@@ -32,7 +32,7 @@ const {
   rejectDeploymentRequest,
   deleteDeploymentRequest,
   fulfillSupervisorRequest,
-} = require('../controllers/coordinatorControllers/coordinator.controller');
+} = require('../controllers/coordinatorControllers');
 
 const authenticate = require('../middleware/verifyToken');
 const authorize = require('../middleware/authorizeRole');
