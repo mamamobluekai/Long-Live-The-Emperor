@@ -34,7 +34,7 @@ const uploadTeachersExcel = async (req, res) => {
       return res.status(400).json({ error: 'Excel file is empty.' });
     }
 
-    const requiredColumns = ['Employee ID', 'First Name', 'Last Name', 'Email', 'Department', 'Position', 'Password'];
+    const requiredColumns = ['Employee ID', 'First Name', 'Last Name', 'Email', 'Department', 'Position'];
     const headers = Object.keys(rows[0]);
     const missing = requiredColumns.filter((c) => !headers.includes(c));
     if (missing.length > 0) {
@@ -55,10 +55,9 @@ const uploadTeachersExcel = async (req, res) => {
         const email = String(row['Email']).trim();
         const department = String(row['Department']).trim();
         const position = String(row['Position']).trim();
-        const password = String(row['Password']).trim();
         const phone = String(row['Phone Number'] || '').trim();
 
-        if (!employeeId || !firstName || !lastName || !email || !department || !position || !password) {
+        if (!employeeId || !firstName || !lastName || !email || !department || !position) {
           results.failed++;
           results.errors.push({ row: i + 2, error: 'Missing required fields' });
           continue;
@@ -68,12 +67,6 @@ const uploadTeachersExcel = async (req, res) => {
         if (!emailRegex.test(email)) {
           results.failed++;
           results.errors.push({ row: i + 2, error: `Invalid email: ${email}` });
-          continue;
-        }
-
-        if (password.length < 8) {
-          results.failed++;
-          results.errors.push({ row: i + 2, error: 'Password must be at least 8 characters' });
           continue;
         }
 
@@ -97,7 +90,8 @@ const uploadTeachersExcel = async (req, res) => {
           continue;
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const tempPassword = Math.random().toString(36).slice(-12);
+        const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
         const userResult = await client.query(
           `INSERT INTO users (email, password, role, phone, status)
@@ -114,24 +108,6 @@ const uploadTeachersExcel = async (req, res) => {
            VALUES ($1, $2, $3, $4, $5, $6)`,
           [userId, firstName, lastName, employeeId, department, position]
         );
-
-        await transporter.sendMail({
-          from: `"Work Immersion System" <${process.env.EMAIL_USER}>`,
-          to: email,
-          subject: 'Your Work Immersion Teacher Account',
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #2a5298;">Welcome to Work Immersion Management System</h2>
-              <p>Hello <strong>${firstName} ${lastName}</strong>,</p>
-              <p>Your teacher account has been created by the administrator. Your account is pending approval.</p>
-              <p><strong>Employee ID:</strong> ${employeeId}</p>
-              <p><strong>Email:</strong> ${email}</p>
-              <p><strong>Department:</strong> ${department}</p>
-              <p style="color: #666; font-size: 12px;">You will be notified once your account is approved.</p>
-              <p style="color: #666; font-size: 12px;">Marinduque National High School - Work Immersion Office</p>
-            </div>
-          `,
-        });
 
         results.success++;
       }
@@ -168,7 +144,7 @@ const uploadSupervisorsExcel = async (req, res) => {
       return res.status(400).json({ error: 'Excel file is empty.' });
     }
 
-    const requiredColumns = ['Employee ID', 'Company Name', 'Supervisor First Name', 'Supervisor Last Name', 'Position', 'Email', 'Password'];
+    const requiredColumns = ['Employee ID', 'Company Name', 'Supervisor First Name', 'Supervisor Last Name', 'Position', 'Email'];
     const headers = Object.keys(rows[0]);
     const missing = requiredColumns.filter((c) => !headers.includes(c));
     if (missing.length > 0) {
@@ -189,11 +165,10 @@ const uploadSupervisorsExcel = async (req, res) => {
         const lastName = String(row['Supervisor Last Name']).trim();
         const position = String(row['Position']).trim();
         const email = String(row['Email']).trim();
-        const password = String(row['Password']).trim();
         const department = String(row['Department'] || '').trim();
         const phone = String(row['Phone Number'] || '').trim();
 
-        if (!employeeId || !companyName || !firstName || !lastName || !position || !email || !password) {
+        if (!employeeId || !companyName || !firstName || !lastName || !position || !email) {
           results.failed++;
           results.errors.push({ row: i + 2, error: 'Missing required fields' });
           continue;
@@ -203,12 +178,6 @@ const uploadSupervisorsExcel = async (req, res) => {
         if (!emailRegex.test(email)) {
           results.failed++;
           results.errors.push({ row: i + 2, error: `Invalid email: ${email}` });
-          continue;
-        }
-
-        if (password.length < 8) {
-          results.failed++;
-          results.errors.push({ row: i + 2, error: 'Password must be at least 8 characters' });
           continue;
         }
 
@@ -232,7 +201,8 @@ const uploadSupervisorsExcel = async (req, res) => {
           continue;
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const tempPassword = Math.random().toString(36).slice(-12);
+        const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
         const userResult = await client.query(
           `INSERT INTO users (email, password, role, phone, status)
@@ -249,24 +219,6 @@ const uploadSupervisorsExcel = async (req, res) => {
            VALUES ($1, $2, $3, $4, $5, $6, $7)`,
           [userId, firstName, lastName, employeeId, companyName, position, department || null]
         );
-
-        await transporter.sendMail({
-          from: `"Work Immersion System" <${process.env.EMAIL_USER}>`,
-          to: email,
-          subject: 'Your Work Immersion Supervisor Account',
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #2a5298;">Welcome to Work Immersion Management System</h2>
-              <p>Hello <strong>${firstName} ${lastName}</strong>,</p>
-              <p>Your supervisor account has been created by the administrator. Your account is pending approval.</p>
-              <p><strong>Employee ID:</strong> ${employeeId}</p>
-              <p><strong>Company:</strong> ${companyName}</p>
-              <p><strong>Email:</strong> ${email}</p>
-              <p style="color: #666; font-size: 12px;">You will be notified once your account is approved.</p>
-              <p style="color: #666; font-size: 12px;">Marinduque National High School - Work Immersion Office</p>
-            </div>
-          `,
-        });
 
         results.success++;
       }
@@ -303,7 +255,7 @@ const uploadCoordinatorsExcel = async (req, res) => {
       return res.status(400).json({ error: 'Excel file is empty.' });
     }
 
-    const requiredColumns = ['Coordinator ID', 'First Name', 'Last Name', 'Email', 'Department', 'Position', 'Password'];
+    const requiredColumns = ['Coordinator ID', 'First Name', 'Last Name', 'Email', 'Department', 'Position'];
     const headers = Object.keys(rows[0]);
     const missing = requiredColumns.filter((c) => !headers.includes(c));
 
@@ -333,7 +285,6 @@ const uploadCoordinatorsExcel = async (req, res) => {
         const email = String(row['Email']).trim();
         const department = String(row['Department']).trim();
         const position = String(row['Position']).trim();
-        const password = String(row['Password']).trim();
         const phone = String(row['Phone Number'] || '').trim();
 
         // Validate required fields
@@ -343,8 +294,7 @@ const uploadCoordinatorsExcel = async (req, res) => {
           !lastName ||
           !email ||
           !department ||
-          !position ||
-          !password
+          !position
         ) {
           results.failed++;
           results.errors.push({
@@ -362,16 +312,6 @@ const uploadCoordinatorsExcel = async (req, res) => {
           results.errors.push({
             row: i + 2,
             error: `Invalid email: ${email}`,
-          });
-          continue;
-        }
-
-        // Validate password
-        if (password.length < 8) {
-          results.failed++;
-          results.errors.push({
-            row: i + 2,
-            error: 'Password must be at least 8 characters',
           });
           continue;
         }
@@ -405,7 +345,8 @@ const uploadCoordinatorsExcel = async (req, res) => {
           continue;
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const tempPassword = Math.random().toString(36).slice(-12);
+        const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
         // Insert coordinator in users table
         const userResult = await client.query(
@@ -423,50 +364,6 @@ const uploadCoordinatorsExcel = async (req, res) => {
            VALUES ($1, $2, $3, $4, $5, $6)`,
           [userId, firstName, lastName, coordinatorId, department, position]
         );
-
-        // Send Email
-        await transporter.sendMail({
-          from: `"Work Immersion System" <${process.env.EMAIL_USER}>`,
-          to: email,
-          subject: 'Your Work Immersion Coordinator Account',
-          html: `
-            <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;">
-              <h2 style="color:#2a5298;">
-                Welcome to Work Immersion Management System
-              </h2>
-
-              <p>Hello <strong>${firstName} ${lastName}</strong>,</p>
-
-              <p>
-                Your <strong>Coordinator</strong> account has been created
-                successfully by the System Administrator.
-              </p>
-
-              <p>
-                Your account is currently
-                <strong>Pending Approval</strong>.
-              </p>
-
-              <hr>
-
-              <p><strong>Coordinator ID:</strong> ${coordinatorId}</p>
-              <p><strong>Email:</strong> ${email}</p>
-              <p><strong>Department:</strong> ${department}</p>
-              <p><strong>Position:</strong> ${position}</p>
-
-              <hr>
-
-              <p style="font-size:12px;color:#666;">
-                You will receive another email once your account has been approved.
-              </p>
-
-              <p style="font-size:12px;color:#666;">
-                Marinduque National High School<br>
-                Work Immersion Office
-              </p>
-            </div>
-          `,
-        });
 
         results.success++;
       }

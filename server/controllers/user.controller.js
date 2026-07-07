@@ -162,7 +162,7 @@ const login = async (req, res) => {
     }
 
     const result = await pool.query(
-      `SELECT id, email, password, first_name, last_name, role, status
+      `SELECT id, email, password, role, status
        FROM users WHERE email = $1`,
       [trimmedEmail]
     );
@@ -173,6 +173,42 @@ const login = async (req, res) => {
     }
 
     const user = result.rows[0];
+
+    let profile = {};
+    if (user.role === 'student') {
+      const studentResult = await pool.query(
+        `SELECT first_name, last_name FROM students WHERE user_id = $1`,
+        [user.id]
+      );
+      profile = studentResult.rows[0] || {};
+    } else if (user.role === 'teacher') {
+      const teacherResult = await pool.query(
+        `SELECT first_name, last_name FROM teachers WHERE user_id = $1`,
+        [user.id]
+      );
+      profile = teacherResult.rows[0] || {};
+    } else if (user.role === 'admin') {
+      const adminResult = await pool.query(
+        `SELECT first_name, last_name FROM admins WHERE user_id = $1`,
+        [user.id]
+      );
+      profile = adminResult.rows[0] || {};
+    } else if (user.role === 'supervisor') {
+      const supervisorResult = await pool.query(
+        `SELECT first_name, last_name FROM supervisors WHERE user_id = $1`,
+        [user.id]
+      );
+      profile = supervisorResult.rows[0] || {};
+    } else if (user.role === 'coordinator') {
+      const coordinatorResult = await pool.query(
+        `SELECT first_name, last_name FROM coordinators WHERE user_id = $1`,
+        [user.id]
+      );
+      profile = coordinatorResult.rows[0] || {};
+    }
+
+    user.first_name = profile.first_name || null;
+    user.last_name = profile.last_name || null;
 
     const match = await comparePassword(password, user.password);
     if (!match) {
@@ -276,12 +312,42 @@ const getMe = async (req, res) => {
   }
 };
 
+const setPassword = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required.' });
+    }
+    
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+    }
+    
+    const result = await pool.query(
+      'UPDATE users SET password = $1, status = $2 WHERE email = $3 AND status = $4 AND role IN ($5, $6, $7) RETURNING id, email, role',
+      [await hashPassword(password), 'approved', email, 'pending', 'teacher', 'supervisor', 'coordinator']
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found or already processed.' });
+    }
+    
+    res.json({ message: 'Password set successfully. You can now log in.' });
+  } catch (err) {
+    console.error('Set password error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
 module.exports = {
   registerStudent,
   login,
   getMe,
+  setPassword,
 };
 
 exports.registerStudent = registerStudent;
 exports.login = login;
 exports.getMe = getMe;
+exports.setPassword = setPassword;

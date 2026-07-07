@@ -1,0 +1,38 @@
+.sidebar {
+  width: 240px;
+  background: #1e293b;
+  color: #f1f5f9;
+  min-height: calc(100vh - 100px);
+  padding: 20px 0;
+  border-radius: 0 18px 18px 0;
+}
+
+.header h2 {
+  margin: 0 0 24px 20px;
+  font-size: 1.2rem;
+  color: #fff;
+}
+
+.navList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.navLink {
+  display: block;
+  padding: 12px 20px;
+  color: #cbd5e1;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.navLink:hover {
+  background: #334155;
+  color: #fff;
+}
+
+.navLink.active {
+  background: #3b82f6;
+  color: #fff;
+}

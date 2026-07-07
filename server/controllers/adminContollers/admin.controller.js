@@ -36,16 +36,16 @@ async function sendApprovalEmail(user, approvedByLabel) {
     await transporter.sendMail({
       from: `"Work Immersion System" <${process.env.EMAIL_USER}>`,
       to: user.email,
-      subject: `Your Work Immersion ${roleLabel} Account is Approved`,
+      subject: `Your Work Immersion ${roleLabel} Account is Approved - Set Your Password`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #2a5298;">Account Approved</h2>
           <p>Hello <strong>${user.first_name} ${user.last_name}</strong>,</p>
-          <p>Your ${roleLabel} account has been approved by the ${approvedByLabel}. You can now log in to the Work Immersion Management System.</p>
+          <p>Your ${roleLabel} account has been approved by the administrator. Please set your password to complete your account setup.</p>
           <p><strong>Email:</strong> ${user.email}</p>
           <p style="margin: 20px 0;">
-            <a href="${getClientUrl()}/login" style="background: #2a5298; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
-              Log In
+            <a href="${getClientUrl()}/set-password?email=${encodeURIComponent(user.email)}" style="background: #2a5298; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Set Your Password
             </a>
           </p>
           <p style="color: #666; font-size: 12px;">Marinduque National High School - Work Immersion Office</p>
