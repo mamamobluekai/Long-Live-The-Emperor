@@ -325,14 +325,17 @@ const setPassword = async (req, res) => {
     }
     
     const result = await pool.query(
-      'UPDATE users SET password = $1, status = $2 WHERE email = $3 AND status = $4 AND role IN ($5, $6, $7) RETURNING id, email, role',
-      [await hashPassword(password), 'approved', email, 'pending', 'teacher', 'supervisor', 'coordinator']
+      `UPDATE users
+       SET password = $1, status = 'approved', updated_at = CURRENT_TIMESTAMP
+       WHERE email = $2 AND status IN ('pending', 'approved')
+       RETURNING id, email, role`,
+      [await hashPassword(password), email]
     );
-    
+
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found or already processed.' });
+      return res.status(404).json({ error: 'User not found or cannot set password.' });
     }
-    
+
     res.json({ message: 'Password set successfully. You can now log in.' });
   } catch (err) {
     console.error('Set password error:', err);

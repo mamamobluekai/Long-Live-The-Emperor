@@ -239,25 +239,26 @@ const assignApprovedStudentsToBatch = async (req, res) => {
 const getRequirementCompletedStudentsForCoordinator = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT
+       `SELECT
          u.id,
-         u.student_id,
-         u.first_name,
-         u.last_name,
+         s.id AS student_id,
+         s.first_name,
+         s.last_name,
          u.email,
-         u.grade_level,
-         u.strand,
+         s.grade_level,
+         s.track_strand AS strand,
          u.phone,
          u.status AS account_status,
          srs.status AS requirements_status,
          srs.progress,
          srs.submitted_at
        FROM users u
+       JOIN students s ON s.user_id = u.id
        JOIN student_requirement_submissions srs ON srs.user_id = u.id
        WHERE u.role = 'student'
          AND srs.progress = 100
          AND srs.status NOT IN ('Rejected', 'Needs Revision')
-       ORDER BY srs.updated_at DESC, u.last_name ASC`
+       ORDER BY srs.updated_at DESC, s.last_name ASC`
     );
 
     res.json({ students: result.rows });
@@ -317,17 +318,18 @@ const getTeacherBatchStudents = async (req, res) => {
     const result = await pool.query(
       `SELECT
          u.id,
-         u.student_id,
-         u.first_name,
-         u.last_name,
-         u.email,
-         u.grade_level,
-         u.strand,
+         s.id AS student_id,
+         s.first_name,
+         s.last_name,
+         s.email,
+         s.grade_level,
+         s.track_strand AS strand,
          u.phone,
          u.status,
          tbs.assigned_at
        FROM teacher_batch_students tbs
        JOIN users u ON u.id = tbs.student_id
+       JOIN students s ON s.user_id = u.id
        WHERE tbs.teacher_batch_id = $1
        ORDER BY tbs.assigned_at DESC`,
       [batchId]
@@ -344,11 +346,13 @@ const getTeachersListForCoordinator = async (req, res) => {
   try {
     const { status } = req.query;
     const result = await pool.query(
-      `SELECT id, email, first_name, last_name, status, employee_id, department, created_at
-       FROM users
-       WHERE role = 'teacher'
-         AND ($1::text IS NULL OR status = $1)
-       ORDER BY created_at DESC`,
+      `SELECT u.id, u.email, u.status, u.created_at,
+              t.first_name, t.last_name, t.employee_id, t.department
+       FROM users u
+       JOIN teachers t ON t.user_id = u.id
+       WHERE u.role = 'teacher'
+         AND ($1::text IS NULL OR u.status = $1)
+       ORDER BY u.created_at DESC`,
       [status || null]
     );
 
@@ -369,22 +373,24 @@ const getCoordinatorBatchesWithAssignedStudents = async (req, res) => {
          tb.batch_label,
          tb.max_students,
          tb.teacher_id,
-         u.first_name,
-         u.last_name,
-         u.employee_id,
+         t.first_name,
+         t.last_name,
+         t.employee_id,
          tb.created_at,
          tb.updated_at,
          tbs.student_id,
          tbs.assigned_at,
-         su.student_id AS student_number,
-         su.first_name AS student_first_name,
-         su.last_name AS student_last_name,
-         su.email AS student_email,
-         su.strand AS student_strand
+         tbs.student_id AS student_number,
+         st.first_name AS student_first_name,
+         st.last_name AS student_last_name,
+         st.email AS student_email,
+         st.track_strand AS student_strand
        FROM teacher_batches tb
        JOIN users u ON u.id = tb.teacher_id
+       JOIN teachers t ON t.user_id = u.id
        LEFT JOIN teacher_batch_students tbs ON tbs.teacher_batch_id = tb.id
        LEFT JOIN users su ON su.id = tbs.student_id
+       LEFT JOIN students st ON st.user_id = su.id
        WHERE tb.coordinator_id = $1
        ORDER BY tb.created_at DESC, tbs.assigned_at DESC`,
       [coordinatorId]

@@ -4,11 +4,13 @@ const getSupervisorsListForCoordinator = async (req, res) => {
   try {
     const { status } = req.query;
     const result = await pool.query(
-      `SELECT id, email, first_name, last_name, status, company_name, designation, phone, created_at
-       FROM users
-       WHERE role = 'supervisor'
-         AND ($1::text IS NULL OR status = $1)
-       ORDER BY created_at DESC`,
+      `SELECT u.id, u.email, u.status, u.phone, u.created_at,
+              s.first_name, s.last_name, s.company_name, s.designation
+       FROM users u
+       JOIN supervisors s ON s.user_id = u.id
+       WHERE u.role = 'supervisor'
+         AND ($1::text IS NULL OR u.status = $1)
+       ORDER BY u.created_at DESC`,
       [status || null]
     );
     res.json({ supervisors: result.rows });
@@ -54,6 +56,24 @@ const createSupervisorRequest = async (req, res) => {
     res.status(500).json({ error: 'Server error.' });
   } finally {
     client.release();
+  }
+};
+
+const getCoordinatorsForSupervisor = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT u.id, u.email, u.status,
+              c.first_name, c.last_name, c.department, c.designation
+       FROM users u
+       JOIN coordinators c ON c.user_id = u.id
+       WHERE u.role = 'coordinator'
+       ORDER BY c.first_name, c.last_name`,
+      []
+    );
+    res.json({ coordinators: result.rows });
+  } catch (err) {
+    console.error('getCoordinatorsForSupervisor error:', err);
+    res.status(500).json({ error: 'Server error.' });
   }
 };
 
@@ -138,15 +158,16 @@ const getMyDeploymentRequests = async (req, res) => {
           dr.status,
           dr.created_at,
           dr.updated_at,
-          u.first_name AS supervisor_first_name,
-          u.last_name AS supervisor_last_name,
-          u.company_name AS supervisor_company,
+          sv.first_name AS supervisor_first_name,
+          sv.last_name AS supervisor_last_name,
+          sv.company_name AS supervisor_company,
           COUNT(drs.student_id) AS student_count
        FROM deployment_requests dr
        JOIN users u ON u.id = dr.supervisor_id
+       JOIN supervisors sv ON sv.user_id = u.id
        LEFT JOIN deployment_request_students drs ON drs.deployment_request_id = dr.id
        WHERE dr.coordinator_id = $1
-       GROUP BY dr.id, u.first_name, u.last_name, u.company_name
+       GROUP BY dr.id, sv.first_name, sv.last_name, sv.company_name
        ORDER BY dr.created_at DESC`,
       [coordinatorId]
     );
@@ -172,14 +193,15 @@ const getSupervisorDeploymentRequests = async (req, res) => {
           dr.status,
           dr.created_at,
           dr.updated_at,
-          u.first_name AS coordinator_first_name,
-          u.last_name AS coordinator_last_name,
+          c.first_name AS coordinator_first_name,
+          c.last_name AS coordinator_last_name,
           COUNT(drs.student_id) AS student_count
        FROM deployment_requests dr
        JOIN users u ON u.id = dr.coordinator_id
+       JOIN coordinators c ON c.user_id = u.id
        LEFT JOIN deployment_request_students drs ON drs.deployment_request_id = dr.id
        WHERE dr.supervisor_id = $1
-       GROUP BY dr.id, u.first_name, u.last_name
+       GROUP BY dr.id, c.first_name, c.last_name
        ORDER BY dr.created_at DESC`,
       [supervisorId]
     );
@@ -189,19 +211,20 @@ const getSupervisorDeploymentRequests = async (req, res) => {
 
     if (requestIds.length > 0) {
       const studentsRes = await pool.query(
-        `SELECT
+        `        SELECT
             drs.deployment_request_id,
             u.id,
-            u.student_id,
-            u.first_name,
-            u.last_name,
-            u.email,
-            u.strand,
-            u.grade_level
+            s.id AS student_id,
+            s.first_name,
+            s.last_name,
+            s.email,
+            s.track_strand AS strand,
+            s.grade_level
          FROM deployment_request_students drs
          JOIN users u ON u.id = drs.student_id
+         JOIN students s ON s.user_id = u.id
          WHERE drs.deployment_request_id = ANY($1::int[])
-         ORDER BY u.last_name, u.first_name`,
+         ORDER BY s.last_name, s.first_name`,
         [requestIds]
       );
 
@@ -239,17 +262,18 @@ const getDeploymentRequestStudents = async (req, res) => {
     const result = await pool.query(
       `SELECT
           u.id,
-          u.student_id,
-          u.first_name,
-          u.last_name,
-          u.email,
-          u.strand,
-          u.grade_level,
+          s.id AS student_id,
+          s.first_name,
+          s.last_name,
+          s.email,
+          s.track_strand AS strand,
+          s.grade_level,
           u.phone
        FROM deployment_request_students drs
        JOIN users u ON u.id = drs.student_id
+       JOIN students s ON s.user_id = u.id
        WHERE drs.deployment_request_id = $1
-       ORDER BY u.last_name, u.first_name`,
+       ORDER BY s.last_name, s.first_name`,
       [requestId]
     );
 
@@ -434,6 +458,7 @@ const fulfillSupervisorRequest = async (req, res) => {
 
 module.exports = {
   getSupervisorsListForCoordinator,
+  getCoordinatorsForSupervisor,
   createSupervisorRequest,
   createDeploymentRequest,
   getMyDeploymentRequests,

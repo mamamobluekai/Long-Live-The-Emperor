@@ -1,38 +1,49 @@
 .sidebar {
   width: 240px;
-  background: #1e293b;
+  background: #16202f;
   color: #f1f5f9;
   min-height: calc(100vh - 100px);
-  padding: 20px 0;
-  border-radius: 0 18px 18px 0;
+  padding: 24px 0;
+  border-radius: 0 20px 20px 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .header h2 {
-  margin: 0 0 24px 20px;
-  font-size: 1.2rem;
+  margin: 0 0 28px 24px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   color: #fff;
 }
 
 .navList {
   list-style: none;
-  padding: 0;
+  padding: 0 12px;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .navLink {
-  display: block;
-  padding: 12px 20px;
-  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: #94a3b8;
   text-decoration: none;
-  transition: all 0.2s;
+  font-size: 0.9375rem;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
 }
 
 .navLink:hover {
-  background: #334155;
-  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
+  transform: translateX(2px);
 }
 
 .navLink.active {
-  background: #3b82f6;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
   color: #fff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
 }

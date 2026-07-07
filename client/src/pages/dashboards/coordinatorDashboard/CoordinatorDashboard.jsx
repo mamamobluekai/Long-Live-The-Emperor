@@ -1,21 +1,29 @@
+import { Routes, Route, Navigate } from 'react-router-dom';
 import DashboardShell from '../DashboardShell';
+import CoordinatorSidebar from './CoordinatorSidebar';
+import StudentApprovals from './StudentApprovals';
+import UploadStudents from './UploadStudents';
+import RequirementsReview from './RequirementsReview';
+import TeacherBatches from './TeacherBatches';
+import Supervisors from './Supervisors';
+import DeploymentRequests from './DeploymentRequests';
 import styles from './CoordinatorDashboard.module.css';
 
 function CoordinatorDashboard({ user, onLogout }) {
   return (
     <DashboardShell user={user} title="Coordinator Dashboard" onLogout={onLogout}>
-      <div className={styles.grid}>
-        <div className={styles.card}>
-          <h3>Student Approvals</h3>
-          <p>Approve new student accounts and review records.</p>
-        </div>
-        <div className={styles.card}>
-          <h3>Requirements</h3>
-          <p>Track student submissions and document completeness.</p>
-        </div>
-        <div className={styles.card}>
-          <h3>Batches</h3>
-          <p>Organize teachers, students, and deployment groups.</p>
+      <div className={styles.layout}>
+        <CoordinatorSidebar />
+        <div className={styles.content}>
+          <Routes>
+            <Route index element={<Navigate to="students" replace />} />
+            <Route path="students" element={<StudentApprovals />} />
+            <Route path="upload-students" element={<UploadStudents />} />
+            <Route path="requirements" element={<RequirementsReview />} />
+            <Route path="batches" element={<TeacherBatches />} />
+            <Route path="supervisors" element={<Supervisors />} />
+            <Route path="deployment-requests" element={<DeploymentRequests />} />
+          </Routes>
         </div>
       </div>
     </DashboardShell>

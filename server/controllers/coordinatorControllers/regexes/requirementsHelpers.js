@@ -87,9 +87,18 @@ const calculateProgress = async (client, studentId) => {
 const serializeRequirements = async (client, studentId) => {
   const student = await client.query('SELECT * FROM students WHERE id = $1', [studentId]);
   const submission = await client.query(
-    `SELECT s.*, u.first_name || ' ' || u.last_name AS reviewed_by_name
+    `SELECT s.*,
+            COALESCE(t.first_name || ' ' || t.last_name,
+                     sv.first_name || ' ' || sv.last_name,
+                     c.first_name || ' ' || c.last_name,
+                     a.first_name || ' ' || a.last_name,
+                     st.first_name || ' ' || st.last_name) AS reviewed_by_name
      FROM student_requirement_submissions s
-     LEFT JOIN users u ON u.id = s.reviewed_by
+     LEFT JOIN teachers t ON t.user_id = s.reviewed_by
+     LEFT JOIN supervisors sv ON sv.user_id = s.reviewed_by
+     LEFT JOIN coordinators c ON c.user_id = s.reviewed_by
+     LEFT JOIN admins a ON a.user_id = s.reviewed_by
+     LEFT JOIN students st ON st.user_id = s.reviewed_by
      WHERE s.student_id = $1 ORDER BY s.created_at DESC LIMIT 1`,
     [studentId]
   );
@@ -102,9 +111,18 @@ const serializeRequirements = async (client, studentId) => {
     [studentId]
   );
   const logs = await client.query(
-    `SELECT sl.*, u.first_name || ' ' || u.last_name AS actor_name
+    `SELECT sl.*,
+            COALESCE(t.first_name || ' ' || t.last_name,
+                     sv.first_name || ' ' || sv.last_name,
+                     c.first_name || ' ' || c.last_name,
+                     a.first_name || ' ' || a.last_name,
+                     st.first_name || ' ' || st.last_name) AS actor_name
      FROM submission_logs sl
-     LEFT JOIN users u ON u.id = sl.actor_id
+     LEFT JOIN teachers t ON t.user_id = sl.actor_id
+     LEFT JOIN supervisors sv ON sv.user_id = sl.actor_id
+     LEFT JOIN coordinators c ON c.user_id = sl.actor_id
+     LEFT JOIN admins a ON a.user_id = sl.actor_id
+     LEFT JOIN students st ON st.user_id = sl.actor_id
      WHERE sl.submission_id = $1
      ORDER BY sl.created_at DESC LIMIT 20`,
     [submission.rows[0]?.id || 0]

@@ -1,6 +1,8 @@
 const multer = require('multer');
 const nodemailer = require('nodemailer');
 const pool = require('../../db');
+const { hashPassword } = require('../../utils/hashPassword');
+const { generateTemporaryPassword } = require('../../utils/generatePassword');
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -30,24 +32,29 @@ const ROLE_LABELS = {
   admin: 'Admin',
 };
 
-async function sendApprovalEmail(user, approvedByLabel) {
+async function sendApprovalEmail(user, approvedByLabel, tempPassword) {
   const roleLabel = ROLE_LABELS[user.role] || user.role;
   try {
     await transporter.sendMail({
       from: `"Work Immersion System" <${process.env.EMAIL_USER}>`,
       to: user.email,
-      subject: `Your Work Immersion ${roleLabel} Account is Approved - Set Your Password`,
+      subject: `Your Work Immersion ${roleLabel} Account is Approved`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #2a5298;">Account Approved</h2>
           <p>Hello <strong>${user.first_name} ${user.last_name}</strong>,</p>
-          <p>Your ${roleLabel} account has been approved by the administrator. Please set your password to complete your account setup.</p>
+          <p>Your ${roleLabel} account has been approved by the administrator. A temporary password was created for you so you can log in right away.</p>
           <p><strong>Email:</strong> ${user.email}</p>
+          <p style="margin: 16px 0;">
+            <strong>Temporary password:</strong>
+            <code style="display: inline-block; background: #f1f5f9; padding: 8px 12px; border-radius: 5px; font-size: 16px; letter-spacing: 1px;">${tempPassword}</code>
+          </p>
           <p style="margin: 20px 0;">
-            <a href="${getClientUrl()}/set-password?email=${encodeURIComponent(user.email)}" style="background: #2a5298; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
-              Set Your Password
+            <a href="${getClientUrl()}/login" style="background: #2a5298; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Log In
             </a>
           </p>
+          <p style="color: #666; font-size: 12px;">For your security, please change this password after logging in.</p>
           <p style="color: #666; font-size: 12px;">Marinduque National High School - Work Immersion Office</p>
         </div>
       `,
@@ -137,7 +144,15 @@ const approveStaff = async (req, res) => {
     }
 
     const user = result.rows[0];
-    
+
+    // Create a temporary password and set it as the user's password so they
+    // can log in immediately after approval.
+    const tempPassword = generateTemporaryPassword();
+    await pool.query(
+      `UPDATE users SET password = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+      [await hashPassword(tempPassword), id]
+    );
+
     // Fetch role-specific data to get first_name and last_name
     let roleData = {};
     if (user.role === 'teacher') {
@@ -159,9 +174,9 @@ const approveStaff = async (req, res) => {
       );
       roleData = roleResult.rows[0] || {};
     }
-    
+
     const userWithNames = { ...user, ...roleData };
-    await sendApprovalEmail(userWithNames, 'admin');
+    await sendApprovalEmail(userWithNames, 'admin', tempPassword);
 
     res.json({ message: `${ROLE_LABELS[user.role]} approved.`, user: userWithNames });
   } catch (err) {

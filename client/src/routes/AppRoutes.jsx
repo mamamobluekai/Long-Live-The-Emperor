@@ -33,10 +33,17 @@ function AppRoutes() {
 
       <Route path="/dashboard">
         <Route path="admin/*" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard user={user} onLogout={logout} /></ProtectedRoute>} />
-        <Route path="coordinator" element={<ProtectedRoute allowedRoles={['coordinator']}><CoordinatorDashboard user={user} onLogout={logout} /></ProtectedRoute>} />
+        <Route path="coordinator/*" element={<ProtectedRoute allowedRoles={['coordinator']}><CoordinatorDashboard user={user} onLogout={logout} /></ProtectedRoute>} />
         <Route path="teacher" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherDashboard user={user} onLogout={logout} /></ProtectedRoute>} />
-        <Route path="student" element={<ProtectedRoute allowedRoles={['student']}><StudentDashboard user={user} onLogout={logout} /></ProtectedRoute>} />
-        <Route path="supervisor" element={<ProtectedRoute allowedRoles={['supervisor']}><SupervisorDashboard user={user} onLogout={logout} /></ProtectedRoute>} />
+        <Route path="student/*" element={<ProtectedRoute allowedRoles={['student']}><StudentDashboard user={user} onLogout={logout} /></ProtectedRoute>} />
+        <Route
+          path="supervisor/*"
+          element={
+            <ProtectedRoute allowedRoles={['supervisor']}>
+              <SupervisorDashboard user={user} onLogout={logout} />
+            </ProtectedRoute>
+          }
+        />
       </Route>
 
       <Route path="/" element={user ? <Navigate to={`/dashboard/${user.role}`} replace /> : <Navigate to="/login" replace />} />

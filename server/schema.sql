@@ -178,8 +178,8 @@ CREATE TABLE teacher_batch_students (
 -- Deployment Requests (from coordinator to supervisor)
 CREATE TABLE deployment_requests (
   id SERIAL PRIMARY KEY,
-  coordinator_id INTEGER NOT NULL REFERENCES coordinators(id) ON DELETE CASCADE,
-  supervisor_id INTEGER NOT NULL REFERENCES supervisors(id) ON DELETE CASCADE,
+  coordinator_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  supervisor_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   batch_label VARCHAR(255) NOT NULL,
   strand VARCHAR(255),
   num_students INTEGER NOT NULL,
@@ -195,7 +195,7 @@ CREATE TABLE deployment_requests (
 CREATE TABLE deployment_request_students (
   id SERIAL PRIMARY KEY,
   deployment_request_id INTEGER NOT NULL REFERENCES deployment_requests(id) ON DELETE CASCADE,
-  student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   UNIQUE (deployment_request_id, student_id)
 );
 

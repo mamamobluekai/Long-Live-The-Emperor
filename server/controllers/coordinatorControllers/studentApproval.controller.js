@@ -1,4 +1,6 @@
 const pool = require('../../db/');
+const { hashPassword } = require('../../utils/hashPassword');
+const { generateTemporaryPassword } = require('../../utils/generatePassword');
 const { sendStudentApprovalEmail } = require('./regexes/email');
 
 const getPendingStudents = async (req, res) => {
@@ -41,7 +43,15 @@ const approveStudent = async (req, res) => {
       user.last_name = studentResult.rows[0].last_name;
     }
 
-    await sendStudentApprovalEmail(user);
+    // Create a temporary password and set it as the student's password so they
+    // can log in immediately after approval.
+    const tempPassword = generateTemporaryPassword();
+    await pool.query(
+      `UPDATE users SET password = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+      [await hashPassword(tempPassword), id]
+    );
+
+    await sendStudentApprovalEmail(user, tempPassword);
 
     res.json({ message: 'Student approved.', user });
   } catch (err) {

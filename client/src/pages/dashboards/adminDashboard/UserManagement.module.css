@@ -1,33 +1,57 @@
 .container {
-  background: white;
-  border-radius: 18px;
-  padding: 24px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 12px 32px -8px rgba(15, 23, 42, 0.12);
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .header h2 {
   margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #0f172a;
 }
 
-.filterSelect {
-  padding: 8px 12px;
-  border-radius: 8px;
+.filterSelect,
+.searchInput {
+  padding: 9px 14px;
+  border-radius: 10px;
   border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 0.9rem;
+  color: #334155;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filterSelect:hover,
+.searchInput:hover {
+  border-color: #cbd5e1;
+}
+
+.filterSelect:focus,
+.searchInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
 .searchInput {
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
   margin-right: 12px;
-  min-width: 200px;
+  min-width: 220px;
 }
 
 .controls {
@@ -37,62 +61,102 @@
 
 .table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .table th,
 .table td {
-  padding: 12px;
+  padding: 14px 12px;
   text-align: left;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .table th {
   font-weight: 600;
-  color: #64748b;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.message,
+.error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 0.9375rem;
+  border: 1px solid transparent;
 }
 
 .message {
-  background: #d1fae5;
+  background: #ecfdf5;
   color: #065f46;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 16px;
+  border-color: #a7f3d0;
 }
 
 .error {
-  background: #fee2e2;
+  background: #fef2f2;
   color: #991b1b;
-  padding: 12px;
+  border-color: #fecaca;
+}
+
+.btnApprove,
+.btnDisapprove,
+.btnDelete {
+  border: none;
+  padding: 7px 14px;
   border-radius: 8px;
-  margin-bottom: 16px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-right: 6px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
 .btnApprove {
   background: #10b981;
   color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-right: 6px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 }
 
 .btnDisapprove {
   background: #f59e0b;
   color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-right: 6px;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
 }
 
 .btnDelete {
   background: #ef4444;
   color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.btnApprove:hover,
+.btnDisapprove:hover,
+.btnDelete:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.btnApprove:active,
+.btnDisapprove:active,
+.btnDelete:active {
+  transform: translateY(0);
 }
