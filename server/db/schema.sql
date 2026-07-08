@@ -135,10 +135,13 @@ CREATE TABLE student_documents (
   student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
   document_type_id INTEGER NOT NULL REFERENCES document_types(id),
   document_name VARCHAR(255),
-  file_path TEXT NOT NULL,
+  file_path TEXT,
   original_name VARCHAR(255),
   mime_type VARCHAR(255),
   file_size INTEGER,
+  cloudinary_public_id VARCHAR(255),
+  cloudinary_url TEXT,
+  resource_type VARCHAR(50) NOT NULL DEFAULT 'raw',
   status VARCHAR(100) NOT NULL DEFAULT 'Uploaded',
   remarks TEXT,
   verified_by INTEGER REFERENCES users(id),
@@ -232,3 +235,18 @@ INSERT INTO document_types (code, name, section) VALUES
   ('psa_birth_certificate', 'PSA Birth Certificate', 'academic'),
   ('id_picture', 'ID Picture', 'academic'),
   ('student_profile_form', 'Student Profile Form', 'academic');
+
+CREATE TABLE files (
+  id SERIAL PRIMARY KEY,
+  student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  original_name VARCHAR(255) NOT NULL,
+  cloudinary_public_id VARCHAR(255) NOT NULL,
+  cloudinary_url TEXT NOT NULL,
+  resource_type VARCHAR(50) NOT NULL DEFAULT 'raw',
+  file_size INTEGER,
+  mime_type VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_files_student_id ON files(student_id);

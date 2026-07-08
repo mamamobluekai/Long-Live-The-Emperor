@@ -1,21 +1,21 @@
+import { Routes, Route, Navigate } from 'react-router-dom';
 import DashboardShell from '../DashboardShell';
+import TeacherSidebar from './TeacherSidebar';
+import TeacherOverview from './TeacherOverview';
+import TeacherDocuments from './TeacherDocuments';
 import styles from './TeacherDashboard.module.css';
 
 function TeacherDashboard({ user, onLogout }) {
   return (
     <DashboardShell user={user} title="Teacher Dashboard" onLogout={onLogout}>
-      <div className={styles.grid}>
-        <div className={styles.card}>
-          <h3>My Class</h3>
-          <p>Monitor assigned students and batch progress.</p>
-        </div>
-        <div className={styles.card}>
-          <h3>Student Status</h3>
-          <p>Review submissions and provide guidance.</p>
-        </div>
-        <div className={styles.card}>
-          <h3>Reporting</h3>
-          <p>Track completion and deployment readiness.</p>
+      <div className={styles.layout}>
+        <TeacherSidebar />
+        <div className={styles.content}>
+          <Routes>
+            <Route index element={<Navigate to="overview" replace />} />
+            <Route path="overview" element={<TeacherOverview user={user} />} />
+            <Route path="documents" element={<TeacherDocuments user={user} />} />
+          </Routes>
         </div>
       </div>
     </DashboardShell>

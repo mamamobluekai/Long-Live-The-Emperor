@@ -27,6 +27,7 @@ const upload = multer({
     },
   }),
 });
+const uploadMemory = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
 router.use(authenticate);
 
@@ -34,7 +35,7 @@ router.get('/requirements/me', authorize('student'), getMyRequirements);
 router.get('/requirements/me/status', authorize('student'), getMySubmissionStatus);
 router.put('/requirements/me', authorize('student'), updateMyRequirements);
 router.post('/requirements/me/submit', authorize('student'), submitMyRequirements);
-router.post('/documents/me/upload', authorize('student'), upload.single('file'), uploadMyDocument);
+router.post('/documents/me/upload', authorize('student'), uploadMemory.single('file'), uploadMyDocument);
 router.delete('/documents/me/:id', authorize('student'), deleteMyDocument);
 
 module.exports = router;

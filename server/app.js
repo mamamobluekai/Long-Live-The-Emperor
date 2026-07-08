@@ -8,6 +8,7 @@ const adminRoutes = require('./routes/admin.routes');
 const userRoutes = require('./routes/user.routes');
 const coordinatorRoutes = require('./routes/coordinator.routes');
 const studentRoutes = require('./routes/student.routes');
+const fileRoutes = require('./routes/fileRoutes');
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/coordinator', coordinatorRoutes);
 app.use('/api/student', studentRoutes);
+app.use('/api/files', fileRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found.' });

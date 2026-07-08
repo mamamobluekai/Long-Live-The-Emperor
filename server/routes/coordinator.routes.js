@@ -45,16 +45,7 @@ const router = express.Router();
 const uploadsDir = path.join(__dirname, '../uploads/requirements');
 fs.mkdirSync(uploadsDir, { recursive: true });
 const uploadExcel = multer({ storage: multer.memoryStorage() });
-const uploadDoc = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadsDir),
-    filename: (req, file, cb) => {
-      const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      const ext = path.extname(file.originalname);
-      cb(null, `${unique}${ext}`);
-    },
-  }),
-});
+const uploadDoc = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
 router.use(authenticate);
 

@@ -1,11 +1,10 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import {
   getMyRequirements,
   updateMyRequirements,
   submitMyRequirements,
   uploadMyDocument,
   deleteMyDocument,
-  documentFileUrl,
 } from '../../../api/studentApi';
 import styles from './Requirements.module.css';
 
@@ -52,22 +51,21 @@ function Requirements({ user }) {
   const [uploadFile, setUploadFile] = useState({});
   const [deleting, setDeleting] = useState(null);
 
-  const load = useCallback(async () => {
-    setError('');
-    setMessage('');
-    try {
-      const result = await getMyRequirements();
-      setData(result);
-    } catch (err) {
-      setError(err.message);
-    }
-  }, []);
-
   useEffect(() => {
-    let mounted = true;
-    load();
-    return () => { mounted = false; };
-  }, [load]);
+    let cancelled = false;
+    async function init() {
+      setError('');
+      setMessage('');
+      try {
+        const result = await getMyRequirements();
+        if (!cancelled) setData(result);
+      } catch (err) {
+        if (!cancelled) setError(err.message);
+      }
+    }
+    init();
+    return () => { cancelled = true; };
+  }, []);
 
   const student = data?.student || {};
   const submission = data?.submission || {};
@@ -206,10 +204,10 @@ function Requirements({ user }) {
           {hasExisting ? (
             <>
               <span className={`${styles.badge} ${styles.badgeVerified}`}>Uploaded</span>
-              {doc.file_path && (
+              {doc.cloudinary_url && (
                 <a
                   className={styles.btnGhost}
-                  href={documentFileUrl(doc.file_path)}
+                  href={doc.cloudinary_url}
                   target="_blank"
                   rel="noreferrer"
                 >

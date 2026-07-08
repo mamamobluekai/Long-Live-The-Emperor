@@ -1,4 +1,5 @@
 const pool = require('../../db/');
+const cloudinary = require('../../db/cloudinary');
 const { normalize, validateStudentPayload } = require('./regexes/validation');
 const {
   getOrCreateStudent,
@@ -6,6 +7,7 @@ const {
   calculateProgress,
   serializeRequirements,
 } = require('./regexes/requirementsHelpers');
+const streamifier = require('streamifier');
 
 const upsertRequirements = async (req, res) => {
   const client = await pool.connect();
@@ -105,6 +107,16 @@ const getRequirements = async (req, res) => {
   }
 };
 
+function uploadToCloudinary(buffer, resourceType) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { resource_type: resourceType, folder: 'student_documents' },
+      (err, result) => err ? reject(err) : resolve(result)
+    );
+    streamifier.createReadStream(buffer).pipe(stream);
+  });
+}
+
 const uploadDocument = async (req, res) => {
   const client = await pool.connect();
   try {
@@ -125,13 +137,28 @@ const uploadDocument = async (req, res) => {
       `DELETE FROM student_documents WHERE student_id = $1 AND document_type_id = $2`,
       [student.id, type.rows[0].id]
     );
-    const publicPath = `uploads/requirements/${req.file.filename}`;
+
+    const resourceType = req.file.mimetype.startsWith('image/') ? 'image' : 'raw';
+    const result = await uploadToCloudinary(req.file.buffer, resourceType);
+
     const inserted = await client.query(
       `INSERT INTO student_documents
-       (submission_id, student_id, document_type_id, document_name, file_path, original_name, mime_type, file_size, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'Uploaded')
+       (submission_id, student_id, document_type_id, document_name, file_path, original_name, mime_type, file_size, cloudinary_public_id, cloudinary_url, resource_type, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'Uploaded')
        RETURNING *`,
-      [submission.id, student.id, type.rows[0].id, type.rows[0].name, publicPath, req.file.originalname, req.file.mimetype, req.file.size]
+      [
+        submission.id,
+        student.id,
+        type.rows[0].id,
+        type.rows[0].name,
+        result.secure_url,
+        req.file.originalname,
+        req.file.mimetype,
+        req.file.size,
+        result.public_id,
+        result.secure_url,
+        resourceType,
+      ]
     );
     await client.query(
       `INSERT INTO submission_logs (submission_id, actor_id, action, remarks) VALUES ($1,$2,'Uploaded document',$3)`,

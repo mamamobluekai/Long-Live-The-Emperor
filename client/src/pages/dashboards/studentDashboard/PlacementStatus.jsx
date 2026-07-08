@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { getMySubmissionStatus } from '../../../api/studentApi';
 import styles from './PlacementStatus.module.css';
 
@@ -7,22 +7,23 @@ function PlacementStatus() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const result = await getMySubmissionStatus();
-      setSubmission(result.submission || {});
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    load();
-  }, [load]);
+    let cancelled = false;
+    async function init() {
+      setLoading(true);
+      setError('');
+      try {
+        const result = await getMySubmissionStatus();
+        if (!cancelled) setSubmission(result.submission || {});
+      } catch (err) {
+        if (!cancelled) setError(err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    init();
+    return () => { cancelled = true; };
+  }, []);
 
   const statusMap = {
     Pending: { label: 'Pending', cls: styles.badgePending },

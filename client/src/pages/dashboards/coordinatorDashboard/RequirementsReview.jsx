@@ -7,8 +7,6 @@ import {
 } from '../../../api/coordinatorApi';
 import styles from './CoordinatorDashboard.module.css';
 
-const SERVER_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace(/\/api$/, '');
-
 const REVIEW_STATUSES = ['Under Review', 'Approved', 'Rejected', 'Needs Revision'];
 
 const SECTION_LABELS = {
@@ -378,17 +376,17 @@ function RequirementsReview() {
                                 >
                                   Reject
                                 </button>
-                                {d.file_path && (
-                                  <a
-                                    className={styles.btnGhost}
-                                    href={`${SERVER_BASE}/${d.file_path}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    download
-                                  >
-                                    Download
-                                  </a>
-                                )}
+                                 {d.cloudinary_url && (
+                                   <a
+                                     className={styles.btnGhost}
+                                     href={d.cloudinary_url}
+                                     target="_blank"
+                                     rel="noreferrer"
+                                     download
+                                   >
+                                     Download
+                                   </a>
+                                 )}
                               </div>
                             </div>
                           );

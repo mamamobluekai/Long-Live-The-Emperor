@@ -2,6 +2,7 @@ import DashboardShell from '../DashboardShell';
 import StudentSidebar from './StudentSidebar';
 import Overview from './Overview';
 import Requirements from './Requirements';
+import Documentation from './Documentation';
 import PlacementStatus from './PlacementStatus';
 import Announcements from './Announcements';
 import { Routes, Route, Navigate } from 'react-router-dom';
@@ -17,6 +18,7 @@ function StudentDashboard({ user, onLogout }) {
             <Route index element={<Navigate to="overview" replace />} />
             <Route path="overview" element={<Overview user={user} />} />
             <Route path="requirements" element={<Requirements user={user} />} />
+            <Route path="documentation" element={<Documentation user={user} />} />
             <Route path="placement-status" element={<PlacementStatus />} />
             <Route path="announcements" element={<Announcements />} />
             <Route path="*" element={<Navigate to="overview" replace />} />
