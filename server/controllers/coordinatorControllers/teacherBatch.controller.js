@@ -3,7 +3,17 @@ const pool = require('../../db/');
 const createTeacherBatch = async (req, res) => {
   const client = await pool.connect();
   try {
-    const coordinatorId = req.user.id;
+    const coordinatorUserId = req.user.id;
+
+    const coordinatorRow = await client.query(
+      "SELECT id FROM coordinators WHERE user_id = $1",
+      [coordinatorUserId]
+    );
+    const coordinatorId = coordinatorRow.rows[0]?.id;
+    if (!coordinatorId) {
+      return res.status(400).json({ error: 'Coordinator profile not found.' });
+    }
+
     const { teacher_id, batch_label, max_students } = req.body;
 
     if (!teacher_id || !batch_label || !max_students) {
@@ -15,27 +25,26 @@ const createTeacherBatch = async (req, res) => {
       return res.status(400).json({ error: 'max_students must be a positive integer.' });
     }
 
-    const teacherCheck = await client.query(
-      `SELECT id FROM users WHERE id = $1 AND role = 'teacher'`,
+    const teacherRow = await client.query(
+      "SELECT id FROM teachers WHERE user_id = $1",
       [teacher_id]
     );
-    if (teacherCheck.rows.length === 0) {
+    const teachersId = teacherRow.rows[0]?.id;
+    if (!teachersId) {
       return res.status(400).json({ error: 'Invalid teacher_id.' });
     }
 
     const existingTeacherBatch = await client.query(
-      `SELECT id FROM teacher_batches WHERE teacher_id = $1 LIMIT 1`,
-      [teacher_id]
+      "SELECT id FROM teacher_batches WHERE teacher_id = $1 LIMIT 1",
+      [teachersId]
     );
     if (existingTeacherBatch.rows.length > 0) {
       return res.status(409).json({ error: 'Teacher is already assigned to a batch.' });
     }
 
     const result = await client.query(
-      `INSERT INTO teacher_batches (coordinator_id, teacher_id, batch_label, max_students)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, coordinator_id, teacher_id, batch_label, max_students, created_at, updated_at`,
-      [coordinatorId, teacher_id, batch_label, max]
+      "INSERT INTO teacher_batches (coordinator_id, teacher_id, batch_label, max_students) VALUES ($1, $2, $3, $4) RETURNING id, coordinator_id, teacher_id, batch_label, max_students, created_at, updated_at",
+      [coordinatorId, teachersId, batch_label, max]
     );
 
     res.status(201).json({ batch: result.rows[0] });
@@ -53,7 +62,16 @@ const createTeacherBatch = async (req, res) => {
 const updateTeacherBatch = async (req, res) => {
   const client = await pool.connect();
   try {
-    const coordinatorId = req.user.id;
+    const coordinatorUserId = req.user.id;
+
+    const coordinatorRow = await client.query(
+      "SELECT id FROM coordinators WHERE user_id = $1",
+      [coordinatorUserId]
+    );
+    const coordinatorId = coordinatorRow.rows[0]?.id;
+    if (!coordinatorId) {
+      return res.status(400).json({ error: 'Coordinator profile not found.' });
+    }
     const { batchId } = req.params;
     const { max_students, batch_label } = req.body;
 
@@ -107,7 +125,16 @@ const updateTeacherBatch = async (req, res) => {
 const deleteTeacherBatch = async (req, res) => {
   const client = await pool.connect();
   try {
-    const coordinatorId = req.user.id;
+    const coordinatorUserId = req.user.id;
+
+    const coordinatorRow = await client.query(
+      "SELECT id FROM coordinators WHERE user_id = $1",
+      [coordinatorUserId]
+    );
+    const coordinatorId = coordinatorRow.rows[0]?.id;
+    if (!coordinatorId) {
+      return res.status(400).json({ error: 'Coordinator profile not found.' });
+    }
     const { batchId } = req.params;
 
     const batchCheck = await client.query(
@@ -137,7 +164,16 @@ const deleteTeacherBatch = async (req, res) => {
 const assignApprovedStudentsToBatch = async (req, res) => {
   const client = await pool.connect();
   try {
-    const coordinatorId = req.user.id;
+    const coordinatorUserId = req.user.id;
+
+    const coordinatorRow = await pool.query(
+      "SELECT id FROM coordinators WHERE user_id = $1",
+      [coordinatorUserId]
+    );
+    const coordinatorId = coordinatorRow.rows[0]?.id;
+    if (!coordinatorId) {
+      return res.status(400).json({ error: 'Coordinator profile not found.' });
+    }
     const { batchId } = req.params;
     const { student_ids } = req.body;
 
@@ -166,18 +202,16 @@ const assignApprovedStudentsToBatch = async (req, res) => {
       return res.status(400).json({ error: `Exceeds max capacity. Max: ${max}, Selected: ${uniqueStudentIds.length}` });
     }
 
-    // Only students with completed requirements can be assigned.
-    // This intentionally does not depend on the user's account approval status.
+    // Only students whose requirements have been explicitly approved by a coordinator can be assigned.
     const studentsCheck = await client.query(
       `SELECT u.id
        FROM users u
        JOIN student_requirement_submissions srs ON srs.user_id = u.id
        WHERE u.role = 'student'
-         AND srs.progress = 100
-         AND srs.status NOT IN ('Rejected', 'Needs Revision')
+         AND srs.status = 'Approved'
          AND u.id = ANY($1::int[])`,
-      [uniqueStudentIds]
-    );
+       [uniqueStudentIds]
+     );
 
     const completedFoundIds = studentsCheck.rows.map((r) => r.id);
     const missingCount = uniqueStudentIds.length - completedFoundIds.length;
@@ -252,13 +286,12 @@ const getRequirementCompletedStudentsForCoordinator = async (req, res) => {
          srs.status AS requirements_status,
          srs.progress,
          srs.submitted_at
-       FROM users u
-       JOIN students s ON s.user_id = u.id
-       JOIN student_requirement_submissions srs ON srs.user_id = u.id
-       WHERE u.role = 'student'
-         AND srs.progress = 100
-         AND srs.status NOT IN ('Rejected', 'Needs Revision')
-       ORDER BY srs.updated_at DESC, s.last_name ASC`
+        FROM users u
+        JOIN students s ON s.user_id = u.id
+        JOIN student_requirement_submissions srs ON srs.user_id = u.id
+        WHERE u.role = 'student'
+          AND srs.status = 'Approved'
+        ORDER BY srs.updated_at DESC, s.last_name ASC`
     );
 
     res.json({ students: result.rows });
@@ -270,7 +303,17 @@ const getRequirementCompletedStudentsForCoordinator = async (req, res) => {
 
 const getMyTeacherBatches = async (req, res) => {
   try {
-    const teacherId = req.user.id;
+    const teacherUserId = req.user.id;
+
+    const teacherRow = await pool.query(
+      "SELECT id FROM teachers WHERE user_id = $1",
+      [teacherUserId]
+    );
+    const teacherId = teacherRow.rows[0]?.id;
+    if (!teacherId) {
+      return res.status(400).json({ error: 'Teacher profile not found.' });
+    }
+
     const result = await pool.query(
       `SELECT id, teacher_id, batch_label, max_students, created_at, updated_at
        FROM teacher_batches
@@ -289,14 +332,19 @@ const getMyTeacherBatches = async (req, res) => {
 const getTeacherBatchStudents = async (req, res) => {
   try {
     const { batchId } = req.params;
-    const requesterId = req.user.id;
 
     if (req.user.role === 'teacher') {
+      const teacherRow = await pool.query(
+        "SELECT id FROM teachers WHERE user_id = $1",
+        [req.user.id]
+      );
+      const teacherId = teacherRow.rows[0]?.id;
+      if (!teacherId) {
+        return res.status(400).json({ error: 'Teacher profile not found.' });
+      }
       const ownership = await pool.query(
-        `SELECT id
-         FROM teacher_batches
-         WHERE id = $1 AND teacher_id = $2`,
-        [batchId, requesterId]
+        "SELECT id FROM teacher_batches WHERE id = $1 AND teacher_id = $2",
+        [batchId, teacherId]
       );
       if (ownership.rows.length === 0) {
         return res.status(403).json({ error: 'Access denied.' });
@@ -304,11 +352,17 @@ const getTeacherBatchStudents = async (req, res) => {
     }
 
     if (req.user.role === 'coordinator') {
+      const coordinatorRow = await pool.query(
+        "SELECT id FROM coordinators WHERE user_id = $1",
+        [req.user.id]
+      );
+      const coordinatorId = coordinatorRow.rows[0]?.id;
+      if (!coordinatorId) {
+        return res.status(400).json({ error: 'Coordinator profile not found.' });
+      }
       const ownership = await pool.query(
-        `SELECT id
-         FROM teacher_batches
-         WHERE id = $1 AND coordinator_id = $2`,
-        [batchId, requesterId]
+        "SELECT id FROM teacher_batches WHERE id = $1 AND coordinator_id = $2",
+        [batchId, coordinatorId]
       );
       if (ownership.rows.length === 0) {
         return res.status(403).json({ error: 'Access denied.' });
@@ -365,7 +419,16 @@ const getTeachersListForCoordinator = async (req, res) => {
 
 const getCoordinatorBatchesWithAssignedStudents = async (req, res) => {
   try {
-    const coordinatorId = req.user.id;
+    const coordinatorUserId = req.user.id;
+
+    const coordinatorRow = await pool.query(
+      "SELECT id FROM coordinators WHERE user_id = $1",
+      [coordinatorUserId]
+    );
+    const coordinatorId = coordinatorRow.rows[0]?.id;
+    if (!coordinatorId) {
+      return res.status(400).json({ error: 'Coordinator profile not found.' });
+    }
 
     const rows = await pool.query(
       `SELECT
@@ -386,15 +449,14 @@ const getCoordinatorBatchesWithAssignedStudents = async (req, res) => {
          st.email AS student_email,
          st.track_strand AS student_strand
        FROM teacher_batches tb
-       JOIN users u ON u.id = tb.teacher_id
-       JOIN teachers t ON t.user_id = u.id
+       JOIN teachers t ON t.id = tb.teacher_id
        LEFT JOIN teacher_batch_students tbs ON tbs.teacher_batch_id = tb.id
        LEFT JOIN users su ON su.id = tbs.student_id
        LEFT JOIN students st ON st.user_id = su.id
        WHERE tb.coordinator_id = $1
        ORDER BY tb.created_at DESC, tbs.assigned_at DESC`,
-      [coordinatorId]
-    );
+       [coordinatorId]
+     );
 
     const batchesMap = new Map();
 

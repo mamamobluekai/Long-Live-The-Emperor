@@ -34,6 +34,11 @@ function StudentSidebar() {
             Announcements
           </NavLink>
         </li>
+        <li>
+          <NavLink to="/dashboard/student/attendance" className={styles.navLink}>
+            Attendance
+          </NavLink>
+        </li>
       </ul>
     </nav>
   );

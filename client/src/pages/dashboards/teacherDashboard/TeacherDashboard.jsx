@@ -3,6 +3,7 @@ import DashboardShell from '../DashboardShell';
 import TeacherSidebar from './TeacherSidebar';
 import TeacherOverview from './TeacherOverview';
 import TeacherDocuments from './TeacherDocuments';
+import LiveMap from './LiveMap';
 import styles from './TeacherDashboard.module.css';
 
 function TeacherDashboard({ user, onLogout }) {
@@ -13,8 +14,10 @@ function TeacherDashboard({ user, onLogout }) {
         <div className={styles.content}>
           <Routes>
             <Route index element={<Navigate to="overview" replace />} />
-            <Route path="overview" element={<TeacherOverview user={user} />} />
-            <Route path="documents" element={<TeacherDocuments user={user} />} />
+             <Route path="overview" element={<TeacherOverview user={user} />} />
+             <Route path="documents" element={<TeacherDocuments user={user} />} />
+             <Route path="live-map" element={<LiveMap />} />
+             {/* fallback route omitted intentionally */}
           </Routes>
         </div>
       </div>

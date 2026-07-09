@@ -105,6 +105,36 @@ CREATE TABLE coordinators (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE student_attendance (
+  id SERIAL PRIMARY KEY,
+  student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  teacher_batch_id INTEGER NOT NULL REFERENCES teacher_batches(id) ON DELETE CASCADE,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  status VARCHAR(50) NOT NULL DEFAULT 'checked_out',
+  check_in_time TIMESTAMP,
+  check_out_time TIMESTAMP,
+  latitude NUMERIC(10, 7),
+  longitude NUMERIC(13, 7),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (student_id, date)
+);
+
+CREATE TABLE student_locations (
+  id SERIAL PRIMARY KEY,
+  student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  attendance_id INTEGER NOT NULL REFERENCES student_attendance(id) ON DELETE CASCADE,
+  latitude NUMERIC(10, 7) NOT NULL,
+  longitude NUMERIC(13, 7) NOT NULL,
+  accuracy INTEGER,
+  recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_student_attendance_student_date ON student_attendance(student_id, date);
+CREATE INDEX idx_student_attendance_batch_date ON student_attendance(teacher_batch_id, date);
+CREATE INDEX idx_student_locations_student_attendance ON student_locations(student_id, attendance_id);
+CREATE INDEX idx_student_locations_recorded_at ON student_locations(recorded_at);
+
 -- Document Types Reference Table
 CREATE TABLE document_types (
   id SERIAL PRIMARY KEY,

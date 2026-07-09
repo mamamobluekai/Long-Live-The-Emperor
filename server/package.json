@@ -24,6 +24,7 @@
     "nodemailer": "^9.0.3",
     "pg": "^8.22.0",
     "pg-promise": "^12.7.0",
+    "socket.io": "^4.8.3",
     "streamifier": "^0.1.1",
     "validator": "^13.15.35",
     "xlsx": "^0.18.5"

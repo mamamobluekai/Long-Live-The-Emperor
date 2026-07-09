@@ -240,8 +240,8 @@ const deleteUser = async (req, res) => {
       await client.query('BEGIN');
       
       // Delete from tables that reference students
-      await client.query('DELETE FROM teacher_batch_students WHERE student_id IN (SELECT id FROM students WHERE user_id = $1)', [id]);
-      await client.query('DELETE FROM deployment_request_students WHERE student_id IN (SELECT id FROM students WHERE user_id = $1)', [id]);
+      await client.query('DELETE FROM teacher_batch_students WHERE student_id = $1', [id]);
+      await client.query('DELETE FROM deployment_request_students WHERE student_id = $1', [id]);
       await client.query('DELETE FROM student_documents WHERE student_id IN (SELECT id FROM students WHERE user_id = $1)', [id]);
       
       // Delete from teacher batches and deployment requests

@@ -19,6 +19,11 @@ function TeacherSidebar() {
             Student Documents
           </NavLink>
         </li>
+        <li>
+          <NavLink to="/dashboard/teacher/live-map" className={styles.navLink}>
+            Live Map
+          </NavLink>
+        </li>
       </ul>
     </nav>
   );
