@@ -10,18 +10,38 @@ function TeacherSidebar() {
       </div>
       <ul className={styles.navList}>
         <li>
-          <NavLink to="/dashboard/teacher" end className={styles.navLink}>
-            Overview
+          <NavLink to="/dashboard/teacher" end className={({ isActive }) => (isActive ? `${styles.navLink} ${styles.active}` : styles.navLink)}>
+            Dashboard
           </NavLink>
         </li>
         <li>
-          <NavLink to="/dashboard/teacher/documents" className={styles.navLink}>
-            Student Documents
+          <NavLink to="/dashboard/teacher/students" className={({ isActive }) => (isActive ? `${styles.navLink} ${styles.active}` : styles.navLink)}>
+            Students
           </NavLink>
         </li>
         <li>
-          <NavLink to="/dashboard/teacher/live-map" className={styles.navLink}>
+          <NavLink to="/dashboard/teacher/attendance" className={({ isActive }) => (isActive ? `${styles.navLink} ${styles.active}` : styles.navLink)}>
+            Attendance
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/dashboard/teacher/live-map" className={({ isActive }) => (isActive ? `${styles.navLink} ${styles.active}` : styles.navLink)}>
             Live Map
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/dashboard/teacher/appeals" className={({ isActive }) => (isActive ? `${styles.navLink} ${styles.active}` : styles.navLink)}>
+            Appeals
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/dashboard/teacher/reports" className={({ isActive }) => (isActive ? `${styles.navLink} ${styles.active}` : styles.navLink)}>
+            Reports
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/dashboard/teacher/settings" className={({ isActive }) => (isActive ? `${styles.navLink} ${styles.active}` : styles.navLink)}>
+            Settings
           </NavLink>
         </li>
       </ul>

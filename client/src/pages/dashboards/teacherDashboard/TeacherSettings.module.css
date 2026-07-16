@@ -1,0 +1,41 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.section {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  color: #1e293b;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+  margin: 0;
+  color: #475569;
+}
+
+.hint {
+  color: #475569;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  margin: 0;
+}

@@ -1,0 +1,297 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 4px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.batchTag {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.batchSelect {
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.95rem;
+  min-width: 200px;
+}
+
+.info {
+  color: #475569;
+}
+
+.error {
+  color: #dc2626;
+  background: #fef2f2;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #fecaca;
+}
+
+.notice {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.notice_info {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.notice_success {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.notice_error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.controlBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.statusBlock {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.statePill {
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+.open {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.closed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.stateMeta {
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.openBtn {
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.openBtn:hover:not(:disabled) {
+  background: #15803d;
+}
+
+.closeBtn {
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.closeBtn:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.statCard {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.statValue {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.statLabel {
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.panel {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.panelTitle {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  color: #1e293b;
+}
+
+.configForm {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  align-items: end;
+}
+
+.cfgField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.cfgField input {
+  font-weight: 400;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.saveBtn {
+  background: #1d4ed8;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  height: fit-content;
+}
+
+.saveBtn:hover:not(:disabled) {
+  background: #1e40af;
+}
+
+.dateInput {
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.table th {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.empty {
+  text-align: center;
+  color: #94a3b8;
+  padding: 24px;
+}
+
+.missed {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.badge {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.badge_checked_in {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge_checked_out {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.appealTag {
+  margin-left: 6px;
+  font-size: 0.7rem;
+  background: #fef9c3;
+  color: #854d0e;
+  padding: 1px 7px;
+  border-radius: 999px;
+}

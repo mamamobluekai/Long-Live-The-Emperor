@@ -41,9 +41,25 @@ exports.updateLocation = async (req, res) => {
       [student.id, attendance.id, latitude, longitude, accuracy || null]
     );
 
+    const studentRow = await pool.query(
+      'SELECT first_name, last_name, student_number FROM students WHERE id = $1',
+      [student.id]
+    );
+    const s = studentRow.rows[0];
+    const name = `${s.first_name} ${s.last_name}`.trim();
+
+    // Persist a live GPS snapshot for history.
+    await pool.query(
+      `INSERT INTO gps_logs (student_id, teacher_batch_id, attendance_id, event_type, latitude, longitude, accuracy, student_name)
+       VALUES ($1, $2, $3, 'live', $4, $5, $6, $7)`,
+      [student.id, attendance.teacher_batch_id, attendance.id, latitude, longitude, accuracy || null, name]
+    );
+
     // Push straight to the teacher's map, live
     getIO().to(`batch:${attendance.teacher_batch_id}`).emit("student:location_update", {
       studentId: student.id,
+      studentName: name,
+      studentNumber: s.student_number,
       latitude,
       longitude,
       accuracy,

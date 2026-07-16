@@ -105,3 +105,278 @@
 .checkOutBtn:hover {
   background: #b91c1c;
 }
+
+.notice {
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  margin-bottom: 14px;
+  font-weight: 500;
+}
+
+.noticeSuccess {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.noticeError {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.noticeInfo {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 0 4px;
+}
+
+.phasePill {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.phaseOpen {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.phaseClosed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.phaseText {
+  color: #475569;
+  font-size: 0.92rem;
+}
+
+.countdown {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+
+.countdownLabel {
+  color: #475569;
+  font-size: 0.85rem;
+}
+
+.countdownValue {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.sectionTitle {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  color: #1e293b;
+}
+
+.primaryBtn {
+  background: #1d4ed8;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.primaryBtn:hover:not(:disabled) {
+  background: #1e40af;
+}
+
+.secondaryBtn {
+  background: #0f766e;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.secondaryBtn:hover:not(:disabled) {
+  background: #115e59;
+}
+
+.cancelBtn {
+  background: #e2e8f0;
+  color: #334155;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.primaryBtn:disabled,
+.secondaryBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.doneRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ecfdf5;
+  color: #065f46;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.check {
+  font-size: 1.1rem;
+}
+
+.lockedRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.appealLink {
+  background: none;
+  border: none;
+  color: #1d4ed8;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  align-self: flex-start;
+  font-size: 0.9rem;
+}
+
+.appealHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.appealForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 10px 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #334155;
+  font-weight: 600;
+}
+
+.field select,
+.field textarea,
+.field input[type='file'] {
+  font-weight: 400;
+  font-size: 0.9rem;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
+}
+
+.appealActions {
+  display: flex;
+  gap: 10px;
+}
+
+.appealList {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.appealEmpty {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.appealItem {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: white;
+}
+
+.appealTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.appealExcuse {
+  margin: 6px 0;
+  color: #334155;
+  font-size: 0.9rem;
+}
+
+.fileLink {
+  color: #1d4ed8;
+  font-size: 0.85rem;
+}
+
+.comment {
+  margin: 6px 0 0;
+  color: #475569;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.badge {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.badge_pending {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.badge_approved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge_rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
