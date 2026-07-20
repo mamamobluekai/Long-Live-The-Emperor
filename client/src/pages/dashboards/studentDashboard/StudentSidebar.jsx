@@ -15,6 +15,11 @@ function StudentSidebar() {
           </NavLink>
         </li>
         <li>
+          <NavLink to="/dashboard/student/progress" className={styles.navLink}>
+            Progress
+          </NavLink>
+        </li>
+        <li>
           <NavLink to="/dashboard/student/requirements" className={styles.navLink}>
             Requirements
           </NavLink>

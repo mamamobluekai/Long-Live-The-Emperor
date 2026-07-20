@@ -61,6 +61,10 @@ export async function getMySubmissionStatus() {
   return apiFetch('/requirements/me/status');
 }
 
+export async function getMyProgress() {
+  return apiFetch('/progress');
+}
+
 export async function uploadMyDocument(file, documentCode) {
   const token = getToken();
   const fd = new FormData();

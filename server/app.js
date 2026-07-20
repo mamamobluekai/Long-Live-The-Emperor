@@ -11,6 +11,7 @@ const studentRoutes = require('./routes/student.routes');
 const fileRoutes = require('./routes/fileRoutes');
 const trackingRoutes = require('./routes/tracking.routes');
 const attendanceRoutes = require('./routes/attendance.routes');
+const supervisorRoutes = require('./routes/supervisor.routes');
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use('/api/student', studentRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/tracking', trackingRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/supervisor', supervisorRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found.' });

@@ -1,0 +1,192 @@
+.pageHeader {
+  margin-bottom: 22px;
+}
+
+.pageHeader h2 {
+  margin: 0 0 4px;
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #0f172a;
+}
+
+.pageHeader p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9375rem;
+}
+
+.loading {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  padding: 24px 0;
+  text-align: center;
+}
+
+.overall {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 20px;
+  padding: 22px 26px;
+  box-shadow: 0 12px 32px -12px rgba(15, 23, 42, 0.16);
+  margin-bottom: 22px;
+}
+
+.bar {
+  width: 100%;
+  height: 12px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: #3b82f6;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.overallMeta h3 {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.overallMeta p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 16px;
+  padding: 16px 20px;
+  box-shadow: 0 8px 24px -12px rgba(15, 23, 42, 0.14);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stepDone {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.stepIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  background: #e2e8f0;
+  color: #475569;
+  flex: none;
+}
+
+.stepDone .stepIcon {
+  background: #22c55e;
+  color: #fff;
+}
+
+.stepBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.stepLabel {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 0.95rem;
+}
+
+.stepDetail {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.stepBadge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  flex: none;
+}
+
+.badgeDone {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badgePending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.certSection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  background: linear-gradient(135deg, #1e293b, #334155);
+  border-radius: 20px;
+  padding: 22px 26px;
+  color: #fff;
+  box-shadow: 0 16px 36px -14px rgba(15, 23, 42, 0.5);
+}
+
+.certInfo h3 {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.certInfo p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  max-width: 420px;
+}
+
+.downloadBtn {
+  padding: 11px 22px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #3b82f6, #2a5298);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(42, 82, 152, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  flex: none;
+}
+
+.downloadBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(42, 82, 152, 0.5);
+}
+
+.downloadBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}

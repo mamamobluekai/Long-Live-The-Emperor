@@ -3,6 +3,7 @@ import DashboardShell from '../DashboardShell';
 import SupervisorSidebar from './SupervisorSidebar';
 import CreateDeploymentRequest from './CreateDeploymentRequest';
 import SupervisorRequests from './SupervisorRequests';
+import SupervisorAttendance from './SupervisorAttendance';
 import styles from './SupervisorDashboard.module.css';
 
 function SupervisorDashboard({ user, onLogout }) {
@@ -15,6 +16,7 @@ function SupervisorDashboard({ user, onLogout }) {
             <Route index element={<SupervisorOverview user={user} />} />
             <Route path="create-deployment-request" element={<CreateDeploymentRequest />} />
             <Route path="my-requests" element={<SupervisorRequests />} />
+            <Route path="attendance" element={<SupervisorAttendance />} />
           </Routes>
         </div>
       </div>

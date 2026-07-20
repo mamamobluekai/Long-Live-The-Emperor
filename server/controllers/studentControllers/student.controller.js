@@ -196,6 +196,66 @@ function uploadToCloudinary(buffer, resourceType) {
   });
 }
 
+// GET /api/student/progress
+// Aggregates immersion completion across requirements, documentation, and
+// attendance so the student dashboard can render a single progress view.
+const REQUIRED_ATTENDANCE_DAYS = 10;
+
+const getProgress = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const student = await getOrCreateStudent(client, req.user.id, {});
+    const studentId = student.id;
+
+    // Requirements approval
+    const submission = await getOrCreateSubmission(client, student, req.user.id);
+    const requirementsApproved = submission.status === 'Approved';
+
+    // Documentation graded: every requirement document that has been uploaded
+    // must have been verified (graded) by the coordinator.
+    const docs = await client.query(
+      `SELECT status FROM student_documents WHERE student_id = $1`,
+      [studentId]
+    );
+    const totalDocs = docs.rows.length;
+    const verifiedDocs = docs.rows.filter((d) => d.status === 'Verified').length;
+    const documentationGraded = totalDocs > 0 && verifiedDocs === totalDocs;
+
+    // Attendance: count distinct days with both time-in and time-out recorded.
+    const att = await client.query(
+      `SELECT COUNT(DISTINCT date)::int AS days
+       FROM student_attendance
+       WHERE student_id = $1 AND check_in_time IS NOT NULL AND check_out_time IS NOT NULL`,
+      [studentId]
+    );
+    const attendanceDays = att.rows[0]?.days || 0;
+    const attendanceComplete = attendanceDays >= REQUIRED_ATTENDANCE_DAYS;
+
+    const completed =
+      requirementsApproved && documentationGraded && attendanceComplete;
+
+    res.json({
+      requirements: { approved: requirementsApproved, status: submission.status },
+      documentation: {
+        graded: documentationGraded,
+        total: totalDocs,
+        verified: verifiedDocs,
+      },
+      attendance: {
+        complete: attendanceComplete,
+        days: attendanceDays,
+        required: REQUIRED_ATTENDANCE_DAYS,
+      },
+      completed,
+    });
+  } catch (err) {
+    console.error('getProgress error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   updateMyRequirements,
   submitMyRequirements,
@@ -203,4 +263,5 @@ module.exports = {
   uploadMyDocument,
   deleteMyDocument,
   getMySubmissionStatus,
+  getProgress,
 };

@@ -10,6 +10,7 @@ const {
   uploadMyDocument,
   deleteMyDocument,
   getMySubmissionStatus,
+  getProgress,
 } = require('../controllers/studentControllers/student.controller');
 const authenticate = require('../middleware/verifyToken');
 const authorize = require('../middleware/authorizeRole');
@@ -33,6 +34,7 @@ router.use(authenticate);
 
 router.get('/requirements/me', authorize('student'), getMyRequirements);
 router.get('/requirements/me/status', authorize('student'), getMySubmissionStatus);
+router.get('/progress', authorize('student'), getProgress);
 router.put('/requirements/me', authorize('student'), updateMyRequirements);
 router.post('/requirements/me/submit', authorize('student'), submitMyRequirements);
 router.post('/documents/me/upload', authorize('student'), uploadMemory.single('file'), uploadMyDocument);

@@ -24,6 +24,11 @@ function SupervisorSidebar() {
             My Requests
           </NavLink>
         </li>
+        <li>
+          <NavLink to="/dashboard/supervisor/attendance" className={styles.navLink}>
+            Student Attendance
+          </NavLink>
+        </li>
       </ul>
     </nav>
   );

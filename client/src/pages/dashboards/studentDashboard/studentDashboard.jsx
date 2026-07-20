@@ -6,6 +6,7 @@ import Documentation from './Documentation';
 import PlacementStatus from './PlacementStatus';
 import Announcements from './Announcements';
 import Attendance from './Attendance';
+import Progress from './Progress';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import styles from './StudentDashboard.module.css';
 
@@ -18,6 +19,7 @@ function StudentDashboard({ user, onLogout }) {
           <Routes>
             <Route index element={<Navigate to="overview" replace />} />
             <Route path="overview" element={<Overview user={user} />} />
+            <Route path="progress" element={<Progress />} />
             <Route path="requirements" element={<Requirements user={user} />} />
             <Route path="documentation" element={<Documentation user={user} />} />
             <Route path="placement-status" element={<PlacementStatus />} />
