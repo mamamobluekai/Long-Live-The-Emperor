@@ -20,8 +20,8 @@ function SupervisorSidebar() {
           </NavLink>
         </li>
         <li>
-          <NavLink to="/dashboard/supervisor/my-requests" className={styles.navLink}>
-            My Requests
+          <NavLink to="/dashboard/supervisor/students" className={styles.navLink}>
+            Students
           </NavLink>
         </li>
         <li>

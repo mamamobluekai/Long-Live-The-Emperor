@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { getSupervisors } from '../../../api/coordinatorApi';
 import styles from './CoordinatorDashboard.module.css';
 
@@ -18,7 +17,6 @@ function Supervisors() {
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
 
   useEffect(() => {
     let mounted = true;
@@ -44,7 +42,7 @@ function Supervisors() {
     <div>
       <div className={styles.pageHeader}>
         <h2>Supervisors</h2>
-        <p>Approved industry supervisors available for deployment requests.</p>
+        <p>Approved industry supervisors and their assigned teacher batches.</p>
       </div>
 
       {error && <div className={styles.error}>{error}</div>}
@@ -57,12 +55,6 @@ function Supervisors() {
             <option value="pending">Pending</option>
             <option value="disapproved">Disapproved</option>
           </select>
-          <button
-            className={styles.btn}
-            onClick={() => navigate('/dashboard/coordinator/deployment-requests')}
-          >
-            New Deployment Request
-          </button>
         </div>
 
         {loading ? (

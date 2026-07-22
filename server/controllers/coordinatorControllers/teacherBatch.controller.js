@@ -14,7 +14,7 @@ const createTeacherBatch = async (req, res) => {
       return res.status(400).json({ error: 'Coordinator profile not found.' });
     }
 
-    const { teacher_id, batch_label, max_students } = req.body;
+    const { teacher_id, batch_label, max_students, supervisor_id } = req.body;
 
     if (!teacher_id || !batch_label || !max_students) {
       return res.status(400).json({ error: 'teacher_id, batch_label, and max_students are required.' });
@@ -43,8 +43,8 @@ const createTeacherBatch = async (req, res) => {
     }
 
     const result = await client.query(
-      "INSERT INTO teacher_batches (coordinator_id, teacher_id, batch_label, max_students) VALUES ($1, $2, $3, $4) RETURNING id, coordinator_id, teacher_id, batch_label, max_students, created_at, updated_at",
-      [coordinatorId, teachersId, batch_label, max]
+      "INSERT INTO teacher_batches (coordinator_id, teacher_id, batch_label, max_students, supervisor_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, coordinator_id, teacher_id, batch_label, max_students, supervisor_id, created_at, updated_at",
+      [coordinatorId, teachersId, batch_label, max, supervisor_id ? Number(supervisor_id) : null]
     );
 
     res.status(201).json({ batch: result.rows[0] });
@@ -73,10 +73,10 @@ const updateTeacherBatch = async (req, res) => {
       return res.status(400).json({ error: 'Coordinator profile not found.' });
     }
     const { batchId } = req.params;
-    const { max_students, batch_label } = req.body;
+    const { max_students, batch_label, supervisor_id } = req.body;
 
-    if (!max_students && !batch_label) {
-      return res.status(400).json({ error: 'max_students or batch_label is required.' });
+    if (!max_students && !batch_label && supervisor_id === undefined) {
+      return res.status(400).json({ error: 'max_students, batch_label, or supervisor_id is required.' });
     }
 
     const fields = [];
@@ -97,12 +97,18 @@ const updateTeacherBatch = async (req, res) => {
       values.push(batch_label);
     }
 
+    if (supervisor_id !== undefined) {
+      const sup = supervisor_id ? Number(supervisor_id) : null;
+      fields.push(`supervisor_id = $${idx++}`);
+      values.push(sup);
+    }
+
     const sql = `
       UPDATE teacher_batches
       SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP
       WHERE id = $${idx++}
         AND coordinator_id = $${idx}
-      RETURNING id, coordinator_id, teacher_id, batch_label, max_students, created_at, updated_at
+      RETURNING id, coordinator_id, teacher_id, batch_label, max_students, supervisor_id, created_at, updated_at
     `;
 
     values.push(batchId);
@@ -315,14 +321,23 @@ const getMyTeacherBatches = async (req, res) => {
     }
 
     const result = await pool.query(
-      `SELECT id, teacher_id, batch_label, max_students, created_at, updated_at
-       FROM teacher_batches
-       WHERE teacher_id = $1
-       ORDER BY created_at DESC`,
+      `SELECT tb.id, tb.teacher_id, tb.batch_label, tb.max_students, tb.supervisor_id, tb.created_at, tb.updated_at,
+              sv.first_name AS supervisor_first_name, sv.last_name AS supervisor_last_name
+       FROM teacher_batches tb
+       LEFT JOIN supervisors sv ON sv.user_id = tb.supervisor_id
+       WHERE tb.teacher_id = $1
+       ORDER BY tb.created_at DESC`,
       [teacherId]
     );
 
-    res.json({ batches: result.rows });
+    const rows = result.rows.map((r) => ({
+      ...r,
+      supervisor: r.supervisor_id
+        ? { first_name: r.supervisor_first_name, last_name: r.supervisor_last_name }
+        : null,
+    }));
+
+    res.json({ batches: rows });
   } catch (err) {
     console.error('getMyTeacherBatches error:', err);
     res.status(500).json({ error: 'Server error.' });
@@ -435,11 +450,14 @@ const getCoordinatorBatchesWithAssignedStudents = async (req, res) => {
          tb.id AS batch_id,
          tb.batch_label,
          tb.max_students,
+         tb.supervisor_id,
          tb.teacher_id,
-         t.first_name,
-         t.last_name,
-         t.employee_id,
-         tb.created_at,
+          t.first_name,
+          t.last_name,
+          t.employee_id,
+          sv.first_name AS supervisor_first_name,
+          sv.last_name AS supervisor_last_name,
+          tb.created_at,
          tb.updated_at,
          tbs.student_id,
          tbs.assigned_at,
@@ -448,15 +466,16 @@ const getCoordinatorBatchesWithAssignedStudents = async (req, res) => {
          st.last_name AS student_last_name,
          st.email AS student_email,
          st.track_strand AS student_strand
-       FROM teacher_batches tb
-       JOIN teachers t ON t.id = tb.teacher_id
-       LEFT JOIN teacher_batch_students tbs ON tbs.teacher_batch_id = tb.id
-       LEFT JOIN users su ON su.id = tbs.student_id
-       LEFT JOIN students st ON st.user_id = su.id
-       WHERE tb.coordinator_id = $1
+        FROM teacher_batches tb
+        JOIN teachers t ON t.id = tb.teacher_id
+        LEFT JOIN supervisors sv ON sv.user_id = tb.supervisor_id
+        LEFT JOIN teacher_batch_students tbs ON tbs.teacher_batch_id = tb.id
+        LEFT JOIN users su ON su.id = tbs.student_id
+        LEFT JOIN students st ON st.user_id = su.id
+        WHERE tb.coordinator_id = $1
        ORDER BY tb.created_at DESC, tbs.assigned_at DESC`,
-       [coordinatorId]
-     );
+        [coordinatorId]
+      );
 
     const batchesMap = new Map();
 
@@ -466,6 +485,10 @@ const getCoordinatorBatchesWithAssignedStudents = async (req, res) => {
           id: r.batch_id,
           batch_label: r.batch_label,
           max_students: r.max_students,
+          supervisor_id: r.supervisor_id,
+          supervisor: r.supervisor_id
+            ? { first_name: r.supervisor_first_name, last_name: r.supervisor_last_name }
+            : null,
           teacher: {
             id: r.teacher_id,
             first_name: r.first_name,

@@ -1,13 +1,14 @@
 // Supervisor-facing views: students assigned to the supervisor through approved
-// coordinator -> supervisor deployment requests (each request is the supervisor's
-// "batch"), and those students' attendance grouped by work-immersion day.
+// coordinator -> supervisor deployment requests, and students in teacher batches
+// that are linked to the supervisor.
 const pool = require('../../db');
 
-// Deployment requests assigned to this supervisor (their batches of students).
+// Approved deployment requests + teacher batches linked to this supervisor.
 async function getSupervisorBatches(supervisorUserId) {
-  const result = await pool.query(
+  const deployment = await pool.query(
     `SELECT dr.id AS request_id, dr.batch_label, dr.strand,
-            c.first_name AS coordinator_first_name, c.last_name AS coordinator_last_name
+            c.first_name AS coordinator_first_name, c.last_name AS coordinator_last_name,
+            'deployment' AS source
      FROM deployment_requests dr
      JOIN users u ON u.id = dr.coordinator_id
      JOIN coordinators c ON c.user_id = u.id
@@ -17,19 +18,51 @@ async function getSupervisorBatches(supervisorUserId) {
      ORDER BY dr.created_at DESC`,
     [supervisorUserId]
   );
+
+  const teacher = await pool.query(
+    `SELECT tb.id AS request_id, tb.batch_label, NULL AS strand,
+            c.first_name AS coordinator_first_name, c.last_name AS coordinator_last_name,
+            'teacher' AS source
+     FROM teacher_batches tb
+     JOIN coordinators c ON c.id = tb.coordinator_id
+     WHERE tb.supervisor_id = $1
+     ORDER BY tb.created_at DESC`,
+    [supervisorUserId]
+  );
+
+  return [...deployment.rows, ...teacher.rows];
+}
+
+// Students for a deployment request batch.
+async function getDeploymentStudents(requestId, supervisorUserId) {
+  const result = await pool.query(
+    `SELECT s.id AS student_id, s.user_id, s.first_name, s.last_name,
+            s.student_number, s.grade_level, s.track_strand, s.photo_url, u.email
+     FROM deployment_request_students drs
+     JOIN deployment_requests dr ON dr.id = drs.deployment_request_id
+     JOIN users u ON u.id = drs.student_id
+     JOIN students s ON s.user_id = u.id
+     WHERE drs.deployment_request_id = $1 AND dr.supervisor_id = $2
+     ORDER BY s.last_name, s.first_name`,
+    [requestId, supervisorUserId]
+  );
   return result.rows;
 }
 
-// Students (user ids) for one of the supervisor's approved deployment requests.
-async function getBatchUserIds(requestId, supervisorUserId) {
+// Students for a teacher batch.
+async function getTeacherBatchStudents(requestId, supervisorUserId) {
   const result = await pool.query(
-    `SELECT drs.student_id AS user_id
-     FROM deployment_request_students drs
-     JOIN deployment_requests dr ON dr.id = drs.deployment_request_id
-     WHERE dr.id = $1 AND dr.supervisor_id = $2`,
+    `SELECT s.id AS student_id, s.user_id, s.first_name, s.last_name,
+            s.student_number, s.grade_level, s.track_strand, s.photo_url, u.email
+     FROM teacher_batch_students tbs
+     JOIN teacher_batches tb ON tb.id = tbs.teacher_batch_id
+     JOIN users u ON u.id = tbs.student_id
+     JOIN students s ON s.user_id = u.id
+     WHERE tbs.teacher_batch_id = $1 AND tb.supervisor_id = $2
+     ORDER BY s.last_name, s.first_name`,
     [requestId, supervisorUserId]
   );
-  return result.rows.map((r) => r.user_id);
+  return result.rows;
 }
 
 // GET /api/supervisor/batches
@@ -40,17 +73,11 @@ const getSupervisorBatchStudents = async (req, res) => {
 
     const enriched = [];
     for (const b of batches) {
-      const students = await pool.query(
-        `SELECT s.id AS student_id, s.user_id, s.first_name, s.last_name,
-                s.student_number, s.grade_level, s.track_strand, s.photo_url, u.email
-         FROM deployment_request_students drs
-         JOIN users u ON u.id = drs.student_id
-         JOIN students s ON s.user_id = u.id
-         WHERE drs.deployment_request_id = $1
-         ORDER BY s.last_name, s.first_name`,
-        [b.request_id]
-      );
-      enriched.push({ ...b, students: students.rows });
+      const students =
+        b.source === 'teacher'
+          ? await getTeacherBatchStudents(b.request_id, supervisorUserId)
+          : await getDeploymentStudents(b.request_id, supervisorUserId);
+      enriched.push({ ...b, students });
     }
 
     res.json({ batches: enriched });
@@ -61,15 +88,50 @@ const getSupervisorBatchStudents = async (req, res) => {
 };
 
 // GET /api/supervisor/batches/:requestId/attendance?from=&to=
-// Attendance of the batch's students, grouped by day (Day N from each student's
-// first recorded attendance date).
 const getBatchAttendance = async (req, res) => {
   try {
     const supervisorUserId = req.user.id;
     const { requestId } = req.params;
-    const userIds = await getBatchUserIds(requestId, supervisorUserId);
+
+    const batchInfo = await pool.query(
+      `SELECT dr.id, dr.batch_label, 'deployment' AS source
+         FROM deployment_requests dr
+        WHERE dr.id = $1 AND dr.supervisor_id = $2
+        UNION ALL
+       SELECT tb.id, tb.batch_label, 'teacher' AS source
+         FROM teacher_batches tb
+        WHERE tb.id = $1 AND tb.supervisor_id = $2
+        LIMIT 1`,
+      [requestId, supervisorUserId]
+    );
+    if (!batchInfo.rows.length) {
+      return res.status(404).json({ error: 'Batch not found.' });
+    }
+    const batch = batchInfo.rows[0];
+
+    let userIds;
+    if (batch.source === 'teacher') {
+      const result = await pool.query(
+        `SELECT u.id AS user_id
+         FROM teacher_batch_students tbs
+         JOIN users u ON u.id = tbs.student_id
+         WHERE tbs.teacher_batch_id = $1`,
+        [requestId]
+      );
+      userIds = result.rows.map((r) => r.user_id);
+    } else {
+      const result = await pool.query(
+        `SELECT drs.student_id AS user_id
+         FROM deployment_request_students drs
+         JOIN deployment_requests dr ON dr.id = drs.deployment_request_id
+         WHERE drs.deployment_request_id = $1 AND dr.supervisor_id = $2`,
+        [requestId, supervisorUserId]
+      );
+      userIds = result.rows.map((r) => r.user_id);
+    }
+
     if (userIds.length === 0) {
-      return res.json({ batch_label: null, students: [], days: [], summary: { total_students: 0, days: 0 } });
+      return res.json({ batch_label: batch.batch_label, students: [], days: [], summary: { total_students: 0, days: 0 } });
     }
 
     const { from, to } = req.query;
@@ -93,11 +155,6 @@ const getBatchAttendance = async (req, res) => {
       [userIds]
     );
     const firstDateMap = new Map(firstDates.rows.map((r) => [r.student_id, r.first_date]));
-
-    const batch = await pool.query(
-      `SELECT batch_label FROM deployment_requests WHERE id = $1`,
-      [requestId]
-    );
 
     const records = await pool.query(
       `SELECT sa.id, sa.student_id, sa.date, sa.status,
@@ -155,7 +212,7 @@ const getBatchAttendance = async (req, res) => {
     const days = Array.from(daysSet).sort((a, b) => a - b);
 
     res.json({
-      batch_label: batch.rows[0]?.batch_label || null,
+      batch_label: batch.batch_label,
       students,
       days,
       summary: { total_students: students.length, days: days.length },

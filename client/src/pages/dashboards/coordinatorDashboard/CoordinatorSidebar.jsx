@@ -34,11 +34,6 @@ function CoordinatorSidebar() {
             Supervisors
           </NavLink>
         </li>
-        <li>
-          <NavLink to="/dashboard/coordinator/deployment-requests" className={styles.navLink}>
-            Deployment Requests
-          </NavLink>
-        </li>
       </ul>
     </nav>
   );

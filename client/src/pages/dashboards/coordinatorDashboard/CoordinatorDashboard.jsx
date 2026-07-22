@@ -6,7 +6,6 @@ import UploadStudents from './UploadStudents';
 import RequirementsReview from './RequirementsReview';
 import TeacherBatches from './TeacherBatches';
 import Supervisors from './Supervisors';
-import DeploymentRequests from './DeploymentRequests';
 import styles from './CoordinatorDashboard.module.css';
 
 function CoordinatorDashboard({ user, onLogout }) {
@@ -22,7 +21,7 @@ function CoordinatorDashboard({ user, onLogout }) {
             <Route path="requirements" element={<RequirementsReview />} />
             <Route path="batches" element={<TeacherBatches />} />
             <Route path="supervisors" element={<Supervisors />} />
-            <Route path="deployment-requests" element={<DeploymentRequests />} />
+            <Route path="*" element={<Navigate to="students" replace />} />
           </Routes>
         </div>
       </div>

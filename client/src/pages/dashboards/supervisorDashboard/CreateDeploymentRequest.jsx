@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getCoordinators, createSupervisorRequest } from '../../../api/coordinatorApi';
+import {
+  getCoordinators,
+  createSupervisorRequest,
+  getSupervisorDeploymentRequests,
+  getDeploymentRequestStudents,
+} from '../../../api/coordinatorApi';
 import styles from './SupervisorDashboard.module.css';
 import '../../../styles/feedback.css';
 
 function CreateDeploymentRequest() {
-  const navigate = useNavigate();
   const [coordinators, setCoordinators] = useState([]);
-  // const [loading, setLoading] = useState(true); // (unused)
   const [error, setError] = useState('');
 
   const [form, setForm] = useState({
@@ -17,27 +19,39 @@ function CreateDeploymentRequest() {
     num_students: '',
     notes: '',
   });
-
   const [creating, setCreating] = useState(false);
 
+  const [requests, setRequests] = useState([]);
+  const [loadingRequests, setLoadingRequests] = useState(true);
+  const [viewing, setViewing] = useState(null);
+  const [viewStudents, setViewStudents] = useState([]);
+
+  const loadCoordinators = async () => {
+    try {
+      setError('');
+      const data = await getCoordinators();
+      setCoordinators(data.coordinators || []);
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
+  const loadRequests = async () => {
+    setLoadingRequests(true);
+    setError('');
+    try {
+      const data = await getSupervisorDeploymentRequests();
+      setRequests(data.deployment_requests || []);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
   useEffect(() => {
-    let mounted = true;
-    const run = async () => {
-      try {
-        // setLoading(true);
-        setError('');
-        const data = await getCoordinators();
-        if (mounted) setCoordinators(data.coordinators || []);
-      } catch (e) {
-        if (mounted) setError(e.message);
-      } finally {
-        // if (mounted) setLoading(false);
-      }
-    };
-    run();
-    return () => {
-      mounted = false;
-    };
+    loadCoordinators();
+    loadRequests();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -58,7 +72,8 @@ function CreateDeploymentRequest() {
         num_students: num,
         notes: form.notes || null,
       });
-      navigate('/dashboard/supervisor/my-requests');
+      setForm({ coordinator_id: '', batch_label: '', strand: '', num_students: '', notes: '' });
+      loadRequests();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -66,13 +81,31 @@ function CreateDeploymentRequest() {
     }
   };
 
+  const handleView = async (id) => {
+    try {
+      const data = await getDeploymentRequestStudents(id);
+      setViewStudents(data.students || []);
+      setViewing(id);
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
+  const statusBadge = (status) => {
+    const map = {
+      pending: styles.badgePending,
+      approved: styles.badgeApproved,
+      rejected: styles.badgeRejected,
+      fulfilled: styles.badgeFulfilled,
+    };
+    return map[String(status || '').toLowerCase()] || styles.badgePending;
+  };
+
   return (
     <div>
       <div className={styles.pageHeader}>
-        <h2>Create Deployment Request</h2>
-        <p>
-          Tell the coordinator how many students you need. The coordinator will assign the students for you.
-        </p>
+        <h2>Deployment Requests</h2>
+        <p>Request students from a coordinator and track the status of your requests.</p>
       </div>
 
       {error && (
@@ -85,7 +118,7 @@ function CreateDeploymentRequest() {
       )}
 
       <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Request Details</h3>
+        <h3 className={styles.sectionTitle}>New Request</h3>
         <form onSubmit={handleSubmit}>
           <div className={styles.row}>
             <select
@@ -141,16 +174,84 @@ function CreateDeploymentRequest() {
             <button className={styles.btn} disabled={creating} type="submit">
               {creating ? 'Submitting...' : 'Submit Request'}
             </button>
-            <button
-              className={styles.btnSecondary}
-              type="button"
-              onClick={() => navigate('/dashboard/supervisor')}
-            >
-              Cancel
-            </button>
           </div>
         </form>
       </div>
+
+      <div className={styles.section}>
+        <h3 className={styles.sectionTitle}>My Requests ({requests.length})</h3>
+        {loadingRequests ? (
+          <p className={styles.loading}>Loading...</p>
+        ) : requests.length === 0 ? (
+          <p className={styles.empty}>No deployment requests yet.</p>
+        ) : (
+          <div className={styles.list}>
+            {requests.map((r) => (
+              <div key={r.id} className={styles.listItem}>
+                <div className={styles.row}>
+                  <div>
+                    <h4>
+                      {r.batch_label} — {r.coordinator_first_name} {r.coordinator_last_name}
+                    </h4>
+                    <p className={styles.muted}>
+                      {r.direction === 'supervisor_to_coordinator' ? 'To Coordinator' : 'From Coordinator'} ·{' '}
+                      {r.num_students} students needed
+                      {r.strand ? ` · ${r.strand}` : ''}
+                    </p>
+                  </div>
+                  <div className={styles.row} style={{ flex: 'none' }}>
+                    <span className={`${styles.badge} ${statusBadge(r.status)}`}>{r.status}</span>
+                    {r.students && r.students.length > 0 && (
+                      <button className={styles.btnSecondary} type="button" onClick={() => handleView(r.id)}>
+                        View Students
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {viewing && (
+        <div className={styles.section}>
+          <h3 className={styles.sectionTitle}>Assigned Students</h3>
+          {viewStudents.length === 0 ? (
+            <p className={styles.empty}>No students assigned yet.</p>
+          ) : (
+            <div className={styles.tableWrap}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Strand</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {viewStudents.map((s) => (
+                    <tr key={s.id}>
+                      <td>{s.student_id}</td>
+                      <td>
+                        {s.first_name} {s.last_name}
+                      </td>
+                      <td>{s.email}</td>
+                      <td>{s.strand || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <div className={styles.actions}>
+            <button className={styles.btnSecondary} type="button" onClick={() => setViewing(null)}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -3,6 +3,7 @@ import {
   getTeachers,
   getBatches,
   getCompletedStudents,
+  getSupervisors,
   createTeacherBatch,
   updateTeacherBatch,
   deleteTeacherBatch,
@@ -14,11 +15,12 @@ function TeacherBatches() {
   const [teachers, setTeachers] = useState([]);
   const [batches, setBatches] = useState([]);
   const [completed, setCompleted] = useState([]);
+  const [supervisors, setSupervisors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  const [form, setForm] = useState({ teacher_id: '', batch_label: '', max_students: '' });
+  const [form, setForm] = useState({ teacher_id: '', batch_label: '', max_students: '', supervisor_id: '' });
   const [creating, setCreating] = useState(false);
 
   const [assigning, setAssigning] = useState(null); // batch being assigned to
@@ -26,16 +28,17 @@ function TeacherBatches() {
   const [savingAssign, setSavingAssign] = useState(false);
 
   const [editing, setEditing] = useState(null);
-  const [editForm, setEditForm] = useState({ batch_label: '', max_students: '' });
+  const [editForm, setEditForm] = useState({ batch_label: '', max_students: '', supervisor_id: '' });
 
   const loadAll = async () => {
     setLoading(true);
     setError('');
     try {
-      const [t, b, c] = await Promise.all([getTeachers(), getBatches(), getCompletedStudents()]);
+      const [t, b, c, s] = await Promise.all([getTeachers(), getBatches(), getCompletedStudents(), getSupervisors()]);
       setTeachers(t.teachers || []);
       setBatches(b.batches || []);
       setCompleted(c.students || []);
+      setSupervisors(s.supervisors || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -49,11 +52,12 @@ function TeacherBatches() {
       setLoading(true);
       setError('');
       try {
-        const [t, b, c] = await Promise.all([getTeachers(), getBatches(), getCompletedStudents()]);
+        const [t, b, c, s] = await Promise.all([getTeachers(), getBatches(), getCompletedStudents(), getSupervisors()]);
         if (!mounted) return;
         setTeachers(t.teachers || []);
         setBatches(b.batches || []);
         setCompleted(c.students || []);
+        setSupervisors(s.supervisors || []);
       } catch (err) {
         if (mounted) setError(err.message);
       } finally {
@@ -75,9 +79,10 @@ function TeacherBatches() {
         teacher_id: Number(form.teacher_id),
         batch_label: form.batch_label,
         max_students: Number(form.max_students),
+        supervisor_id: form.supervisor_id ? Number(form.supervisor_id) : null,
       });
       setMessage('Batch created.');
-      setForm({ teacher_id: '', batch_label: '', max_students: '' });
+      setForm({ teacher_id: '', batch_label: '', max_students: '', supervisor_id: '' });
       loadAll();
     } catch (err) {
       setError(err.message);
@@ -133,7 +138,7 @@ function TeacherBatches() {
 
   const openEdit = (batch) => {
     setEditing(batch);
-    setEditForm({ batch_label: batch.batch_label, max_students: batch.max_students });
+    setEditForm({ batch_label: batch.batch_label, max_students: batch.max_students, supervisor_id: batch.supervisor_id || '' });
   };
 
   const handleEdit = async (e) => {
@@ -142,6 +147,7 @@ function TeacherBatches() {
       await updateTeacherBatch(editing.id, {
         batch_label: editForm.batch_label,
         max_students: Number(editForm.max_students),
+        supervisor_id: editForm.supervisor_id ? Number(editForm.supervisor_id) : null,
       });
       setMessage('Batch updated.');
       setEditing(null);
@@ -177,6 +183,18 @@ function TeacherBatches() {
               </option>
             ))}
           </select>
+          <select
+            className={styles.select}
+            value={form.supervisor_id}
+            onChange={(e) => setForm({ ...form, supervisor_id: e.target.value })}
+          >
+            <option value="">No Supervisor</option>
+            {supervisors.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.first_name} {s.last_name} ({s.company_name})
+              </option>
+            ))}
+          </select>
           <input
             className={styles.input}
             placeholder="Batch label"
@@ -209,14 +227,15 @@ function TeacherBatches() {
           batches.map((b) => (
             <div key={b.id} className={styles.listItem}>
               <div className={styles.row}>
-                <div>
-                  <h4>
-                    {b.batch_label} — {b.teacher?.first_name} {b.teacher?.last_name}
-                  </h4>
-                  <p className={styles.muted}>
-                    {b.students.length}/{b.max_students} students assigned
-                  </p>
-                </div>
+              <div>
+                <h4>
+                  {b.batch_label} — {b.teacher?.first_name} {b.teacher?.last_name}
+                </h4>
+                <p className={styles.muted}>
+                  {b.students.length}/{b.max_students} students assigned
+                  {b.supervisor ? ` · Supervisor: ${b.supervisor.first_name} ${b.supervisor.last_name}` : ''}
+                </p>
+              </div>
                 <div className={styles.actions}>
                   <button className={styles.btnGhost} onClick={() => openAssign(b)}>
                     Assign Students
@@ -312,6 +331,18 @@ function TeacherBatches() {
               onChange={(e) => setEditForm({ ...editForm, max_students: e.target.value })}
               required
             />
+            <select
+              className={styles.select}
+              value={editForm.supervisor_id}
+              onChange={(e) => setEditForm({ ...editForm, supervisor_id: e.target.value })}
+            >
+              <option value="">No Supervisor</option>
+              {supervisors.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.first_name} {s.last_name} ({s.company_name})
+                </option>
+              ))}
+            </select>
             <button className={styles.btn} type="submit">
               Save
             </button>

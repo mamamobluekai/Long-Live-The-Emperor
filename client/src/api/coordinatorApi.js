@@ -99,12 +99,12 @@ export async function getCompletedStudents() {
   return apiFetch('/students/completed');
 }
 
-export async function createTeacherBatch({ teacher_id, batch_label, max_students }) {
-  return apiFetch('/teacher-batches', jsonBody({ teacher_id, batch_label, max_students }));
+export async function createTeacherBatch({ teacher_id, batch_label, max_students, supervisor_id }) {
+  return apiFetch('/teacher-batches', jsonBody({ teacher_id, batch_label, max_students, supervisor_id }));
 }
 
-export async function updateTeacherBatch(batchId, { batch_label, max_students }) {
-  return apiFetch(`/teacher-batches/${batchId}`, { method: 'PUT', ...jsonBody({ batch_label, max_students }) });
+export async function updateTeacherBatch(batchId, { batch_label, max_students, supervisor_id }) {
+  return apiFetch(`/teacher-batches/${batchId}`, { method: 'PUT', ...jsonBody({ batch_label, max_students, supervisor_id }) });
 }
 
 export async function deleteTeacherBatch(batchId) {

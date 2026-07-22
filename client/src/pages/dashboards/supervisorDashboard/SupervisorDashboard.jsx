@@ -1,8 +1,8 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import DashboardShell from '../DashboardShell';
 import SupervisorSidebar from './SupervisorSidebar';
 import CreateDeploymentRequest from './CreateDeploymentRequest';
-import SupervisorRequests from './SupervisorRequests';
+import SupervisorStudents from './SupervisorStudents';
 import SupervisorAttendance from './SupervisorAttendance';
 import styles from './SupervisorDashboard.module.css';
 
@@ -15,7 +15,7 @@ function SupervisorDashboard({ user, onLogout }) {
           <Routes>
             <Route index element={<SupervisorOverview user={user} />} />
             <Route path="create-deployment-request" element={<CreateDeploymentRequest />} />
-            <Route path="my-requests" element={<SupervisorRequests />} />
+            <Route path="students" element={<SupervisorStudents />} />
             <Route path="attendance" element={<SupervisorAttendance />} />
           </Routes>
         </div>
