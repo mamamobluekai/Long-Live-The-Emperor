@@ -4,6 +4,7 @@ import SupervisorSidebar from './SupervisorSidebar';
 import CreateDeploymentRequest from './CreateDeploymentRequest';
 import SupervisorStudents from './SupervisorStudents';
 import SupervisorAttendance from './SupervisorAttendance';
+import SupervisorCertifications from './SupervisorCertifications';
 import styles from './SupervisorDashboard.module.css';
 
 function SupervisorDashboard({ user, onLogout }) {
@@ -17,6 +18,7 @@ function SupervisorDashboard({ user, onLogout }) {
             <Route path="create-deployment-request" element={<CreateDeploymentRequest />} />
             <Route path="students" element={<SupervisorStudents />} />
             <Route path="attendance" element={<SupervisorAttendance />} />
+            <Route path="certifications" element={<SupervisorCertifications />} />
           </Routes>
         </div>
       </div>

@@ -21,22 +21,6 @@ async function apiFetch(path, options = {}) {
   return data;
 }
 
-function jsonBody(body) {
-  return {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  };
-}
-
-function formDataBody(fd) {
-  return {
-    method: 'POST',
-    headers: {},
-    body: fd,
-  };
-}
-
 export async function getMyRequirements() {
   return apiFetch('/requirements/me');
 }
@@ -63,6 +47,38 @@ export async function getMySubmissionStatus() {
 
 export async function getMyProgress() {
   return apiFetch('/progress');
+}
+
+export async function getMyCertificate() {
+  const token = getToken();
+  const res = await fetch(`${API_BASE}/certificate/me`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    credentials: 'include',
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error || data.message || 'Request failed.');
+  }
+  return data;
+}
+
+export async function downloadMyCertificate() {
+  const token = getToken();
+  const res = await fetch(`${API_BASE}/certificate/me/download`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    credentials: 'include',
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || data.message || 'Certificate download failed.');
+  }
+  const blob = await res.blob();
+  const disposition = res.headers.get('content-disposition') || '';
+  const match = disposition.match(/filename="?([^"]+)"?/i);
+  return {
+    blob,
+    filename: match?.[1] || 'Certificate.pdf',
+  };
 }
 
 export async function uploadMyDocument(file, documentCode) {

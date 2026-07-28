@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getMyProgress } from '../../../api/studentApi';
+import { downloadMyCertificate, getMyProgress } from '../../../api/studentApi';
 import Feedback from '../../../components/Feedback';
 import styles from './Progress.module.css';
 
@@ -24,6 +24,8 @@ function Progress() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
 
+  const [certLoading, setCertLoading] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
     async function init() {
@@ -46,6 +48,7 @@ function Progress() {
   const documentation = data?.documentation;
   const attendance = data?.attendance;
   const completed = data?.completed;
+  const certificate = data?.certificate?.issued ? data.certificate : null;
 
   const steps = [
     {
@@ -80,9 +83,24 @@ function Progress() {
   const doneCount = steps.filter((s) => s.done).length;
   const percent = Math.round((doneCount / steps.length) * 100);
 
-  const handleDownload = () => {
-    setNotice('Certification download is not available yet (testing only).');
-    setTimeout(() => setNotice(''), 4000);
+  const handleDownload = async () => {
+    try {
+      setCertLoading(true);
+      const { blob, filename } = await downloadMyCertificate();
+      const downloadUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      setNotice(err.message || 'Unable to load your certificate right now.');
+      setTimeout(() => setNotice(''), 4000);
+    } finally {
+      setCertLoading(false);
+    }
   };
 
   if (loading) return <p className={styles.loading}>Loading progress…</p>;
@@ -123,7 +141,9 @@ function Progress() {
         <div className={styles.certInfo}>
           <h3>Certificate of Completion</h3>
           <p>
-            {completed
+            {certificate
+              ? 'Your certificate has been issued. You may download it now.'
+              : completed
               ? 'Your immersion is complete. You may now download your certificate.'
               : 'Available once requirements, documentation, and 10 attendance days are complete.'}
           </p>
@@ -131,10 +151,10 @@ function Progress() {
         <button
           className={styles.downloadBtn}
           onClick={handleDownload}
-          disabled={!completed}
-          title={completed ? '' : 'Locked until all milestones are complete'}
+          disabled={certLoading}
+          title="Download your certificate"
         >
-          Download Certificate
+          {certLoading ? 'Preparing...' : 'Download Certificate'}
         </button>
       </div>
     </>

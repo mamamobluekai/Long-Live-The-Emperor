@@ -234,6 +234,16 @@ const getProgress = async (req, res) => {
     const completed =
       requirementsApproved && documentationGraded && attendanceComplete;
 
+    const certificateResult = await client.query(
+      `SELECT id, certificate_number, full_name, completion_date, cloudinary_url, created_at
+       FROM certificates
+       WHERE student_id = $1
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [studentId]
+    );
+    const certificate = certificateResult.rows[0] || null;
+
     res.json({
       requirements: { approved: requirementsApproved, status: submission.status },
       documentation: {
@@ -247,6 +257,12 @@ const getProgress = async (req, res) => {
         required: REQUIRED_ATTENDANCE_DAYS,
       },
       completed,
+      certificate: certificate
+        ? {
+            issued: true,
+            ...certificate,
+          }
+        : { issued: false },
     });
   } catch (err) {
     console.error('getProgress error:', err);
