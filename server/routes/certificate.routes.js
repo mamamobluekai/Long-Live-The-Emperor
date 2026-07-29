@@ -6,12 +6,13 @@ const authorize = require('../middleware/authorizeRole');
 
 router.use(authenticate);
 
-router.get('/eligible', authorize('supervisor'), certificate.getEligibleStudents);
-router.get('/template/me', authorize('supervisor'), certificate.getMyCertificateTemplate);
-router.put('/template/me', authorize('supervisor'), certificate.saveMyCertificateTemplate);
-router.post('/generate/:studentId', authorize('supervisor'), certificate.generateCertificate);
-router.post('/force/:studentId', authorize('supervisor'), certificate.forceGenerateCertificate);
-router.get('/me', authorize('student'), certificate.getMyCertificate);
+router.get('/eligible', authorize('supervisor', 'admin'), certificate.getEligibleStudents);
+router.get('/template/me', authenticate, certificate.getMyCertificateTemplate);
+router.put('/template/me', authenticate, certificate.saveMyCertificateTemplate);
+router.post('/generate/:studentId', authorize('supervisor', 'admin'), certificate.generateCertificate);
+router.post('/force/:studentId', authorize('supervisor', 'admin'), certificate.forceGenerateCertificate);
+router.delete('/undo/:studentId', authorize('supervisor', 'admin'), certificate.undoForceIssue);
+router.get('/me', authorize('student', 'admin'), certificate.getMyCertificate);
 router.get('/me/download', authorize('student'), certificate.downloadMyCertificate);
 
 module.exports = router;

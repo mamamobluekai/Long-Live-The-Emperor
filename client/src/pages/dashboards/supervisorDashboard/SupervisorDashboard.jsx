@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import DashboardShell from '../DashboardShell';
 import SupervisorSidebar from './SupervisorSidebar';
 import CreateDeploymentRequest from './CreateDeploymentRequest';
@@ -19,6 +19,7 @@ function SupervisorDashboard({ user, onLogout }) {
             <Route path="students" element={<SupervisorStudents />} />
             <Route path="attendance" element={<SupervisorAttendance />} />
             <Route path="certifications" element={<SupervisorCertifications />} />
+            <Route path="*" element={<Navigate to="certifications" replace />} />
           </Routes>
         </div>
       </div>

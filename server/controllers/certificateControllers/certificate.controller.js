@@ -26,7 +26,7 @@ function cloudinaryDownloadUrl(secureUrl) {
 function buildCertificatePdf(student, issuedBy, template = {}) {
   return new Promise((resolve, reject) => {
     try {
-      const doc = new PDFDocument({ size: 'A4', margin: 0 });
+      const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: 0 });
       const chunks = [];
       doc.on('data', (chunk) => chunks.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(chunks)));
@@ -34,7 +34,7 @@ function buildCertificatePdf(student, issuedBy, template = {}) {
 
       const pageWidth = doc.page.width;
       const pageHeight = doc.page.height;
-      const margin = 50;
+      const margin = 42;
       const usableWidth = pageWidth - margin * 2;
 
       const schoolName = template.school_name || 'Work Immersion Program';
@@ -43,137 +43,80 @@ function buildCertificatePdf(student, issuedBy, template = {}) {
       const footerText = template.footer_text || 'Verify this certificate at the issuing institution. This is an official record of work immersion completion.';
       const borderColor = template.border_color || '#1e3a8a';
       const titleText = template.title_text || 'CERTIFICATE OF COMPLETION';
+      const studentName = student.full_name || `${student.first_name} ${student.last_name}`;
 
-      // Outer decorative border
-      doc
-        .strokeColor(borderColor)
-        .lineWidth(4)
-        .rect(margin, margin, usableWidth, pageHeight - margin * 2)
-        .stroke();
+      doc.rect(0, 0, pageWidth, pageHeight).fill('#fffdf8');
+      doc.strokeColor(borderColor).lineWidth(2).rect(margin, margin, usableWidth, pageHeight - margin * 2).stroke();
+      doc.strokeColor(`${borderColor}88`).lineWidth(1).rect(margin + 8, margin + 8, usableWidth - 16, pageHeight - (margin + 8) * 2).stroke();
 
-      // Inner border
-      const innerMargin = margin + 8;
-      doc
-        .strokeColor('#cbd5e1')
-        .lineWidth(1.5)
-        .rect(innerMargin, innerMargin, usableWidth - 16, pageHeight - innerMargin * 2)
-        .stroke();
+      const drawCorner = (x, y, xDir, yDir) => {
+        doc.strokeColor(borderColor).lineWidth(1.2)
+          .moveTo(x, y).lineTo(x + xDir * 46, y)
+          .moveTo(x, y).lineTo(x, y + yDir * 46)
+          .stroke();
+        doc.circle(x, y, 2.4).fill(borderColor);
+      };
+      drawCorner(margin + 18, margin + 18, 1, 1);
+      drawCorner(pageWidth - margin - 18, margin + 18, -1, 1);
+      drawCorner(margin + 18, pageHeight - margin - 18, 1, -1);
+      drawCorner(pageWidth - margin - 18, pageHeight - margin - 18, -1, -1);
 
-      // Header accent bar
-      doc
-        .fillColor(borderColor)
-        .rect(margin + 20, margin + 20, usableWidth - 40, 6)
-        .fill();
-
-      // Title
-      doc.moveDown(2.5);
-      doc
-        .font('Helvetica-Bold')
-        .fontSize(22)
-        .fillColor('#0f172a')
-        .text(titleText, { align: 'center' });
-
-      doc.moveDown(0.3);
-      doc
-        .font('Helvetica-Oblique')
-        .fontSize(11)
-        .fillColor('#475569')
-        .text(programName, { align: 'center' });
-
-      // Divider
-      doc.moveDown(1.2);
-      doc
-        .strokeColor('#3b82f6')
-        .lineWidth(1)
-        .moveTo(margin + 60, doc.y)
-        .lineTo(pageWidth - margin - 60, doc.y)
-        .stroke();
-      doc.moveDown(1);
-
-      // Body
-      doc
-        .font('Helvetica')
-        .fontSize(13)
-        .fillColor('#334155')
-        .text('This is to certify that', { align: 'center' });
-
+      doc.y = margin + 58;
+      doc.font('Times-Italic').fontSize(13).fillColor('#64748b')
+        .text(schoolName.toUpperCase(), margin + 72, doc.y, { width: usableWidth - 144, align: 'center' });
       doc.moveDown(0.6);
-      doc
-        .font('Helvetica-Bold')
-        .fontSize(20)
-        .fillColor('#0f172a')
-        .text(student.full_name || `${student.first_name} ${student.last_name}`, { align: 'center' });
+      doc.font('Times-Bold').fontSize(34).fillColor('#1c1f2b')
+        .text(titleText, margin + 50, doc.y, { width: usableWidth - 100, align: 'center' });
 
+      const dividerY = doc.y + 18;
+      doc.strokeColor(`${borderColor}88`).lineWidth(1)
+        .moveTo(margin + 110, dividerY).lineTo(pageWidth / 2 - 12, dividerY)
+        .moveTo(pageWidth / 2 + 12, dividerY).lineTo(pageWidth - margin - 110, dividerY)
+        .stroke();
+      doc.save().translate(pageWidth / 2, dividerY).rotate(45).rect(-3, -3, 6, 6).fill(borderColor).restore();
+
+      doc.y = pageHeight * 0.32;
+      doc.font('Times-Italic').fontSize(17).fillColor('#4b5563')
+        .text('This is to certify that', margin + 70, doc.y, { width: usableWidth - 140, align: 'center' });
       doc.moveDown(0.6);
-      doc
-        .font('Helvetica')
-        .fontSize(12)
-        .fillColor('#334155')
+      doc.font('Times-BoldItalic').fontSize(38).fillColor('#1c1f2b')
+        .text(studentName, margin + 120, doc.y, { width: usableWidth - 240, align: 'center' });
+      doc.strokeColor(`${borderColor}66`).lineWidth(1)
+        .moveTo(margin + 190, doc.y + 4).lineTo(pageWidth - margin - 190, doc.y + 4).stroke();
+      doc.moveDown(0.9);
+      doc.font('Times-Roman').fontSize(14).fillColor('#374151')
         .text(
-          `has successfully completed the ${programName} at ` +
-            companyName +
-            ` with a total of ${student.attendance_days || 10} attendance days.`,
-          { align: 'center', width: usableWidth - 80 }
+          `has successfully completed the ${programName} at ${companyName}, having fulfilled all required hours, documentation, and evaluation standards.`,
+          margin + 140,
+          doc.y,
+          { align: 'center', width: usableWidth - 280, lineGap: 4 }
         );
 
-      doc.moveDown(1);
-      doc
-        .font('Helvetica')
-        .fontSize(11)
-        .fillColor('#475569')
-        .text(
-          'Requirements approved  ·  Documentation verified  ·  Attendance completed',
-          { align: 'center' }
-        );
+      const sealY = pageHeight - margin - 220;
+      doc.circle(pageWidth / 2, sealY + 38, 31).fillAndStroke('#fffdf8', borderColor);
+      doc.font('Times-Bold').fontSize(24).fillColor(borderColor).text('*', pageWidth / 2 - 10, sealY + 24, { width: 20, align: 'center' });
 
-      doc.moveDown(1.2);
-      doc
-        .strokeColor('#cbd5e1')
-        .lineWidth(0.5)
-        .moveTo(margin + 60, doc.y)
-        .lineTo(pageWidth - margin - 60, doc.y)
-        .stroke();
-      doc.moveDown(0.6);
-
-      const leftX = margin + 30;
-      const centerX = pageWidth / 2;
-      const rightX = pageWidth - margin - 30;
-
+      const signatureY = sealY + 94;
+      const leftX = margin + 145;
+      const rightX = pageWidth - margin - 315;
+      doc.strokeColor('#94a3b8').lineWidth(1);
+      doc.moveTo(leftX, signatureY).lineTo(leftX + 170, signatureY).stroke();
+      doc.moveTo(rightX, signatureY).lineTo(rightX + 170, signatureY).stroke();
       doc.font('Helvetica').fontSize(9).fillColor('#64748b');
-      doc.text('ISSUED BY', leftX, doc.y, { width: 140, align: 'left' });
-      doc.text('CERTIFICATE NO.', centerX - 60, doc.y, { width: 120, align: 'center' });
-      doc.text('DATE', rightX - 120, doc.y, { width: 120, align: 'right' });
+      doc.text('Work Immersion Supervisor', leftX, signatureY + 8, { width: 170, align: 'center' });
+      doc.text('Company Representative', rightX, signatureY + 8, { width: 170, align: 'center' });
 
-      doc.moveDown(0.3);
-      doc.font('Helvetica-Bold').fontSize(11).fillColor('#0f172a');
-      doc.text(issuedBy || schoolName || 'Administrator', leftX, doc.y, { width: 180, align: 'left' });
-      doc.text(student.certificate_number || '', centerX - 60, doc.y, { width: 120, align: 'center' });
-      doc.text(
-        student.completion_date
-          ? new Date(student.completion_date).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })
-          : '',
-        rightX - 120,
-        doc.y,
-        { width: 120, align: 'right' }
-      );
+      const metaY = signatureY + 44;
+      const dateText = student.completion_date
+        ? new Date(student.completion_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+        : '';
+      doc.font('Helvetica').fontSize(8.5).fillColor('#64748b');
+      doc.text(`Issued by: ${issuedBy || schoolName || 'Administrator'}`, margin + 70, metaY, { width: 180, align: 'left' });
+      doc.text(`Certificate No. ${student.certificate_number || ''}`, pageWidth / 2 - 80, metaY, { width: 160, align: 'center' });
+      doc.text(dateText, pageWidth - margin - 250, metaY, { width: 180, align: 'right' });
 
-      doc.moveDown(2);
-      doc
-        .strokeColor(borderColor)
-        .lineWidth(2)
-        .rect(margin + 40, doc.y, usableWidth - 80, 1)
-        .stroke();
-
-      doc.moveDown(0.4);
-      doc
-        .font('Helvetica-Oblique')
-        .fontSize(9)
-        .fillColor('#64748b')
-        .text(footerText, { align: 'center', width: usableWidth - 80 });
+      doc.font('Times-Italic').fontSize(8).fillColor('#64748b')
+        .text(footerText, margin + 130, pageHeight - margin - 58, { align: 'center', width: usableWidth - 260, lineGap: 2 });
 
       doc.end();
     } catch (err) {
@@ -209,10 +152,19 @@ const getEligibleStudents = async (req, res) => {
              s.track_strand,
              u.email,
              srs.status AS requirements_status,
-             srs.submitted_at
+             srs.submitted_at,
+             cert.certificate_number,
+             cert.cloudinary_url AS certificate_url
       FROM users u
       JOIN students s ON s.user_id = u.id
       JOIN student_requirement_submissions srs ON srs.user_id = u.id
+      LEFT JOIN LATERAL (
+        SELECT certificate_number, cloudinary_url
+        FROM certificates c
+        WHERE c.student_id = s.id
+        ORDER BY c.created_at DESC
+        LIMIT 1
+      ) cert ON true
       WHERE u.role = 'student'
         AND s.user_id IN (SELECT student_id FROM supervisor_batches)`;
 
@@ -313,6 +265,22 @@ const generateCertificate = async (req, res) => {
     }
     const student = studentResult.rows[0];
 
+    const existing = await client.query(
+      `SELECT id, certificate_number, cloudinary_url
+       FROM certificates
+       WHERE student_id = $1
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [student.student_id]
+    );
+    if (existing.rows.length) {
+      return res.json({
+        message: 'Certificate already generated.',
+        certificate: existing.rows[0],
+        forced: String(existing.rows[0].certificate_number || '').startsWith('CERT-FORCE-'),
+      });
+    }
+
     const attendanceResult = await client.query(
       `SELECT COUNT(DISTINCT date)::int AS days
        FROM student_attendance
@@ -333,20 +301,6 @@ const generateCertificate = async (req, res) => {
       return res.status(400).json({ error: 'Student has not completed all milestones yet.' });
     }
 
-    const existing = await client.query(
-      `SELECT id, cloudinary_url FROM certificates WHERE student_id = $1 LIMIT 1`,
-      [student.student_id]
-    );
-    if (existing.rows.length) {
-      return res.json({
-        message: 'Certificate already generated.',
-        certificate: {
-          id: existing.rows[0].id,
-          cloudinary_url: existing.rows[0].cloudinary_url,
-        },
-      });
-    }
-
     const certificateNumber = `CERT-${Date.now()}-${student.student_id}`;
     const completionDate = new Date().toISOString().slice(0, 10);
     const studentRecord = {
@@ -357,7 +311,7 @@ const generateCertificate = async (req, res) => {
     };
 
     const pdfBuffer = await buildCertificatePdf(studentRecord, req.user?.email || 'Administrator', template);
-    const publicId = `certificates/${certificateNumber}`;
+    const publicId = certificateNumber;
     const uploadResult = await uploadPdfToCloudinary(pdfBuffer, publicId);
 
     const insert = await client.query(
@@ -574,6 +528,22 @@ const forceGenerateCertificate = async (req, res) => {
     }
     const student = studentResult.rows[0];
 
+    const existing = await client.query(
+      `SELECT id, certificate_number, cloudinary_url
+       FROM certificates
+       WHERE student_id = $1
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [student.student_id]
+    );
+    if (existing.rows.length) {
+      return res.json({
+        message: 'Certificate already generated.',
+        certificate: existing.rows[0],
+        forced: String(existing.rows[0].certificate_number || '').startsWith('CERT-FORCE-'),
+      });
+    }
+
     const attendanceResult = await client.query(
       `SELECT COUNT(DISTINCT date)::int AS days
        FROM student_attendance
@@ -597,7 +567,7 @@ const forceGenerateCertificate = async (req, res) => {
     };
 
     const pdfBuffer = await buildCertificatePdf(studentRecord, req.user?.email || 'Administrator', template);
-    const publicId = `certificates/${certificateNumber}`;
+    const publicId = certificateNumber;
     const uploadResult = await uploadPdfToCloudinary(pdfBuffer, publicId);
 
     const insert = await client.query(
@@ -627,10 +597,49 @@ const forceGenerateCertificate = async (req, res) => {
   }
 };
 
+const undoForceIssue = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { studentId } = req.params;
+
+    const certResult = await client.query(
+      `SELECT c.id, c.cloudinary_public_id, c.cloudinary_url, c.certificate_number
+       FROM certificates c
+       JOIN students s ON s.id = c.student_id
+       WHERE s.user_id = $1
+         AND c.certificate_number LIKE 'CERT-FORCE-%'
+       ORDER BY c.created_at DESC`,
+      [studentId]
+    );
+    if (!certResult.rows.length) {
+      return res.status(404).json({ error: 'No force-issued certificate found for this student.' });
+    }
+
+    const certIds = certResult.rows.map((cert) => cert.id);
+    await client.query('DELETE FROM certificates WHERE id = ANY($1::int[])', [certIds]);
+
+    for (const cert of certResult.rows) {
+      try {
+        await cloudinary.uploader.destroy(cert.cloudinary_public_id, { resource_type: 'raw' });
+      } catch (cloudinaryErr) {
+        console.error('Cloudinary delete failed:', cloudinaryErr);
+      }
+    }
+
+    res.json({ message: 'Certificate removed successfully.' });
+  } catch (err) {
+    console.error('undoForceIssue error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   getEligibleStudents,
   generateCertificate,
   forceGenerateCertificate,
+  undoForceIssue,
   getMyCertificate,
   downloadMyCertificate,
   getMyCertificateTemplate,

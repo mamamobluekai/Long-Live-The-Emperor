@@ -3,10 +3,45 @@ import {
   supervisorGetAllStudents,
   supervisorGenerateCertificate,
   supervisorForceGenerateCertificate,
+  supervisorUndoForceIssue,
   supervisorGetCertificateTemplate,
   supervisorSaveCertificateTemplate,
 } from '../../../api/certificateApi';
 import styles from './SupervisorDashboard.module.css';
+
+function CornerOrnament({ color, corner }) {
+  const transforms = { tl: 'rotate(0deg)', tr: 'rotate(90deg)', br: 'rotate(180deg)', bl: 'rotate(270deg)' };
+  const positions = {
+    tl: { top: 14, left: 14 },
+    tr: { top: 14, right: 14 },
+    br: { bottom: 14, right: 14 },
+    bl: { bottom: 14, left: 14 },
+  };
+  return (
+    <svg
+      width="34"
+      height="34"
+      viewBox="0 0 34 34"
+      style={{ position: 'absolute', ...positions[corner], transform: transforms[corner] }}
+    >
+      <path d="M2 2H22M2 2V22" stroke={color} strokeWidth="1.5" fill="none" strokeLinecap="square" />
+      <path d="M2 9C7 9 9 7 9 2" stroke={color} strokeWidth="1" fill="none" strokeLinecap="round" />
+      <circle cx="2" cy="2" r="1.6" fill={color} />
+    </svg>
+  );
+}
+
+function CertificateSeal({ color }) {
+  return (
+    <svg width="64" height="80" viewBox="0 0 64 80">
+      <path d="M20 46 L14 78 L32 68 Z" fill={color} opacity="0.85" />
+      <path d="M44 46 L50 78 L32 68 Z" fill={color} opacity="0.65" />
+      <circle cx="32" cy="30" r="26" fill="#fff" stroke={color} strokeWidth="2" />
+      <circle cx="32" cy="30" r="20" fill="none" stroke={color} strokeWidth="1" strokeDasharray="2 3" />
+      <path d="M32 16l3.5 9.5 9.5.7-7.3 6.3 2.3 9.2L32 41.5l-8.7 4.4 2.3-9.2-7.3-6.3 9.5-.7z" fill={color} />
+    </svg>
+  );
+}
 
 function SupervisorCertifications() {
   const [list, setList] = useState([]);
@@ -16,6 +51,7 @@ function SupervisorCertifications() {
   const [generatingId, setGeneratingId] = useState(null);
   const [confirmForceId, setConfirmForceId] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [forcedIds, setForcedIds] = useState({});
 
   const [template, setTemplate] = useState({
     school_name: 'Work Immersion Program',
@@ -39,6 +75,14 @@ function SupervisorCertifications() {
       const raw = eligibleData.eligible || [];
       setList(raw);
       setTemplate((prev) => ({ ...prev, ...(templateData || {}) }));
+
+      const forced = {};
+      for (const s of raw) {
+        if (s.certificate_number && String(s.certificate_number).startsWith('CERT-FORCE-')) {
+          forced[s.user_id] = s.certificate_number;
+        }
+      }
+      setForcedIds(forced);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -89,6 +133,33 @@ function SupervisorCertifications() {
     }
   };
 
+  const handleUndoForce = async (studentId) => {
+    setGeneratingId(studentId);
+    setError('');
+    setMessage('');
+    try {
+      await supervisorUndoForceIssue(studentId);
+      setMessage('Force-issued certificate removed.');
+      setForcedIds((prev) => {
+        const next = { ...prev };
+        delete next[studentId];
+        return next;
+      });
+      setList((prev) =>
+        prev.map((student) =>
+          student.user_id === studentId
+            ? { ...student, certificate_number: null, certificate_url: null }
+            : student
+        )
+      );
+      await loadAll();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setGeneratingId(null);
+    }
+  };
+
   const handleTemplateChange = (field, value) => {
     setTemplate((prev) => ({ ...prev, [field]: value }));
   };
@@ -102,6 +173,7 @@ function SupervisorCertifications() {
       const saved = await supervisorSaveCertificateTemplate(template);
       setTemplate((prev) => ({ ...prev, ...saved }));
       setMessage('Certificate design saved.');
+      await loadAll();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -109,19 +181,33 @@ function SupervisorCertifications() {
     }
   };
 
-  const previewStyle = useMemo(
+  const accent = template.border_color || '#1e3a8a';
+
+  const outerFrameStyle = useMemo(
     () => ({
-      border: `4px solid ${template.border_color || '#1e3a8a'}`,
-      borderRadius: 6,
-      padding: 24,
-      background: '#fff',
-      boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)',
+      width: '100%',
+      maxWidth: 760,
+      aspectRatio: '3 / 2',
+      margin: '0 auto',
+      background: '#fffdf8',
+      border: `2px solid ${accent}`,
+      boxShadow: `inset 0 0 0 6px #fffdf8, inset 0 0 0 7px ${accent}55, 0 24px 50px -18px rgba(15, 23, 42, 0.35)`,
+      borderRadius: 4,
+      position: 'relative',
+      padding: '30px 46px',
+      display: 'flex',
+      flexDirection: 'column',
+      fontFamily: '"Cormorant Garamond", "Iowan Old Style", Georgia, "Times New Roman", serif',
     }),
-    [template.border_color]
+    [accent]
   );
 
   return (
     <div>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=EB+Garamond:ital@0;1&display=swap');
+      `}</style>
+
       <div className={styles.pageHeader}>
         <h2>Certifications</h2>
         <p>Edit your certificate design, then generate signed PDF certificates for students assigned to your batches.</p>
@@ -165,7 +251,7 @@ function SupervisorCertifications() {
               />
             </label>
             <label className={styles.filterField}>
-              Border Color
+              Accent Color
               <input
                 className={styles.input}
                 type="color"
@@ -187,91 +273,156 @@ function SupervisorCertifications() {
 
           <div className={styles.actions} style={{ marginTop: 14 }}>
             <button className={styles.btn} type="submit" disabled={savingTemplate}>
-              {savingTemplate ? 'Saving...' : 'Save Design'}
+              {savingTemplate ? 'Saving...' : 'Save Student Download Design'}
             </button>
           </div>
         </form>
 
-        <div style={{ marginTop: 20 }}>
-          <h4 className={styles.sectionTitle} style={{ marginBottom: 10 }}>
+        <div style={{ marginTop: 24 }}>
+          <h4 className={styles.sectionTitle} style={{ marginBottom: 14 }}>
             Preview
           </h4>
-          <div style={previewStyle}>
-            <div
-              style={{
-                height: 4,
-                background: template.border_color || '#1e3a8a',
-                borderRadius: 2,
-                marginBottom: 16,
-              }}
-            />
-            <h2
-              style={{
-                margin: 0,
-                textAlign: 'center',
-                fontSize: 22,
-                fontWeight: 700,
-                color: '#0f172a',
-              }}
-            >
-              {template.title_text || 'CERTIFICATE OF COMPLETION'}
-            </h2>
-            <p style={{ margin: '8px 0 0', textAlign: 'center', color: '#475569', fontSize: 12 }}>
-              {template.program_name}
-            </p>
-            <div
-              style={{
-                margin: '16px auto',
-                width: '80%',
-                height: 1,
-                background: '#cbd5e1',
-              }}
-            />
-            <p style={{ textAlign: 'center', color: '#334155', margin: 0 }}>
-              This is to certify that
-            </p>
-            <p
-              style={{
-                textAlign: 'center',
-                fontWeight: 700,
-                fontSize: 20,
-                color: '#0f172a',
-                margin: '8px 0',
-              }}
-            >
-              Juan Dela Cruz
-            </p>
-            <p
-              style={{
-                textAlign: 'center',
-                color: '#334155',
-                fontSize: 12,
-                maxWidth: '80%',
-                margin: '0 auto',
-              }}
-            >
-              has successfully completed the {template.program_name} at {template.company_name || 'Host Company'}
-            </p>
-            <p
-              style={{
-                textAlign: 'center',
-                color: '#64748b',
-                fontSize: 11,
-                marginTop: 12,
-              }}
-            >
-              Requirements approved · Documentation verified · Attendance completed
-            </p>
-            <p
-              style={{
-                textAlign: 'center',
-                color: '#94a3b8',
-                fontSize: 9,
-                marginTop: 16,
-              }}
-            >
-              {template.footer_text}
-            </p>
+
+          <div style={outerFrameStyle}>
+            <CornerOrnament color={accent} corner="tl" />
+            <CornerOrnament color={accent} corner="tr" />
+            <CornerOrnament color={accent} corner="bl" />
+            <CornerOrnament color={accent} corner="br" />
+
+            <div style={{ textAlign: 'center', marginTop: 6 }}>
+              <p
+                style={{
+                  margin: 0,
+                  fontFamily: '"EB Garamond", Georgia, serif',
+                  fontStyle: 'italic',
+                  fontSize: 12,
+                  letterSpacing: '0.22em',
+                  color: '#6b7280',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {template.school_name}
+              </p>
+              <h2
+                style={{
+                  margin: '8px 0 0',
+                  fontSize: 30,
+                  fontWeight: 600,
+                  letterSpacing: '0.06em',
+                  color: '#1c1f2b',
+                  lineHeight: 1.15,
+                }}
+              >
+                {template.title_text || 'CERTIFICATE OF COMPLETION'}
+              </h2>
+
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+              gap: 12,
+              margin: '14px auto 0',
+              width: '64%',
+                }}
+              >
+                <span style={{ flex: 1, height: 1, background: accent, opacity: 0.5 }} />
+                <span
+                  style={{
+                    width: 5,
+                    height: 5,
+                    background: accent,
+                    transform: 'rotate(45deg)',
+                    display: 'inline-block',
+                  }}
+                />
+                <span style={{ flex: 1, height: 1, background: accent, opacity: 0.5 }} />
+              </div>
+            </div>
+
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'center' }}>
+              <p
+                style={{
+                  margin: 0,
+                  fontFamily: '"EB Garamond", Georgia, serif',
+                  fontStyle: 'italic',
+                  color: '#4b5563',
+                  fontSize: 16,
+                }}
+              >
+                This is to certify that
+              </p>
+              <p
+                style={{
+                  margin: '8px 0',
+                  fontSize: 34,
+                  fontWeight: 600,
+                  fontStyle: 'italic',
+                  color: '#1c1f2b',
+                  borderBottom: `1px solid ${accent}66`,
+                  display: 'inline-block',
+                  padding: '0 6px 5px',
+                  alignSelf: 'center',
+                }}
+              >
+                Juan Dela Cruz
+              </p>
+              <p
+                style={{
+                  margin: '8px auto 0',
+                  fontFamily: '"EB Garamond", Georgia, serif',
+                  color: '#374151',
+                  fontSize: 15,
+                  maxWidth: '74%',
+                  lineHeight: 1.5,
+                }}
+              >
+                has successfully completed the {template.program_name} at{' '}
+                <strong style={{ fontWeight: 600 }}>{template.company_name || 'Host Company'}</strong>, having
+                fulfilled all required hours, documentation, and evaluation standards.
+              </p>
+            </div>
+
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4 }}>
+                <CertificateSeal color={accent} />
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  gap: 14,
+                  marginTop: 8,
+                }}
+              >
+                <div style={{ flex: 1, textAlign: 'center' }}>
+                  <div style={{ borderTop: '1px solid #94a3b8', margin: '0 4px 5px' }} />
+                  <p style={{ margin: 0, fontSize: 10, color: '#64748b', letterSpacing: '0.04em' }}>
+                    Work Immersion Supervisor
+                  </p>
+                </div>
+                <div style={{ flex: 1, textAlign: 'center' }}>
+                  <div style={{ borderTop: '1px solid #94a3b8', margin: '0 4px 5px' }} />
+                  <p style={{ margin: 0, fontSize: 10, color: '#64748b', letterSpacing: '0.04em' }}>
+                    Company Representative
+                  </p>
+                </div>
+              </div>
+
+              <p
+                style={{
+                  textAlign: 'center',
+                  color: '#94a3b8',
+                  fontSize: 8,
+                  lineHeight: 1.4,
+                  marginTop: 12,
+                  fontFamily: '"EB Garamond", Georgia, serif',
+                }}
+              >
+                {template.footer_text}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -324,7 +475,16 @@ function SupervisorCertifications() {
                         </span>
                       </td>
                       <td>
-                        {s.completed ? (
+                        {forcedIds[s.user_id] ? (
+                          <button
+                            className={styles.btnSecondary}
+                            type="button"
+                            onClick={() => handleUndoForce(s.user_id)}
+                            disabled={generatingId === s.user_id}
+                          >
+                            {generatingId === s.user_id ? 'Undoing...' : 'Undo Force Issue'}
+                          </button>
+                        ) : s.completed ? (
                           <button
                             className={styles.btn}
                             onClick={() => handleGenerate(s.user_id)}

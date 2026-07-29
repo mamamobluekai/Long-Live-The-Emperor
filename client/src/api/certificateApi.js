@@ -37,6 +37,10 @@ export async function supervisorForceGenerateCertificate(studentId) {
   return apiFetch(`/supervisor/certificate/force/${studentId}`, { method: 'POST' });
 }
 
+export async function supervisorUndoForceIssue(studentId) {
+  return apiFetch(`/supervisor/certificate/undo/${studentId}`, { method: 'DELETE' });
+}
+
 export async function supervisorGetCertificateTemplate() {
   return apiFetch('/supervisor/certificate/template/me');
 }
