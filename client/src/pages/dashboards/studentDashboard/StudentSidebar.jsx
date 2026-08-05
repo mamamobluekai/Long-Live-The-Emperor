@@ -44,6 +44,11 @@ function StudentSidebar() {
             Attendance
           </NavLink>
         </li>
+        <li>
+          <NavLink to="/dashboard/student/profile" className={styles.navLink}>
+            Profile Settings
+          </NavLink>
+        </li>
       </ul>
     </nav>
   );

@@ -13,6 +13,7 @@ const trackingRoutes = require('./routes/tracking.routes');
 const attendanceRoutes = require('./routes/attendance.routes');
 const supervisorRoutes = require('./routes/supervisor.routes');
 const certificateRoutes = require('./routes/certificate.routes');
+const feedRoutes = require('./routes/feed.routes');
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/supervisor', supervisorRoutes);
 app.use('/api/certificate', certificateRoutes);
 app.use('/api/supervisor/certificate', certificateRoutes);
+app.use('/api/feed', feedRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found.' });

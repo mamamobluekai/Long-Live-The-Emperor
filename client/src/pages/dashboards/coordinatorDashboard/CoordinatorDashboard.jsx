@@ -6,11 +6,13 @@ import UploadStudents from './UploadStudents';
 import RequirementsReview from './RequirementsReview';
 import TeacherBatches from './TeacherBatches';
 import Supervisors from './Supervisors';
+import SocialFeed from '../studentDashboard/SocialFeed';
+import UserProfileSettings from '../UserProfileSettings';
 import styles from './CoordinatorDashboard.module.css';
 
 function CoordinatorDashboard({ user, onLogout }) {
   return (
-    <DashboardShell user={user} title="Coordinator Dashboard" onLogout={onLogout}>
+    <DashboardShell user={user} title="Coordinator Dashboard" onLogout={onLogout} profilePath="/dashboard/coordinator/profile">
       <div className={styles.layout}>
         <CoordinatorSidebar />
         <div className={styles.content}>
@@ -19,9 +21,11 @@ function CoordinatorDashboard({ user, onLogout }) {
             <Route path="students" element={<StudentApprovals />} />
             <Route path="upload-students" element={<UploadStudents />} />
             <Route path="requirements" element={<RequirementsReview />} />
-            <Route path="batches" element={<TeacherBatches />} />
-            <Route path="supervisors" element={<Supervisors />} />
-            <Route path="*" element={<Navigate to="students" replace />} />
+             <Route path="batches" element={<TeacherBatches />} />
+             <Route path="supervisors" element={<Supervisors />} />
+             <Route path="social-feed" element={<SocialFeed />} />
+             <Route path="profile" element={<UserProfileSettings />} />
+             <Route path="*" element={<Navigate to="students" replace />} />
           </Routes>
         </div>
       </div>

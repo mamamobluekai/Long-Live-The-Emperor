@@ -1,0 +1,20 @@
+.toastContainer {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  max-width: calc(100vw - 48px);
+  pointer-events: none;
+}
+
+.toastContainer > * {
+  pointer-events: auto;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 560px) {
+  .toastContainer {
+    max-width: calc(100vw - 24px);
+  }
+}

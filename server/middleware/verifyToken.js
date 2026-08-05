@@ -3,11 +3,11 @@ const { verifyAccessToken } = require('../utils/generateToken');
 const authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if ((!authHeader || !authHeader.startsWith('Bearer ')) && !req.query.token) {
     return res.status(401).json({ error: 'Access Denied. No token provided.' });
   }
 
-  const token = authHeader.split(' ')[1];
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : req.query.token;
 
   try {
     const decoded = verifyAccessToken(token);

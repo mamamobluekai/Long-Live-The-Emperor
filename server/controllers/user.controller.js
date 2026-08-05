@@ -177,31 +177,31 @@ const login = async (req, res) => {
     let profile = {};
     if (user.role === 'student') {
       const studentResult = await pool.query(
-        `SELECT first_name, last_name FROM students WHERE user_id = $1`,
+        `SELECT first_name, last_name, photo_url FROM students WHERE user_id = $1`,
         [user.id]
       );
       profile = studentResult.rows[0] || {};
     } else if (user.role === 'teacher') {
       const teacherResult = await pool.query(
-        `SELECT first_name, last_name FROM teachers WHERE user_id = $1`,
+        `SELECT first_name, last_name, photo_url FROM teachers WHERE user_id = $1`,
         [user.id]
       );
       profile = teacherResult.rows[0] || {};
     } else if (user.role === 'admin') {
       const adminResult = await pool.query(
-        `SELECT first_name, last_name FROM admins WHERE user_id = $1`,
+        `SELECT first_name, last_name, photo_url FROM admins WHERE user_id = $1`,
         [user.id]
       );
       profile = adminResult.rows[0] || {};
     } else if (user.role === 'supervisor') {
       const supervisorResult = await pool.query(
-        `SELECT first_name, last_name FROM supervisors WHERE user_id = $1`,
+        `SELECT first_name, last_name, photo_url FROM supervisors WHERE user_id = $1`,
         [user.id]
       );
       profile = supervisorResult.rows[0] || {};
     } else if (user.role === 'coordinator') {
       const coordinatorResult = await pool.query(
-        `SELECT first_name, last_name FROM coordinators WHERE user_id = $1`,
+        `SELECT first_name, last_name, photo_url FROM coordinators WHERE user_id = $1`,
         [user.id]
       );
       profile = coordinatorResult.rows[0] || {};
@@ -209,6 +209,7 @@ const login = async (req, res) => {
 
     user.first_name = profile.first_name || null;
     user.last_name = profile.last_name || null;
+    user.photo_url = profile.photo_url || null;
 
     const match = await comparePassword(password, user.password);
     if (!match) {
@@ -270,35 +271,35 @@ const getMe = async (req, res) => {
     if (user.role === 'student') {
       const studentResult = await pool.query(
         `SELECT first_name, last_name, student_number, gender, birthdate, age, 
-                contact_number, email, home_address, grade_level, section, track_strand, school
+                contact_number, email, home_address, grade_level, section, track_strand, school, photo_url
          FROM students WHERE user_id = $1`,
         [req.user.id]
       );
       roleData = studentResult.rows[0] || {};
     } else if (user.role === 'teacher') {
       const teacherResult = await pool.query(
-        `SELECT first_name, last_name, employee_id, department, designation, school
+        `SELECT first_name, last_name, employee_id, department, designation, school, photo_url
          FROM teachers WHERE user_id = $1`,
         [req.user.id]
       );
       roleData = teacherResult.rows[0] || {};
     } else if (user.role === 'admin') {
       const adminResult = await pool.query(
-        `SELECT first_name, last_name, employee_id, department
+        `SELECT first_name, last_name, employee_id, department, photo_url
          FROM admins WHERE user_id = $1`,
         [req.user.id]
       );
       roleData = adminResult.rows[0] || {};
     } else if (user.role === 'supervisor') {
       const supervisorResult = await pool.query(
-        `SELECT first_name, last_name, employee_id, company_name, designation, department, company_address
+        `SELECT first_name, last_name, employee_id, company_name, designation, department, company_address, photo_url
          FROM supervisors WHERE user_id = $1`,
         [req.user.id]
       );
       roleData = supervisorResult.rows[0] || {};
     } else if (user.role === 'coordinator') {
       const coordinatorResult = await pool.query(
-        `SELECT first_name, last_name, employee_id, department, designation, school
+        `SELECT first_name, last_name, employee_id, department, designation, school, photo_url
          FROM coordinators WHERE user_id = $1`,
         [req.user.id]
       );

@@ -270,6 +270,26 @@ input {
   text-decoration: underline;
 }
 
+.admin-link {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.admin-link button {
+  border: none;
+  background: transparent;
+  color: #93c5fd;
+  padding: 0;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: color 150ms ease;
+}
+
+.admin-link button:hover {
+  color: #bfdbfe;
+  text-decoration: underline;
+}
+
 @media (max-width: 860px) {
   .auth-card {
     grid-template-columns: 1fr;

@@ -34,6 +34,16 @@ function CoordinatorSidebar() {
             Supervisors
           </NavLink>
         </li>
+        <li>
+          <NavLink to="/dashboard/coordinator/social-feed" className={styles.navLink}>
+            Social Feed
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/dashboard/coordinator/profile" className={styles.navLink}>
+            Profile Settings
+          </NavLink>
+        </li>
       </ul>
     </nav>
   );

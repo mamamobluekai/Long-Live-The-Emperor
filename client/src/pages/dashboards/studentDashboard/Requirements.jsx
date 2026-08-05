@@ -372,7 +372,6 @@ function Requirements({ user }) {
           style={{ width: '100%' }}
         >
           <option value="">Select</option>
-          <option value="Grade 11">Grade 11</option>
           <option value="Grade 12">Grade 12</option>
         </select>
       </div>

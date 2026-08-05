@@ -1,0 +1,54 @@
+.container {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.content {
+  text-align: center;
+  max-width: 480px;
+}
+
+.icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 16px;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.title {
+  margin: 0 0 12px;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.message {
+  margin: 0 0 24px;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.homeBtn {
+  display: inline-block;
+  background: #2a5298;
+  color: #ffffff;
+  text-decoration: none;
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.homeBtn:hover {
+  background: #1e3a7a;
+}

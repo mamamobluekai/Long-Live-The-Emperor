@@ -88,12 +88,18 @@ function AuthForm({ onAuthSuccess }) {
             </button>
           </form>
 
-          <p className="helper-text">
-            {mode === 'login' ? 'New here?' : 'Already have an account?'}{' '}
-            <button type="button" onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>
-              {mode === 'login' ? 'Create an account' : 'Sign in instead'}
-            </button>
-          </p>
+           <p className="helper-text">
+             {mode === 'login' ? 'New here?' : 'Already have an account?'}{' '}
+             <button type="button" onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>
+               {mode === 'login' ? 'Create an account' : 'Sign in instead'}
+             </button>
+           </p>
+
+           <p className="admin-link">
+             <button type="button" onClick={() => navigate('/admin/login')}>
+               Admin login
+             </button>
+           </p>
         </div>
       </div>
     </div>

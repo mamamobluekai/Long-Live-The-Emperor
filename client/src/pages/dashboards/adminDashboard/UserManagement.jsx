@@ -1,161 +1,216 @@
 import { useEffect, useState } from 'react';
-import { getAllUsers, approveStaff, disapproveStaff, deleteUser, getUsersByStatus } from '../../../api/adminApi';
+import {
+  getAllUsers,
+  deleteUser,
+  updateUserStatus,
+  resetUserPassword,
+} from '../../../api/adminApi';
+import DataTable from '../../../components/admin/DataTable';
+import ConfirmModal from '../../../components/admin/ConfirmModal';
+import LoadingSkeleton from '../../../components/admin/LoadingSkeleton';
+import Pagination from '../../../components/admin/Pagination';
+import UserProfileModal from '../../../components/admin/UserProfileModal';
 import styles from './UserManagement.module.css';
+import { useToast } from '../../../components/admin/ToastContainer';
 
-function UserManagement() {
+const ROLE_OPTIONS = [
+  { value: '', label: 'All Roles' },
+  { value: 'admin', label: 'Admin' },
+  { value: 'teacher', label: 'Teacher' },
+  { value: 'student', label: 'Student' },
+  { value: 'supervisor', label: 'Supervisor' },
+  { value: 'coordinator', label: 'Coordinator' },
+];
+
+const STATUS_OPTIONS = [
+  { value: '', label: 'All Statuses' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'approved', label: 'Approved' },
+  { value: 'disapproved', label: 'Disapproved' },
+];
+
+export default function UserManagement() {
+  const { showToast } = useToast();
   const [users, setUsers] = useState([]);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0 });
+  const [filters, setFilters] = useState({ search: '', role: '', status: '' });
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [deleteModal, setDeleteModal] = useState({ open: false, id: null, name: '' });
+  const [resetModal, setResetModal] = useState({ open: false, id: null, name: '' });
+  const [profile, setProfile] = useState(null);
+
+  const fetchUsers = async (page = pagination.page) => {
+    setLoading(true);
+    try {
+      const params = {
+        ...filters,
+        page,
+        limit: pagination.limit,
+      };
+      const data = await getAllUsers(params);
+      setUsers(data.users || []);
+      setPagination((p) => ({ page: Number(data.pagination?.page) || page, limit: Number(data.pagination?.limit) || p.limit, total: Number(data.pagination?.total) || 0 }));
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let mounted = true;
-    const fetchUsers = async () => {
-      if (!mounted) return;
-      setLoading(true);
-      setError('');
-      try {
-        const data = statusFilter === 'all' 
-          ? await getAllUsers() 
-          : await getUsersByStatus(statusFilter);
-        if (mounted) setUsers(data.users || []);
-      } catch (err) {
-        if (mounted) setError(err.message);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-    fetchUsers();
-    return () => { mounted = false; };
-  }, [statusFilter]);
+    fetchUsers(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.role, filters.status]);
 
-  const refreshUsers = () => {
-    const fetchUsers = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const data = statusFilter === 'all' 
-          ? await getAllUsers() 
-          : await getUsersByStatus(statusFilter);
-        setUsers(data.users || []);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUsers();
+  const applyFilters = () => {
+    setFilters((f) => ({ ...f, search: searchInput }));
+    setPagination((p) => ({ ...p, page: 1 }));
+    fetchUsers(1);
   };
 
-  const handleApprove = async (id) => {
+  const clearFilters = () => {
+    setSearchInput('');
+    setFilters({ search: '', role: '', status: '' });
+    setPagination((p) => ({ ...p, page: 1 }));
+  };
+
+  const handleStatusChange = async (id, status) => {
     try {
-      await approveStaff(id);
-      setMessage('User approved successfully.');
-      refreshUsers();
+      await updateUserStatus(id, status);
+      showToast(`User status updated to ${status}.`, 'success');
+      fetchUsers(pagination.page);
     } catch (err) {
-      setError(err.message);
+      showToast(err.message, 'error');
     }
   };
 
-  const handleDisapprove = async (id) => {
+  const handleResetPassword = async () => {
+    const { id, name } = resetModal;
     try {
-      await disapproveStaff(id);
-      setMessage('User disapproved successfully.');
-      refreshUsers();
+      const data = await resetUserPassword(id, null);
+      showToast(
+        `Password reset. New temporary password for ${name || id}: ${data.tempPassword || ''}`,
+        'success',
+        10000
+      );
+      setResetModal({ open: false, id: null, name: '' });
     } catch (err) {
-      setError(err.message);
+      showToast(err.message, 'error');
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return;
+  const handleDelete = async () => {
+    const { id } = deleteModal;
     try {
       await deleteUser(id);
-      setMessage('User deleted successfully.');
-      refreshUsers();
+      showToast('User deleted.', 'success');
+      setDeleteModal({ open: false, id: null, name: '' });
+      fetchUsers(pagination.page);
     } catch (err) {
-      setError(err.message);
+      showToast(err.message, 'error');
     }
   };
 
-  const filteredUsers = users.filter((u) => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
+  const columns = [
+    { key: 'id', header: 'ID' },
+    {
+      header: 'Name',
+      key: 'first_name',
+      render: (_, row) => `${row.first_name || ''} ${row.last_name || ''}`.trim() || row.email,
+    },
+    { key: 'email', header: 'Email' },
+    { key: 'identifier', header: 'Identifier' },
+    { key: 'role', header: 'Role' },
+    { key: 'status', header: 'Status' },
+    { key: 'created_at', header: 'Joined', render: (v) => new Date(v).toLocaleDateString() },
+  ];
+
+  const actions = (row) => {
+    const isStaff = ['teacher', 'supervisor', 'coordinator'].includes(row.role) && row.status === 'pending';
     return (
-      (u.first_name && u.first_name.toLowerCase().includes(q)) ||
-      (u.last_name && u.last_name.toLowerCase().includes(q)) ||
-      (u.email && u.email.toLowerCase().includes(q)) ||
-      (u.role && u.role.toLowerCase().includes(q)) ||
-      (u.identifier && u.identifier.toLowerCase().includes(q))
+      <div className={styles.rowActions}>
+        <button type="button" className={styles.viewBtn} title="View" onClick={() => setProfile(row)}>👁</button>
+        {row.status !== 'approved' ? (
+          <button type="button" className={styles.approveBtn} title="Activate" onClick={() => handleStatusChange(row.id, 'approved')}>Activate</button>
+        ) : (
+          <button type="button" className={styles.disapproveBtn} title="Deactivate" onClick={() => handleStatusChange(row.id, 'disapproved')}>Deactivate</button>
+        )}
+        <button type="button" className={styles.resetBtn} title="Reset password" onClick={() => setResetModal({ open: true, id: row.id, name: `${row.first_name || ''} ${row.last_name || ''}`.trim() })}>Reset</button>
+        {isStaff ? (
+          <button type="button" className={styles.approveBtn} title="Approve staff" onClick={() => handleStatusChange(row.id, 'approved')}>Approve</button>
+        ) : null}
+        <button type="button" className={styles.deleteBtn} title="Delete" onClick={() => setDeleteModal({ open: true, id: row.id, name: `${row.first_name || ''} ${row.last_name || ''}`.trim() })}>Del</button>
+      </div>
     );
-  });
+  };
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <h2>User Management</h2>
-        <div className={styles.controls}>
+        <div className={styles.filters}>
           <input
-            type="text"
-            placeholder="Search users..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            type="search"
+            placeholder="Search name, email, ID..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className={styles.searchInput}
+            onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
           />
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={styles.filterSelect}>
-            <option value="all">All Users</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="disapproved">Disapproved</option>
+          <select value={filters.role} onChange={(e) => setFilters((f) => ({ ...f, role: e.target.value }))} className={styles.filterSelect}>
+            {ROLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
+          <select value={filters.status} onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))} className={styles.filterSelect}>
+            {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+          <button type="button" className={styles.applyBtn} onClick={applyFilters}>Apply</button>
+          <button type="button" className={styles.clearBtn} onClick={clearFilters}>Clear</button>
         </div>
       </div>
-      
-      {message && <div className={styles.message}>{message}</div>}
-      {error && <div className={styles.error}>{error}</div>}
-      
+
       {loading ? (
-        <p>Loading...</p>
+        <LoadingSkeleton rows={8} />
       ) : (
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Identifier</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.map((user) => (
-              <tr key={user.id}>
-                <td>{user.id}</td>
-                <td>{user.first_name} {user.last_name}</td>
-                <td>{user.email}</td>
-                <td>{user.identifier}</td>
-                <td>{user.role}</td>
-                <td>{user.status}</td>
-                <td>
-                  {user.status === 'pending' && (user.role === 'teacher' || user.role === 'supervisor' || user.role === 'coordinator') && (
-                    <>
-                      <button onClick={() => handleApprove(user.id)} className={styles.btnApprove}>Approve</button>
-                      <button onClick={() => handleDisapprove(user.id)} className={styles.btnDisapprove}>Disapprove</button>
-                    </>
-                  )}
-                  <button onClick={() => handleDelete(user.id)} className={styles.btnDelete}>Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <>
+          <DataTable
+            columns={columns}
+            data={users}
+            actions={actions}
+            emptyMessage="No users found."
+          />
+          <Pagination
+            current={pagination.page}
+            total={pagination.total}
+            limit={pagination.limit}
+            onPageChange={(page) => {
+              setPagination((p) => ({ ...p, page }));
+              fetchUsers(page);
+            }}
+          />
+        </>
       )}
+
+      <ConfirmModal
+        isOpen={deleteModal.open}
+        title="Delete User"
+        message={`Are you sure you want to delete "${deleteModal.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        isDestructive
+        onConfirm={handleDelete}
+        onClose={() => setDeleteModal({ open: false, id: null, name: '' })}
+      />
+      <ConfirmModal
+        isOpen={resetModal.open}
+        title="Reset Password"
+        message={`Reset the password for "${resetModal.name}"? A new temporary password will be generated.`}
+        confirmLabel="Reset"
+        onConfirm={handleResetPassword}
+        onClose={() => setResetModal({ open: false, id: null, name: '' })}
+      />
+      {profile ? (
+        <UserProfileModal user={profile} onClose={() => setProfile(null)} onUpdated={() => fetchUsers(pagination.page)} />
+      ) : null}
     </div>
   );
 }
-
-export default UserManagement;

@@ -40,8 +40,18 @@ function TeacherSidebar() {
           </NavLink>
         </li>
         <li>
+          <NavLink to="/dashboard/teacher/social-feed" className={({ isActive }) => (isActive ? `${styles.navLink} ${styles.active}` : styles.navLink)}>
+            Social Feed
+          </NavLink>
+        </li>
+        <li>
           <NavLink to="/dashboard/teacher/settings" className={({ isActive }) => (isActive ? `${styles.navLink} ${styles.active}` : styles.navLink)}>
             Settings
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/dashboard/teacher/profile" className={({ isActive }) => (isActive ? `${styles.navLink} ${styles.active}` : styles.navLink)}>
+            Profile Settings
           </NavLink>
         </li>
       </ul>

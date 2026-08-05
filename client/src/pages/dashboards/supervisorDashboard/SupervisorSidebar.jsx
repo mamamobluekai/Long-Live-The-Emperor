@@ -34,6 +34,16 @@ function SupervisorSidebar() {
             Certifications
           </NavLink>
         </li>
+        <li>
+          <NavLink to="/dashboard/supervisor/social-feed" className={styles.navLink}>
+            Social Feed
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/dashboard/supervisor/profile" className={styles.navLink}>
+            Profile Settings
+          </NavLink>
+        </li>
       </ul>
     </nav>
   );

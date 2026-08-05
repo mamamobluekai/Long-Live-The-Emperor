@@ -5,21 +5,25 @@ import CreateDeploymentRequest from './CreateDeploymentRequest';
 import SupervisorStudents from './SupervisorStudents';
 import SupervisorAttendance from './SupervisorAttendance';
 import SupervisorCertifications from './SupervisorCertifications';
+import SocialFeed from '../studentDashboard/SocialFeed';
+import UserProfileSettings from '../UserProfileSettings';
 import styles from './SupervisorDashboard.module.css';
 
 function SupervisorDashboard({ user, onLogout }) {
   return (
-    <DashboardShell user={user} title="Supervisor Dashboard" onLogout={onLogout}>
+    <DashboardShell user={user} title="Supervisor Dashboard" onLogout={onLogout} profilePath="/dashboard/supervisor/profile">
       <div className={styles.layout}>
         <SupervisorSidebar />
         <div className={styles.content}>
           <Routes>
             <Route index element={<SupervisorOverview user={user} />} />
             <Route path="create-deployment-request" element={<CreateDeploymentRequest />} />
-            <Route path="students" element={<SupervisorStudents />} />
-            <Route path="attendance" element={<SupervisorAttendance />} />
-            <Route path="certifications" element={<SupervisorCertifications />} />
-            <Route path="*" element={<Navigate to="certifications" replace />} />
+             <Route path="students" element={<SupervisorStudents />} />
+             <Route path="attendance" element={<SupervisorAttendance />} />
+             <Route path="certifications" element={<SupervisorCertifications />} />
+             <Route path="social-feed" element={<SocialFeed />} />
+             <Route path="profile" element={<UserProfileSettings />} />
+             <Route path="*" element={<Navigate to="certifications" replace />} />
           </Routes>
         </div>
       </div>

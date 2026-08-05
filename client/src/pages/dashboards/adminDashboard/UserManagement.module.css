@@ -117,6 +117,72 @@
   border-color: #fecaca;
 }
 
+.form {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 22px;
+  background: #f8fafc;
+}
+
+.formHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.formHeader h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.formGrid input {
+  min-width: 0;
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.formGrid input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.btnCreate {
+  border: none;
+  border-radius: 10px;
+  background: #2563eb;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 9px 16px;
+  transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+}
+
+.btnCreate:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.btnCreate:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .btnApprove,
 .btnDisapprove,
 .btnDelete {
@@ -159,4 +225,31 @@
 .btnDisapprove:active,
 .btnDelete:active {
   transform: translateY(0);
+}
+
+@media (max-width: 980px) {
+  .formGrid {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 20px;
+  }
+
+  .controls {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .searchInput {
+    min-width: 0;
+    margin-right: 0;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
 }

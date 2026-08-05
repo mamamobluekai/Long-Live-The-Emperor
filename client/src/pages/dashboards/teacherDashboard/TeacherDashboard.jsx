@@ -9,11 +9,13 @@ import TeacherAppeals from './TeacherAppeals';
 import TeacherStudents from './TeacherStudents';
 import TeacherReports from './TeacherReports';
 import TeacherSettings from './TeacherSettings';
+import SocialFeed from '../studentDashboard/SocialFeed';
+import UserProfileSettings from '../UserProfileSettings';
 import styles from './TeacherDashboard.module.css';
 
 function TeacherDashboard({ user, onLogout }) {
   return (
-    <DashboardShell user={user} title="Teacher Dashboard" onLogout={onLogout}>
+    <DashboardShell user={user} title="Teacher Dashboard" onLogout={onLogout} profilePath="/dashboard/teacher/profile">
       <div className={styles.layout}>
         <TeacherSidebar />
         <div className={styles.content}>
@@ -24,10 +26,12 @@ function TeacherDashboard({ user, onLogout }) {
             <Route path="attendance" element={<TeacherAttendance />} />
             <Route path="live-map" element={<LiveMap />} />
             <Route path="appeals" element={<TeacherAppeals />} />
-            <Route path="reports" element={<TeacherReports />} />
-            <Route path="settings" element={<TeacherSettings />} />
-            <Route path="documents" element={<TeacherDocuments user={user} />} />
-            <Route path="*" element={<Navigate to="overview" replace />} />
+             <Route path="reports" element={<TeacherReports />} />
+             <Route path="settings" element={<TeacherSettings />} />
+             <Route path="social-feed" element={<SocialFeed />} />
+             <Route path="profile" element={<UserProfileSettings />} />
+             <Route path="documents" element={<TeacherDocuments user={user} />} />
+             <Route path="*" element={<Navigate to="overview" replace />} />
           </Routes>
         </div>
       </div>

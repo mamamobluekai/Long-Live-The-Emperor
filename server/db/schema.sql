@@ -23,6 +23,7 @@ CREATE TABLE admins (
   last_name VARCHAR(100) NOT NULL,
   employee_id VARCHAR(100) UNIQUE,
   department VARCHAR(255),
+  photo_url VARCHAR(512),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
