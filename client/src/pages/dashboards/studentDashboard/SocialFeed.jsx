@@ -171,7 +171,7 @@ export default function SocialFeed({ embedded = false }) {
         <div className={styles.emptyState}>
           <div className={styles.emptyIcon}>📭</div>
           <h3 className={styles.emptyTitle}>No posts yet</h3>
-          <p className={styles.emptyText}>Be the first to share something with the community!</p>
+          <p className={styles.emptyText}>You haven't created any posts yet. Share something with your community!</p>
         </div>
       ) : (
         <>

@@ -39,7 +39,6 @@ export default function PostCard({ post, currentUser, onPostUpdated, onPostDelet
   const [menuOpen, setMenuOpen] = useState(false);
 
   const isAuthor = currentUser?.id === post.author_id;
-  const canModerate = ['teacher', 'supervisor', 'coordinator'].includes(currentUser?.role);
   const typeConfig = POST_TYPE_CONFIG[post.post_type] || POST_TYPE_CONFIG.announcement;
   const authorName = `${post.author_first_name || ''} ${post.author_last_name || ''}`.trim() || post.author_role || 'User';
 
@@ -146,15 +145,6 @@ export default function PostCard({ post, currentUser, onPostUpdated, onPostDelet
                       {post.is_pinned ? 'Unpin' : 'Pin to top'}
                     </button>
                     <button type="button" className={`${styles.menuItem} ${styles.menuItemDanger}`} onClick={handleDelete}>Delete</button>
-                  </>
-                )}
-                {!isAuthor && canModerate && (
-                  <button type="button" className={`${styles.menuItem} ${styles.menuItemDanger}`} onClick={handleDelete}>Delete</button>
-                )}
-                {!isAuthor && !canModerate && (
-                  <>
-                    <button type="button" className={styles.menuItem}>Report</button>
-                    <button type="button" className={styles.menuItem}>Hide</button>
                   </>
                 )}
               </div>

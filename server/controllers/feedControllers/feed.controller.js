@@ -94,6 +94,12 @@ async function getPosts(req, res) {
       i += 1;
     }
 
+    if (!['admin'].includes(String(req.user.role || '').toLowerCase())) {
+      filters.push(`p.author_id = $${i}`);
+      values.push(req.user.id);
+      i += 1;
+    }
+
     const whereClause = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
     const offset = (page - 1) * limit;
 
@@ -148,23 +154,29 @@ async function getPostById(req, res) {
   await ensureFeedTables();
   try {
     const { id } = req.params;
-    const result = await pool.query(
-      `SELECT p.id, p.author_id, p.post_type, p.title, p.content, p.image_url,
-               p.link_url, p.link_title, p.link_description, p.link_domain, p.link_thumbnail,
-               p.audience, p.is_pinned, p.created_at, p.updated_at,
-               COALESCE(s.first_name, t.first_name, a.first_name, sup.first_name, c.first_name, '') AS author_first_name,
-               COALESCE(s.last_name, t.last_name, a.last_name, sup.last_name, c.last_name, '') AS author_last_name,
-               u_a.role AS author_role
-        FROM feed_posts p
-        JOIN users u_a ON p.author_id = u_a.id
-        LEFT JOIN students s ON u_a.id = s.user_id AND u_a.role = 'student'
-        LEFT JOIN teachers t ON u_a.id = t.user_id AND u_a.role = 'teacher'
-        LEFT JOIN admins a ON u_a.id = a.user_id AND u_a.role = 'admin'
-        LEFT JOIN supervisors sup ON u_a.id = sup.user_id AND u_a.role = 'supervisor'
-        LEFT JOIN coordinators c ON u_a.id = c.user_id AND u_a.role = 'coordinator'
-        WHERE p.id = $1`,
-      [id]
-    );
+    const viewerRole = String(req.user.role || '').toLowerCase();
+    let query = `
+      SELECT p.id, p.author_id, p.post_type, p.title, p.content, p.image_url,
+             p.link_url, p.link_title, p.link_description, p.link_domain, p.link_thumbnail,
+             p.audience, p.is_pinned, p.created_at, p.updated_at,
+             COALESCE(s.first_name, t.first_name, a.first_name, sup.first_name, c.first_name, '') AS author_first_name,
+             COALESCE(s.last_name, t.last_name, a.last_name, sup.last_name, c.last_name, '') AS author_last_name,
+             u_a.role AS author_role
+      FROM feed_posts p
+      JOIN users u_a ON p.author_id = u_a.id
+      LEFT JOIN students s ON u_a.id = s.user_id AND u_a.role = 'student'
+      LEFT JOIN teachers t ON u_a.id = t.user_id AND u_a.role = 'teacher'
+      LEFT JOIN admins a ON u_a.id = a.user_id AND u_a.role = 'admin'
+      LEFT JOIN supervisors sup ON u_a.id = sup.user_id AND u_a.role = 'supervisor'
+      LEFT JOIN coordinators c ON u_a.id = c.user_id AND u_a.role = 'coordinator'
+      WHERE p.id = $1
+    `;
+    const params = [id];
+    if (viewerRole !== 'admin') {
+      query += ` AND p.author_id = $2`;
+      params.push(req.user.id);
+    }
+    const result = await pool.query(query, params);
     const post = result.rows[0] || null;
     if (!post) return res.status(404).json({ error: 'Post not found.' });
     res.json({ post });

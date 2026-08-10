@@ -6,6 +6,7 @@ import SupervisorStudents from './SupervisorStudents';
 import SupervisorAttendance from './SupervisorAttendance';
 import SupervisorCertifications from './SupervisorCertifications';
 import SocialFeed from '../studentDashboard/SocialFeed';
+import BatchChat from '../../../components/social/BatchChat';
 import UserProfileSettings from '../UserProfileSettings';
 import styles from './SupervisorDashboard.module.css';
 
@@ -22,6 +23,7 @@ function SupervisorDashboard({ user, onLogout }) {
              <Route path="attendance" element={<SupervisorAttendance />} />
              <Route path="certifications" element={<SupervisorCertifications />} />
              <Route path="social-feed" element={<SocialFeed />} />
+             <Route path="group-chat" element={<BatchChat user={user} />} />
              <Route path="profile" element={<UserProfileSettings />} />
              <Route path="*" element={<Navigate to="certifications" replace />} />
           </Routes>

@@ -45,6 +45,11 @@ function TeacherSidebar() {
           </NavLink>
         </li>
         <li>
+          <NavLink to="/dashboard/teacher/group-chat" className={({ isActive }) => (isActive ? `${styles.navLink} ${styles.active}` : styles.navLink)}>
+            Group Chat
+          </NavLink>
+        </li>
+        <li>
           <NavLink to="/dashboard/teacher/settings" className={({ isActive }) => (isActive ? `${styles.navLink} ${styles.active}` : styles.navLink)}>
             Settings
           </NavLink>

@@ -40,6 +40,11 @@ function SupervisorSidebar() {
           </NavLink>
         </li>
         <li>
+          <NavLink to="/dashboard/supervisor/group-chat" className={styles.navLink}>
+            Group Chat
+          </NavLink>
+        </li>
+        <li>
           <NavLink to="/dashboard/supervisor/profile" className={styles.navLink}>
             Profile Settings
           </NavLink>

@@ -14,6 +14,7 @@ const attendanceRoutes = require('./routes/attendance.routes');
 const supervisorRoutes = require('./routes/supervisor.routes');
 const certificateRoutes = require('./routes/certificate.routes');
 const feedRoutes = require('./routes/feed.routes');
+const chatRoutes = require('./routes/chat.routes');
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.use('/api/supervisor', supervisorRoutes);
 app.use('/api/certificate', certificateRoutes);
 app.use('/api/supervisor/certificate', certificateRoutes);
 app.use('/api/feed', feedRoutes);
+app.use('/api/chat', chatRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found.' });

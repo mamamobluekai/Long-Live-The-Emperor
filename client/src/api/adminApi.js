@@ -166,10 +166,6 @@ export async function uploadLogo(file) {
   }));
 }
 
-export async function getAdminLogs(query = '') {
-  return fetchJsonOrThrow(`${API_BASE}/admin/logs${query ? `?${query}` : ''}`, { headers: authHeaders() });
-}
-
 export async function getAccessLogs(params = {}) {
   const qs = new URLSearchParams(params).toString();
   return fetchJsonOrThrow(`${API_BASE}/admin/logs${qs ? `?${qs}` : ''}`, { headers: authHeaders() });

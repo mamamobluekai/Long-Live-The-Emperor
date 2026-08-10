@@ -45,6 +45,11 @@ function StudentSidebar() {
           </NavLink>
         </li>
         <li>
+          <NavLink to="/dashboard/student/group-chat" className={styles.navLink}>
+            Group Chat
+          </NavLink>
+        </li>
+        <li>
           <NavLink to="/dashboard/student/profile" className={styles.navLink}>
             Profile Settings
           </NavLink>

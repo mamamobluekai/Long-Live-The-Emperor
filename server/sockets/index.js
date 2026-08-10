@@ -18,6 +18,20 @@ function initializeSocket(server) {
       }
     });
 
+    socket.on('chat:join_batch', (teacherBatchId) => {
+      if (teacherBatchId) {
+        socket.join(`chat:batch:${teacherBatchId}`);
+        console.log(`Socket ${socket.id} joined chat batch:${teacherBatchId}`);
+      }
+    });
+
+    socket.on('chat:leave_batch', (teacherBatchId) => {
+      if (teacherBatchId) {
+        socket.leave(`chat:batch:${teacherBatchId}`);
+        console.log(`Socket ${socket.id} left chat batch:${teacherBatchId}`);
+      }
+    });
+
     socket.on('disconnect', () => {
       console.log(`Socket ${socket.id} disconnected`);
     });

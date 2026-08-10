@@ -10,6 +10,7 @@ import TeacherStudents from './TeacherStudents';
 import TeacherReports from './TeacherReports';
 import TeacherSettings from './TeacherSettings';
 import SocialFeed from '../studentDashboard/SocialFeed';
+import BatchChat from '../../../components/social/BatchChat';
 import UserProfileSettings from '../UserProfileSettings';
 import styles from './TeacherDashboard.module.css';
 
@@ -29,6 +30,7 @@ function TeacherDashboard({ user, onLogout }) {
              <Route path="reports" element={<TeacherReports />} />
              <Route path="settings" element={<TeacherSettings />} />
              <Route path="social-feed" element={<SocialFeed />} />
+             <Route path="group-chat" element={<BatchChat user={user} />} />
              <Route path="profile" element={<UserProfileSettings />} />
              <Route path="documents" element={<TeacherDocuments user={user} />} />
              <Route path="*" element={<Navigate to="overview" replace />} />

@@ -7,6 +7,7 @@ import PlacementStatus from './PlacementStatus';
 import Announcements from './Announcements';
 import Attendance from './Attendance';
 import Progress from './Progress';
+import BatchChat from '../../../components/social/BatchChat';
 import UserProfileSettings from '../UserProfileSettings';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import styles from './StudentDashboard.module.css';
@@ -26,6 +27,7 @@ function StudentDashboard({ user, onLogout }) {
             <Route path="placement-status" element={<PlacementStatus />} />
              <Route path="announcements" element={<Announcements />} />
              <Route path="attendance" element={<Attendance />} />
+             <Route path="group-chat" element={<BatchChat user={user} />} />
              <Route path="profile" element={<UserProfileSettings />} />
              <Route path="*" element={<Navigate to="overview" replace />} />
           </Routes>
