@@ -15,11 +15,6 @@ function CoordinatorSidebar() {
           </NavLink>
         </li>
         <li>
-          <NavLink to="/dashboard/coordinator/upload-students" className={styles.navLink}>
-            Upload Students
-          </NavLink>
-        </li>
-        <li>
           <NavLink to="/dashboard/coordinator/requirements" className={styles.navLink}>
             Requirements
           </NavLink>
