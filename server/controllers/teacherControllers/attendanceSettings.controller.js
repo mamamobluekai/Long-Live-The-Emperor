@@ -3,6 +3,7 @@
 // Time Out window : 17:00 - 17:30
 // The teacher can also force-open (override) attendance for a batch at any time.
 const pool = require('../../db/');
+const { getBatchScheduleForDate } = require('./immersionSchedule.controller');
 
 const TZ = 'Asia/Manila';
 
@@ -207,6 +208,12 @@ const openBatchAttendance = async (req, res) => {
     if (!teacherId) return res.status(400).json({ error: 'Teacher profile not found.' });
     const own = await pool.query('SELECT id FROM teacher_batches WHERE id = $1 AND teacher_id = $2', [batchId, teacherId]);
     if (own.rows.length === 0) return res.status(403).json({ error: 'Access denied.' });
+
+    const today = new Date().toISOString().slice(0, 10);
+    const schedule = await getBatchScheduleForDate(batchId, today);
+    if (!schedule) {
+      return res.status(400).json({ error: 'Today is not within the work immersion schedule. Attendance can only be opened on scheduled dates.' });
+    }
 
     const r = await pool.query(
       `INSERT INTO attendance_config (teacher_batch_id, manual_open)

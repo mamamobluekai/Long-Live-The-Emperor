@@ -6,6 +6,7 @@ import {
   studentCheckOut,
   submitAppeal,
   getMyAppeals,
+  getMySchedule,
 } from '../../../api/attendanceApi';
 import styles from './Attendance.module.css';
 
@@ -54,8 +55,11 @@ function Attendance() {
   const [access, setAccess] = useState(null);
   const [today, setToday] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState(null); // { type: 'success'|'error'|'info', text }
+  const [notice, setNotice] = useState(null);
   const [nowSec, setNowSec] = useState(0);
+
+  const [schedules, setSchedules] = useState([]);
+  const [scheduleLoading, setScheduleLoading] = useState(true);
 
   // Appeals
   const [appeals, setAppeals] = useState([]);
@@ -89,6 +93,22 @@ function Attendance() {
     const tick = setInterval(() => setNowSec((s) => (s + 1) % 86400), 1000);
     return () => { clearInterval(id); clearInterval(tick); };
   }, [refresh]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadSchedule() {
+      try {
+        const data = await getMySchedule(token);
+        if (!cancelled) setSchedules(data.schedules || []);
+      } catch {
+        // ignore schedule load error
+      } finally {
+        if (!cancelled) setScheduleLoading(false);
+      }
+    }
+    loadSchedule();
+    return () => { cancelled = true; };
+  }, [token]);
 
   const flash = (type, text) => {
     setNotice({ type, text });
@@ -169,6 +189,7 @@ function Attendance() {
   const todayRec = today;
   const timedIn = !!todayRec?.check_in_time;
   const timedOut = !!todayRec?.check_out_time;
+  const inSchedule = access?.in_schedule === true;
 
   // Countdown target
   let countdownTarget = null;
@@ -219,6 +240,7 @@ function Attendance() {
 
   const phaseMessage = () => {
     if (!assigned) return 'You are not assigned to a teacher batch yet.';
+    if (!inSchedule) return 'Today is not within your work immersion schedule. Attendance is not allowed.';
     if (manualOpen) return 'Your teacher has opened attendance manually.';
     switch (phase) {
       case 'before_in': return 'Attendance has not opened yet.';
@@ -266,6 +288,36 @@ function Attendance() {
               <p className={styles.info}>{countdownLabel}</p>
             )}
 
+            {/* IMMERSION SCHEDULE */}
+            {!scheduleLoading && schedules.length > 0 && (
+              <div className={styles.section}>
+                <h3 className={styles.sectionTitle}>My Immersion Schedule</h3>
+                {schedules.map((s) => {
+                  const dates = s.attendance_dates ? s.attendance_dates.split(',') : [];
+                  return (
+                    <div key={s.id} className={styles.scheduleCard}>
+                      <div className={styles.scheduleHeader}>
+                        <div>
+                          <strong>Supervisor:</strong> {s.supervisor_first_name && s.supervisor_last_name ? `${s.supervisor_first_name} ${s.supervisor_last_name}` : 'Batch'}
+                        </div>
+                        <div>
+                          <strong>Duration:</strong> {s.duration_value} {s.duration_type} ({dates.length} days)
+                        </div>
+                        <div>
+                          <strong>Start:</strong> {s.start_date} → <strong>End:</strong> {s.end_date}
+                        </div>
+                      </div>
+                      <div className={styles.dateChips}>
+                        {dates.map((d) => (
+                          <span key={d} className={styles.dateChip}>{d}</span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             {/* TIME IN */}
             <div className={styles.section}>
               <h3 className={styles.sectionTitle}>Time In</h3>
@@ -273,6 +325,10 @@ function Attendance() {
                 <div className={styles.doneRow}>
                   <span className={styles.check}>✓</span>
                   Timed in at {new Date(todayRec.check_in_time).toLocaleTimeString()}
+                </div>
+              ) : !inSchedule ? (
+                <div className={styles.lockedRow}>
+                  <p className={styles.info}>Today is not a scheduled immersion date.</p>
                 </div>
               ) : activeType === 'time_in' && open ? (
                 <button className={styles.primaryBtn} onClick={doCheckIn} disabled={busy}>
@@ -295,6 +351,10 @@ function Attendance() {
                 <div className={styles.doneRow}>
                   <span className={styles.check}>✓</span>
                   Timed out at {new Date(todayRec.check_out_time).toLocaleTimeString()}
+                </div>
+              ) : !inSchedule ? (
+                <div className={styles.lockedRow}>
+                  <p className={styles.info}>Today is not a scheduled immersion date.</p>
                 </div>
               ) : timedIn && activeType === 'time_out' && open ? (
                 <button className={styles.secondaryBtn} onClick={doCheckOut} disabled={busy}>

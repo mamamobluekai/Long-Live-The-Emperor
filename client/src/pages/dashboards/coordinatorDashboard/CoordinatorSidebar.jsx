@@ -1,47 +1,16 @@
-import { NavLink } from 'react-router-dom';
-import styles from './CoordinatorSidebar.module.css';
+import DashboardSidebar from '../sharedSidebar/DashboardSidebar';
+
+const links = [
+  { to: '/dashboard/coordinator/students', label: 'Student Approvals', icon: '👥' },
+  { to: '/dashboard/coordinator/requirements', label: 'Requirements', icon: '📋' },
+  { to: '/dashboard/coordinator/batches', label: 'Teacher Batches', icon: '📚' },
+  { to: '/dashboard/coordinator/supervisors', label: 'Supervisors', icon: '👔' },
+  { to: '/dashboard/coordinator/social-feed', label: 'Social Feed', icon: '💬' },
+  { to: '/dashboard/coordinator/profile', label: 'Profile Settings', icon: '👤' },
+];
 
 function CoordinatorSidebar() {
-  return (
-    <nav className={styles.sidebar}>
-      <div className={styles.header}>
-        <h2>Coordinator</h2>
-        <p className={styles.subtitle}>Work Immersion Office</p>
-      </div>
-      <ul className={styles.navList}>
-        <li>
-          <NavLink to="/dashboard/coordinator/students" className={styles.navLink}>
-            Student Approvals
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/dashboard/coordinator/requirements" className={styles.navLink}>
-            Requirements
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/dashboard/coordinator/batches" className={styles.navLink}>
-            Teacher Batches
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/dashboard/coordinator/supervisors" className={styles.navLink}>
-            Supervisors
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/dashboard/coordinator/social-feed" className={styles.navLink}>
-            Social Feed
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/dashboard/coordinator/profile" className={styles.navLink}>
-            Profile Settings
-          </NavLink>
-        </li>
-      </ul>
-    </nav>
-  );
+  return <DashboardSidebar title="Coordinator" subtitle="Work Immersion Office" links={links} />;
 }
 
 export default CoordinatorSidebar;

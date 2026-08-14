@@ -9,6 +9,8 @@ import {
   updateBatchConfig,
   getBatchRecords,
   getBatchStats,
+  getBatchSchedules,
+  upsertBatchSchedule,
 } from '../../../api/attendanceApi';
 import styles from './TeacherAttendance.module.css';
 
@@ -19,11 +21,15 @@ function TeacherAttendance() {
   const [config, setConfig] = useState(null);
   const [records, setRecords] = useState([]);
   const [stats, setStats] = useState(null);
+  const [groups, setGroups] = useState([]);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
+  
+  // Location modal state
+  const [locationModal, setLocationModal] = useState(null);
 
   const flash = (type, text) => {
     setNotice({ type, text });
@@ -35,16 +41,18 @@ function TeacherAttendance() {
     setLoading(true);
     setError(null);
     try {
-      const [s, c, r, st] = await Promise.all([
+      const [s, c, r, st, g] = await Promise.all([
         getTeacherBatchStatus(selectedBatchId, token),
         getBatchConfig(selectedBatchId, token),
         getBatchRecords(selectedBatchId, date, token),
         getBatchStats(selectedBatchId, date, token),
+        getBatchSchedules(selectedBatchId, token),
       ]);
       setStatus(s);
       setConfig(c);
       setRecords(r.records || []);
       setStats(st);
+      setGroups(g.groups || []);
     } catch {
       setError('Failed to load attendance data.');
     } finally {
@@ -85,6 +93,24 @@ function TeacherAttendance() {
     }
   };
 
+  const showLocationModal = (record, type) => {
+    const lat = type === 'check_in' ? record.check_in_lat : record.check_out_lat;
+    const lng = type === 'check_in' ? record.check_in_lng : record.check_out_lng;
+    const accuracy = type === 'check_in' ? record.check_in_accuracy : record.check_out_accuracy;
+    const time = type === 'check_in' ? record.check_in_time : record.check_out_time;
+
+    if (!lat || !lng) {
+      flash('error', 'No location data available for this attendance.');
+      return;
+    }
+
+    setLocationModal({ record, type, lat, lng, accuracy, time });
+  };
+
+  const closeLocationModal = () => {
+    setLocationModal(null);
+  };
+
   const saveConfig = async (e) => {
     e.preventDefault();
     setBusy(true);
@@ -108,6 +134,52 @@ function TeacherAttendance() {
 
   const onConfigChange = (key, value) => setConfig((c) => ({ ...c, [key]: value }));
 
+  const saveGroupSchedule = async (group, form) => {
+    setBusy(true);
+    try {
+      const payload = {
+        supervisor_id: group.supervisor_id,
+        duration_type: form.duration_type,
+        duration_value: form.duration_value,
+        start_date: form.start_date,
+      };
+      await upsertBatchSchedule(selectedBatchId, payload, token);
+      flash('success', 'Immersion schedule saved.');
+      const g = await getBatchSchedules(selectedBatchId, token);
+      setGroups(g.groups || []);
+    } catch {
+      flash('error', 'Failed to save immersion schedule.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  function computeDates(startDate, durationType, durationValue) {
+    const start = new Date(startDate);
+    let daysNeeded = Number(durationValue);
+    if (durationType === 'hours') {
+      daysNeeded = Math.ceil(daysNeeded / 8);
+    }
+    const dates = [];
+    const current = new Date(start);
+    while (dates.length < daysNeeded) {
+      const day = current.getDay();
+      if (day !== 0 && day !== 6) {
+        dates.push(new Date(current).toISOString().slice(0, 10));
+      }
+      current.setDate(current.getDate() + 1);
+    }
+    return dates;
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const isTodayInSchedule = groups.some((g) => {
+    const s = g.schedule;
+    if (!s || !s.start_date) return false;
+    const dates = computeDates(s.start_date, s.duration_type, s.duration_value);
+    return dates.includes(today);
+  });
+
   return (
     <div className={styles.page}>
       <div className={styles.header}>
@@ -124,31 +196,6 @@ function TeacherAttendance() {
 
       {!loading && selectedBatchId && (
         <>
-          {/* Control + status */}
-          <div className={styles.controlBar}>
-            <div className={styles.statusBlock}>
-              <span className={`${styles.statePill} ${status?.attendance_open ? styles.open : styles.closed}`}>
-                {status?.attendance_open ? 'Open' : 'Closed'}
-              </span>
-              <span className={styles.stateMeta}>
-                {status?.manual_open
-                  ? 'Manually opened by you'
-                  : status?.active_type === 'time_in'
-                  ? 'Time In window active'
-                  : status?.active_type === 'time_out'
-                  ? 'Time Out window active'
-                  : 'No active window'}
-              </span>
-            </div>
-            <button
-              className={status?.manual_open ? styles.closeBtn : styles.openBtn}
-              onClick={handleToggle}
-              disabled={busy}
-            >
-              {status?.manual_open ? 'Close Attendance' : 'Open Attendance'}
-            </button>
-          </div>
-
           {stats && (
             <div className={styles.statGrid}>
               <div className={styles.statCard}>
@@ -196,6 +243,122 @@ function TeacherAttendance() {
             </div>
           )}
 
+          {/* Work Immersion Duration Settings */}
+          <div className={styles.panel}>
+            <h3 className={styles.panelTitle}>Work Immersion Duration</h3>
+            <p className={styles.muted} style={{ marginBottom: 14 }}>
+              Set the immersion duration per supervisor. Weekends (Saturday/Sunday) are excluded from attendance days.
+            </p>
+            {groups.map((group) => {
+              const schedule = group.schedule || {};
+              const form = {
+                duration_type: schedule.duration_type || 'days',
+                duration_value: schedule.duration_value || 10,
+                start_date: schedule.start_date || new Date().toISOString().slice(0, 10),
+              };
+              const computedDates = computeDates(form.start_date, form.duration_type, form.duration_value);
+              return (
+                <div key={group.supervisor_id || 'batch'} className={styles.supervisorGroup}>
+                  <div className={styles.supervisorHeader}>
+                    <div>
+                      <h4 className={styles.supervisorName}>
+                        {group.supervisor_name || 'Batch Students'}
+                      </h4>
+                      <p className={styles.muted}>
+                        {group.students.length} student{group.students.length !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <div className={styles.scheduleForm}>
+                    <label className={styles.cfgField}>
+                      Duration Type
+                      <select
+                        value={form.duration_type}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setGroups((gs) => gs.map((g) => g.supervisor_id === group.supervisor_id ? { ...g, schedule: { ...g.schedule, duration_type: val } } : g));
+                        }}
+                      >
+                        <option value="days">Days</option>
+                        <option value="hours">Hours</option>
+                      </select>
+                    </label>
+                    <label className={styles.cfgField}>
+                      {form.duration_type === 'hours' ? 'Total Hours' : 'Total Days'}
+                      <input
+                        type="number"
+                        min="1"
+                        value={form.duration_value}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setGroups((gs) => gs.map((g) => g.supervisor_id === group.supervisor_id ? { ...g, schedule: { ...g.schedule, duration_value: val } } : g));
+                        }}
+                      />
+                    </label>
+                    <label className={styles.cfgField}>
+                      Start Date
+                      <input
+                        type="date"
+                        value={form.start_date}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setGroups((gs) => gs.map((g) => g.supervisor_id === group.supervisor_id ? { ...g, schedule: { ...g.schedule, start_date: val } } : g));
+                        }}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className={styles.saveBtn}
+                      disabled={busy}
+                      onClick={() => saveGroupSchedule(group, form)}
+                    >
+                      Save Schedule
+                    </button>
+                  </div>
+                  <div className={styles.dateTimeline}>
+                    {computedDates.map((d) => (
+                      <span key={d} className={styles.dateChip}>{d}</span>
+                    ))}
+                  </div>
+                  <div className={styles.studentChips}>
+                    {group.students.map((s) => (
+                      <span key={s.student_id} className={styles.studentChip}>
+                        {s.first_name} {s.last_name}
+                      </span>
+                    ))}
+                  </div>
+                  <div className={styles.groupActions}>
+                    <span className={`${styles.statePill} ${status?.attendance_open ? styles.open : styles.closed}`}>
+                      {status?.attendance_open ? 'Open' : 'Closed'}
+                    </span>
+                    <span className={styles.stateMeta}>
+                      {status?.manual_open
+                        ? 'Manually opened by you'
+                        : status?.active_type === 'time_in'
+                        ? 'Time In window active'
+                        : status?.active_type === 'time_out'
+                        ? 'Time Out window active'
+                        : 'No active window'}
+                    </span>
+                    {!isTodayInSchedule && (
+                      <span className={styles.stateMeta} style={{ color: '#dc2626', fontWeight: 600 }}>
+                        Today is not a scheduled immersion date
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      className={status?.manual_open ? styles.closeBtn : styles.openBtn}
+                      onClick={handleToggle}
+                      disabled={busy || !isTodayInSchedule}
+                    >
+                      {status?.manual_open ? 'Close Attendance' : 'Open Attendance'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
           {/* Records */}
           <div className={styles.panel}>
             <div className={styles.panelHeader}>
@@ -223,8 +386,24 @@ function TeacherAttendance() {
                       <td>{r.first_name} {r.last_name}</td>
                       <td>{r.student_number || '—'}</td>
                       <td>{[r.grade_level, r.track_strand].filter(Boolean).join(' / ') || '—'}</td>
-                      <td>{r.check_in_time ? new Date(r.check_in_time).toLocaleTimeString() : <span className={styles.missed}>missed</span>}</td>
-                      <td>{r.check_out_time ? new Date(r.check_out_time).toLocaleTimeString() : <span className={styles.missed}>missed</span>}</td>
+                      <td style={{ cursor: r.check_in_time ? 'pointer' : 'default' }} onClick={() => r.check_in_time && showLocationModal(r, 'check_in')}>
+                        {r.check_in_time ? (
+                          <span style={{ color: '#0066cc', textDecoration: 'underline' }}>
+                            {new Date(r.check_in_time).toLocaleTimeString()}
+                          </span>
+                        ) : (
+                          <span className={styles.missed}>missed</span>
+                        )}
+                      </td>
+                      <td style={{ cursor: r.check_out_time ? 'pointer' : 'default' }} onClick={() => r.check_out_time && showLocationModal(r, 'check_out')}>
+                        {r.check_out_time ? (
+                          <span style={{ color: '#0066cc', textDecoration: 'underline' }}>
+                            {new Date(r.check_out_time).toLocaleTimeString()}
+                          </span>
+                        ) : (
+                          <span className={styles.missed}>missed</span>
+                        )}
+                      </td>
                       <td>
                         <span className={`${styles.badge} ${styles['badge_' + (r.status || 'none')]}`}>{r.status}</span>
                         {r.appeal_time_in_id && <span className={styles.appealTag}>appeal</span>}
@@ -240,6 +419,103 @@ function TeacherAttendance() {
       )}
 
       {!loading && !selectedBatchId && <p className={styles.info}>You are not assigned to a batch yet.</p>}
+
+      {/* Location Modal */}
+      {locationModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }} onClick={closeLocationModal}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '8px',
+            padding: '24px',
+            maxWidth: '400px',
+            width: '90%',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+          }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.2rem' }}>
+              {locationModal.type === 'check_in' ? 'Check-In' : 'Check-Out'} Location
+            </h3>
+            <div style={{ marginBottom: '12px' }}>
+              <p style={{ margin: '0 0 4px 0', fontSize: '0.85rem', color: '#666' }}>Student</p>
+              <p style={{ margin: 0, fontWeight: 500 }}>
+                {locationModal.record.first_name} {locationModal.record.last_name}
+              </p>
+            </div>
+            <div style={{ marginBottom: '12px' }}>
+              <p style={{ margin: '0 0 4px 0', fontSize: '0.85rem', color: '#666' }}>Time</p>
+              <p style={{ margin: 0, fontWeight: 500 }}>
+                {new Date(locationModal.time).toLocaleString()}
+              </p>
+            </div>
+            <div style={{ marginBottom: '12px' }}>
+              <p style={{ margin: '0 0 4px 0', fontSize: '0.85rem', color: '#666' }}>Latitude</p>
+              <p style={{ margin: 0, fontFamily: 'monospace', fontSize: '0.9rem' }}>
+                {locationModal.lat.toFixed(6)}
+              </p>
+            </div>
+            <div style={{ marginBottom: '12px' }}>
+              <p style={{ margin: '0 0 4px 0', fontSize: '0.85rem', color: '#666' }}>Longitude</p>
+              <p style={{ margin: 0, fontFamily: 'monospace', fontSize: '0.9rem' }}>
+                {locationModal.lng.toFixed(6)}
+              </p>
+            </div>
+            {locationModal.accuracy && (
+              <div style={{ marginBottom: '12px' }}>
+                <p style={{ margin: '0 0 4px 0', fontSize: '0.85rem', color: '#666' }}>Accuracy</p>
+                <p style={{ margin: 0, fontFamily: 'monospace', fontSize: '0.9rem' }}>
+                  ±{locationModal.accuracy.toFixed(2)} meters
+                </p>
+              </div>
+            )}
+            <div style={{ marginBottom: '12px' }}>
+              <p style={{ margin: '0 0 4px 0', fontSize: '0.85rem', color: '#666' }}>Map Link</p>
+              <a 
+                href={`https://www.google.com/maps?q=${locationModal.lat},${locationModal.lng}`}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  color: '#0066cc',
+                  textDecoration: 'none',
+                  display: 'inline-block',
+                  padding: '6px 12px',
+                  border: '1px solid #0066cc',
+                  borderRadius: '4px',
+                  fontSize: '0.85rem',
+                  fontWeight: 500,
+                }}
+              >
+                Open in Google Maps
+              </a>
+            </div>
+            <button
+              onClick={closeLocationModal}
+              style={{
+                width: '100%',
+                padding: '10px',
+                marginTop: '16px',
+                backgroundColor: '#f3f4f6',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: 500,
+                fontSize: '0.9rem',
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

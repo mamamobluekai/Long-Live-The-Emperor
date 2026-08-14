@@ -3,6 +3,7 @@
 const pool = require('../../db');
 const { getIO } = require('../../sockets');
 const { resolveAttendanceState } = require('../teacherControllers/attendanceSettings.controller');
+const { getBatchScheduleForDate } = require('../teacherControllers/immersionSchedule.controller');
 
 // Find the student's currently assigned batch (teacher_batch_students stores user id).
 async function getActiveBatch(userId) {
@@ -62,6 +63,15 @@ async function assertTypeOpen(teacherBatchId, type) {
   return state;
 }
 
+async function assertDateInSchedule(teacherBatchId, dateStr) {
+  const schedule = await getBatchScheduleForDate(teacherBatchId, dateStr);
+  if (!schedule) {
+    const err = new Error('Today is not within the work immersion schedule. Attendance is not allowed on this date.');
+    err.status = 403;
+    throw err;
+  }
+}
+
 // POST /api/attendance/check-in  { latitude, longitude, accuracy }
 exports.checkIn = async (req, res) => {
   const userId = req.user.id;
@@ -79,6 +89,7 @@ exports.checkIn = async (req, res) => {
     const batch = await getActiveBatch(userId);
     if (!batch) return res.status(400).json({ message: 'You are not assigned to a batch yet.' });
 
+    await assertDateInSchedule(batch.teacher_batch_id, new Date().toISOString().slice(0, 10));
     await assertTypeOpen(batch.teacher_batch_id, 'time_in');
 
     // Prevent duplicate Time In for today.
@@ -147,6 +158,7 @@ exports.checkOut = async (req, res) => {
     const batch = await getActiveBatch(userId);
     if (!batch) return res.status(400).json({ message: 'You are not assigned to a batch yet.' });
 
+    await assertDateInSchedule(batch.teacher_batch_id, new Date().toISOString().slice(0, 10));
     await assertTypeOpen(batch.teacher_batch_id, 'time_out');
 
     const existing = await client.query(
@@ -233,6 +245,9 @@ exports.getStudentAttendanceAccess = async (req, res) => {
 
     const state = await resolveAttendanceState(batch.teacher_batch_id);
 
+    const today = new Date().toISOString().slice(0, 10);
+    const schedule = await getBatchScheduleForDate(batch.teacher_batch_id, today);
+
     const rec = await pool.query(
       `SELECT id, status, check_in_time, check_out_time, appeal_time_in_id, appeal_time_out_id
        FROM student_attendance WHERE student_id = $1 AND date = CURRENT_DATE`,
@@ -243,6 +258,7 @@ exports.getStudentAttendanceAccess = async (req, res) => {
       assigned: true,
       teacherBatchId: batch.teacher_batch_id,
       teacherId: batch.teacher_id,
+      in_schedule: !!schedule,
       ...state,
       today: rec.rows[0] || null,
     });

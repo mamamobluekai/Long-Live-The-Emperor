@@ -6,6 +6,7 @@ const attendanceSettings = require('../controllers/teacherControllers/attendance
 const attendanceManagement = require('../controllers/teacherControllers/attendanceManagement.controller');
 const attendanceController = require('../controllers/studentControllers/attendance.controller');
 const attendanceAppeal = require('../controllers/studentControllers/attendanceAppeal.controller');
+const immersionSchedule = require('../controllers/teacherControllers/immersionSchedule.controller');
 const authenticate = require('../middleware/verifyToken');
 const authorize = require('../middleware/authorizeRole');
 
@@ -21,6 +22,13 @@ router.get('/teacher/batch/:batchId/records', authenticate, authorize('teacher',
 router.get('/teacher/batch/:batchId/stats', authenticate, authorize('teacher', 'coordinator'), attendanceManagement.getBatchStats);
 router.get('/teacher/batch/:batchId/appeals', authenticate, authorize('teacher', 'coordinator'), attendanceManagement.getBatchAppeals);
 router.post('/teacher/appeals/:appealId/review', authenticate, authorize('teacher', 'coordinator'), attendanceManagement.reviewAppeal);
+
+// ----- Teacher: work immersion schedules -----
+router.get('/teacher/batch/:batchId/schedules', authenticate, authorize('teacher', 'coordinator'), immersionSchedule.getBatchSchedules);
+router.put('/teacher/batch/:batchId/schedules', authenticate, authorize('teacher', 'coordinator'), immersionSchedule.upsertBatchSchedule);
+
+// ----- Student: view own schedule -----
+router.get('/student/schedule', authenticate, authorize('student'), immersionSchedule.getMySchedule);
 
 // ----- Student: status, check-in/out, appeals -----
 router.get('/student/status', authenticate, authorize('student'), attendanceController.getStudentAttendanceAccess);

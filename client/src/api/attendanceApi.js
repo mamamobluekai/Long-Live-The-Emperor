@@ -99,6 +99,21 @@ export async function reviewAppeal(appealId, payload, token) {
   return res.data;
 }
 
+export async function getBatchSchedules(batchId, token) {
+  const res = await axios.get(`${API_URL}/attendance/teacher/batch/${batchId}/schedules`, { headers: authHeaders(token) });
+  return res.data;
+}
+
+export async function upsertBatchSchedule(batchId, payload, token) {
+  const res = await axios.put(`${API_URL}/attendance/teacher/batch/${batchId}/schedules`, payload, { headers: authHeaders(token) });
+  return res.data;
+}
+
+export async function getMySchedule(token) {
+  const res = await axios.get(`${API_URL}/attendance/student/schedule`, { headers: authHeaders(token) });
+  return res.data;
+}
+
 // ---------- Socket ----------
 export function connectAttendanceSocket(token) {
   return io(SOCKET_URL, { auth: { token } });

@@ -1,62 +1,20 @@
-import { NavLink } from 'react-router-dom';
-import styles from './StudentSidebar.module.css';
+import DashboardSidebar from '../sharedSidebar/DashboardSidebar';
+
+const links = [
+  { to: '/dashboard/student', label: 'Overview', icon: '🏠', end: true },
+  { to: '/dashboard/student/progress', label: 'Progress', icon: '📈' },
+  { to: '/dashboard/student/requirements', label: 'Requirements', icon: '📋' },
+  { to: '/dashboard/student/documentation', label: 'Documentation', icon: '📁' },
+  { to: '/dashboard/student/placement-status', label: 'Placement Status', icon: '📍' },
+  { to: '/dashboard/student/evaluation', label: 'Grades', icon: '📝' },
+  { to: '/dashboard/student/announcements', label: 'Announcements', icon: '📢' },
+  { to: '/dashboard/student/attendance', label: 'Attendance', icon: '📅' },
+  { to: '/dashboard/student/group-chat', label: 'Group Chat', icon: '💬' },
+  { to: '/dashboard/student/profile', label: 'Profile Settings', icon: '👤' },
+];
 
 function StudentSidebar() {
-  return (
-    <nav className={styles.sidebar}>
-      <div className={styles.header}>
-        <h2>Student</h2>
-        <p className={styles.subtitle}>Work Immersion</p>
-      </div>
-      <ul className={styles.navList}>
-        <li>
-          <NavLink to="/dashboard/student" end className={styles.navLink}>
-            Overview
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/dashboard/student/progress" className={styles.navLink}>
-            Progress
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/dashboard/student/requirements" className={styles.navLink}>
-            Requirements
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/dashboard/student/documentation" className={styles.navLink}>
-            Documentation
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/dashboard/student/placement-status" className={styles.navLink}>
-            Placement Status
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/dashboard/student/announcements" className={styles.navLink}>
-            Announcements
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/dashboard/student/attendance" className={styles.navLink}>
-            Attendance
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/dashboard/student/group-chat" className={styles.navLink}>
-            Group Chat
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/dashboard/student/profile" className={styles.navLink}>
-            Profile Settings
-          </NavLink>
-        </li>
-      </ul>
-    </nav>
-  );
+  return <DashboardSidebar title="Student" subtitle="Work Immersion" links={links} />;
 }
 
 export default StudentSidebar;

@@ -295,3 +295,75 @@
   padding: 1px 7px;
   border-radius: 999px;
 }
+
+.supervisorGroup {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 14px;
+  background: #f8fafc;
+}
+
+.supervisorHeader {
+  margin-bottom: 12px;
+}
+
+.supervisorName {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.scheduleForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 12px;
+}
+
+.dateTimeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.dateChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  font-size: 0.8rem;
+  color: #334155;
+}
+
+.studentChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.studentChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #075985;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.groupActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+}

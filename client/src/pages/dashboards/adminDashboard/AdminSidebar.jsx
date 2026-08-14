@@ -1,5 +1,4 @@
-import { NavLink } from 'react-router-dom';
-import styles from './AdminSidebar.module.css';
+import DashboardSidebar from '../sharedSidebar/DashboardSidebar';
 
 const links = [
   { to: '/dashboard/admin', label: 'Dashboard', icon: '📊', end: true },
@@ -14,29 +13,7 @@ const links = [
 ];
 
 function AdminSidebar() {
-  return (
-    <nav className={styles.sidebar}>
-      <div className={styles.header}>
-        <h2>Admin Panel</h2>
-      </div>
-      <ul className={styles.navList}>
-        {links.map((link) => (
-          <li key={link.to}>
-            <NavLink
-              to={link.to}
-              className={({ isActive }) =>
-                isActive && link.end ? `${styles.navLink} ${styles.active}` : styles.navLink
-              }
-              end={link.end}
-            >
-              <span className={styles.linkIcon}>{link.icon}</span>
-              <span>{link.label}</span>
-            </NavLink>
-          </li>
-        ))}
-      </ul>
-    </nav>
-  );
+  return <DashboardSidebar title="Admin Panel" links={links} />;
 }
 
 export default AdminSidebar;

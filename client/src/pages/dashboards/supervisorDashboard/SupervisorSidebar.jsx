@@ -1,57 +1,20 @@
-import { NavLink } from 'react-router-dom';
-import styles from './SupervisorSidebar.module.css';
+import DashboardSidebar from '../sharedSidebar/DashboardSidebar';
+
+const links = [
+  { to: '/dashboard/supervisor', label: 'Dashboard', icon: '📊', end: true },
+  { to: '/dashboard/supervisor/create-deployment-request', label: 'Create Deployment Request', icon: '📤' },
+  { to: '/dashboard/supervisor/students', label: 'Students', icon: '👥' },
+  { to: '/dashboard/supervisor/attendance', label: 'Student Attendance', icon: '📅' },
+  { to: '/dashboard/supervisor/evaluate', label: 'Evaluate Student', icon: '📝' },
+  { to: '/dashboard/supervisor/evaluation', label: 'Student Criteria', icon: '📋' },
+  { to: '/dashboard/supervisor/certifications', label: 'Certifications', icon: '📜' },
+  { to: '/dashboard/supervisor/social-feed', label: 'Social Feed', icon: '💬' },
+  { to: '/dashboard/supervisor/group-chat', label: 'Group Chat', icon: '🗨️' },
+  { to: '/dashboard/supervisor/profile', label: 'Profile Settings', icon: '👤' },
+];
 
 function SupervisorSidebar() {
-  return (
-    <nav className={styles.sidebar}>
-      <div className={styles.header}>
-        <h2>Supervisor</h2>
-        <p className={styles.subtitle}>Deployment Requests</p>
-      </div>
-      <ul className={styles.navList}>
-        <li>
-          <NavLink to="/dashboard/supervisor" end className={styles.navLink}>
-            Dashboard
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/dashboard/supervisor/create-deployment-request" className={styles.navLink}>
-            Create Deployment Request
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/dashboard/supervisor/students" className={styles.navLink}>
-            Students
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/dashboard/supervisor/attendance" className={styles.navLink}>
-            Student Attendance
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/dashboard/supervisor/certifications" className={styles.navLink}>
-            Certifications
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/dashboard/supervisor/social-feed" className={styles.navLink}>
-            Social Feed
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/dashboard/supervisor/group-chat" className={styles.navLink}>
-            Group Chat
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/dashboard/supervisor/profile" className={styles.navLink}>
-            Profile Settings
-          </NavLink>
-        </li>
-      </ul>
-    </nav>
-  );
+  return <DashboardSidebar title="Supervisor" subtitle="Deployment Requests" links={links} />;
 }
 
 export default SupervisorSidebar;

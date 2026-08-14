@@ -1,10 +1,1 @@
-.layout {
-  display: flex;
-  gap: 24px;
-  align-items: flex-start;
-}
 
-.content {
-  flex: 1;
-  min-width: 0;
-}

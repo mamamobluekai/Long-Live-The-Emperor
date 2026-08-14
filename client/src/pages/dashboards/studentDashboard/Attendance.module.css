@@ -380,3 +380,37 @@
   background: #fee2e2;
   color: #991b1b;
 }
+
+.scheduleCard {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+  background: white;
+  margin-bottom: 10px;
+}
+
+.scheduleHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: #334155;
+  margin-bottom: 8px;
+}
+
+.dateChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dateChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  font-size: 0.75rem;
+  color: #334155;
+}

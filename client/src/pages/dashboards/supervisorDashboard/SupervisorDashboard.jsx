@@ -1,9 +1,12 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import DashboardShell from '../DashboardShell';
+import DashboardLayout from '../sharedSidebar/DashboardLayout';
+import DashboardTopNav from '../sharedSidebar/DashboardTopNav';
 import SupervisorSidebar from './SupervisorSidebar';
 import CreateDeploymentRequest from './CreateDeploymentRequest';
 import SupervisorStudents from './SupervisorStudents';
 import SupervisorAttendance from './SupervisorAttendance';
+import SupervisorEvaluateStudent from './SupervisorEvaluateStudent';
+import SupervisorEvaluation from './SupervisorEvaluation';
 import SupervisorCertifications from './SupervisorCertifications';
 import SocialFeed from '../studentDashboard/SocialFeed';
 import BatchChat from '../../../components/social/BatchChat';
@@ -12,24 +15,24 @@ import styles from './SupervisorDashboard.module.css';
 
 function SupervisorDashboard({ user, onLogout }) {
   return (
-    <DashboardShell user={user} title="Supervisor Dashboard" onLogout={onLogout} profilePath="/dashboard/supervisor/profile">
-      <div className={styles.layout}>
-        <SupervisorSidebar />
-        <div className={styles.content}>
-          <Routes>
-            <Route index element={<SupervisorOverview user={user} />} />
-            <Route path="create-deployment-request" element={<CreateDeploymentRequest />} />
-             <Route path="students" element={<SupervisorStudents />} />
-             <Route path="attendance" element={<SupervisorAttendance />} />
-             <Route path="certifications" element={<SupervisorCertifications />} />
-             <Route path="social-feed" element={<SocialFeed />} />
-             <Route path="group-chat" element={<BatchChat user={user} />} />
-             <Route path="profile" element={<UserProfileSettings />} />
-             <Route path="*" element={<Navigate to="certifications" replace />} />
-          </Routes>
-        </div>
-      </div>
-    </DashboardShell>
+    <DashboardLayout
+      topNav={<DashboardTopNav user={user} onLogout={onLogout} title="Supervisor Dashboard" />}
+      sidebar={<SupervisorSidebar />}
+    >
+      <Routes>
+        <Route index element={<SupervisorOverview user={user} />} />
+        <Route path="create-deployment-request" element={<CreateDeploymentRequest />} />
+         <Route path="students" element={<SupervisorStudents />} />
+         <Route path="attendance" element={<SupervisorAttendance />} />
+         <Route path="evaluate" element={<SupervisorEvaluateStudent />} />
+         <Route path="evaluation" element={<SupervisorEvaluation />} />
+         <Route path="certifications" element={<SupervisorCertifications />} />
+         <Route path="social-feed" element={<SocialFeed />} />
+         <Route path="group-chat" element={<BatchChat user={user} />} />
+         <Route path="profile" element={<UserProfileSettings />} />
+         <Route path="*" element={<Navigate to="evaluate" replace />} />
+      </Routes>
+    </DashboardLayout>
   );
 }
 
