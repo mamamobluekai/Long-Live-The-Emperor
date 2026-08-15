@@ -209,12 +209,8 @@ const openBatchAttendance = async (req, res) => {
     const own = await pool.query('SELECT id FROM teacher_batches WHERE id = $1 AND teacher_id = $2', [batchId, teacherId]);
     if (own.rows.length === 0) return res.status(403).json({ error: 'Access denied.' });
 
-    const today = new Date().toISOString().slice(0, 10);
-    const schedule = await getBatchScheduleForDate(batchId, today);
-    if (!schedule) {
-      return res.status(400).json({ error: 'Today is not within the work immersion schedule. Attendance can only be opened on scheduled dates.' });
-    }
-
+    // Manual override is intentionally allowed even when a date is not in the
+    // immersion schedule, so the teacher can open attendance on demand.
     const r = await pool.query(
       `INSERT INTO attendance_config (teacher_batch_id, manual_open)
        VALUES ($1, TRUE)

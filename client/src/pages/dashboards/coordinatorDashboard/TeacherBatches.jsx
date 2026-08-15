@@ -93,7 +93,7 @@ function TeacherBatches() {
 
   const openAssign = (batch) => {
     setAssigning(batch);
-    setSelectedStudents((batch.students || []).map((s) => s.id));
+    setSelectedStudents((batch.students || []).map((s) => s.student_id || s.id));
   };
 
   const toggleStudent = (id) => {
@@ -282,13 +282,15 @@ function TeacherBatches() {
                 </tr>
               </thead>
               <tbody>
-                {completed.map((s) => (
-                  <tr key={s.id}>
+                {completed.map((s) => {
+                  const assignmentId = s.student_id || s.id;
+                  return (
+                  <tr key={assignmentId}>
                     <td>
                       <input
                         type="checkbox"
-                        checked={selectedStudents.includes(s.id)}
-                        onChange={() => toggleStudent(s.id)}
+                        checked={selectedStudents.includes(assignmentId)}
+                        onChange={() => toggleStudent(assignmentId)}
                       />
                     </td>
                     <td>{s.student_id}</td>
@@ -298,7 +300,8 @@ function TeacherBatches() {
                     <td>{s.email}</td>
                     <td>{s.strand || '-'}</td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

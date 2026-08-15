@@ -1,6 +1,23 @@
 // Work Immersion Schedules: duration, date calculation, and batch grouping.
 const pool = require('../../db/');
 
+function parseLocalDate(dateStr) {
+  if (dateStr instanceof Date) {
+    if (isNaN(dateStr.getTime())) return dateStr;
+    return new Date(dateStr.getFullYear(), dateStr.getMonth(), dateStr.getDate());
+  }
+  const [y, m, d] = String(dateStr).split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function toLocalDateString(date) {
+  if (!date) return '';
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 async function ensureImmersionScheduleTable() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS work_immersion_schedules (
@@ -22,31 +39,46 @@ async function ensureImmersionScheduleTable() {
   `);
 
   await pool.query(`ALTER TABLE work_immersion_schedules ADD COLUMN IF NOT EXISTS end_date DATE;`);
+
+  // Collapse pre-existing duplicate batch-level schedules (supervisor_id IS NULL).
+  // PostgreSQL unique constraints ignore NULL, so earlier upserts could create
+  // multiple rows per (teacher_batch_id, NULL). Keep the newest and remove the rest.
+  await pool.query(`
+    DELETE FROM work_immersion_schedules
+    WHERE supervisor_id IS NULL
+      AND id NOT IN (
+        SELECT MAX(id) FROM work_immersion_schedules
+        WHERE supervisor_id IS NULL
+        GROUP BY teacher_batch_id
+      )
+  `);
 }
 
 function addWeekdays(startDate, weekdaysToAdd) {
-  const date = new Date(startDate);
+  const date = parseLocalDate(startDate);
   let added = 0;
   while (added < weekdaysToAdd) {
-    date.setDate(date.getDate() + 1);
     const day = date.getDay();
     if (day !== 0 && day !== 6) {
       added++;
     }
+    if (added < weekdaysToAdd) {
+      date.setDate(date.getDate() + 1);
+    }
   }
-  return date.toISOString().slice(0, 10);
+  return toLocalDateString(date);
 }
 
 function isWeekday(dateStr) {
-  const d = new Date(dateStr);
+  const d = parseLocalDate(dateStr);
   const day = d.getDay();
   return day !== 0 && day !== 6;
 }
 
 function isDateInSchedule(startDate, durationType, durationValue, targetDate) {
   if (!startDate || !durationType || !durationValue) return false;
-  const start = new Date(startDate);
-  const target = new Date(targetDate);
+  const start = parseLocalDate(startDate);
+  const target = parseLocalDate(targetDate);
   if (target < start) return false;
   if (!isWeekday(targetDate)) return false;
   const totalDays = durationType === 'hours' ? Math.ceil(Number(durationValue) / 8) : Number(durationValue);
@@ -120,7 +152,7 @@ const getBatchSchedules = async (req, res) => {
     }
 
     const groups = Array.from(supervisorsMap.entries()).map(([supervisor_id, data]) => {
-      const schedule = schedulesResult.rows.find(s => String(s.supervisor_id) === String(supervisor_id));
+      const schedule = schedulesResult.rows.find(s => String(s.supervisor_id) === String(data.supervisor_id));
       return {
         supervisor_id: supervisor_id === 'batch' ? null : Number(supervisor_id),
         supervisor_name: schedule ? `${schedule.supervisor_first_name || ''} ${schedule.supervisor_last_name || ''}`.trim() || 'Batch' : 'Batch',
@@ -160,7 +192,7 @@ const upsertBatchSchedule = async (req, res) => {
     let effectiveStart = start_date;
     if (!effectiveStart) {
       const row = await client.query('SELECT start_date FROM work_immersion_schedules WHERE teacher_batch_id = $1 LIMIT 1', [batchId]);
-      effectiveStart = row.rows[0]?.start_date || new Date().toISOString().slice(0, 10);
+      effectiveStart = row.rows[0]?.start_date || toLocalDateString(new Date());
     }
 
     let weekdays = durVal;
@@ -169,19 +201,44 @@ const upsertBatchSchedule = async (req, res) => {
     }
     const end_date = addWeekdays(effectiveStart, Math.max(1, weekdays));
 
-    const result = await client.query(
-      `INSERT INTO work_immersion_schedules (teacher_batch_id, supervisor_id, duration_type, duration_value, start_date, end_date, created_by, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
-       ON CONFLICT (teacher_batch_id, supervisor_id) DO UPDATE SET
-         duration_type = EXCLUDED.duration_type,
-         duration_value = EXCLUDED.duration_value,
-         start_date = EXCLUDED.start_date,
-         end_date = EXCLUDED.end_date,
-         created_by = EXCLUDED.created_by,
-         updated_at = CURRENT_TIMESTAMP
-       RETURNING *`,
-      [batchId, supId, duration_type, durVal, effectiveStart, end_date, req.user.id]
-    );
+    // PostgreSQL unique constraints treat NULL as distinct, so ON CONFLICT
+    // (teacher_batch_id, supervisor_id) does NOT match an existing row when
+    // supervisor_id is NULL (the batch-level schedule). Use an explicit
+    // upsert that finds the existing batch-level row by NULL supervisor so
+    // updates replace it instead of creating duplicate rows.
+    let result;
+    if (supId) {
+      result = await client.query(
+        `INSERT INTO work_immersion_schedules (teacher_batch_id, supervisor_id, duration_type, duration_value, start_date, end_date, created_by, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
+         ON CONFLICT (teacher_batch_id, supervisor_id) DO UPDATE SET
+           duration_type = EXCLUDED.duration_type,
+           duration_value = EXCLUDED.duration_value,
+           start_date = EXCLUDED.start_date,
+           end_date = EXCLUDED.end_date,
+           created_by = EXCLUDED.created_by,
+           updated_at = CURRENT_TIMESTAMP
+         RETURNING *`,
+        [batchId, supId, duration_type, durVal, effectiveStart, end_date, req.user.id]
+      );
+    } else {
+      result = await client.query(
+        `UPDATE work_immersion_schedules
+          SET duration_type = $1, duration_value = $2, start_date = $3, end_date = $4,
+              supervisor_id = NULL, created_by = $5, updated_at = CURRENT_TIMESTAMP
+         WHERE teacher_batch_id = $6 AND supervisor_id IS NULL
+         RETURNING *`,
+        [duration_type, durVal, effectiveStart, end_date, req.user.id, batchId]
+      );
+      if (!result.rowCount) {
+        result = await client.query(
+          `INSERT INTO work_immersion_schedules (teacher_batch_id, supervisor_id, duration_type, duration_value, start_date, end_date, created_by, updated_at)
+           VALUES ($1, NULL, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
+           RETURNING *`,
+          [batchId, duration_type, durVal, effectiveStart, end_date, req.user.id]
+        );
+      }
+    }
 
     res.json({ schedule: result.rows[0] });
   } catch (err) {
@@ -216,13 +273,13 @@ const getMySchedule = async (req, res) => {
 
     const schedules = result.rows.map((row) => {
       const dates = [];
-      const current = new Date(row.start_date);
+      const current = parseLocalDate(row.start_date);
       const totalDays = row.duration_type === 'hours' ? Math.ceil(Number(row.duration_value) / 8) : Number(row.duration_value);
       let added = 0;
       while (added < totalDays) {
         const day = current.getDay();
         if (day !== 0 && day !== 6) {
-          dates.push(new Date(current).toISOString().slice(0, 10));
+          dates.push(toLocalDateString(current));
           added++;
         }
         current.setDate(current.getDate() + 1);

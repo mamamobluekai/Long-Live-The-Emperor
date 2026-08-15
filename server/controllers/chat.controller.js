@@ -105,8 +105,8 @@ async function getAccessibleBatches(req, res) {
                 sv.first_name AS supervisor_first_name, sv.last_name AS supervisor_last_name
          FROM teacher_batch_students tbs
          JOIN teacher_batches tb ON tb.id = tbs.teacher_batch_id
-         JOIN users su ON su.id = tbs.student_id
-         JOIN students s ON s.user_id = su.id
+         JOIN students s ON s.id = tbs.student_id OR s.user_id = tbs.student_id
+         JOIN users su ON su.id = s.user_id
          JOIN coordinators c ON c.id = tb.coordinator_id
          JOIN teachers t ON t.id = tb.teacher_id
          LEFT JOIN supervisors sv ON sv.user_id = tb.supervisor_id
@@ -189,8 +189,8 @@ async function ensureBatchAccess(batchId, userId, role) {
       const check = await pool.query(
         `SELECT tb.id FROM teacher_batches tb
          JOIN teacher_batch_students tbs ON tbs.teacher_batch_id = tb.id
-         JOIN users su ON su.id = tbs.student_id
-         JOIN students s ON s.user_id = su.id
+         JOIN students s ON s.id = tbs.student_id OR s.user_id = tbs.student_id
+         JOIN users su ON su.id = s.user_id
          WHERE tb.id = $1 AND su.id = $2`,
         [batchId, userId]
       );

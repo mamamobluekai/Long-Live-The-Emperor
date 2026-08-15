@@ -1,6 +1,7 @@
 // controllers/locationController.js
 const pool = require("../db");
 const { getIO } = require("../sockets");
+const { getBatchScheduleForDate } = require("./teacherControllers/immersionSchedule.controller");
 
 // POST /api/location/update
 // Called repeatedly by the student's browser (e.g. every 5-10s) while
@@ -75,10 +76,17 @@ exports.updateLocation = async (req, res) => {
 
 // GET /api/location/batch/:teacherBatchId
 // Teacher dashboard: current position of every student currently checked in.
+// Only returns students whose attendance date falls within an active work immersion schedule.
 exports.getBatchCurrentLocations = async (req, res) => {
   const { teacherBatchId } = req.params;
+  const today = new Date().toISOString().slice(0, 10);
 
   try {
+    const schedule = await getBatchScheduleForDate(teacherBatchId, today);
+    if (!schedule) {
+      return res.json({ students: [], in_schedule: false, message: 'Today is not within the work immersion schedule.' });
+    }
+
     const result = await pool.query(
       `SELECT DISTINCT ON (sl.student_id)
               sl.student_id, st.first_name, st.last_name,
@@ -87,11 +95,11 @@ exports.getBatchCurrentLocations = async (req, res) => {
        FROM student_locations sl
        JOIN student_attendance sa ON sa.id = sl.attendance_id
        JOIN students st ON st.id = sl.student_id
-       WHERE sa.teacher_batch_id = $1 AND sa.date = CURRENT_DATE
+       WHERE sa.teacher_batch_id = $1 AND sa.date = $2
        ORDER BY sl.student_id, sl.recorded_at DESC`,
-      [teacherBatchId]
+      [teacherBatchId, today]
     );
-    res.json(result.rows);
+    res.json({ students: result.rows, in_schedule: true });
   } catch (err) {
     console.error("getBatchCurrentLocations error:", err);
     res.status(500).json({ message: "Failed to fetch locations." });
@@ -100,20 +108,35 @@ exports.getBatchCurrentLocations = async (req, res) => {
 
 // GET /api/location/history/:studentId?date=YYYY-MM-DD
 // Trail of a single student's movement for a given day (defaults to today).
+// Only returns data if the date falls within an active work immersion schedule.
 exports.getStudentLocationHistory = async (req, res) => {
   const { studentId } = req.params;
   const date = req.query.date || new Date().toISOString().slice(0, 10);
 
   try {
-    const result = await pool.query(
-      `SELECT sl.latitude, sl.longitude, sl.accuracy, sl.recorded_at
-       FROM student_locations sl
-       JOIN student_attendance sa ON sa.id = sl.attendance_id
-       WHERE sl.student_id = $1 AND sa.date = $2
-       ORDER BY sl.recorded_at ASC`,
+    const attendanceRes = await pool.query(
+      `SELECT teacher_batch_id FROM student_attendance WHERE student_id = $1 AND date = $2`,
       [studentId, date]
     );
-    res.json(result.rows);
+    const attendance = attendanceRes.rows[0];
+
+    let locations = [];
+    if (attendance) {
+      const schedule = await getBatchScheduleForDate(attendance.teacher_batch_id, date);
+      if (schedule) {
+        const result = await pool.query(
+          `SELECT sl.latitude, sl.longitude, sl.accuracy, sl.recorded_at
+           FROM student_locations sl
+           JOIN student_attendance sa ON sa.id = sl.attendance_id
+           WHERE sl.student_id = $1 AND sa.date = $2
+           ORDER BY sl.recorded_at ASC`,
+          [studentId, date]
+        );
+        locations = result.rows;
+      }
+    }
+
+    res.json(locations);
   } catch (err) {
     console.error("getStudentLocationHistory error:", err);
     res.status(500).json({ message: "Failed to fetch location history." });

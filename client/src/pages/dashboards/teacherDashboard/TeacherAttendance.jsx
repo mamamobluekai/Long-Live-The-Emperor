@@ -14,6 +14,24 @@ import {
 } from '../../../api/attendanceApi';
 import styles from './TeacherAttendance.module.css';
 
+function parseLocalDate(dateStr) {
+  if (dateStr instanceof Date) {
+    if (isNaN(dateStr.getTime())) return new Date();
+    return new Date(dateStr.getFullYear(), dateStr.getMonth(), dateStr.getDate());
+  }
+  if (!dateStr) return new Date();
+  const [y, m, d] = String(dateStr).split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function toLocalDateString(date) {
+  if (!date) return '';
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 function TeacherAttendance() {
   const { token } = useAuth();
   const { batchId: selectedBatchId, batchLabel } = useTeacherBatch();
@@ -22,7 +40,7 @@ function TeacherAttendance() {
   const [records, setRecords] = useState([]);
   const [stats, setStats] = useState(null);
   const [groups, setGroups] = useState([]);
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(toLocalDateString(new Date()));
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -154,29 +172,32 @@ function TeacherAttendance() {
     }
   };
 
-  function computeDates(startDate, durationType, durationValue) {
-    const start = new Date(startDate);
-    let daysNeeded = Number(durationValue);
-    if (durationType === 'hours') {
-      daysNeeded = Math.ceil(daysNeeded / 8);
-    }
+  const isWeekend = (dateStr) => {
+    if (!dateStr) return false;
+    const d = parseLocalDate(dateStr);
+    const day = d.getDay();
+    return day === 0 || day === 6;
+  };
+
+  function computeDates(startDate) {
+    const current = parseLocalDate(startDate);
+    if (isNaN(current.getTime())) return [];
     const dates = [];
-    const current = new Date(start);
-    while (dates.length < daysNeeded) {
+    while (dates.length < 10) {
       const day = current.getDay();
       if (day !== 0 && day !== 6) {
-        dates.push(new Date(current).toISOString().slice(0, 10));
+        dates.push(toLocalDateString(current));
       }
       current.setDate(current.getDate() + 1);
     }
     return dates;
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = toLocalDateString(new Date());
   const isTodayInSchedule = groups.some((g) => {
     const s = g.schedule;
     if (!s || !s.start_date) return false;
-    const dates = computeDates(s.start_date, s.duration_type, s.duration_value);
+    const dates = computeDates(s.start_date);
     return dates.includes(today);
   });
 
@@ -254,9 +275,10 @@ function TeacherAttendance() {
               const form = {
                 duration_type: schedule.duration_type || 'days',
                 duration_value: schedule.duration_value || 10,
-                start_date: schedule.start_date || new Date().toISOString().slice(0, 10),
+                start_date: schedule.start_date || toLocalDateString(new Date()),
               };
-              const computedDates = computeDates(form.start_date, form.duration_type, form.duration_value);
+              const computedDates = computeDates(form.start_date);
+              const hasSchedule = Boolean(schedule.id);
               return (
                 <div key={group.supervisor_id || 'batch'} className={styles.supervisorGroup}>
                   <div className={styles.supervisorHeader}>
@@ -268,31 +290,17 @@ function TeacherAttendance() {
                         {group.students.length} student{group.students.length !== 1 ? 's' : ''}
                       </p>
                     </div>
+                    {hasSchedule && <span className={styles.scheduleBadge}>Schedule active</span>}
                   </div>
                   <div className={styles.scheduleForm}>
                     <label className={styles.cfgField}>
-                      Duration Type
-                      <select
-                        value={form.duration_type}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setGroups((gs) => gs.map((g) => g.supervisor_id === group.supervisor_id ? { ...g, schedule: { ...g.schedule, duration_type: val } } : g));
-                        }}
-                      >
-                        <option value="days">Days</option>
-                        <option value="hours">Hours</option>
-                      </select>
-                    </label>
-                    <label className={styles.cfgField}>
-                      {form.duration_type === 'hours' ? 'Total Hours' : 'Total Days'}
+                      Total Days
                       <input
                         type="number"
                         min="1"
-                        value={form.duration_value}
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          setGroups((gs) => gs.map((g) => g.supervisor_id === group.supervisor_id ? { ...g, schedule: { ...g.schedule, duration_value: val } } : g));
-                        }}
+                        value={10}
+                        readOnly
+                        style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
                       />
                     </label>
                     <label className={styles.cfgField}>
@@ -302,6 +310,10 @@ function TeacherAttendance() {
                         value={form.start_date}
                         onChange={(e) => {
                           const val = e.target.value;
+                          if (val && isWeekend(val)) {
+                            flash('error', 'Start date cannot be a weekend (Saturday/Sunday).');
+                            return;
+                          }
                           setGroups((gs) => gs.map((g) => g.supervisor_id === group.supervisor_id ? { ...g, schedule: { ...g.schedule, start_date: val } } : g));
                         }}
                       />
@@ -310,9 +322,9 @@ function TeacherAttendance() {
                       type="button"
                       className={styles.saveBtn}
                       disabled={busy}
-                      onClick={() => saveGroupSchedule(group, form)}
+                      onClick={() => saveGroupSchedule(group, { ...form, duration_type: 'days', duration_value: 10 })}
                     >
-                      Save Schedule
+                      {hasSchedule ? 'Update Schedule' : 'Save Schedule'}
                     </button>
                   </div>
                   <div className={styles.dateTimeline}>
@@ -342,14 +354,14 @@ function TeacherAttendance() {
                     </span>
                     {!isTodayInSchedule && (
                       <span className={styles.stateMeta} style={{ color: '#dc2626', fontWeight: 600 }}>
-                        Today is not a scheduled immersion date
+                        Today is not a scheduled immersion date — manual override is still available.
                       </span>
                     )}
                     <button
                       type="button"
                       className={status?.manual_open ? styles.closeBtn : styles.openBtn}
                       onClick={handleToggle}
-                      disabled={busy || !isTodayInSchedule}
+                      disabled={busy}
                     >
                       {status?.manual_open ? 'Close Attendance' : 'Open Attendance'}
                     </button>
@@ -363,7 +375,14 @@ function TeacherAttendance() {
           <div className={styles.panel}>
             <div className={styles.panelHeader}>
               <h3 className={styles.panelTitle}>Attendance Records</h3>
-              <input type="date" className={styles.dateInput} value={date} onChange={(e) => setDate(e.target.value)} />
+              <input type="date" className={styles.dateInput} value={date} onChange={(e) => {
+                const val = e.target.value;
+                if (val && isWeekend(val)) {
+                  flash('error', 'Attendance records are not available on weekends.');
+                  return;
+                }
+                setDate(val);
+              }} />
             </div>
             <div className={styles.tableWrap}>
               <table className={styles.table}>

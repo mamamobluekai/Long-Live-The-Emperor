@@ -1,6 +1,24 @@
 // Teacher-facing attendance management: records, statistics, and appeals.
 const pool = require('../../db/');
 
+const TZ = 'Asia/Manila';
+
+function nowLocalDate(timezone = TZ) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+  const map = {};
+  for (const p of parts) map[p.type] = p.value;
+  return `${map.year}-${map.month}-${map.day}`;
+}
+
+async function ensureAppealDateColumn(client = pool) {
+  await client.query(`ALTER TABLE attendance_appeals ADD COLUMN IF NOT EXISTS appeal_date DATE DEFAULT CURRENT_DATE`);
+}
+
 // Ensure the requesting teacher owns the batch.
 async function assertOwnsBatch(teacherUserId, batchId) {
   const teacherRow = await pool.query('SELECT id FROM teachers WHERE user_id = $1', [teacherUserId]);
@@ -14,8 +32,9 @@ async function assertOwnsBatch(teacherUserId, batchId) {
 // GET /api/attendance/teacher/batch/:batchId/records?date=YYYY-MM-DD
 const getBatchRecords = async (req, res) => {
   try {
+    await ensureAppealDateColumn();
     const { batchId } = req.params;
-    const date = req.query.date || new Date().toISOString().slice(0, 10);
+    const date = req.query.date || nowLocalDate();
     const own = await assertOwnsBatch(req.user.id, batchId);
     if (own.error) return res.status(own.status).json({ error: own.error });
 
@@ -44,7 +63,7 @@ const getBatchRecords = async (req, res) => {
 const getBatchStats = async (req, res) => {
   try {
     const { batchId } = req.params;
-    const date = req.query.date || new Date().toISOString().slice(0, 10);
+    const date = req.query.date || nowLocalDate();
     const own = await assertOwnsBatch(req.user.id, batchId);
     if (own.error) return res.status(own.status).json({ error: own.error });
 
@@ -120,6 +139,7 @@ const getBatchAppeals = async (req, res) => {
 const reviewAppeal = async (req, res) => {
   const client = await pool.connect();
   try {
+    await ensureAppealDateColumn(client);
     const { appealId } = req.params;
     const { status, comment } = req.body;
     if (!['approved', 'rejected'].includes(status)) {
@@ -152,25 +172,26 @@ const reviewAppeal = async (req, res) => {
 
     // If approved, update the attendance record accordingly.
     if (status === 'approved') {
+      const appealDate = row.appeal_date || nowLocalDate();
       if (row.attendance_type === 'time_in') {
         await client.query(
           `INSERT INTO student_attendance (student_id, teacher_batch_id, date, status, check_in_time, appeal_time_in_id)
-           VALUES ($1, $2, CURRENT_DATE, 'checked_in', CURRENT_TIMESTAMP, $3)
+           VALUES ($1, $2, $4, 'checked_in', CURRENT_TIMESTAMP, $3)
            ON CONFLICT (student_id, date) DO UPDATE SET
              check_in_time = COALESCE(student_attendance.check_in_time, CURRENT_TIMESTAMP),
              appeal_time_in_id = $3,
              updated_at = CURRENT_TIMESTAMP`,
-          [row.student_id, row.teacher_batch_id, appealId]
+          [row.student_id, row.teacher_batch_id, appealId, appealDate]
         );
       } else {
         await client.query(
           `INSERT INTO student_attendance (student_id, teacher_batch_id, date, status, check_out_time, appeal_time_out_id)
-           VALUES ($1, $2, CURRENT_DATE, 'checked_out', CURRENT_TIMESTAMP, $3)
+           VALUES ($1, $2, $4, 'checked_out', CURRENT_TIMESTAMP, $3)
            ON CONFLICT (student_id, date) DO UPDATE SET
              check_out_time = COALESCE(student_attendance.check_out_time, CURRENT_TIMESTAMP),
              appeal_time_out_id = $3,
              updated_at = CURRENT_TIMESTAMP`,
-          [row.student_id, row.teacher_batch_id, appealId]
+          [row.student_id, row.teacher_batch_id, appealId, appealDate]
         );
       }
     }

@@ -42,6 +42,14 @@
   margin-top: 16px;
 }
 
+.appealSection {
+  margin-top: 16px;
+}
+
+.legacyActionSection {
+  display: none;
+}
+
 .statusBadge {
   display: inline-flex;
   align-items: center;
@@ -288,6 +296,16 @@
   margin: 10px 0;
 }
 
+.appealDate {
+  background: #e0f2fe;
+  color: #075985;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -382,6 +400,7 @@
 }
 
 .scheduleCard {
+  display: none;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 12px;
@@ -413,4 +432,125 @@
   border: 1px solid #e2e8f0;
   font-size: 0.75rem;
   color: #334155;
+}
+
+.dayList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dayCard {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.dayToday {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.dayMain {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.dayNumber {
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.dayDate,
+.dayMeta {
+  color: #475569;
+  font-size: 0.82rem;
+}
+
+.dayActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.dayTime {
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.dayTimeActual {
+  color: #1e40af;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-top: 1px;
+}
+
+.dayAbsent {
+  color: #991b1b;
+}
+
+.dayStatus {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.dayDone {
+  color: #166534;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.dayOpen {
+  color: #166534;
+}
+
+.dayClosed {
+  color: #991b1b;
+}
+
+.smallPrimaryBtn,
+.smallSecondaryBtn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.smallPrimaryBtn {
+  background: #1d4ed8;
+}
+
+.smallSecondaryBtn {
+  background: #0f766e;
+}
+
+.smallPrimaryBtn:disabled,
+.smallSecondaryBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 520px) {
+  .dayCard {
+    flex-direction: column;
+  }
+
+  .dayActions {
+    align-items: flex-start;
+  }
 }

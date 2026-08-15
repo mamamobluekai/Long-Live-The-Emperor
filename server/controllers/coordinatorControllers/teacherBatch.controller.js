@@ -208,19 +208,25 @@ const assignApprovedStudentsToBatch = async (req, res) => {
       return res.status(400).json({ error: `Exceeds max capacity. Max: ${max}, Selected: ${uniqueStudentIds.length}` });
     }
 
-    // Only students whose requirements have been explicitly approved by a coordinator can be assigned.
+    // Accept either students.id (current UI) or users.id (older callers), then store students.id.
     const studentsCheck = await client.query(
-      `SELECT u.id
+      `SELECT s.id, s.user_id
        FROM users u
+       JOIN students s ON s.user_id = u.id
        JOIN student_requirement_submissions srs ON srs.user_id = u.id
        WHERE u.role = 'student'
          AND srs.status = 'Approved'
-         AND u.id = ANY($1::int[])`,
+         AND (s.id = ANY($1::int[]) OR u.id = ANY($1::int[]))`,
        [uniqueStudentIds]
      );
 
-    const completedFoundIds = studentsCheck.rows.map((r) => r.id);
-    const missingCount = uniqueStudentIds.length - completedFoundIds.length;
+    const completedByStudentId = new Map(studentsCheck.rows.map((r) => [Number(r.id), Number(r.id)]));
+    const completedByUserId = new Map(studentsCheck.rows.map((r) => [Number(r.user_id), Number(r.id)]));
+    const normalizedStudentIds = Array.from(new Set(uniqueStudentIds
+      .map((id) => completedByStudentId.get(id) || completedByUserId.get(id))
+      .filter(Boolean)));
+
+    const missingCount = uniqueStudentIds.length - normalizedStudentIds.length;
     if (missingCount > 0) {
       return res.status(400).json({ error: 'One or more students have not completed requirements or were not found.' });
     }
@@ -228,13 +234,13 @@ const assignApprovedStudentsToBatch = async (req, res) => {
     // Conflict rule: a student cannot be assigned to another teacher/batch (any teacher batch other than this one)
     // Allow re-assigning within the same batchId.
     const conflictCheck = await client.query(
-      `SELECT DISTINCT tbs.student_id
+         `SELECT DISTINCT tbs.student_id
        FROM teacher_batch_students tbs
        JOIN teacher_batches tb ON tb.id = tbs.teacher_batch_id
        WHERE tb.coordinator_id = $1
          AND tbs.student_id = ANY($2::int[])
          AND tbs.teacher_batch_id <> $3`,
-      [coordinatorId, uniqueStudentIds, batchId]
+      [coordinatorId, normalizedStudentIds, batchId]
     );
 
     const conflictedIds = conflictCheck.rows.map((r) => r.student_id);
@@ -252,9 +258,9 @@ const assignApprovedStudentsToBatch = async (req, res) => {
       [batchId]
     );
 
-    if (uniqueStudentIds.length > 0) {
-      const placeholders = uniqueStudentIds.map((_, i) => `($1, $${i + 2}, NOW())`).join(',');
-      const params = [batchId, ...uniqueStudentIds];
+    if (normalizedStudentIds.length > 0) {
+      const placeholders = normalizedStudentIds.map((_, i) => `($1, $${i + 2}, NOW())`).join(',');
+      const params = [batchId, ...normalizedStudentIds];
       await client.query(
         `INSERT INTO teacher_batch_students (teacher_batch_id, student_id, assigned_at)
          VALUES ${placeholders}`,
@@ -386,19 +392,19 @@ const getTeacherBatchStudents = async (req, res) => {
 
     const result = await pool.query(
       `SELECT
-         u.id,
+         s.user_id AS user_id,
          s.id AS student_id,
          s.first_name,
          s.last_name,
-         s.email,
+         u.email,
          s.grade_level,
          s.track_strand AS strand,
          u.phone,
          u.status,
          tbs.assigned_at
        FROM teacher_batch_students tbs
-       JOIN users u ON u.id = tbs.student_id
-       JOIN students s ON s.user_id = u.id
+       JOIN students s ON s.id = tbs.student_id
+       JOIN users u ON u.id = s.user_id
        WHERE tbs.teacher_batch_id = $1
        ORDER BY tbs.assigned_at DESC`,
       [batchId]
@@ -470,8 +476,8 @@ const getCoordinatorBatchesWithAssignedStudents = async (req, res) => {
         JOIN teachers t ON t.id = tb.teacher_id
         LEFT JOIN supervisors sv ON sv.user_id = tb.supervisor_id
         LEFT JOIN teacher_batch_students tbs ON tbs.teacher_batch_id = tb.id
-        LEFT JOIN users su ON su.id = tbs.student_id
-        LEFT JOIN students st ON st.user_id = su.id
+        LEFT JOIN students st ON st.id = tbs.student_id
+        LEFT JOIN users su ON su.id = st.user_id
         WHERE tb.coordinator_id = $1
        ORDER BY tb.created_at DESC, tbs.assigned_at DESC`,
         [coordinatorId]

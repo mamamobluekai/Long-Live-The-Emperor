@@ -248,6 +248,7 @@ CREATE TABLE attendance_appeals (
   teacher_batch_id INTEGER NOT NULL REFERENCES teacher_batches(id) ON DELETE CASCADE,
   teacher_id INTEGER NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
   attendance_type VARCHAR(20) NOT NULL CHECK (attendance_type IN ('time_in', 'time_out')),
+  appeal_date DATE NOT NULL DEFAULT CURRENT_DATE,
   excuse TEXT NOT NULL,
   file_url TEXT,
   file_name VARCHAR(255),
@@ -262,10 +263,15 @@ CREATE TABLE attendance_appeals (
 CREATE INDEX idx_appeals_teacher ON attendance_appeals(teacher_id);
 CREATE INDEX idx_appeals_status ON attendance_appeals(status);
 
+ALTER TABLE student_attendance ADD COLUMN IF NOT EXISTS check_in_lat NUMERIC(10, 7);
+ALTER TABLE student_attendance ADD COLUMN IF NOT EXISTS check_in_lng NUMERIC(13, 7);
+ALTER TABLE student_attendance ADD COLUMN IF NOT EXISTS check_out_lat NUMERIC(10, 7);
+ALTER TABLE student_attendance ADD COLUMN IF NOT EXISTS check_out_lng NUMERIC(13, 7);
 ALTER TABLE student_attendance ADD COLUMN IF NOT EXISTS check_in_accuracy INTEGER;
 ALTER TABLE student_attendance ADD COLUMN IF NOT EXISTS check_out_accuracy INTEGER;
 ALTER TABLE student_attendance ADD COLUMN IF NOT EXISTS appeal_time_in_id INTEGER REFERENCES attendance_appeals(id) ON DELETE SET NULL;
 ALTER TABLE student_attendance ADD COLUMN IF NOT EXISTS appeal_time_out_id INTEGER REFERENCES attendance_appeals(id) ON DELETE SET NULL;
+ALTER TABLE attendance_appeals ADD COLUMN IF NOT EXISTS appeal_date DATE DEFAULT CURRENT_DATE;
 
 ALTER TABLE students ADD COLUMN IF NOT EXISTS photo_url VARCHAR(512);
 

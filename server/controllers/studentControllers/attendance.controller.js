@@ -10,8 +10,9 @@ async function getActiveBatch(userId) {
   const r = await pool.query(
     `SELECT tbs.teacher_batch_id, tb.teacher_id
      FROM teacher_batch_students tbs
+     LEFT JOIN students s ON s.id = tbs.student_id OR s.user_id = tbs.student_id
      JOIN teacher_batches tb ON tb.id = tbs.teacher_batch_id
-     WHERE tbs.student_id = $1
+     WHERE (s.user_id = $1 OR tbs.student_id = $1)
      ORDER BY tbs.assigned_at DESC LIMIT 1`,
     [userId]
   );
@@ -28,6 +29,18 @@ async function getStudentRow(userId) {
 
 function studentName(s) {
   return `${s.first_name} ${s.last_name}`.trim();
+}
+
+function todayInTimezone(timezone = 'Asia/Manila') {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+  const map = {};
+  for (const p of parts) map[p.type] = p.value;
+  return `${map.year}-${map.month}-${map.day}`;
 }
 
 // Record a GPS snapshot for an attendance event.
@@ -89,13 +102,14 @@ exports.checkIn = async (req, res) => {
     const batch = await getActiveBatch(userId);
     if (!batch) return res.status(400).json({ message: 'You are not assigned to a batch yet.' });
 
-    await assertDateInSchedule(batch.teacher_batch_id, new Date().toISOString().slice(0, 10));
+    const attendanceDate = todayInTimezone();
+    await assertDateInSchedule(batch.teacher_batch_id, attendanceDate);
     await assertTypeOpen(batch.teacher_batch_id, 'time_in');
 
     // Prevent duplicate Time In for today.
     const existing = await client.query(
-      `SELECT id, check_in_time FROM student_attendance WHERE student_id = $1 AND date = CURRENT_DATE`,
-      [student.id]
+      `SELECT id, check_in_time FROM student_attendance WHERE student_id = $1 AND date = $2`,
+      [student.id, attendanceDate]
     );
     if (existing.rows[0]?.check_in_time) {
       return res.status(409).json({ message: 'You have already timed in today.', attendance: existing.rows[0] });
@@ -103,8 +117,8 @@ exports.checkIn = async (req, res) => {
 
     const attendanceRes = await client.query(
       `INSERT INTO student_attendance
-        (student_id, teacher_batch_id, status, check_in_time, check_in_lat, check_in_lng, check_in_accuracy)
-       VALUES ($1, $2, 'checked_in', CURRENT_TIMESTAMP, $3, $4, $5)
+        (student_id, teacher_batch_id, date, status, check_in_time, check_in_lat, check_in_lng, check_in_accuracy)
+       VALUES ($1, $2, $3, 'checked_in', CURRENT_TIMESTAMP, $4, $5, $6)
        ON CONFLICT (student_id, date)
        DO UPDATE SET status = 'checked_in',
          check_in_time = CURRENT_TIMESTAMP,
@@ -114,7 +128,7 @@ exports.checkIn = async (req, res) => {
          check_out_time = NULL,
          updated_at = CURRENT_TIMESTAMP
        RETURNING *`,
-      [student.id, batch.teacher_batch_id, latitude, longitude, accuracy || null]
+      [student.id, batch.teacher_batch_id, attendanceDate, latitude, longitude, accuracy || null]
     );
     const attendance = attendanceRes.rows[0];
 
@@ -158,12 +172,13 @@ exports.checkOut = async (req, res) => {
     const batch = await getActiveBatch(userId);
     if (!batch) return res.status(400).json({ message: 'You are not assigned to a batch yet.' });
 
-    await assertDateInSchedule(batch.teacher_batch_id, new Date().toISOString().slice(0, 10));
+    const attendanceDate = todayInTimezone();
+    await assertDateInSchedule(batch.teacher_batch_id, attendanceDate);
     await assertTypeOpen(batch.teacher_batch_id, 'time_out');
 
     const existing = await client.query(
-      `SELECT id, check_in_time, check_out_time FROM student_attendance WHERE student_id = $1 AND date = CURRENT_DATE`,
-      [student.id]
+      `SELECT id, check_in_time, check_out_time FROM student_attendance WHERE student_id = $1 AND date = $2`,
+      [student.id, attendanceDate]
     );
     if (!existing.rows[0]) {
       return res.status(400).json({ message: 'You have not timed in yet today.' });
@@ -180,9 +195,9 @@ exports.checkOut = async (req, res) => {
            check_out_lng = $3,
            check_out_accuracy = $4,
            updated_at = CURRENT_TIMESTAMP
-       WHERE student_id = $1 AND date = CURRENT_DATE
+       WHERE student_id = $1 AND date = $5
        RETURNING *`,
-      [student.id, latitude, longitude, accuracy || null]
+      [student.id, latitude, longitude, accuracy || null, attendanceDate]
     );
     const attendance = attendanceRes.rows[0];
 
@@ -245,20 +260,22 @@ exports.getStudentAttendanceAccess = async (req, res) => {
 
     const state = await resolveAttendanceState(batch.teacher_batch_id);
 
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayInTimezone(state?.timezone || 'Asia/Manila');
     const schedule = await getBatchScheduleForDate(batch.teacher_batch_id, today);
 
     const rec = await pool.query(
       `SELECT id, status, check_in_time, check_out_time, appeal_time_in_id, appeal_time_out_id
-       FROM student_attendance WHERE student_id = $1 AND date = CURRENT_DATE`,
-      [student.id]
+       FROM student_attendance WHERE student_id = $1 AND date = $2`,
+      [student.id, today]
     );
 
     res.json({
       assigned: true,
       teacherBatchId: batch.teacher_batch_id,
       teacherId: batch.teacher_id,
+      date: today,
       in_schedule: !!schedule,
+      active_schedule: schedule || null,
       ...state,
       today: rec.rows[0] || null,
     });

@@ -222,6 +222,7 @@ function LiveMap() {
   const [socketStatus, setSocketStatus] = useState('disconnected');
   const [lastUpdate, setLastUpdate] = useState(null);
   const [mapLayer, setMapLayer] = useState('standard');
+  const [scheduleMessage, setScheduleMessage] = useState(null);
 
   const socketRef = useRef(null);
   const abortControllerRef = useRef(null);
@@ -240,7 +241,8 @@ function LiveMap() {
           headers: { Authorization: `Bearer ${token}` },
           signal: abortControllerRef.current.signal,
         });
-        setStudents(res.data || []);
+        setStudents(res.data?.students || []);
+        setScheduleMessage(res.data?.message || null);
         setLastUpdate(new Date());
       } catch (err) {
         if (err.name !== 'CanceledError') {
@@ -386,11 +388,12 @@ function LiveMap() {
 
         {!loading && selectedBatchId && (
           <div className={styles.mapWrapper}>
-            {students.length === 0 && <p className={styles.info}>No student data available for this batch.</p>}
-            {students.length > 0 && activeStudents.length === 0 && (
+            {scheduleMessage && <p className={styles.info}>{scheduleMessage}</p>}
+            {!scheduleMessage && students.length === 0 && <p className={styles.info}>No student data available for this batch.</p>}
+            {!scheduleMessage && students.length > 0 && activeStudents.length === 0 && (
               <p className={styles.info}>No students are currently checked in for this batch.</p>
             )}
-            {students.length > 0 && (
+            {!scheduleMessage && students.length > 0 && (
               <MapContainer
                 center={MAP_CONFIG.center}
                 zoom={MAP_CONFIG.initialZoom}

@@ -56,8 +56,8 @@ async function getTeacherBatchStudents(requestId, supervisorUserId) {
             s.student_number, s.grade_level, s.track_strand, s.photo_url, u.email
      FROM teacher_batch_students tbs
      JOIN teacher_batches tb ON tb.id = tbs.teacher_batch_id
-     JOIN users u ON u.id = tbs.student_id
-     JOIN students s ON s.user_id = u.id
+     JOIN students s ON s.id = tbs.student_id
+     JOIN users u ON u.id = s.user_id
      WHERE tbs.teacher_batch_id = $1 AND tb.supervisor_id = $2
      ORDER BY s.last_name, s.first_name`,
     [requestId, supervisorUserId]
@@ -112,9 +112,9 @@ const getBatchAttendance = async (req, res) => {
     let userIds;
     if (batch.source === 'teacher') {
       const result = await pool.query(
-        `SELECT u.id AS user_id
+        `SELECT DISTINCT s.user_id AS user_id
          FROM teacher_batch_students tbs
-         JOIN users u ON u.id = tbs.student_id
+         JOIN students s ON s.id = tbs.student_id OR s.user_id = tbs.student_id
          WHERE tbs.teacher_batch_id = $1`,
         [requestId]
       );
@@ -148,13 +148,31 @@ const getBatchAttendance = async (req, res) => {
 
     const firstDates = await pool.query(
       `SELECT s.id AS student_id, MIN(sa.date) AS first_date
-       FROM students s
-       JOIN student_attendance sa ON sa.student_id = s.id
-       WHERE s.user_id = ANY($1::int[])
-       GROUP BY s.id`,
+        FROM students s
+        JOIN student_attendance sa ON sa.student_id = s.id
+        WHERE s.user_id = ANY($1::int[])
+        GROUP BY s.id`,
       [userIds]
     );
     const firstDateMap = new Map(firstDates.rows.map((r) => [r.student_id, r.first_date]));
+
+    // Count only weekdays (Mon-Fri) so Saturdays and Sundays are skipped from
+    // the "Day N" numbering. Weekends are not attendance days.
+    function weekdayDayNumber(targetDate, firstDate) {
+      const start = new Date(firstDate);
+      const target = new Date(targetDate);
+      if (target < start) return null;
+      let count = 0;
+      const cur = new Date(start);
+      while (cur <= target) {
+        const day = cur.getDay();
+        if (day !== 0 && day !== 6) {
+          count++;
+        }
+        cur.setDate(cur.getDate() + 1);
+      }
+      return count;
+    }
 
     const records = await pool.query(
       `SELECT sa.id, sa.student_id, sa.date, sa.status,
@@ -176,10 +194,8 @@ const getBatchAttendance = async (req, res) => {
 
     for (const r of records.rows) {
       const firstDate = firstDateMap.get(r.student_id);
-      let dayNumber = null;
-      if (firstDate) {
-        const diff = Math.floor((new Date(r.date) - new Date(firstDate)) / (1000 * 60 * 60 * 24));
-        dayNumber = diff + 1;
+      const dayNumber = firstDate ? weekdayDayNumber(r.date, firstDate) : null;
+      if (dayNumber) {
         daysSet.add(dayNumber);
       }
       if (!studentsMap.has(r.student_id)) {

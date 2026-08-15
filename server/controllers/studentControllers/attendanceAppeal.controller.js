@@ -6,6 +6,20 @@ const cloudinary = require('../../db/cloudinary');
 const pool = require('../../db');
 const { getIO } = require('../../sockets');
 
+const TZ = 'Asia/Manila';
+
+function nowLocalDate(timezone = TZ) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+  const map = {};
+  for (const p of parts) map[p.type] = p.value;
+  return `${map.year}-${map.month}-${map.day}`;
+}
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
@@ -22,12 +36,17 @@ function uploadToCloudinary(buffer, originalName) {
   });
 }
 
+async function ensureAppealDateColumn(client = pool) {
+  await client.query(`ALTER TABLE attendance_appeals ADD COLUMN IF NOT EXISTS appeal_date DATE DEFAULT CURRENT_DATE`);
+}
+
 // POST /api/attendance/appeal  (multipart: attendance_type, excuse, file?)
 const submitAppeal = async (req, res) => {
   const client = await pool.connect();
   try {
+    await ensureAppealDateColumn(client);
     const userId = req.user.id;
-    const { attendance_type, excuse } = req.body;
+    const { attendance_type, excuse, appeal_date } = req.body;
 
     if (!['time_in', 'time_out'].includes(attendance_type)) {
       return res.status(400).json({ message: 'attendance_type must be time_in or time_out.' });
@@ -43,7 +62,9 @@ const submitAppeal = async (req, res) => {
     const batchRes = await client.query(
       `SELECT tbs.teacher_batch_id,
               (SELECT teacher_id FROM teacher_batches WHERE id = tbs.teacher_batch_id) AS teacher_id
-       FROM teacher_batch_students tbs WHERE tbs.student_id = $1
+       FROM teacher_batch_students tbs
+       JOIN students s ON s.id = tbs.student_id OR s.user_id = tbs.student_id
+       WHERE s.user_id = $1 OR tbs.student_id = $1
        ORDER BY tbs.assigned_at DESC LIMIT 1`,
       [userId]
     );
@@ -51,6 +72,9 @@ const submitAppeal = async (req, res) => {
       return res.status(400).json({ message: 'You are not assigned to a batch yet.' });
     }
     const { teacher_batch_id, teacher_id } = batchRes.rows[0];
+    const appealDate = /^\d{4}-\d{2}-\d{2}$/.test(String(appeal_date || ''))
+      ? appeal_date
+      : nowLocalDate();
 
     let fileUrl = null;
     let fileName = null;
@@ -62,10 +86,10 @@ const submitAppeal = async (req, res) => {
 
     const insert = await client.query(
       `INSERT INTO attendance_appeals
-        (student_id, teacher_batch_id, teacher_id, attendance_type, excuse, file_url, file_name)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+        (student_id, teacher_batch_id, teacher_id, attendance_type, appeal_date, excuse, file_url, file_name)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [student.id, teacher_batch_id, teacher_id, attendance_type, excuse.trim(), fileUrl, fileName]
+      [student.id, teacher_batch_id, teacher_id, attendance_type, appealDate, excuse.trim(), fileUrl, fileName]
     );
 
     const full = await client.query(
@@ -89,6 +113,7 @@ const submitAppeal = async (req, res) => {
 // GET /api/attendance/appeals/me
 const getMyAppeals = async (req, res) => {
   try {
+    await ensureAppealDateColumn();
     const userId = req.user.id;
     const studentRes = await pool.query('SELECT id FROM students WHERE user_id = $1', [userId]);
     const student = studentRes.rows[0];

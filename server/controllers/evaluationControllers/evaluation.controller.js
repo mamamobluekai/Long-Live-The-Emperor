@@ -281,8 +281,8 @@ async function listMyStudents(req, res) {
           `SELECT s.id AS student_id, s.user_id, s.first_name, s.last_name, s.student_number, s.grade_level, s.track_strand, u.email
            FROM teacher_batch_students tbs
            JOIN teacher_batches tb ON tb.id = tbs.teacher_batch_id
-           JOIN users u ON u.id = tbs.student_id
-           JOIN students s ON s.user_id = u.id
+           JOIN students s ON s.id = tbs.student_id
+           JOIN users u ON u.id = s.user_id
            WHERE tbs.teacher_batch_id = $1
            ORDER BY s.last_name, s.first_name`,
           [b.request_id]
@@ -388,8 +388,8 @@ async function getTeacherBatchEvaluations(req, res) {
       const studentsResult = await pool.query(
         `SELECT s.id AS student_id, s.user_id, s.first_name, s.last_name, s.student_number, s.grade_level, s.track_strand, u.email
          FROM teacher_batch_students tbs
-         JOIN users u ON u.id = tbs.student_id
-         JOIN students s ON s.user_id = u.id
+         JOIN students s ON s.id = tbs.student_id
+         JOIN users u ON u.id = s.user_id
          WHERE tbs.teacher_batch_id = $1
          ORDER BY s.last_name ASC, s.first_name ASC`,
         [batch.batch_id]
