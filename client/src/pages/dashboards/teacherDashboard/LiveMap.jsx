@@ -1,14 +1,13 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import axios from 'axios';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import * as L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { io } from 'socket.io-client';
 import { useAuth } from '../../../context/AuthContext';
 import { useTeacherBatch } from '../../../hooks/useTeacherBatch';
+import { getBatchCurrentLocations } from '../../../api/teacherApi';
 import styles from './LiveMap.module.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
 // Map Configuration — locked to Marinduque province, Philippines
@@ -237,8 +236,7 @@ function LiveMap() {
       abortControllerRef.current?.abort();
       abortControllerRef.current = new AbortController();
       try {
-        const res = await axios.get(`${API_URL}/tracking/location/batch/${selectedBatchId}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const res = await getBatchCurrentLocations(selectedBatchId, token, {
           signal: abortControllerRef.current.signal,
         });
         setStudents(res.data?.students || []);

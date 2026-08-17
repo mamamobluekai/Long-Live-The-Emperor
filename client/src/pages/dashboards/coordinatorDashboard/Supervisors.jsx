@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getSupervisors } from '../../../api/coordinatorApi';
-import styles from './CoordinatorDashboard.module.css';
+import styles from './Supervisors.module.css';
 
 const statusBadge = (status) => {
   const map = {

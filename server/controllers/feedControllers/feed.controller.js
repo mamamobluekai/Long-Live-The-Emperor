@@ -95,9 +95,9 @@ async function getPosts(req, res) {
     }
 
     if (!['admin'].includes(String(req.user.role || '').toLowerCase())) {
-      filters.push(`p.author_id = $${i}`);
-      values.push(req.user.id);
-      i += 1;
+      filters.push(`(p.audience = $${i} OR p.author_id = $${i + 1})`);
+      values.push('all', req.user.id);
+      i += 2;
     }
 
     const whereClause = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
@@ -173,8 +173,8 @@ async function getPostById(req, res) {
     `;
     const params = [id];
     if (viewerRole !== 'admin') {
-      query += ` AND p.author_id = $2`;
-      params.push(req.user.id);
+      query += ` AND (p.audience = $2 OR p.author_id = $3)`;
+      params.push('all', req.user.id);
     }
     const result = await pool.query(query, params);
     const post = result.rows[0] || null;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getTeacherBatchEvaluations } from '../../../api/evaluationApi';
+import { getTeacherBatchEvaluations } from '../../../api/teacherApi';
 import styles from '../supervisorDashboard/SupervisorEvaluation.module.css';
 
 function TeacherStudentEvaluations() {

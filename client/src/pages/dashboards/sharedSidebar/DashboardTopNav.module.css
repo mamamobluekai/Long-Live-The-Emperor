@@ -1,184 +1,510 @@
+/* =========================================
+   TOP NAVIGATION
+========================================= */
+
 .topnav {
-  --wine-700: #7f1d2f;
-  --wine-500: #a53148;
+  width: 100%;
+  height: 72px;
 
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  height: 64px;
+
+  padding: 0 26px;
+
   background: #ffffff;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
-  position: sticky;
-  top: 0;
+
+  border-bottom: 1px solid #e7e9ee;
+
+  box-sizing: border-box;
+
+  position: relative;
   z-index: 100;
 }
 
-/* --- Brand --- */
+
+/* =========================================
+   LEFT
+========================================= */
+
+.left {
+  display: flex;
+  align-items: center;
+
+  min-width: 0;
+}
+
+
+/* =========================================
+   MENU BUTTON
+========================================= */
+
+.menuButton {
+  width: 40px;
+  height: 40px;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #e3e6eb;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  color: #344054;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.menuButton:hover {
+  background: #faf7f8;
+  border-color: #d7a8b5;
+  color: #7f0d2b;
+}
+
+
+/* =========================================
+   BRAND
+========================================= */
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: 0;
+
+  gap: 11px;
+
+  padding: 0;
+
+  border: 0;
+  background: transparent;
+
+  cursor: pointer;
+
+  text-align: left;
 }
 
-.brandMark {
+
+/* LOGO */
+
+.brandLogo {
+  width: 60px;
+  height: 60px;
+
+  flex-shrink: 0;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  background: linear-gradient(155deg, var(--wine-500), var(--wine-700));
+
+  border-radius: 11px;
+
+  background: linear-gradient(
+    135deg,
+    #7f0d2b 0%,
+    #a7193d 100%
+  );
+
   color: #ffffff;
-  font-size: 0.9rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+
+  box-shadow:
+    0 4px 10px rgba(127, 13, 43, 0.16);
+}
+
+.brandLogo span {
+  font-size: 12px;
+  font-weight: 800;
+
+  letter-spacing: -0.3px;
+}
+
+
+/* BRAND TEXT */
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+
+  line-height: 1;
 }
 
 .brandName {
-  display: none;
-  font-size: 1.02rem;
-  font-weight: 700;
-  color: #0f172a;
-  letter-spacing: -0.01em;
+  color: #7f0d2b;
+
+  font-size: 24px;
+  font-weight: 750;
+
+  letter-spacing: -0.2px;
+}
+
+.brandSubtitle {
+  margin-top: 5px;
+
+  color: #98a2b3;
+
+  font-size: 10px;
+  font-weight: 500;
+
+  letter-spacing: 0.3px;
+}
+
+
+/* =========================================
+   PAGE TITLE
+========================================= */
+
+.breadcrumbDivider {
+  width: 1px;
+  height: 27px;
+
+  margin: 0 20px;
+
+  background: #e4e7ec;
+}
+
+.pageTitle {
+  color: #667085;
+
+  font-size: 13px;
+  font-weight: 500;
+
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-@media (min-width: 768px) {
-  .brandName {
-    display: inline;
-  }
-}
 
-/* --- Right cluster --- */
+/* =========================================
+   RIGHT
+========================================= */
 
 .right {
   display: flex;
   align-items: center;
+
   gap: 12px;
 }
 
-.profileBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  padding: 6px 10px 6px 6px;
-  cursor: pointer;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
-}
 
-.profileBtn:hover {
-  background: #f8fafc;
-  border-color: #e2e8f0;
-}
+/* =========================================
+   NOTIFICATION
+========================================= */
 
-.profileBtn:focus-visible {
-  outline: 2px solid var(--wine-500);
-  outline-offset: 2px;
-}
+.notificationButton {
+  position: relative;
 
-.avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
+  width: 40px;
+  height: 40px;
 
-.avatarPlaceholder {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  background: linear-gradient(155deg, var(--wine-500), var(--wine-700));
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #ffffff;
+
+  border: 0;
+  border-radius: 10px;
+
+  background: transparent;
+
+  color: #667085;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
+
+.notificationButton:hover {
+  background: #f8f4f5;
+  color: #7f0d2b;
+}
+
+.notificationDot {
+  position: absolute;
+
+  top: 8px;
+  right: 8px;
+
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: #b42318;
+
+  border: 2px solid #ffffff;
+}
+
+
+/* =========================================
+   DIVIDER
+========================================= */
+
+.verticalDivider {
+  width: 1px;
+  height: 30px;
+
+  margin: 0 3px;
+
+  background: #eaecf0;
+}
+
+
+/* =========================================
+   PROFILE
+========================================= */
+
+.profileBtn {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 5px 8px;
+
+  border: 0;
+  border-radius: 11px;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease;
+}
+
+.profileBtn:hover {
+  background: #f8f9fa;
+}
+
+
+/* =========================================
+   AVATAR
+========================================= */
+
+.avatar,
+.avatarPlaceholder {
+  width: 38px;
+  height: 38px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+}
+
+.avatar {
+  object-fit: cover;
+
+  border: 1px solid #e5e7eb;
+}
+
+.avatarPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #f4e7eb;
+
+  color: #7f0d2b;
+
+  font-size: 13px;
+  font-weight: 750;
+}
+
+
+/* =========================================
+   USER
+========================================= */
 
 .user {
   display: flex;
   flex-direction: column;
-  line-height: 1.25;
-  min-width: 0;
+
+  align-items: flex-start;
+
+  min-width: 105px;
+
+  line-height: 1;
 }
 
 .userName {
-  font-size: 0.86rem;
-  font-weight: 600;
-  color: #0f172a;
-  white-space: nowrap;
+  max-width: 150px;
+
   overflow: hidden;
+
   text-overflow: ellipsis;
-  max-width: 160px;
+
+  white-space: nowrap;
+
+  color: #101828;
+
+  font-size: 13px;
+  font-weight: 650;
 }
 
 .userRole {
-  font-size: 0.7rem;
-  color: #64748b;
+  margin-top: 5px;
+
+  color: #98a2b3;
+
+  font-size: 10px;
+  font-weight: 500;
+
   text-transform: capitalize;
 }
 
 .chevron {
-  color: #94a3b8;
-  flex-shrink: 0;
+  color: #98a2b3;
+
+  transition: transform 0.2s ease;
 }
 
+.profileBtn:hover .chevron {
+  color: #667085;
+}
+
+
+/* =========================================
+   LOGOUT
+========================================= */
+
 .logoutBtn {
-  background: #ffffff;
-  color: #475569;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 8px 14px;
-  font-size: 0.82rem;
+  height: 38px;
+
+  padding: 0 15px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #dfe3e8;
+  border-radius: 9px;
+
+  background: #9b1438;
+
+  color: #eaebee;
+
+  font-size: 12px;
   font-weight: 600;
+
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .logoutBtn:hover {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #dc2626;
+  background: #cc103f;
+
+  border-color: #d7a8b5;
+
+  color: #f0c8d3;
 }
 
-.logoutBtn:focus-visible {
-  outline: 2px solid var(--wine-500);
-  outline-offset: 2px;
-}
 
-@media (max-width: 640px) {
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 900px) {
+
   .topnav {
-    padding: 0 16px;
+    padding: 0 18px;
+  }
+
+  .menuButton {
+    display: flex;
+
+    margin-right: 12px;
+  }
+
+  .breadcrumbDivider,
+  .pageTitle {
+    display: none;
+  }
+
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 650px) {
+
+  .topnav {
+    height: 64px;
+
+    padding: 0 14px;
+  }
+
+  .brandText {
+    display: none;
+  }
+
+  .brandLogo {
+    width: 38px;
+    height: 38px;
+
+    border-radius: 10px;
+  }
+
+  .notificationButton {
+    width: 36px;
+    height: 36px;
+  }
+
+  .verticalDivider {
+    display: none;
   }
 
   .user {
     display: none;
   }
 
+  .profileBtn {
+    padding: 0;
+  }
+
   .chevron {
     display: none;
   }
 
-  .profileBtn {
-    padding: 4px;
+  .logoutBtn {
+    height: 36px;
+
+    padding: 0 11px;
+
+    font-size: 11px;
+  }
+
+  .right {
+    gap: 5px;
+  }
+}
+
+
+/* =========================================
+   SMALL MOBILE
+========================================= */
+
+@media (max-width: 420px) {
+
+  .menuButton {
+    width: 36px;
+    height: 36px;
+
+    margin-right: 7px;
   }
 
   .logoutBtn {
-    padding: 8px 12px;
+    padding: 0 9px;
   }
 }

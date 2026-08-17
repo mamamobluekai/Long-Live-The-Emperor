@@ -2,7 +2,7 @@
   --nav-height: 64px;
   --sidebar-width: 264px;
   --border-color: #e2e8f0;
-  --bg-page: #f8fafc;
+  --bg-page: #e6e6e6;
   --bg-surface: #ffffff;
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.06);
@@ -40,6 +40,7 @@
   position: sticky;
   top: var(--nav-height);
   height: calc(100vh - var(--nav-height));
+  z-index: 1;
 
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
@@ -60,9 +61,10 @@
 }
 
 .contentInner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 32px 28px 48px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 24px 28px 48px;
   animation: fadeIn 0.25s ease;
 }
 
@@ -81,23 +83,22 @@
   }
 }
 
-/* Mobile: sidebar collapses out of flow (pair with a drawer/toggle in topNav) */
+/* Mobile: the <aside> drawer (DashboardSidebar) owns visibility via .open.
+   The wrapper <div> stays out of flow and must NOT transform (which would
+   trap the fixed <aside> in an off-screen containing block) nor paint a
+   white background. */
 @media (max-width: 768px) {
   .layout {
     flex-direction: column;
   }
   .sidebar {
-    position: fixed;
-    top: var(--nav-height);
-    left: 0;
-    height: calc(100vh - var(--nav-height));
-    transform: translateX(-100%);
-    transition: transform 0.2s ease;
-    z-index: 30;
-    box-shadow: var(--shadow-md);
-  }
-  .sidebar[data-open="true"] {
-    transform: translateX(0);
+    position: static;   /* was: fixed */
+    width: 0;
+    height: 0;
+    overflow: visible;  /* let the fixed <aside> inside it still paint */
+    background: transparent;
+    border: none;
+    box-shadow: none;
   }
   .contentInner {
     padding: 20px 16px 32px;

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { useTeacherBatch } from '../../../hooks/useTeacherBatch';
-import { getBatchStats } from '../../../api/attendanceApi';
+import { getBatchStats } from '../../../api/teacherApi';
 import styles from './TeacherReports.module.css';
 
 function TeacherReports() {

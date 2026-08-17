@@ -9,7 +9,7 @@ import {
   deleteTeacherBatch,
   assignStudentsToBatch,
 } from '../../../api/coordinatorApi';
-import styles from './CoordinatorDashboard.module.css';
+import styles from './TeacherBatches.module.css';
 
 function TeacherBatches() {
   const [teachers, setTeachers] = useState([]);

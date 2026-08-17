@@ -11,7 +11,7 @@ import {
   getBatchStats,
   getBatchSchedules,
   upsertBatchSchedule,
-} from '../../../api/attendanceApi';
+} from '../../../api/teacherApi';
 import styles from './TeacherAttendance.module.css';
 
 function parseLocalDate(dateStr) {

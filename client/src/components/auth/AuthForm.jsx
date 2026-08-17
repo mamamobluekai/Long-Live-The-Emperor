@@ -32,14 +32,16 @@ function AuthForm({ onAuthSuccess }) {
       });
     }
   }, [loginSuccess, navigate]);
-
+  const [showPassword, setShowPassword] = useState(false);
   return (
     <div className="auth-shell">
       <div className="auth-overlay"></div>
 
       <div className="auth-container">
 
-        {/* LOGO ABOVE LOGIN FORM */}
+       
+
+    <div className="auth-card">
         <div className="logo-container">
           <img
             src="/logo.png"
@@ -47,14 +49,22 @@ function AuthForm({ onAuthSuccess }) {
             className="login-logo"
           />
         </div>
-
-    <div className="auth-card">
-
+        {/* SYSTEM TITLE */}
+        <div className="system-brand">
+          <h1 className="system-title">e-MMERSION</h1>
+          <p className="system-subtitle">
+            Work Immersion Monitoring System
+          </p>
+        </div>
         <div className="form-panel">
+
+
+          
 
           {/* =================================
               TITLE
           ================================= */}
+          <div className="section-divider" />
           <h2 className="login-title">
             {mode === 'login' ? 'Login' : 'Create Account'}
           </h2>
@@ -272,13 +282,21 @@ function AuthForm({ onAuthSuccess }) {
                     <input
                       id="password"
                       name="password"
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       placeholder="Enter your password"
                       value={form.password}
                       onChange={handleChange}
                       required
                     />
                   </div>
+                  <label className="show-password">
+                    <input
+                      type="checkbox"
+                      checked={showPassword}
+                      onChange={(e) => setShowPassword(e.target.checked)}
+                    />
+                    <span>Show password</span>
+                  </label>
                 </div>
 
               {mode === 'register' ? (

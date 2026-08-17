@@ -5,7 +5,7 @@ import {
   disapproveStudent,
   uploadStudentsExcel,
 } from '../../../api/coordinatorApi';
-import styles from './CoordinatorDashboard.module.css';
+import styles from './StudentApprovals.module.css';
 
 const statusBadge = (status) => {
   const map = {
@@ -14,14 +14,17 @@ const statusBadge = (status) => {
     rejected: styles.badgeRejected,
     'needs revision': styles.badgeNeeds,
   };
+
   return map[String(status).toLowerCase()] || styles.badgePending;
 };
 
 function StudentApprovals() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState('');
@@ -30,6 +33,7 @@ function StudentApprovals() {
   const load = async () => {
     setLoading(true);
     setError('');
+
     try {
       const data = await getPendingStudents();
       setStudents(data.students || []);
@@ -41,23 +45,7 @@ function StudentApprovals() {
   };
 
   useEffect(() => {
-    let mounted = true;
-    const fetchData = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const data = await getPendingStudents();
-        if (mounted) setStudents(data.students || []);
-      } catch (err) {
-        if (mounted) setError(err.message);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-    fetchData();
-    return () => {
-      mounted = false;
-    };
+    load();
   }, []);
 
   const handleUpload = async () => {
@@ -74,11 +62,14 @@ function StudentApprovals() {
 
     try {
       const data = await uploadStudentsExcel(file);
+
       const r = data.results || {};
       const summary = data.message || 'Upload complete.';
       const detail = r.failed ? ` (${r.failed} failed)` : '';
+
       setUploadMessage(`${summary}${detail}`);
       setFile(null);
+
       await load();
     } catch (err) {
       setUploadError(err.message);
@@ -90,8 +81,12 @@ function StudentApprovals() {
   const handleApprove = async (id) => {
     try {
       await approveStudent(id);
-      setMessage('Student approved. An email with their password setup link was sent.');
-      load();
+
+      setMessage(
+        'Student approved. An email with their password setup link was sent.'
+      );
+
+      await load();
     } catch (err) {
       setError(err.message);
     }
@@ -100,87 +95,250 @@ function StudentApprovals() {
   const handleDisapprove = async (id) => {
     try {
       await disapproveStudent(id);
+
       setMessage('Student disapproved.');
-      load();
+
+      await load();
     } catch (err) {
       setError(err.message);
     }
   };
 
   return (
-    <div>
+    <div className={styles.page}>
+      {/* HEADER */}
       <div className={styles.pageHeader}>
-        <h2>Student Management</h2>
-        <p>Upload new student accounts in bulk and approve pending registrations from one place.</p>
+        <div>
+          <span className={styles.eyebrow}>STUDENT MANAGEMENT</span>
+
+          <h2>Students</h2>
+
+          <p>
+            Manage student accounts, upload students in bulk, and review
+            pending registrations.
+          </p>
+        </div>
+
+        
       </div>
 
-      {message && <div className={styles.message}>{message}</div>}
-      {error && <div className={styles.error}>{error}</div>}
+      {/* ALERTS */}
+      {message && (
+        <div className={`${styles.alert} ${styles.alertSuccess}`}>
+          <span className={styles.alertIcon}>✓</span>
+          <span>{message}</span>
+          <button onClick={() => setMessage('')}>×</button>
+        </div>
+      )}
 
-      <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Bulk Upload Students</h3>
-        <p className={styles.muted}>
-          Upload an Excel file to create pending student accounts. Required columns include Student ID,
-          First Name, Last Name, and Email.
-        </p>
-        <div className={styles.row}>
-          <input type="file" accept=".xlsx,.xls" onChange={(e) => setFile(e.target.files[0])} />
-          <button className={styles.btn} onClick={handleUpload} disabled={uploading || !file}>
-            {uploading ? 'Uploading...' : 'Upload Students'}
+      {error && (
+        <div className={`${styles.alert} ${styles.alertError}`}>
+          <span className={styles.alertIcon}>!</span>
+          <span>{error}</span>
+          <button onClick={() => setError('')}>×</button>
+        </div>
+      )}
+
+      {/* BULK UPLOAD */}
+      <section className={styles.uploadCard}>
+        <div className={styles.cardHeader}>
+          
+
+          <div>
+            <h3>Bulk Upload Students</h3>
+            <p>
+              Import multiple student accounts using an Excel spreadsheet.
+            </p>
+          </div>
+        </div>
+
+        <div className={styles.uploadContent}>
+          <div className={styles.uploadBox}>
+            <div className={styles.uploadSymbol}>↑</div>
+
+            <div className={styles.uploadText}>
+              <strong>
+                {file ? file.name : 'Choose an Excel file'}
+              </strong>
+
+              <span>
+                {file
+                  ? `${(file.size / 1024 / 1024).toFixed(2)} MB`
+                  : 'Supported formats: .xlsx and .xls'}
+              </span>
+            </div>
+
+            <label className={styles.chooseBtn}>
+              Browse
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={(e) => {
+                  setFile(e.target.files?.[0] || null);
+                  setUploadError('');
+                  setUploadMessage('');
+                }}
+              />
+            </label>
+          </div>
+
+          <button
+            className={styles.uploadBtn}
+            onClick={handleUpload}
+            disabled={uploading || !file}
+          >
+            {uploading ? (
+              <>
+                <span className={styles.spinner}></span>
+                Uploading...
+              </>
+            ) : (
+              <>
+                Upload Students
+              </>
+            )}
           </button>
         </div>
-        {uploadMessage && <div className={styles.message}>{uploadMessage}</div>}
-        {uploadError && <div className={styles.error}>{uploadError}</div>}
-      </div>
 
-      <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Pending Student Approvals</h3>
+        <div className={styles.uploadHint}>
+          <span>ⓘ</span>
+          Required columns: Student ID, First Name, Last Name, and Email.
+        </div>
+
+        {uploadMessage && (
+          <div className={`${styles.smallAlert} ${styles.smallSuccess}`}>
+            ✓ {uploadMessage}
+          </div>
+        )}
+
+        {uploadError && (
+          <div className={`${styles.smallAlert} ${styles.smallError}`}>
+            ! {uploadError}
+          </div>
+        )}
+      </section>
+
+      {/* STUDENTS */}
+      <section className={styles.studentsCard}>
+        <div className={styles.studentsHeader}>
+          <div>
+            <span className={styles.sectionLabel}>REGISTRATION</span>
+
+            <h3>Pending Student Approvals</h3>
+
+            <p>
+              Review and approve student accounts waiting for registration.
+            </p>
+          </div>
+
+          <div className={styles.studentCount}>
+            <strong>{students.length}</strong>
+            <span>Pending</span>
+          </div>
+        </div>
+
         {loading ? (
-          <p className={styles.loading}>Loading students...</p>
+          <div className={styles.loading}>
+            <span className={styles.spinnerDark}></span>
+            <p>Loading students...</p>
+          </div>
         ) : students.length === 0 ? (
-          <p className={styles.empty}>No pending students.</p>
+          <div className={styles.empty}>
+            <div className={styles.emptyIcon}>✓</div>
+
+            <h4>No pending students</h4>
+
+            <p>
+              All student registrations have been processed.
+            </p>
+          </div>
         ) : (
-          <div className={styles.tableWrap}>
+          <div className={styles.tableContainer}>
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>Student ID</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                  <th>STUDENT</th>
+                  <th>EMAIL</th>
+                  <th>STATUS</th>
+                  <th className={styles.actionHeader}>ACTIONS</th>
                 </tr>
               </thead>
+
               <tbody>
-                {students.map((s) => (
-                  <tr key={s.id}>
-                    <td>{s.student_number || '-'}</td>
-                    <td>
-                      {s.first_name || ''} {s.last_name || ''}
-                    </td>
-                    <td>{s.email}</td>
-                    <td>
-                      <span className={`${styles.badge} ${statusBadge(s.status)}`}>
-                        {s.status}
-                      </span>
-                    </td>
-                    <td>
-                      <div className={styles.actions}>
-                        <button className={styles.btnApprove} onClick={() => handleApprove(s.id)}>
-                          Approve
-                        </button>
-                        <button className={styles.btnReject} onClick={() => handleDisapprove(s.id)}>
-                          Disapprove
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {students.map((student) => {
+                  const fullName =
+                    `${student.first_name || ''} ${
+                      student.last_name || ''
+                    }`.trim();
+
+                  return (
+                    <tr key={student.id}>
+                      <td>
+                        <div className={styles.studentCell}>
+                          <div className={styles.studentAvatar}>
+                            {(student.first_name || 'S')
+                              .charAt(0)
+                              .toUpperCase()}
+                          </div>
+
+                          <div>
+                            <strong>
+                              {fullName || 'Unnamed Student'}
+                            </strong>
+
+                            <span>
+                              {student.student_number || 'No student ID'}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td>
+                        <span className={styles.email}>
+                          {student.email || '-'}
+                        </span>
+                      </td>
+
+                      <td>
+                        <span
+                          className={`${styles.badge} ${statusBadge(
+                            student.status
+                          )}`}
+                        >
+                          <span className={styles.statusDot}></span>
+                          {student.status || 'Pending'}
+                        </span>
+                      </td>
+
+                      <td>
+                        <div className={styles.actions}>
+                          <button
+                            className={styles.approveBtn}
+                            onClick={() =>
+                              handleApprove(student.id)
+                            }
+                          >
+                            ✓ Approve
+                          </button>
+
+                          <button
+                            className={styles.rejectBtn}
+                            onClick={() =>
+                              handleDisapprove(student.id)
+                            }
+                          >
+                            Disapprove
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

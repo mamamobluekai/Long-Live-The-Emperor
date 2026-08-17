@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
 import { useTeacherBatch } from '../../../hooks/useTeacherBatch';
+import { getTeacherBatchStudents } from '../../../api/teacherApi';
 import styles from './TeacherStudents.module.css';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 function TeacherStudents() {
   const { token } = useAuth();
@@ -15,11 +13,8 @@ function TeacherStudents() {
   useEffect(() => {
     if (!selectedBatchId) return;
     setLoading(true);
-    axios
-      .get(`${API_URL}/coordinator/teacher-batches/${selectedBatchId}/students`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => setStudents(res.data?.students || []))
+    getTeacherBatchStudents(selectedBatchId, token)
+      .then((res) => setStudents(res?.students || []))
       .catch(() => setStudents([]))
       .finally(() => setLoading(false));
   }, [selectedBatchId, token]);

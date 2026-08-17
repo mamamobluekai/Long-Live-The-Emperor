@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { useTeacherBatch } from '../../../hooks/useTeacherBatch';
-import { getBatchAppeals, reviewAppeal } from '../../../api/attendanceApi';
+import { getBatchAppeals, reviewAppeal } from '../../../api/teacherApi';
 import styles from './TeacherAppeals.module.css';
 
 function TeacherAppeals() {

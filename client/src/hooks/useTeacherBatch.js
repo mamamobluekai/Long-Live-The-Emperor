@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { getMyTeacherBatch } from '../api/teacherApi';
 
 // A teacher is assigned to exactly one batch by the coordinator
 // (teacher_batches.teacher_id is UNIQUE). This hook resolves that single
@@ -16,10 +14,8 @@ export function useTeacherBatch() {
   const load = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await axios.get(`${API_URL}/coordinator/teacher-batches/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const list = res.data?.batches || [];
+      const res = await getMyTeacherBatch(token);
+      const list = res?.batches || [];
       // Take the first (and typically only) assigned batch.
       setBatch(list.length ? { id: list[0].id, batch_label: list[0].batch_label } : null);
       setError(null);

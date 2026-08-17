@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getAllFiles, getFileById } from '../../../api/fileApi';
+import { getAllFiles, getFileById } from '../../../api/teacherApi';
 import styles from './TeacherDocuments.module.css';
 
 function TeacherDocuments() {

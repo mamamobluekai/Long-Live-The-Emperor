@@ -4,7 +4,7 @@ import Feedback from '../../../components/Feedback';
 import styles from './Progress.module.css';
 
 // ---- Shared token system (mirrors the certificate design: navy + gold) ----
-const INK = '#1c2b4a';
+const INK = '#8B1E2D';
 const GOLD = '#b3872c';
 const GOLD_LIGHT = '#d4af6a';
 const CREAM = '#fdf8ef';
@@ -221,7 +221,7 @@ function Progress() {
           border: `1px solid ${LINE}`,
           borderRadius: 14,
           padding: '22px 24px',
-          boxShadow: '0 1px 2px rgba(15,23,42,0.04)',
+          boxShadow: '0 1px 2px rgba(78, 7, 13, 0.04)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
@@ -257,7 +257,7 @@ function Progress() {
           </div>
 
           <div style={{ flex: 1, minWidth: 200 }}>
-            <h3 style={{ margin: 0, fontSize: 17, color: '#0f172a' }}>
+            <h3 style={{ margin: 0, fontSize: 17, color: '#2a0f0f' }}>
               {completed ? 'All requirements met!' : 'In progress'}
             </h3>
             <p style={{ margin: '4px 0 0', fontSize: 13.5, color: SLATE }}>
@@ -275,7 +275,7 @@ function Progress() {
           border: `1px solid ${LINE}`,
           borderRadius: 14,
           padding: '22px 24px 4px',
-          boxShadow: '0 1px 2px rgba(15,23,42,0.04)',
+          boxShadow: '0 1px 2px rgba(90, 10, 14, 0.04)',
         }}
       >
         {steps.map((s, i) => (
