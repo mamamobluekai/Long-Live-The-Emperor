@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getSupervisorBatches } from '../../../api/supervisorApi';
 import Feedback from '../../../components/Feedback';
-import styles from './SupervisorDashboard.module.css';
+import styles from './SupervisorStudent.module.css';
 
 function SupervisorStudents() {
   const [batches, setBatches] = useState([]);

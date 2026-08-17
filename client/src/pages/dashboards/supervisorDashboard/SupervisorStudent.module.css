@@ -1,0 +1,660 @@
+/* =========================================================
+   SUPERVISOR STUDENTS DASHBOARD
+   Modern Maroon Theme
+========================================================= */
+
+.pageHeader {
+  position: relative;
+  overflow: hidden;
+
+  margin-bottom: 24px;
+  padding: 28px 30px;
+
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #581725 0%,
+      #6d1e30 55%,
+      #822d3e 100%
+    );
+
+  color: #ffffff;
+
+  box-shadow:
+    0 12px 30px rgba(88, 23, 37, 0.18);
+}
+
+.pageHeader::before {
+  content: "";
+
+  position: absolute;
+
+  width: 260px;
+  height: 260px;
+
+  right: -95px;
+  top: -150px;
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.065);
+}
+
+.pageHeader::after {
+  content: "";
+
+  position: absolute;
+
+  width: 170px;
+  height: 170px;
+
+  right: 100px;
+  bottom: -125px;
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.pageHeader h2 {
+  position: relative;
+  z-index: 1;
+
+  margin: 0 0 6px;
+
+  color: #ffffff;
+
+  font-size: 1.55rem;
+  font-weight: 750;
+
+  letter-spacing: -0.025em;
+}
+
+.pageHeader p {
+  position: relative;
+  z-index: 1;
+
+  max-width: 650px;
+
+  margin: 0;
+
+  color: rgba(255, 255, 255, 0.78);
+
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+
+/* =========================================================
+   FEEDBACK
+========================================================= */
+
+.message,
+.error {
+  margin-bottom: 18px;
+  padding: 12px 15px;
+
+  border-radius: 10px;
+
+  font-size: 0.83rem;
+  font-weight: 600;
+}
+
+.error {
+  border: 1px solid #e4c4c9;
+
+  background: #fff2f3;
+
+  color: #a23d49;
+}
+
+
+/* =========================================================
+   STATISTICS
+========================================================= */
+
+.statRow {
+  display: grid;
+
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 16px;
+
+  margin-bottom: 24px;
+}
+
+.statCard {
+  position: relative;
+
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+
+  min-height: 118px;
+
+  padding: 22px 23px;
+
+  border: 1px solid #eadcdf;
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 5px 18px rgba(88, 23, 37, 0.055);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.statCard::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  top: 0;
+  bottom: 0;
+
+  width: 4px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #581725,
+      #822d3e
+    );
+}
+
+.statCard::after {
+  content: "";
+
+  position: absolute;
+
+  width: 110px;
+  height: 110px;
+
+  right: -48px;
+  top: -55px;
+
+  border-radius: 50%;
+
+  background: rgba(109, 30, 48, 0.035);
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 10px 25px rgba(88, 23, 37, 0.09);
+}
+
+.statValue {
+  position: relative;
+  z-index: 1;
+
+  color: #581725;
+
+  font-size: 1.8rem;
+  font-weight: 800;
+
+  line-height: 1.1;
+
+  letter-spacing: -0.035em;
+}
+
+.statLabel {
+  position: relative;
+  z-index: 1;
+
+  margin-top: 7px;
+
+  color: #89777d;
+
+  font-size: 0.72rem;
+  font-weight: 700;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.07em;
+}
+
+
+/* =========================================================
+   BATCH SECTION
+========================================================= */
+
+.section {
+  position: relative;
+
+  margin-bottom: 22px;
+  padding: 24px;
+
+  border: 1px solid #eadcdf;
+  border-radius: 17px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 4px 15px rgba(88, 23, 37, 0.045);
+}
+
+.section::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  top: 21px;
+  bottom: 21px;
+
+  width: 3px;
+
+  border-radius: 0 5px 5px 0;
+
+  background:
+    linear-gradient(
+      180deg,
+      #581725,
+      #822d3e
+    );
+}
+
+
+/* =========================================================
+   SECTION TITLE
+========================================================= */
+
+.sectionTitle {
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  margin: 0 0 7px;
+
+  color: #3b292e;
+
+  font-size: 1.02rem;
+  font-weight: 750;
+
+  letter-spacing: -0.015em;
+}
+
+.sectionTitle::before {
+  content: "";
+
+  width: 8px;
+  height: 8px;
+
+  flex: 0 0 auto;
+
+  border-radius: 50%;
+
+  background: #6d1e30;
+
+  box-shadow:
+    0 0 0 4px rgba(109, 30, 48, 0.09);
+}
+
+
+/* =========================================================
+   MUTED INFORMATION
+========================================================= */
+
+.muted {
+  margin: 0 0 17px;
+
+  color: #8a777d;
+
+  font-size: 0.78rem;
+
+  line-height: 1.55;
+}
+
+
+/* =========================================================
+   BATCH BADGE
+========================================================= */
+
+.badge {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-height: 25px;
+
+  padding: 4px 10px;
+
+  border: 1px solid #ddc1c8;
+  border-radius: 999px;
+
+  background: #fbf2f5;
+
+  color: #6d1e30;
+
+  font-size: 0.64rem;
+  font-weight: 750;
+
+  line-height: 1;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.035em;
+}
+
+
+/* =========================================================
+   TABLE CONTAINER
+========================================================= */
+
+.tableWrap {
+  width: 100%;
+
+  overflow-x: auto;
+
+  border: 1px solid #e8dce0;
+  border-radius: 13px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 3px 12px rgba(88, 23, 37, 0.035);
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.table {
+  width: 100%;
+
+  border-collapse: separate;
+  border-spacing: 0;
+
+  min-width: 720px;
+
+  font-size: 0.78rem;
+}
+
+
+/* Header */
+
+.table thead {
+  background:
+    linear-gradient(
+      135deg,
+      #581725 0%,
+      #6d1e30 55%,
+      #822d3e 100%
+    );
+}
+
+.table th {
+  height: 47px;
+
+  padding: 0 14px;
+
+  border-right: 1px solid rgba(255, 255, 255, 0.09);
+
+  color: #ffffff;
+
+  font-size: 0.66rem;
+  font-weight: 750;
+
+  text-align: left;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.045em;
+
+  white-space: nowrap;
+}
+
+.table th:last-child {
+  border-right: none;
+}
+
+
+/* Body */
+
+.table td {
+  padding: 13px 14px;
+
+  border-right: 1px solid #f0e7e9;
+  border-bottom: 1px solid #eee5e7;
+
+  color: #4a3a3f;
+
+  vertical-align: middle;
+}
+
+.table td:last-child {
+  border-right: none;
+}
+
+.table tbody tr {
+  background: #ffffff;
+
+  transition:
+    background 0.15s ease;
+}
+
+.table tbody tr:hover {
+  background: #fdf7f9;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
+/* =========================================================
+   STUDENT ID
+========================================================= */
+
+.table td:first-child {
+  color: #6d1e30;
+
+  font-weight: 750;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   STUDENT NAME
+========================================================= */
+
+.table td:nth-child(2) {
+  color: #322328;
+
+  font-weight: 650;
+}
+
+
+/* =========================================================
+   EMAIL
+========================================================= */
+
+.table td:nth-child(3) {
+  color: #76666b;
+
+  font-size: 0.75rem;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.empty {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-height: 75px;
+
+  margin: 0;
+
+  padding: 18px;
+
+  border: 1px dashed #ddcbd0;
+  border-radius: 11px;
+
+  background: #fdfafb;
+
+  color: #89777d;
+
+  font-size: 0.81rem;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+.loading {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-height: 120px;
+
+  margin: 0;
+
+  padding: 25px;
+
+  border: 1px dashed #ddcbd0;
+  border-radius: 13px;
+
+  background: #fdfafb;
+
+  color: #6d1e30;
+
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+.tableWrap::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.tableWrap::-webkit-scrollbar-track {
+  background: #f7f1f3;
+}
+
+.tableWrap::-webkit-scrollbar-thumb {
+  background: #c8a9b1;
+
+  border-radius: 10px;
+}
+
+.tableWrap::-webkit-scrollbar-thumb:hover {
+  background: #8d4b5b;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 800px) {
+  .statRow {
+    grid-template-columns: 1fr;
+  }
+
+  .pageHeader {
+    padding: 24px;
+  }
+
+  .section {
+    padding: 21px;
+  }
+}
+
+
+@media (max-width: 600px) {
+  .pageHeader {
+    padding: 21px 18px;
+
+    border-radius: 16px;
+  }
+
+  .pageHeader h2 {
+    font-size: 1.3rem;
+  }
+
+  .pageHeader p {
+    font-size: 0.8rem;
+  }
+
+  .statCard {
+    min-height: 105px;
+
+    padding: 19px;
+  }
+
+  .statValue {
+    font-size: 1.55rem;
+  }
+
+  .section {
+    padding: 18px;
+
+    border-radius: 14px;
+  }
+
+  .sectionTitle {
+    flex-wrap: wrap;
+  }
+
+  .tableWrap {
+    border-radius: 11px;
+  }
+}
+
+
+@media (max-width: 420px) {
+  .pageHeader {
+    margin-bottom: 17px;
+  }
+
+  .section {
+    padding: 16px;
+  }
+
+  .statRow {
+    gap: 11px;
+  }
+
+  .statCard {
+    min-height: 95px;
+
+    padding: 17px;
+  }
+
+  .statValue {
+    font-size: 1.4rem;
+  }
+
+  .statLabel {
+    font-size: 0.65rem;
+  }
+}

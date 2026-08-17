@@ -7,10 +7,10 @@ import SurveyBlock from './SurveyBlock';
 import styles from './PostCard.module.css';
 
 const POST_TYPE_CONFIG = {
-  announcement: { label: 'Announcement', icon: '📢', color: '#2a5298', bg: '#eff6ff' },
-  advertisement: { label: 'Advertisement', icon: '📣', color: '#f59e0b', bg: '#fffbeb' },
-  endorsement: { label: 'Endorsement', icon: '⭐', color: '#10b981', bg: '#ecfdf5' },
-  survey: { label: 'Survey', icon: '📊', color: '#8b5cf6', bg: '#f5f3ff' },
+  announcement: { label: 'Announcement', color: '#2a5298', bg: '#eff6ff' },
+  advertisement: { label: 'Advertisement', color: '#f59e0b', bg: '#fffbeb' },
+  endorsement: { label: 'Endorsement',  color: '#10b981', bg: '#ecfdf5' },
+  survey: { label: 'Survey', color: '#8b5cf6', bg: '#f5f3ff' },
 };
 
 function timeAgo(date) {

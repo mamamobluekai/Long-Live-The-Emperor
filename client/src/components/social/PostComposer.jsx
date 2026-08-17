@@ -4,10 +4,10 @@ import { createFeedPost } from '../../api/feedApi';
 import styles from './PostComposer.module.css';
 
 const POST_TYPES = [
-  { value: 'announcement', label: 'Announcement', icon: '📢', color: '#2a5298' },
-  { value: 'advertisement', label: 'Advertisement', icon: '📣', color: '#f59e0b' },
-  { value: 'endorsement', label: 'Endorsement', icon: '⭐', color: '#10b981' },
-  { value: 'survey', label: 'Survey', icon: '📊', color: '#8b5cf6' },
+  { value: 'announcement', label: 'Announcement',  color: '#2a5298' },
+  { value: 'advertisement', label: 'Advertisement', color: '#f59e0b' },
+  { value: 'endorsement', label: 'Endorsement', color: '#10b981' },
+  { value: 'survey', label: 'Survey', color: '#8b5cf6' },
 ];
 
 const AUDIENCE_OPTIONS = [

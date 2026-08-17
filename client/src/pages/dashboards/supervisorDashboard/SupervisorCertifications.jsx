@@ -7,7 +7,7 @@ import {
   supervisorGetCertificateTemplate,
   supervisorSaveCertificateTemplate,
 } from '../../../api/certificateApi';
-import styles from './SupervisorDashboard.module.css';
+import styles from './SupervisorDashboardCertifications.module.css';
 
 function CornerOrnament({ color, corner }) {
   const transforms = { tl: 'rotate(0deg)', tr: 'rotate(90deg)', br: 'rotate(180deg)', bl: 'rotate(270deg)' };

@@ -1,41 +1,405 @@
+/* =========================================================
+   PAGE
+========================================================= */
+
 .page {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  min-height: 100%;
+  padding: 30px;
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(130, 45, 62, 0.045),
+      transparent 32%
+    ),
+    #f8f7f6;
+
+  color: #292124;
 }
+
+
+/* =========================================================
+   TITLE
+========================================================= */
 
 .title {
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #0f172a;
+  position: relative;
+
+  margin: 0 0 26px;
+  padding-left: 16px;
+
+  color: #581725;
+
+  font-size: 1.85rem;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.2;
 }
+
+.title::before {
+  content: "";
+
+  position: absolute;
+  left: 0;
+  top: 3px;
+
+  width: 6px;
+  height: 29px;
+
+  border-radius: 6px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #581725 0%,
+      #6d1e30 55%,
+      #822d3e 100%
+    );
+}
+
+
+/* =========================================================
+   CARD
+========================================================= */
 
 .card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 18px;
+  width: 100%;
+  max-width: 900px;
+
+  margin-bottom: 20px;
+  padding: 25px 27px;
+
+  border: 1px solid #e8dcdf;
+  border-radius: 17px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 5px 20px rgba(88, 23, 37, 0.055);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
-.section {
-  margin: 0 0 12px;
-  font-size: 1.05rem;
-  color: #1e293b;
+.card:hover {
+  border-color: #dcc6cb;
+
+  box-shadow:
+    0 8px 25px rgba(88, 23, 37, 0.08);
+
+  transform: translateY(-1px);
 }
+
+
+/* =========================================================
+   SECTION TITLE
+========================================================= */
+
+.section {
+  display: flex;
+  align-items: center;
+
+  margin: 0 0 20px;
+  padding-bottom: 15px;
+
+  border-bottom: 1px solid #eee5e7;
+
+  color: #581725;
+
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.section::before {
+  content: "";
+
+  width: 8px;
+  height: 8px;
+
+  margin-right: 10px;
+
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      135deg,
+      #581725,
+      #822d3e
+    );
+
+  box-shadow:
+    0 0 0 4px #f8edef;
+}
+
+
+/* =========================================================
+   ACCOUNT ROW
+========================================================= */
 
 .row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid #f1f5f9;
+  gap: 25px;
+
+  min-height: 58px;
+
   margin: 0;
-  color: #475569;
+  padding: 13px 4px;
+
+  border-bottom: 1px solid #f1ebec;
 }
 
+.row:last-child {
+  border-bottom: none;
+}
+
+
+/* LABEL */
+
+.row span {
+  color: #76686c;
+
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+
+/* VALUE */
+
+.row strong {
+  color: #3d3034;
+
+  font-size: 0.95rem;
+  font-weight: 750;
+
+  text-align: right;
+  word-break: break-word;
+}
+
+
+/* =========================================================
+   ROLE VALUE
+========================================================= */
+
+.row:nth-child(4) strong {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 7px 13px;
+
+  border: 1px solid #e5cfd5;
+  border-radius: 999px;
+
+  background: #fff7f8;
+
+  color: #6d1e30;
+
+  font-size: 0.78rem;
+  font-weight: 800;
+
+  text-transform: capitalize;
+}
+
+
+/* =========================================================
+   ATTENDANCE HINT
+========================================================= */
+
 .hint {
-  color: #475569;
-  font-size: 0.92rem;
-  line-height: 1.5;
   margin: 0;
+
+  padding: 17px 18px;
+
+  border: 1px solid #eadcdf;
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(88, 23, 37, 0.055),
+      rgba(130, 45, 62, 0.025)
+    );
+
+  color: #625459;
+
+  font-size: 0.9rem;
+  font-weight: 550;
+  line-height: 1.65;
+}
+
+
+/* =========================================================
+   ATTENDANCE TIME HIGHLIGHT
+========================================================= */
+
+.hint::before {
+  content: "🕐";
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  margin-right: 10px;
+
+  vertical-align: middle;
+
+  border-radius: 9px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #581725 0%,
+      #6d1e30 55%,
+      #822d3e 100%
+    );
+
+  font-size: 0.95rem;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 768px) {
+  .page {
+    padding: 22px;
+  }
+
+  .title {
+    margin-bottom: 21px;
+    font-size: 1.55rem;
+  }
+
+  .title::before {
+    width: 5px;
+    height: 25px;
+  }
+
+  .card {
+    padding: 21px;
+    border-radius: 15px;
+  }
+
+  .section {
+    font-size: 1rem;
+  }
+
+  .row {
+    min-height: 54px;
+  }
+
+  .row span {
+    font-size: 0.85rem;
+  }
+
+  .row strong {
+    font-size: 0.88rem;
+  }
+
+  .hint {
+    font-size: 0.84rem;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+  .page {
+    padding: 16px;
+  }
+
+  .title {
+    margin-bottom: 18px;
+    padding-left: 13px;
+
+    font-size: 1.35rem;
+  }
+
+  .title::before {
+    width: 4px;
+    height: 22px;
+  }
+
+  .card {
+    margin-bottom: 16px;
+    padding: 18px;
+
+    border-radius: 13px;
+  }
+
+  .section {
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+
+    font-size: 0.94rem;
+  }
+
+  .section::before {
+    width: 7px;
+    height: 7px;
+    margin-right: 8px;
+  }
+
+  .row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+
+    padding: 12px 2px;
+  }
+
+  .row span {
+    font-size: 0.78rem;
+  }
+
+  .row strong {
+    max-width: 100%;
+
+    font-size: 0.86rem;
+
+    text-align: left;
+  }
+
+  .row:nth-child(4) strong {
+    padding: 6px 11px;
+    font-size: 0.72rem;
+  }
+
+  .hint {
+    padding: 14px;
+
+    font-size: 0.79rem;
+    line-height: 1.6;
+  }
+
+  .hint::before {
+    width: 30px;
+    height: 30px;
+
+    margin-right: 7px;
+
+    font-size: 0.85rem;
+  }
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
 }

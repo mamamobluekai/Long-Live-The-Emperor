@@ -5,7 +5,7 @@ import {
   getSupervisorDeploymentRequests,
   getDeploymentRequestStudents,
 } from '../../../api/coordinatorApi';
-import styles from './SupervisorDashboard.module.css';
+import styles from './Deployment.module.css';
 import '../../../styles/feedback.css';
 
 function CreateDeploymentRequest() {
@@ -93,17 +93,17 @@ function CreateDeploymentRequest() {
 
   const statusBadge = (status) => {
     const map = {
-      pending: styles.badgePending,
-      approved: styles.badgeApproved,
-      rejected: styles.badgeRejected,
-      fulfilled: styles.badgeFulfilled,
+      pending: 'badgePending',
+      approved: 'badgeApproved',
+      rejected: 'badgeRejected',
+      fulfilled: 'badgeFulfilled',
     };
-    return map[String(status || '').toLowerCase()] || styles.badgePending;
+    return map[String(status || '').toLowerCase()] || 'badgePending';
   };
 
   return (
     <div>
-      <div className={styles.pageHeader}>
+      <div className="pageHeader">
         <h2>Deployment Requests</h2>
         <p>Request students from a coordinator and track the status of your requests.</p>
       </div>
@@ -117,8 +117,8 @@ function CreateDeploymentRequest() {
         </div>
       )}
 
-      <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>New Request</h3>
+      <div className="section">
+        <h3 className="sectionTitle">New Request</h3>
         <form onSubmit={handleSubmit}>
           <div className={styles.row}>
             <select

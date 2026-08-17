@@ -1,212 +1,678 @@
+/* =========================================================
+   TEACHER APPEALS
+   Modern Minimal Maroon Theme
+   ========================================================= */
+
 .page {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 4px;
+  min-height: 100%;
+  padding: 28px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f4eeee 0%,
+      #f8f5f5 48%,
+      #f1e8ea 100%
+    );
+
+  color: #2d2226;
 }
 
+/* =========================================================
+   HEADER
+   ========================================================= */
+
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
+  max-width: 1100px;
+  margin: 0 auto 22px;
+  padding: 22px 25px;
+
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #581725 0%,
+      #6d1e30 55%,
+      #822d3e 100%
+    );
+
+  box-shadow:
+    0 10px 30px rgba(91, 24, 39, 0.18);
 }
 
 .title {
   margin: 0;
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #0f172a;
+
+  color: #ffffff;
+
+  font-size: 1.6rem;
+  font-weight: 750;
+
+  letter-spacing: -0.025em;
 }
 
 .batchTag {
-  margin: 4px 0 0;
-  font-size: 0.9rem;
-  color: #64748b;
+  display: inline-flex;
+
+  margin: 9px 0 0;
+  padding: 6px 11px;
+
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.1);
+
+  color: #f9e8ec;
+
+  font-size: 0.73rem;
+  font-weight: 600;
 }
 
-.batchSelect {
-  padding: 9px 12px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  font-size: 0.95rem;
-  min-width: 200px;
-}
-
-.info {
-  color: #475569;
-}
+/* =========================================================
+   NOTICE
+   ========================================================= */
 
 .notice {
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-weight: 500;
-  font-size: 0.9rem;
-}
+  max-width: 1100px;
+  margin: 0 auto 18px;
 
-.notice_info {
-  background: #eff6ff;
-  color: #1e40af;
-  border: 1px solid #bfdbfe;
+  padding: 13px 16px;
+
+  border-radius: 10px;
+
+  font-size: 0.83rem;
+  font-weight: 600;
 }
 
 .notice_success {
-  background: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
+  background: #e7f4ec;
+  border: 1px solid #c8e3d2;
+  color: #21643b;
 }
 
 .notice_error {
-  background: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
+  background: #fff0f2;
+  border: 1px solid #e7c0c6;
+  color: #922f40;
 }
 
+.notice_info {
+  background: #f2e4e7;
+  border: 1px solid #dfc4ca;
+  color: #681f2d;
+}
+
+/* =========================================================
+   FILTER BAR
+   ========================================================= */
+
 .filterRow {
+  max-width: 1100px;
+
+  margin: 0 auto 20px;
+  padding: 6px;
+
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 5px;
+
+  border: 1px solid #ddcbd0;
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.72);
+
+  box-shadow:
+    0 5px 18px rgba(83, 25, 38, 0.05);
 }
 
 .filterBtn {
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #475569;
+  position: relative;
+
+  padding: 9px 17px;
+
+  border: 0;
+  border-radius: 8px;
+
+  background: transparent;
+
+  color: #76686d;
+
   cursor: pointer;
+
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 650;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    transform 0.15s ease;
+}
+
+.filterBtn:hover {
+  background: #f5e8eb;
+  color: #681f2d;
 }
 
 .filterActive {
-  background: #1d4ed8;
-  color: white;
-  border-color: #1d4ed8;
+  background:
+    linear-gradient(
+      135deg,
+      #641b2b,
+      #7b293b
+    );
+
+  color: #ffffff;
+
+  box-shadow:
+    0 4px 10px rgba(104, 31, 45, 0.2);
 }
 
-.list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.filterActive:hover {
+  background:
+    linear-gradient(
+      135deg,
+      #641b2b,
+      #7b293b
+    );
+
+  color: #ffffff;
 }
 
-.empty {
-  color: #94a3b8;
-  text-align: center;
-  padding: 24px;
-}
+/* =========================================================
+   GENERAL INFO
+   ========================================================= */
 
-.item {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 16px 18px;
-}
+.info {
+  max-width: 1100px;
 
-.itemTop {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
+  margin: 20px auto;
 
-.meta {
-  color: #64748b;
+  color: #817176;
+
   font-size: 0.85rem;
 }
 
+/* =========================================================
+   APPEAL LIST
+   ========================================================= */
+
+.list {
+  max-width: 1100px;
+
+  margin: 0 auto;
+  padding: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 13px;
+
+  list-style: none;
+}
+
+/* =========================================================
+   APPEAL ITEM
+   ========================================================= */
+
+.item {
+  position: relative;
+
+  padding: 20px;
+
+  border: 1px solid #dfcdd1;
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff 0%,
+      #fbf6f7 100%
+    );
+
+  box-shadow:
+    0 6px 22px rgba(83, 25, 38, 0.055);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.item::before {
+  content: '';
+
+  position: absolute;
+
+  left: 0;
+  top: 15px;
+  bottom: 15px;
+
+  width: 4px;
+
+  border-radius: 0 5px 5px 0;
+
+  background:
+    linear-gradient(
+      180deg,
+      #681f2d,
+      #a44759
+    );
+}
+
+.item:hover {
+  transform: translateY(-2px);
+
+  border-color: #d5b9c0;
+
+  box-shadow:
+    0 12px 28px rgba(83, 25, 38, 0.09);
+}
+
+/* =========================================================
+   TOP SECTION
+   ========================================================= */
+
+.itemTop {
+  display: flex;
+
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding-left: 5px;
+}
+
+.itemTop strong {
+  color: #3b292e;
+
+  font-size: 0.95rem;
+  font-weight: 750;
+}
+
+.meta {
+  color: #89797f;
+
+  font-size: 0.73rem;
+}
+
+/* =========================================================
+   STATUS BADGES
+   ========================================================= */
+
 .badge {
-  padding: 2px 10px;
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 72px;
+
+  padding: 5px 10px;
+
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 700;
+
+  font-size: 0.65rem;
+  font-weight: 750;
+
   text-transform: capitalize;
 }
 
 .badge_pending {
-  background: #fef9c3;
-  color: #854d0e;
+  background: #fff1d5;
+  color: #966518;
+
+  border: 1px solid #ead7a9;
 }
 
 .badge_approved {
-  background: #dcfce7;
-  color: #166534;
+  background: #e4f3e9;
+  color: #21643b;
+
+  border: 1px solid #c8e3d2;
 }
 
 .badge_rejected {
-  background: #fee2e2;
-  color: #991b1b;
+  background: #fdebed;
+  color: #a23b49;
+
+  border: 1px solid #e8c1c7;
 }
+
+/* =========================================================
+   APPEAL TYPE
+   ========================================================= */
+
+.itemTop .meta::first-letter {
+  text-transform: uppercase;
+}
+
+/* =========================================================
+   EXCUSE
+   ========================================================= */
 
 .excuse {
-  margin: 10px 0;
-  color: #334155;
-  font-size: 0.92rem;
+  margin: 15px 0 12px;
+  padding: 13px 15px;
+
+  border-left: 3px solid #c69ba5;
+  border-radius: 0 8px 8px 0;
+
+  background: #f8edef;
+
+  color: #514147;
+
+  font-size: 0.82rem;
+  line-height: 1.55;
 }
+
+/* =========================================================
+   ATTACHMENT
+   ========================================================= */
 
 .fileLink {
-  color: #1d4ed8;
-  font-size: 0.85rem;
+  display: inline-flex;
+
+  align-items: center;
+
+  margin-bottom: 10px;
+  padding: 7px 11px;
+
+  border: 1px solid #d9c0c6;
+  border-radius: 8px;
+
+  background: #f5e9ec;
+
+  color: #681f2d;
+
+  text-decoration: none;
+
+  font-size: 0.71rem;
+  font-weight: 700;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
+
+.fileLink:hover {
+  background: #eedde1;
+  border-color: #cba8b0;
+}
+
+/* =========================================================
+   TEACHER COMMENT
+   ========================================================= */
 
 .comment {
-  margin: 8px 0 0;
-  font-size: 0.85rem;
-  font-style: italic;
-  color: #475569;
+  margin: 10px 0 0;
+  padding: 10px 12px;
+
+  border: 1px solid #d9e6dd;
+  border-radius: 8px;
+
+  background: #edf6f0;
+
+  color: #3c6049;
+
+  font-size: 0.75rem;
+  line-height: 1.5;
 }
 
+/* =========================================================
+   REVIEW BOX
+   ========================================================= */
+
 .reviewBox {
-  margin-top: 12px;
-  border-top: 1px solid #eef2f7;
-  padding-top: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+
+  border-top: 1px solid #eadde0;
 }
+
+/* =========================================================
+   COMMENT INPUT
+   ========================================================= */
 
 .commentInput {
   width: 100%;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 0.9rem;
-  font-family: inherit;
+  min-height: 72px;
+
+  box-sizing: border-box;
+
   resize: vertical;
+
+  padding: 11px 12px;
+
+  border: 1px solid #d8c5ca;
+  border-radius: 9px;
+
+  background: #fffafa;
+
+  color: #3d2e33;
+
+  font-family: inherit;
+  font-size: 0.78rem;
+  line-height: 1.5;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
 }
+
+.commentInput::placeholder {
+  color: #a29499;
+}
+
+.commentInput:hover {
+  background: #fff6f7;
+}
+
+.commentInput:focus {
+  background: #ffffff;
+
+  border-color: #8b3345;
+
+  box-shadow:
+    0 0 0 3px rgba(104, 31, 45, 0.09);
+}
+
+/* =========================================================
+   REVIEW ACTIONS
+   ========================================================= */
 
 .reviewActions {
   display: flex;
-  gap: 10px;
+
+  justify-content: flex-end;
+
+  gap: 8px;
+
   margin-top: 10px;
 }
 
-.approveBtn {
-  background: #16a34a;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  padding: 9px 18px;
-  font-weight: 600;
+.approveBtn,
+.rejectBtn {
+  min-width: 92px;
+
+  height: 38px;
+
+  padding: 0 15px;
+
+  border-radius: 8px;
+
   cursor: pointer;
+
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 700;
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
-.approveBtn:hover:not(:disabled) {
-  background: #15803d;
+/* Approve */
+
+.approveBtn {
+  border: 1px solid #bcdac7;
+
+  background:
+    linear-gradient(
+      135deg,
+      #2f7950,
+      #3d8c61
+    );
+
+  color: #ffffff;
+
+  box-shadow:
+    0 4px 10px rgba(47, 121, 80, 0.15);
 }
+
+.approveBtn:hover {
+  transform: translateY(-1px);
+
+  background:
+    linear-gradient(
+      135deg,
+      #276944,
+      #347951
+    );
+
+  box-shadow:
+    0 7px 15px rgba(47, 121, 80, 0.2);
+}
+
+/* Reject */
 
 .rejectBtn {
-  background: #dc2626;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  padding: 9px 18px;
-  font-weight: 600;
-  cursor: pointer;
+  border: 1px solid #e1bfc5;
+
+  background: #fff0f2;
+
+  color: #9a3042;
 }
 
-.rejectBtn:hover:not(:disabled) {
-  background: #b91c1c;
+.rejectBtn:hover {
+  transform: translateY(-1px);
+
+  background: #fbe2e6;
+
+  border-color: #d9aab3;
+}
+
+/* Disabled */
+
+.approveBtn:disabled,
+.rejectBtn:disabled {
+  opacity: 0.5;
+
+  cursor: not-allowed;
+
+  transform: none;
+
+  box-shadow: none;
+}
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.empty {
+  padding: 55px 20px;
+
+  border: 1px dashed #d8c4ca;
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.85),
+      rgba(248, 238, 241, 0.85)
+    );
+
+  color: #8a7a80;
+
+  text-align: center;
+
+  font-size: 0.84rem;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .page {
+    padding: 15px;
+  }
+
+  .header {
+    padding: 19px;
+  }
+
+  .title {
+    font-size: 1.35rem;
+  }
+
+  .filterRow {
+    overflow-x: auto;
+  }
+
+  .filterBtn {
+    flex: 0 0 auto;
+  }
+
+  .item {
+    padding: 17px;
+  }
+
+  .itemTop {
+    flex-direction: column;
+
+    gap: 10px;
+  }
+
+  .badge {
+    align-self: flex-start;
+  }
+
+  .reviewActions {
+    flex-direction: column;
+  }
+
+  .approveBtn,
+  .rejectBtn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 450px) {
+  .page {
+    padding: 10px;
+  }
+
+  .header {
+    border-radius: 13px;
+  }
+
+  .filterRow {
+    margin-bottom: 15px;
+  }
+
+  .item {
+    border-radius: 12px;
+  }
+
+  .meta {
+    display: block;
+
+    margin-top: 5px;
+  }
 }

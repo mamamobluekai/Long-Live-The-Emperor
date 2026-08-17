@@ -1,71 +1,394 @@
+/* =========================================================
+   TEACHER REPORTS
+   Modern Minimal Maroon Theme
+   ========================================================= */
+
 .page {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  min-height: 100%;
+  padding: 28px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f4eeee 0%,
+      #f8f5f5 48%,
+      #f1e8ea 100%
+    );
+
+  color: #2d2226;
 }
 
+/* =========================================================
+   HEADER
+   ========================================================= */
+
 .header {
+  max-width: 1100px;
+  margin: 0 auto 22px;
+
+  padding: 22px 25px;
+
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #581725 0%,
+      #6d1e30 55%,
+      #822d3e 100%
+    );
+
+  box-shadow:
+    0 10px 30px rgba(91, 24, 39, 0.18);
 }
 
 .title {
   margin: 0;
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #0f172a;
+
+  color: #ffffff;
+
+  font-size: 1.6rem;
+  font-weight: 750;
+
+  letter-spacing: -0.025em;
 }
 
 .batchTag {
-  margin: 4px 0 0;
-  font-size: 0.9rem;
-  color: #64748b;
+  display: inline-flex;
+
+  margin: 9px 0 0;
+  padding: 6px 11px;
+
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.1);
+
+  color: #f9e8ec;
+
+  font-size: 0.73rem;
+  font-weight: 600;
 }
 
-.controls {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
+/* =========================================================
+   DATE SELECTOR
+   ========================================================= */
 
-.select,
 .dateInput {
-  padding: 9px 12px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  font-size: 0.95rem;
+  height: 40px;
+
+  padding: 0 12px;
+
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9px;
+
+  background: rgba(255, 255, 255, 0.12);
+
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  outline: none;
+
+  color-scheme: dark;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
+
+.dateInput:hover {
+  background: rgba(255, 255, 255, 0.18);
+
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+.dateInput:focus {
+  background: rgba(255, 255, 255, 0.18);
+
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+/* =========================================================
+   INFO
+   ========================================================= */
 
 .info {
-  color: #475569;
+  max-width: 1100px;
+
+  margin: 20px auto;
+
+  color: #817176;
+
+  font-size: 0.85rem;
 }
 
+/* =========================================================
+   REPORT GRID
+   ========================================================= */
+
 .grid {
+  max-width: 1100px;
+
+  margin: 0 auto;
+
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
   gap: 14px;
 }
 
+/* =========================================================
+   REPORT CARD
+   ========================================================= */
+
 .card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 18px;
+  position: relative;
+
+  min-height: 135px;
+
+  padding: 23px;
+
+  overflow: hidden;
+
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  justify-content: center;
+
+  border: 1px solid #dfcdd1;
+  border-radius: 15px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff 0%,
+      #fbf6f7 100%
+    );
+
+  box-shadow:
+    0 7px 24px rgba(83, 25, 38, 0.065);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
+
+.card:hover {
+  transform: translateY(-3px);
+
+  border-color: #d3b7be;
+
+  box-shadow:
+    0 13px 30px rgba(83, 25, 38, 0.1);
+}
+
+/* Left accent */
+
+.card::before {
+  content: '';
+
+  position: absolute;
+
+  left: 0;
+  top: 0;
+  bottom: 0;
+
+  width: 5px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #681f2d,
+      #a44759
+    );
+}
+
+/* Decorative circle */
+
+.card::after {
+  content: '';
+
+  position: absolute;
+
+  right: -40px;
+  top: -40px;
+
+  width: 120px;
+  height: 120px;
+
+  border-radius: 50%;
+
+  background: rgba(104, 31, 45, 0.045);
+}
+
+/* =========================================================
+   VALUE
+   ========================================================= */
 
 .value {
-  font-size: 1.9rem;
-  font-weight: 700;
-  color: #0f172a;
+  position: relative;
+  z-index: 1;
+
+  color: #681f2d;
+
+  font-size: 2rem;
+  font-weight: 800;
+
+  line-height: 1;
+
+  letter-spacing: -0.04em;
 }
 
+/* =========================================================
+   LABEL
+   ========================================================= */
+
 .label {
-  font-size: 0.82rem;
-  color: #64748b;
+  position: relative;
+  z-index: 1;
+
+  margin-top: 10px;
+
+  color: #75676c;
+
+  font-size: 0.76rem;
+  font-weight: 650;
+
+  line-height: 1.4;
+}
+
+/* =========================================================
+   INDIVIDUAL CARD ACCENTS
+   ========================================================= */
+
+/* Total students */
+
+.card:nth-child(1)::before {
+  background:
+    linear-gradient(
+      180deg,
+      #681f2d,
+      #a44759
+    );
+}
+
+/* Timed in */
+
+.card:nth-child(2)::before {
+  background:
+    linear-gradient(
+      180deg,
+      #2f7950,
+      #58a375
+    );
+}
+
+.card:nth-child(2) .value {
+  color: #2f7950;
+}
+
+/* Timed out */
+
+.card:nth-child(3)::before {
+  background:
+    linear-gradient(
+      180deg,
+      #7a5260,
+      #9b7080
+    );
+}
+
+.card:nth-child(3) .value {
+  color: #714456;
+}
+
+/* Pending appeals */
+
+.card:nth-child(4)::before {
+  background:
+    linear-gradient(
+      180deg,
+      #a2711b,
+      #c3953a
+    );
+}
+
+.card:nth-child(4) .value {
+  color: #9a6a18;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 950px) {
+  .grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .page {
+    padding: 15px;
+  }
+
+  .header {
+    padding: 19px;
+
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .title {
+    font-size: 1.35rem;
+  }
+
+  .dateInput {
+    width: 100%;
+  }
+
+  .grid {
+    grid-template-columns: 1fr 1fr;
+
+    gap: 9px;
+  }
+
+  .card {
+    min-height: 110px;
+
+    padding: 17px;
+  }
+
+  .value {
+    font-size: 1.55rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .page {
+    padding: 10px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    min-height: 100px;
+  }
 }

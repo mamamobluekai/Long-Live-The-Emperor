@@ -1,332 +1,596 @@
+/* =========================
+   POST CARD
+========================= */
+
 .card {
-  background: #ffffff;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 12px 32px -8px rgba(15, 23, 42, 0.12);
-  margin-bottom: 20px;
   position: relative;
+
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 24px;
+
+  border: 1px solid #e8dfdc;
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 6px 22px rgba(69, 26, 26, 0.06);
+
+  overflow: visible;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.card:hover {
+  border-color: #dfd0d0;
+
+  box-shadow:
+    0 10px 30px rgba(69, 26, 26, 0.09);
 }
 
 .pinned {
-  border: 2px solid #2a5298;
+  border-color: #d8b8bf;
+
+  box-shadow:
+    0 8px 28px rgba(88, 23, 37, 0.09);
 }
 
+/* =========================
+   PINNED LABEL
+========================= */
+
 .pinnedLabel {
-  position: absolute;
-  top: -12px;
-  left: 20px;
-  background: #2a5298;
-  color: #ffffff;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 4px 12px;
-  border-radius: 999px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  gap: 6px;
+
+  margin-bottom: 16px;
+  padding: 6px 11px;
+
+  border-radius: 999px;
+
+  background: #f8eeee;
+  color: #6d1e30;
+
+  font-size: 0.78rem;
+  font-weight: 750;
 }
+
+/* =========================
+   HEADER
+========================= */
 
 .header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
+
+  gap: 15px;
 }
 
 .authorInfo {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 13px;
+
+  min-width: 0;
 }
 
 .avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #475569;
-  flex-shrink: 0;
-}
+  flex: 0 0 48px;
 
-.avatarFallback {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f1f5f9;
-  border: 1px dashed #cbd5e1;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #475569;
+
+  border-radius: 50%;
+
+  background: linear-gradient(
+    135deg,
+    #581725 0%,
+    #6d1e30 55%,
+    #822d3e 100%
+  );
+
+  color: #ffffff;
+
+  font-size: 1.15rem;
+  font-weight: 800;
+
+  box-shadow:
+    0 4px 12px rgba(88, 23, 37, 0.2);
 }
 
 .authorMeta {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.3;
+  min-width: 0;
 }
 
 .authorNameRow {
   display: flex;
   align-items: center;
-  gap: 8px;
   flex-wrap: wrap;
+  gap: 8px;
 }
 
 .authorName {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #0f172a;
+  color: #292524;
+
+  font-size: 1.02rem;
+  font-weight: 800;
+
+  line-height: 1.3;
 }
 
 .roleBadge {
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 2px 8px;
+  display: inline-flex;
+  align-items: center;
+
+  padding: 4px 9px;
+
   border-radius: 999px;
-  text-transform: capitalize;
+
+  font-size: 0.7rem;
+  font-weight: 750;
 }
 
 .timestamp {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #a8a29e;
+
   font-size: 0.8rem;
-  color: #94a3b8;
-  margin-top: 2px;
+  font-weight: 500;
 }
+
+/* =========================
+   MENU
+========================= */
 
 .menuWrapper {
   position: relative;
+  z-index: 20;
 }
 
 .menuBtn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: #64748b;
-  font-size: 1.2rem;
+  width: 38px;
+  height: 38px;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s ease;
+
+  border: none;
+  border-radius: 10px;
+
+  background: transparent;
+  color: #78716c;
+
+  font-size: 1.45rem;
+  font-weight: 800;
+
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
 }
 
 .menuBtn:hover {
-  background: #f1f5f9;
+  background: #f6f2f1;
+  color: #581725;
 }
 
 .menuOverlay {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 5;
+
+  background: transparent;
 }
 
 .menuDropdown {
   position: absolute;
-  top: 36px;
+  top: 43px;
   right: 0;
+  z-index: 30;
+
+  min-width: 165px;
+
+  padding: 6px;
+
+  border: 1px solid #e7dfdc;
+  border-radius: 13px;
+
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.2);
-  z-index: 50;
-  min-width: 160px;
-  overflow: hidden;
+
+  box-shadow:
+    0 12px 30px rgba(28, 25, 23, 0.14);
 }
 
 .menuItem {
   display: block;
+
   width: 100%;
-  padding: 10px 16px;
-  background: transparent;
+
+  padding: 10px 12px;
+
   border: none;
+  border-radius: 8px;
+
+  background: transparent;
+
+  color: #44403c;
+
   text-align: left;
+
+  font-family: inherit;
   font-size: 0.85rem;
-  color: #334155;
+  font-weight: 650;
+
   cursor: pointer;
-  transition: background 0.15s ease;
+
+  transition:
+    background 0.16s ease,
+    color 0.16s ease;
 }
 
 .menuItem:hover {
-  background: #f8fafc;
+  background: #f8f1f2;
+  color: #6d1e30;
 }
 
 .menuItemDanger {
-  color: #dc2626;
+  color: #b91c1c;
 }
 
 .menuItemDanger:hover {
   background: #fef2f2;
+  color: #991b1b;
 }
+
+/* =========================
+   TYPE CHIP
+========================= */
 
 .typeChip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  padding: 4px 12px;
+  gap: 7px;
+
+  margin-top: 18px;
+  margin-bottom: 12px;
+
+  padding: 6px 11px;
+
   border-radius: 999px;
-  margin-bottom: 10px;
-  text-transform: capitalize;
+
+  font-size: 0.76rem;
+  font-weight: 750;
 }
 
 .typeIcon {
   font-size: 0.9rem;
 }
 
+/* =========================
+   POST TITLE
+========================= */
+
 .postTitle {
-  margin: 0 0 8px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #0f172a;
-  line-height: 1.4;
+  margin: 5px 0 10px;
+
+  color: #292524;
+
+  font-size: 1.3rem;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
 }
+
+/* =========================
+   POST CONTENT
+========================= */
 
 .postContent {
-  margin: 0 0 14px;
-  font-size: 0.95rem;
-  color: #334155;
-  line-height: 1.6;
+  margin: 0;
+
+  color: #44403c;
+
+  font-size: 1rem;
+  font-weight: 450;
+  line-height: 1.7;
+
   white-space: pre-wrap;
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
+/* =========================
+   POST IMAGE
+========================= */
+
 .postImageWrapper {
-  margin-bottom: 14px;
-  border-radius: 12px;
+  width: 100%;
+
+  margin-top: 18px;
+
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+
+  border-radius: 15px;
+
+  background: #f5f3f2;
 }
 
 .postImage {
-  width: 100%;
-  max-height: 500px;
-  object-fit: cover;
   display: block;
+
+  width: 100%;
+  max-height: 520px;
+
+  object-fit: cover;
 }
+
+/* =========================
+   LINK CARD
+========================= */
 
 .linkCard {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  text-decoration: none;
+  align-items: stretch;
+
+  margin-top: 18px;
+
+  min-height: 90px;
+
+  overflow: hidden;
+
+  border: 1px solid #e7dfdc;
+  border-radius: 14px;
+
+  background: #faf9f8;
+
   color: inherit;
-  margin-bottom: 14px;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  text-decoration: none;
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
 }
 
 .linkCard:hover {
-  border-color: #2a5298;
-  box-shadow: 0 4px 12px rgba(42, 82, 152, 0.08);
+  border-color: #d9c4c8;
+  background: #f9f3f4;
+
+  transform: translateY(-1px);
 }
 
 .linkThumb {
-  width: 80px;
-  height: 80px;
-  border-radius: 10px;
+  width: 125px;
+  min-height: 90px;
+
   object-fit: cover;
-  background: #f1f5f9;
-  flex-shrink: 0;
 }
 
 .linkInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
   min-width: 0;
+
+  padding: 13px 15px;
 }
 
 .linkDomain {
-  font-size: 0.75rem;
-  color: #64748b;
+  margin-bottom: 4px;
+
+  color: #8a7f7c;
+
+  font-size: 0.72rem;
+  font-weight: 700;
+
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .linkTitle {
+  color: #292524;
+
   font-size: 0.9rem;
-  font-weight: 600;
-  color: #0f172a;
-  white-space: nowrap;
+  font-weight: 750;
+  line-height: 1.35;
+
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .linkDesc {
-  font-size: 0.82rem;
-  color: #64748b;
+  margin-top: 5px;
+
+  color: #78716c;
+
+  font-size: 0.78rem;
+  line-height: 1.4;
+
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
+/* =========================
+   ACTIONS
+========================= */
+
 .actions {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(15, 23, 42, 0.06);
+
+  gap: 6px;
+
+  margin-top: 22px;
+  padding-top: 15px;
+
+  border-top: 1px solid #eee8e6;
 }
 
 .actionBtn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: 10px;
-  background: transparent;
+  justify-content: center;
+  gap: 7px;
+
+  min-height: 40px;
+
+  padding: 7px 14px;
+
   border: none;
-  color: #64748b;
-  font-size: 0.85rem;
-  font-weight: 500;
+  border-radius: 10px;
+
+  background: transparent;
+
+  color: #6b6460;
+
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+
   cursor: pointer;
-  transition: all 0.2s ease;
+
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
 }
 
 .actionBtn:hover {
-  background: #f1f5f9;
-  color: #2a5298;
+  background: #f8f1f2;
+  color: #6d1e30;
+
+  transform: translateY(-1px);
 }
 
 .actionBtnActive {
-  color: #dc2626;
-}
-
-.actionBtnActive:hover {
-  background: #fef2f2;
+  color: #6d1e30;
+  background: #faf0f2;
 }
 
 .actionIcon {
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
-@media (max-width: 640px) {
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 700px) {
+  .card {
+    padding: 19px;
+
+    border-radius: 17px;
+  }
+
+  .avatar {
+    flex-basis: 43px;
+    width: 43px;
+    height: 43px;
+
+    font-size: 1rem;
+  }
+
+  .authorName {
+    font-size: 0.95rem;
+  }
+
+  .postTitle {
+    font-size: 1.15rem;
+  }
+
+  .postContent {
+    font-size: 0.94rem;
+    line-height: 1.6;
+  }
+
+  .actions {
+    gap: 2px;
+  }
+
+  .actionBtn {
+    flex: 1;
+    padding: 7px 8px;
+
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
   .card {
     padding: 16px;
-    border-radius: 14px;
+
+    border-radius: 15px;
   }
+
+  .header {
+    gap: 8px;
+  }
+
+  .authorInfo {
+    gap: 10px;
+  }
+
+  .avatar {
+    flex-basis: 40px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .roleBadge {
+    font-size: 0.64rem;
+  }
+
+  .timestamp {
+    font-size: 0.72rem;
+  }
+
+  .typeChip {
+    font-size: 0.7rem;
+  }
+
+  .postTitle {
+    font-size: 1.05rem;
+  }
+
+  .postContent {
+    font-size: 0.9rem;
+  }
+
   .linkThumb {
-    width: 60px;
-    height: 60px;
+    width: 90px;
+  }
+
+  .linkTitle {
+    font-size: 0.82rem;
+  }
+
+  .linkDesc {
+    font-size: 0.72rem;
+  }
+
+  .actionBtn {
+    min-height: 38px;
+
+    font-size: 0.74rem;
+  }
+
+  .actionIcon {
+    font-size: 0.9rem;
   }
 }
