@@ -12,6 +12,7 @@ import {
   MessagesSquare,
   Settings,
   User,
+  FolderOpen,
 } from 'lucide-react';
 
 const links = [
@@ -35,6 +36,11 @@ const links = [
     to: '/dashboard/teacher/attendance',
     label: 'Attendance',
     icon: CalendarDays,
+  },
+  {
+    to: '/dashboard/teacher/student-documentation',
+    label: 'Student Documentation',
+    icon: FolderOpen,
   },
   {
     to: '/dashboard/teacher/live-map',

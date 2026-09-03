@@ -6,9 +6,10 @@ import AdminLogin from '../pages/admin/AdminLogin';
 import AdminDashboard from '../pages/dashboards/adminDashboard/AdminDashboard';
 import CoordinatorDashboard from '../pages/dashboards/coordinatorDashboard/CoordinatorDashboard';
 import TeacherDashboard from '../pages/dashboards/teacherDashboard/TeacherDashboard';
-import StudentDashboard from '../pages/dashboards/studentDashboard/StudentDashboard';
+import StudentDashboard from '../pages/dashboards/studentDashboard/studentDashboard';
 import SupervisorDashboard from '../pages/dashboards/supervisorDashboard/SupervisorDashboard';
 import SetPassword from '../pages/SetPassword/SetPassword';
+import ForgotPassword from '../pages/ForgotPassword/ForgotPassword';
 
 function ProtectedRoute({ children, allowedRoles, redirectTo = '/login' }) {
   const { user } = useAuth();
@@ -34,6 +35,7 @@ function AppRoutes() {
       <Route path="/admin/login" element={<AdminLogin onAuthSuccess={login} />} />
       <Route path="/register" element={<LoginAndFRegister onAuthSuccess={login} />} />
       <Route path="/set-password" element={<SetPassword />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
 
       <Route path="/dashboard">
         <Route

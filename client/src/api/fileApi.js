@@ -53,6 +53,52 @@ export async function deleteMyFile(id) {
   return apiFetch(`/${id}`, { method: 'DELETE' });
 }
 
+export async function submitDailyDoc(payload) {
+  const token = getToken();
+  const res = await fetch(`${API_BASE}/documentation/daily/submit`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    credentials: 'include',
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || 'Submit failed.');
+  return data;
+}
+
+export async function updateDailyDoc(payload) {
+  const token = getToken();
+  const res = await fetch(`${API_BASE}/documentation/daily/submit`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    credentials: 'include',
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || 'Update failed.');
+  return data;
+}
+
+export async function getMyDailyDocs(params = {}) {
+  const token = getToken();
+  const qs = new URLSearchParams();
+  if (params.date) qs.set('date', params.date);
+  if (params.batchId) qs.set('batchId', params.batchId);
+  const res = await fetch(`${API_BASE}/documentation/daily?${qs.toString()}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include',
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || 'Request failed.');
+  return data;
+}
+
 export function fileDownloadUrl(url) {
   if (!url) return '';
   return url;

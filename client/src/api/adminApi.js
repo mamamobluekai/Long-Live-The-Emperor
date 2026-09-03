@@ -250,3 +250,34 @@ export async function uploadCoordinatorsExcel(file) {
     return data;
   }));
 }
+
+export async function getImmersionPeriods() {
+  return fetchJsonOrThrow(`${API_BASE}/admin/immersion/periods`, { headers: authHeaders() });
+}
+
+export async function createImmersionPeriod(period) {
+  return fetchJsonOrThrow(`${API_BASE}/admin/immersion/periods`, {
+    method: 'POST',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(period),
+  });
+}
+
+export async function updateImmersionPeriod(id, period) {
+  return fetchJsonOrThrow(`${API_BASE}/admin/immersion/periods/${id}`, {
+    method: 'PUT',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(period),
+  });
+}
+
+export async function deleteImmersionPeriod(id) {
+  return fetchJsonOrThrow(`${API_BASE}/admin/immersion/periods/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+}
+
+export async function getImmersionAccess() {
+  return fetchJsonOrThrow(`${API_BASE}/admin/immersion/access`, { headers: authHeaders() });
+}

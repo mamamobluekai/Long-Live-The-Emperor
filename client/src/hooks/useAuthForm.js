@@ -3,6 +3,7 @@ import { loginUser, registerUser } from '../api/authApi';
 
 export function useAuthForm(onAuthSuccess) {
   const [mode, setMode] = useState('login');
+  const [role, setRole] = useState('student');
   const [form, setForm] = useState({
     studentId: '',
     firstName: '',
@@ -33,7 +34,7 @@ export function useAuthForm(onAuthSuccess) {
 
     try {
       const payload = mode === 'login'
-        ? { email: form.email, password: form.password }
+        ? { email: form.email, password: form.password, role }
         : {
             studentId: form.studentId,
             firstName: form.firstName,
@@ -42,6 +43,7 @@ export function useAuthForm(onAuthSuccess) {
             password: form.password,
             confirmPassword: form.confirmPassword,
             phone: form.phone,
+            role,
           };
 
       const data = mode === 'login'
@@ -72,5 +74,5 @@ export function useAuthForm(onAuthSuccess) {
     }
   };
 
-  return { mode, setMode, form, handleChange, loading, message, error, handleSubmit, loginSuccess };
+  return { mode, setMode, role, setRole, form, handleChange, loading, message, error, handleSubmit, loginSuccess };
 }

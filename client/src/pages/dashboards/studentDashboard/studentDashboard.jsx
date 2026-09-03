@@ -4,7 +4,6 @@ import DashboardTopNav from '../sharedSidebar/DashboardTopNav';
 import StudentSidebar from './StudentSidebar';
 import Overview from './Overview';
 import Requirements from './Requirements';
-import Documentation from './Documentation';
 import PlacementStatus from './PlacementStatus';
 import Announcements from './Announcements';
 import Attendance from './Attendance';
@@ -24,7 +23,6 @@ function StudentDashboard({ user, onLogout }) {
         <Route path="overview" element={<Overview />} />
         <Route path="progress" element={<Progress />} />
         <Route path="requirements" element={<Requirements user={user} />} />
-        <Route path="documentation" element={<Documentation user={user} />} />
         <Route path="placement-status" element={<PlacementStatus />} />
         <Route path="evaluation" element={<StudentEvaluation />} />
         <Route path="announcements" element={<Announcements />} />

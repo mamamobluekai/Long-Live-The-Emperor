@@ -69,23 +69,103 @@ async function getDashboardStats() {
       (SELECT COUNT(*) FROM users WHERE role = 'coordinator')    AS total_coordinators,
       (SELECT COUNT(*) FROM users WHERE status = 'approved')     AS total_active_users,
       (SELECT COUNT(*) FROM users WHERE status = 'pending')      AS total_pending_accounts,
-      (SELECT COUNT(*) FROM users WHERE status = 'approved')     AS total_approved_accounts,
+      (SELECT COUNT(*) FROM users WHERE status = 'disapproved')  AS total_disabled_accounts,
       (SELECT COUNT(*) FROM student_attendance)                  AS total_attendance_records,
       (SELECT COUNT(*) FROM student_requirement_submissions)     AS total_requirements_submitted
     FROM users
     LIMIT 1`;
   const result = await pool.query(q);
   const row = result.rows[0] || {};
+
+  const totalStudents = Number(row.total_students) || 0;
+  const totalTeachers = Number(row.total_teachers) || 0;
+  const totalSupervisors = Number(row.total_supervisors) || 0;
+  const totalCoordinators = Number(row.total_coordinators) || 0;
+  const totalActiveUsers = Number(row.total_active_users) || 0;
+  const totalPendingAccounts = Number(row.total_pending_accounts) || 0;
+  const totalDisabledAccounts = Number(row.total_disabled_accounts) || 0;
+
+  const attendanceWeekQuery = `
+    SELECT
+      TO_CHAR(date, 'Dy') AS day,
+      COUNT(*) AS total,
+      COUNT(*) FILTER (WHERE status = 'present') AS present
+    FROM student_attendance
+    WHERE date >= date_trunc('week', CURRENT_DATE)
+      AND date < date_trunc('week', CURRENT_DATE) + INTERVAL '5 days'
+    GROUP BY EXTRACT(DOW FROM date), TO_CHAR(date, 'Dy')
+    ORDER BY EXTRACT(DOW FROM date)`;
+  const attendanceWeekResult = await pool.query(attendanceWeekQuery);
+  const attendanceWeek = attendanceWeekResult.rows.map((r) => ({
+    day: r.day,
+    percentage: r.total > 0 ? Math.round((Number(r.present) / Number(r.total)) * 100) : 0,
+  }));
+
+  const requirementsQuery = `
+    SELECT
+      COUNT(*) FILTER (WHERE status = 'completed') AS completed,
+      COUNT(*) FILTER (WHERE status = 'pending') AS pending,
+      COUNT(*) FILTER (WHERE status = 'under_review') AS under_review,
+      COUNT(*) FILTER (WHERE status = 'rejected') AS rejected
+    FROM student_requirement_submissions`;
+  const reqResult = await pool.query(requirementsQuery);
+  const reqRow = reqResult.rows[0] || {};
+  const reqTotal = (Number(reqRow.completed) + Number(reqRow.pending) + Number(reqRow.under_review) + Number(reqRow.rejected)) || 0;
+  const requirements = {
+    completed: Number(reqRow.completed) || 0,
+    pending: Number(reqRow.pending) || 0,
+    review: Number(reqRow.under_review) || 0,
+    rejected: Number(reqRow.rejected) || 0,
+    completedPct: reqTotal > 0 ? Math.round((Number(reqRow.completed) / reqTotal) * 100) : 0,
+    pendingPct: reqTotal > 0 ? Math.round((Number(reqRow.pending) / reqTotal) * 100) : 0,
+    reviewPct: reqTotal > 0 ? Math.round((Number(reqRow.under_review) / reqTotal) * 100) : 0,
+    rejectedPct: reqTotal > 0 ? Math.round((Number(reqRow.rejected) / reqTotal) * 100) : 0,
+  };
+
+  const documentationQuery = `
+    SELECT
+      COUNT(*) FILTER (WHERE status = 'submitted') AS submitted,
+      COUNT(*) FILTER (WHERE status = 'pending') AS pending,
+      COUNT(*) FILTER (WHERE status = 'reviewed') AS reviewed,
+      COUNT(*) FILTER (WHERE status = 'graded') AS graded
+    FROM student_daily_documentation`;
+  const docResult = await pool.query(documentationQuery);
+  const docRow = docResult.rows[0] || {};
+  const documentation = {
+    submitted: Number(docRow.submitted) || 0,
+    pending: Number(docRow.pending) || 0,
+    reviewed: Number(docRow.reviewed) || 0,
+    graded: Number(docRow.graded) || 0,
+  };
+
+  const evalQuery = `
+    SELECT ec.category_name, ec.sort_order,
+      COALESCE(AVG((se.category_scores->>ec.category_name)::numeric), 0) AS avg_score
+    FROM evaluation_criteria ec
+    LEFT JOIN student_evaluations se ON se.category_scores ? ec.category_name
+    GROUP BY ec.category_name, ec.sort_order
+    ORDER BY ec.sort_order`;
+  const evalResult = await pool.query(evalQuery);
+  const evaluations = evalResult.rows.map((r) => ({
+    category: r.category_name,
+    percentage: Math.round((Number(r.avg_score) / 10) * 100),
+  }));
+
   return {
-    totalStudents: Number(row.total_students) || 0,
-    totalTeachers: Number(row.total_teachers) || 0,
-    totalSupervisors: Number(row.total_supervisors) || 0,
-    totalCoordinators: Number(row.total_coordinators) || 0,
-    totalActiveUsers: Number(row.total_active_users) || 0,
-    totalPendingAccounts: Number(row.total_pending_accounts) || 0,
-    totalApprovedAccounts: Number(row.total_approved_accounts) || 0,
+    totalStudents,
+    totalTeachers,
+    totalSupervisors,
+    totalCoordinators,
+    totalActiveUsers,
+    totalPendingAccounts,
+    totalApprovedAccounts: totalActiveUsers,
+    totalDisabledAccounts,
     totalAttendanceRecords: Number(row.total_attendance_records) || 0,
     totalRequirementsSubmitted: Number(row.total_requirements_submitted) || 0,
+    attendanceWeek,
+    requirements,
+    documentation,
+    evaluations,
   };
 }
 
@@ -366,7 +446,11 @@ async function rejectCoordinator(id) {
 async function getSettings() {
   const result = await pool.query(
     `SELECT id, system_name, logo_url, school_name, school_address,
-            academic_year, semester, attendance_time_in, attendance_time_out, announcements, updated_by, updated_at
+            academic_year, semester, attendance_time_in, attendance_time_out, announcements,
+            immersion_start_date, immersion_end_date, auto_activate, auto_deactivate,
+            access_student, access_teacher, access_coordinator, access_supervisor,
+            required_hours, working_days,
+            updated_by, updated_at
      FROM system_settings WHERE id = 1`
   );
   return result.rows[0] || null;
@@ -379,6 +463,9 @@ async function updateSettings(payload, updatedBy) {
   const allowed = [
     'system_name', 'logo_url', 'school_name', 'school_address',
     'academic_year', 'semester', 'attendance_time_in', 'attendance_time_out', 'announcements',
+    'immersion_start_date', 'immersion_end_date', 'auto_activate', 'auto_deactivate',
+    'access_student', 'access_teacher', 'access_coordinator', 'access_supervisor',
+    'required_hours', 'working_days',
   ];
   for (const key of allowed) {
     if (payload[key] !== undefined) {
@@ -670,4 +757,187 @@ module.exports = {
   getUnreadNotificationCount,
   getReport,
   ROLE_LABELS,
+};
+
+async function getImmersionPeriods() {
+  const result = await pool.query(
+    `SELECT ip.*,
+            COALESCE(tb.batch_count, 0) AS batch_count
+     FROM immersion_periods ip
+     LEFT JOIN (
+       SELECT immersion_period_id, COUNT(*) AS batch_count
+       FROM teacher_batches
+       WHERE immersion_period_id IS NOT NULL
+       GROUP BY immersion_period_id
+     ) tb ON ip.id = tb.immersion_period_id
+     ORDER BY ip.start_date DESC`
+  );
+  return result.rows;
+}
+
+async function createImmersionPeriod(payload, createdBy) {
+  const {
+    period_name, academic_year, semester, start_date, end_date,
+    required_hours = 80, working_days = 'Mon,Tue,Wed,Thu,Fri', is_active = true,
+  } = payload;
+
+  const status = computePeriodStatus(start_date, end_date);
+
+  const result = await pool.query(
+    `INSERT INTO immersion_periods
+      (period_name, academic_year, semester, start_date, end_date, required_hours, working_days, status, is_active, created_by)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+     RETURNING *`,
+    [period_name, academic_year, semester, start_date, end_date, required_hours, working_days, status, is_active, createdBy]
+  );
+  return result.rows[0];
+}
+
+async function updateImmersionPeriod(id, payload) {
+  const fields = [];
+  const values = [];
+  let i = 1;
+  const allowed = [
+    'period_name', 'academic_year', 'semester', 'start_date', 'end_date',
+    'required_hours', 'working_days', 'status', 'is_active',
+  ];
+  for (const key of allowed) {
+    if (payload[key] !== undefined) {
+      fields.push(`${key} = $${i}`);
+      values.push(payload[key]);
+      i += 1;
+    }
+  }
+  if (fields.length === 0) return getImmersionPeriodById(id);
+
+  if (payload.start_date || payload.end_date) {
+    const current = await getImmersionPeriodById(id);
+    const start = payload.start_date || current.start_date;
+    const end = payload.end_date || current.end_date;
+    const computedStatus = computePeriodStatus(start, end);
+    if (!payload.status) {
+      fields.push(`status = $${i}`);
+      values.push(computedStatus);
+      i += 1;
+    }
+  }
+
+  fields.push(`updated_at = CURRENT_TIMESTAMP`);
+  values.push(id);
+  await pool.query(
+    `UPDATE immersion_periods SET ${fields.join(', ')} WHERE id = $${i}`,
+    values
+  );
+  return getImmersionPeriodById(id);
+}
+
+async function getImmersionPeriodById(id) {
+  const result = await pool.query(
+    `SELECT ip.*,
+            COALESCE(tb.batch_count, 0) AS batch_count
+     FROM immersion_periods ip
+     LEFT JOIN (
+       SELECT immersion_period_id, COUNT(*) AS batch_count
+       FROM teacher_batches
+       WHERE immersion_period_id IS NOT NULL
+       GROUP BY immersion_period_id
+     ) tb ON ip.id = tb.immersion_period_id
+     WHERE ip.id = $1`,
+    [id]
+  );
+  return result.rows[0] || null;
+}
+
+async function deleteImmersionPeriod(id) {
+  await pool.query(`DELETE FROM immersion_periods WHERE id = $1`, [id]);
+  return { success: true };
+}
+
+function computePeriodStatus(startDate, endDate) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  if (today < start) return 'upcoming';
+  if (today > end) return 'completed';
+  return 'ongoing';
+}
+
+async function refreshImmersionPeriodStatuses() {
+  const periods = await getImmersionPeriods();
+  for (const period of periods) {
+    const computed = computePeriodStatus(period.start_date, period.end_date);
+    if (computed !== period.status) {
+      await pool.query(
+        `UPDATE immersion_periods SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+        [computed, period.id]
+      );
+    }
+  }
+}
+
+async function getImmersionAccess() {
+  const settings = await getSettings();
+  if (!settings) return null;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const start = settings.immersion_start_date ? new Date(settings.immersion_start_date) : null;
+  const end = settings.immersion_end_date ? new Date(settings.immersion_end_date) : null;
+
+  let phase = 'inactive';
+  if (start && end) {
+    if (today < start) phase = 'upcoming';
+    else if (today > end) phase = 'completed';
+    else phase = 'ongoing';
+  }
+
+  return {
+    phase,
+    startDate: settings.immersion_start_date,
+    endDate: settings.immersion_end_date,
+    autoActivate: settings.auto_activate,
+    autoDeactivate: settings.auto_deactivate,
+    access: {
+      student: settings.access_student,
+      teacher: settings.access_teacher,
+      coordinator: settings.access_coordinator,
+      supervisor: settings.access_supervisor,
+    },
+  };
+}
+
+module.exports = {
+  ensureAdminTables,
+  getDashboardStats,
+  getUsers,
+  getUserById,
+  updateUser,
+  resetUserPassword,
+  updateAdminProfile,
+  updateAdminPassword,
+  getPendingCoordinators,
+  getPendingStaff,
+  approveCoordinator,
+  rejectCoordinator,
+  getSettings,
+  updateSettings,
+  getLogs,
+  getLogsForExport,
+  getNotifications,
+  createNotification,
+  markNotificationsRead,
+  ensureCoordinatorRegistrationNotifications,
+  getUnreadNotificationCount,
+  getReport,
+  ROLE_LABELS,
+  getImmersionPeriods,
+  createImmersionPeriod,
+  updateImmersionPeriod,
+  getImmersionPeriodById,
+  deleteImmersionPeriod,
+  computePeriodStatus,
+  refreshImmersionPeriodStatuses,
+  getImmersionAccess,
 };

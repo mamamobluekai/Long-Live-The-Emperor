@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   getAllUsers,
   deleteUser,
@@ -25,9 +25,17 @@ const ROLE_OPTIONS = [
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
   { value: 'pending', label: 'Pending' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'disapproved', label: 'Disapproved' },
+  { value: 'approved', label: 'Active' },
+  { value: 'disapproved', label: 'Inactive' },
 ];
+
+const ROLE_COLORS = {
+  student: '#3b82f6',
+  teacher: '#22c55e',
+  supervisor: '#f59e0b',
+  coordinator: '#8b5cf6',
+  admin: '#ef4444',
+};
 
 export default function UserManagement() {
   const { showToast } = useToast();
@@ -39,8 +47,9 @@ export default function UserManagement() {
   const [deleteModal, setDeleteModal] = useState({ open: false, id: null, name: '' });
   const [resetModal, setResetModal] = useState({ open: false, id: null, name: '' });
   const [profile, setProfile] = useState(null);
+  const [openMenuId, setOpenMenuId] = useState(null);
 
-  const fetchUsers = async (page = pagination.page) => {
+  const fetchUsers = useCallback(async (page = pagination.page) => {
     setLoading(true);
     try {
       const params = {
@@ -50,13 +59,17 @@ export default function UserManagement() {
       };
       const data = await getAllUsers(params);
       setUsers(data.users || []);
-      setPagination((p) => ({ page: Number(data.pagination?.page) || page, limit: Number(data.pagination?.limit) || p.limit, total: Number(data.pagination?.total) || 0 }));
+      setPagination((p) => ({
+        page: Number(data.pagination?.page) || page,
+        limit: Number(data.pagination?.limit) || p.limit,
+        total: Number(data.pagination?.total) || 0,
+      }));
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, pagination.page, pagination.limit, showToast]);
 
   useEffect(() => {
     fetchUsers(1);
@@ -82,6 +95,8 @@ export default function UserManagement() {
       fetchUsers(pagination.page);
     } catch (err) {
       showToast(err.message, 'error');
+    } finally {
+      setOpenMenuId(null);
     }
   };
 
@@ -112,35 +127,82 @@ export default function UserManagement() {
     }
   };
 
+  const totalUsers = pagination.total;
+  const activeCount = users.filter((u) => u.status === 'approved').length;
+  const pendingCount = users.filter((u) => u.status === 'pending').length;
+  const inactiveCount = users.filter((u) => u.status === 'disapproved').length;
+
+  const roleCounts = users.reduce((acc, u) => {
+    acc[u.role] = (acc[u.role] || 0) + 1;
+    return acc;
+  }, {});
+
+  const maxRoleCount = Math.max(...Object.values(roleCounts), 1);
+
   const columns = [
-    { key: 'id', header: 'ID' },
     {
-      header: 'Name',
+      header: 'User',
       key: 'first_name',
-      render: (_, row) => `${row.first_name || ''} ${row.last_name || ''}`.trim() || row.email,
+      render: (_, row) => {
+        const name = `${row.first_name || ''} ${row.last_name || ''}`.trim() || row.email;
+        return (
+          <div className={styles.userCell}>
+            <div className={styles.avatar}>{name.charAt(0).toUpperCase()}</div>
+            <div className={styles.userInfo}>
+              <span className={styles.userName}>{name}</span>
+              <span className={styles.userEmail}>{row.email}</span>
+            </div>
+          </div>
+        );
+      },
     },
-    { key: 'email', header: 'Email' },
-    { key: 'identifier', header: 'Identifier' },
-    { key: 'role', header: 'Role' },
-    { key: 'status', header: 'Status' },
+    { key: 'role', header: 'Role', render: (v) => <span className={styles.roleBadge}>{v}</span> },
+    { key: 'status', header: 'Status', render: (v) => <StatusBadge status={v} /> },
     { key: 'created_at', header: 'Joined', render: (v) => new Date(v).toLocaleDateString() },
   ];
 
   const actions = (row) => {
-    const isStaff = ['teacher', 'supervisor', 'coordinator'].includes(row.role) && row.status === 'pending';
+    const isOpen = openMenuId === row.id;
     return (
-      <div className={styles.rowActions}>
-        <button type="button" className={styles.viewBtn} title="View" onClick={() => setProfile(row)}>👁</button>
-        {row.status !== 'approved' ? (
-          <button type="button" className={styles.approveBtn} title="Activate" onClick={() => handleStatusChange(row.id, 'approved')}>Activate</button>
-        ) : (
-          <button type="button" className={styles.disapproveBtn} title="Deactivate" onClick={() => handleStatusChange(row.id, 'disapproved')}>Deactivate</button>
+      <div className={styles.actionWrapper}>
+        <button
+          type="button"
+          className={styles.menuTrigger}
+          onClick={() => setOpenMenuId(isOpen ? null : row.id)}
+          aria-label="Actions"
+        >
+          •••
+        </button>
+        {isOpen && (
+          <div className={styles.dropdown}>
+            <button type="button" className={styles.dropdownItem} onClick={() => { setProfile(row); setOpenMenuId(null); }}>
+              View Profile
+            </button>
+            <button
+              type="button"
+              className={styles.dropdownItem}
+              onClick={() => { setResetModal({ open: true, id: row.id, name: `${row.first_name || ''} ${row.last_name || ''}`.trim() }); setOpenMenuId(null); }}
+            >
+              Reset Password
+            </button>
+            {row.status === 'approved' ? (
+              <button type="button" className={styles.dropdownItem} onClick={() => handleStatusChange(row.id, 'disapproved')}>
+                Deactivate Account
+              </button>
+            ) : (
+              <button type="button" className={styles.dropdownItem} onClick={() => handleStatusChange(row.id, 'approved')}>
+                Activate Account
+              </button>
+            )}
+            <button
+              type="button"
+              className={styles.dropdownItemDanger}
+              onClick={() => { setDeleteModal({ open: true, id: row.id, name: `${row.first_name || ''} ${row.last_name || ''}`.trim() }); setOpenMenuId(null); }}
+            >
+              Delete Account
+            </button>
+          </div>
         )}
-        <button type="button" className={styles.resetBtn} title="Reset password" onClick={() => setResetModal({ open: true, id: row.id, name: `${row.first_name || ''} ${row.last_name || ''}`.trim() })}>Reset</button>
-        {isStaff ? (
-          <button type="button" className={styles.approveBtn} title="Approve staff" onClick={() => handleStatusChange(row.id, 'approved')}>Approve</button>
-        ) : null}
-        <button type="button" className={styles.deleteBtn} title="Delete" onClick={() => setDeleteModal({ open: true, id: row.id, name: `${row.first_name || ''} ${row.last_name || ''}`.trim() })}>Del</button>
       </div>
     );
   };
@@ -148,11 +210,54 @@ export default function UserManagement() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2>User Management</h2>
+        <div>
+          <h1 className={styles.title}>User Management</h1>
+          <p className={styles.subtitle}>Manage system accounts and access</p>
+        </div>
+      </div>
+
+      <div className={styles.statsRow}>
+        <div className={styles.statCard}>
+          <span className={styles.statValue}>{totalUsers}</span>
+          <span className={styles.statLabel}>Total Users</span>
+        </div>
+        <div className={styles.statCard}>
+          <span className={styles.statValue}>{activeCount}</span>
+          <span className={styles.statLabel}>Active</span>
+        </div>
+        <div className={styles.statCard}>
+          <span className={styles.statValue}>{pendingCount}</span>
+          <span className={styles.statLabel}>Pending</span>
+        </div>
+        <div className={styles.statCard}>
+          <span className={styles.statValue}>{inactiveCount}</span>
+          <span className={styles.statLabel}>Inactive</span>
+        </div>
+      </div>
+
+      <div className={styles.chartCard}>
+        <h3 className={styles.chartTitle}>Users by Role</h3>
+        <div className={styles.roleBars}>
+          {Object.entries(roleCounts).map(([role, count]) => (
+            <div key={role} className={styles.roleBarRow}>
+              <span className={styles.roleBarLabel}>{role.charAt(0).toUpperCase() + role.slice(1)}</span>
+              <div className={styles.roleBarTrack}>
+                <div
+                  className={styles.roleBarFill}
+                  style={{ width: `${(count / maxRoleCount) * 100}%`, background: ROLE_COLORS[role] || '#64748b' }}
+                />
+              </div>
+              <span className={styles.roleBarCount}>{count}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className={styles.tableSection}>
         <div className={styles.filters}>
           <input
             type="search"
-            placeholder="Search name, email, ID..."
+            placeholder="Search users..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className={styles.searchInput}
@@ -167,29 +272,29 @@ export default function UserManagement() {
           <button type="button" className={styles.applyBtn} onClick={applyFilters}>Apply</button>
           <button type="button" className={styles.clearBtn} onClick={clearFilters}>Clear</button>
         </div>
-      </div>
 
-      {loading ? (
-        <LoadingSkeleton rows={8} />
-      ) : (
-        <>
-          <DataTable
-            columns={columns}
-            data={users}
-            actions={actions}
-            emptyMessage="No users found."
-          />
-          <Pagination
-            current={pagination.page}
-            total={pagination.total}
-            limit={pagination.limit}
-            onPageChange={(page) => {
-              setPagination((p) => ({ ...p, page }));
-              fetchUsers(page);
-            }}
-          />
-        </>
-      )}
+        {loading ? (
+          <LoadingSkeleton rows={8} />
+        ) : (
+          <>
+            <DataTable
+              columns={columns}
+              data={users}
+              actions={actions}
+              emptyMessage="No users found."
+            />
+            <Pagination
+              current={pagination.page}
+              total={pagination.total}
+              limit={pagination.limit}
+              onPageChange={(page) => {
+                setPagination((p) => ({ ...p, page }));
+                fetchUsers(page);
+              }}
+            />
+          </>
+        )}
+      </div>
 
       <ConfirmModal
         isOpen={deleteModal.open}
@@ -213,4 +318,20 @@ export default function UserManagement() {
       ) : null}
     </div>
   );
+}
+
+function StatusBadge({ status }) {
+  const statusClass = {
+    approved: styles.statusActive,
+    pending: styles.statusPending,
+    disapproved: styles.statusInactive,
+  }[status] || styles.statusPending;
+
+  const label = {
+    approved: 'Active',
+    pending: 'Pending',
+    disapproved: 'Inactive',
+  }[status] || status;
+
+  return <span className={`${styles.statusBadge} ${statusClass}`}>{label}</span>;
 }

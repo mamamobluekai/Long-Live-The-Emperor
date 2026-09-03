@@ -133,6 +133,44 @@ export async function getFileById(id) {
   return res.data;
 }
 
+/* ---------------- Documentation ---------------- */
+
+export async function getBatchDailyDocSummary(batchId, token) {
+  const res = await axios.get(`${API_URL}/documentation/batch/${batchId}/summary`, {
+    headers: authHeaders(token),
+  });
+  return res.data;
+}
+
+export async function getStudentDailyDocs(params, token) {
+  const res = await axios.get(`${API_URL}/documentation/daily`, {
+    headers: authHeaders(token),
+    params,
+  });
+  return res.data;
+}
+
+export async function gradeDailyDoc(docId, payload, token) {
+  const res = await axios.post(`${API_URL}/documentation/daily/${docId}/grade`, payload, {
+    headers: authHeaders(token),
+  });
+  return res.data;
+}
+
+export async function getDocumentationCriteria(token) {
+  const res = await axios.get(`${API_URL}/documentation/criteria`, {
+    headers: authHeaders(token),
+  });
+  return res.data;
+}
+
+export async function saveDocumentationCriteria(criteria, token) {
+  const res = await axios.put(`${API_URL}/documentation/criteria`, { criteria }, {
+    headers: authHeaders(token),
+  });
+  return res.data;
+}
+
 /* ---------------- Tracking / Live Map ---------------- */
 
 export async function getBatchCurrentLocations(batchId, token, config = {}) {

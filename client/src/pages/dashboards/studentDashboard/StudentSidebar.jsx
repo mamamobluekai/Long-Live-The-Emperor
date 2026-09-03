@@ -2,7 +2,6 @@ import {
   LayoutDashboard,
   TrendingUp,
   ClipboardList,
-  FolderOpen,
   MapPin,
   FilePenLine,
   Megaphone,
@@ -32,12 +31,6 @@ const links = [
     to: '/dashboard/student/requirements',
     label: 'Requirements',
     icon: ClipboardList,
-  },
-
-  {
-    to: '/dashboard/student/documentation',
-    label: 'Documentation',
-    icon: FolderOpen,
   },
 
   {

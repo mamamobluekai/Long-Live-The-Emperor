@@ -11,6 +11,8 @@ function AuthForm({ onAuthSuccess }) {
   const {
     mode,
     setMode,
+    role,
+    setRole,
     form,
     handleChange,
     loading,
@@ -21,9 +23,6 @@ function AuthForm({ onAuthSuccess }) {
   } = useAuthForm((data) => {
     onAuthSuccess?.(data);
   });
-
-  // Selected role
-  const [role, setRole] = useState('student');
 
   useEffect(() => {
     if (loginSuccess) {

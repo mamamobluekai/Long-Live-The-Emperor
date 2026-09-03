@@ -35,3 +35,33 @@ export async function registerUser(payload) {
     body: JSON.stringify(payload),
   });
 }
+
+export async function forgotPassword(email) {
+  const url = `${API_BASE}/users/forgot-password`;
+  return fetchJsonOrThrow(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resetPassword(payload) {
+  const url = `${API_BASE}/users/reset-password`;
+  return fetchJsonOrThrow(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function verifyResetToken(token) {
+  const url = `${API_BASE}/users/verify-reset-token`;
+  return fetchJsonOrThrow(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ token }),
+  });
+}

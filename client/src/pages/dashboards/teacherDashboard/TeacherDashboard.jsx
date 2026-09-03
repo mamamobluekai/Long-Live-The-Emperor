@@ -9,6 +9,7 @@ import TeacherAttendance from './TeacherAttendance';
 import TeacherAppeals from './TeacherAppeals';
 import TeacherStudents from './TeacherStudents';
 import TeacherStudentEvaluations from './TeacherStudentEvaluations';
+import TeacherStudentDocumentation from './TeacherStudentDocumentation';
 import TeacherReports from './TeacherReports';
 import TeacherSettings from './TeacherSettings';
 import SocialFeed from '../studentDashboard/SocialFeed';
@@ -27,6 +28,7 @@ function TeacherDashboard({ user, onLogout }) {
          <Route path="students" element={<TeacherStudents />} />
          <Route path="evaluations" element={<TeacherStudentEvaluations />} />
          <Route path="attendance" element={<TeacherAttendance />} />
+         <Route path="student-documentation" element={<TeacherStudentDocumentation />} />
         <Route path="live-map" element={<LiveMap />} />
         <Route path="appeals" element={<TeacherAppeals />} />
          <Route path="reports" element={<TeacherReports />} />

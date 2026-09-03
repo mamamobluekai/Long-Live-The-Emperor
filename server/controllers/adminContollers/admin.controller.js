@@ -778,6 +778,61 @@ const getReport = async (req, res) => {
   }
 };
 
+
+const getImmersionPeriods = async (req, res) => {
+  try {
+    await adminService.refreshImmersionPeriodStatuses();
+    const periods = await adminService.getImmersionPeriods();
+    res.json({ periods });
+  } catch (err) {
+    console.error('Get immersion periods error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+const createImmersionPeriod = async (req, res) => {
+  try {
+    const period = await adminService.createImmersionPeriod(req.body, req.user.id);
+    await writeAuditLog(req, 'immersion_period_create', `Created immersion period: ${period.period_name}`);
+    res.status(201).json({ period });
+  } catch (err) {
+    console.error('Create immersion period error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+const updateImmersionPeriod = async (req, res) => {
+  try {
+    const period = await adminService.updateImmersionPeriod(Number(req.params.id), req.body);
+    await writeAuditLog(req, 'immersion_period_update', `Updated immersion period: ${period.period_name}`);
+    res.json({ period });
+  } catch (err) {
+    console.error('Update immersion period error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+const deleteImmersionPeriod = async (req, res) => {
+  try {
+    await adminService.deleteImmersionPeriod(Number(req.params.id));
+    await writeAuditLog(req, 'immersion_period_delete', `Deleted immersion period ID: ${req.params.id}`);
+    res.json({ message: 'Immersion period deleted.' });
+  } catch (err) {
+    console.error('Delete immersion period error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+const getImmersionAccess = async (req, res) => {
+  try {
+    const access = await adminService.getImmersionAccess();
+    res.json({ access });
+  } catch (err) {
+    console.error('Get immersion access error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getCoordinators,
@@ -807,4 +862,11 @@ module.exports = {
   sendCsv,
   sendExcel,
   sendPdf,
+  getImmersionPeriods,
+  createImmersionPeriod,
+  updateImmersionPeriod,
+  deleteImmersionPeriod,
+  getImmersionAccess,
 };
+
+

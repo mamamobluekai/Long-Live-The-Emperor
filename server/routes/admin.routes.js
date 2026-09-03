@@ -29,6 +29,11 @@ const {
   markNotificationsRead,
   getReport,
   uploadLogo,
+  getImmersionPeriods,
+  createImmersionPeriod,
+  updateImmersionPeriod,
+  deleteImmersionPeriod,
+  getImmersionAccess,
 } = require('../controllers/adminContollers/admin.controller');
 
 const { login, logout, profile, updateProfile } = require('../controllers/adminContollers/auth.controller');
@@ -86,6 +91,12 @@ router.patch('/notifications/read', markNotificationsRead);
 router.get('/reports/:type', getReport);
 
 router.post('/admins', createAdmin);
+
+router.get('/immersion/periods', getImmersionPeriods);
+router.post('/immersion/periods', createImmersionPeriod);
+router.put('/immersion/periods/:id', updateImmersionPeriod);
+router.delete('/immersion/periods/:id', deleteImmersionPeriod);
+router.get('/immersion/access', getImmersionAccess);
 
 router.post('/upload/teachers', upload.single('file'), uploadTeachersExcel);
 router.post('/upload/supervisors', upload.single('file'), uploadSupervisorsExcel);

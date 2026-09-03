@@ -54,6 +54,25 @@ const loginValidation = [
     .notEmpty().withMessage('Password is required'),
 ];
 
+const forgotValidation = [
+  body('email')
+    .trim()
+    .isEmail().withMessage('Valid email is required')
+    .normalizeEmail(),
+];
+
+const resetValidation = [
+  body('token')
+    .notEmpty().withMessage('Reset token is required'),
+
+  body('password')
+    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+];
+
+const verifyTokenValidation = [
+  body('token')
+    .notEmpty().withMessage('Reset token is required'),
+];
 
 const handleValidation = (req, res, next) => {
   const errors = validationResult(req);
@@ -69,5 +88,8 @@ const handleValidation = (req, res, next) => {
 module.exports = {
   registerValidation,
   loginValidation,
+  forgotValidation,
+  resetValidation,
+  verifyTokenValidation,
   handleValidation,
 };

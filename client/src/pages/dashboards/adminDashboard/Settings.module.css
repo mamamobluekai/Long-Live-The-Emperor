@@ -2,30 +2,314 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  padding: 0;
+  max-width: 100%;
 }
 
-h2 {
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.title {
   margin: 0;
-  font-size: 1.35rem;
+  font-size: 1.5rem;
+  font-weight: 700;
   color: #0f172a;
+  letter-spacing: -0.02em;
 }
 
-.form {
+.subtitle {
+  margin: 2px 0 0;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0;
+}
+
+.tab {
+  padding: 10px 18px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.tab:hover {
+  color: #334155;
+}
+
+.tabActive {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+  font-weight: 600;
+}
+
+.section {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.logoSection {
+.card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.cardTitle {
+  margin: 0 0 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.cardDescription {
+  margin: -8px 0 16px;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.statusCard {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.statusHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.statusTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.statusBadge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.statusDates {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #334155;
+  margin: 0;
+}
+
+.statusCountdown {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.statusEmpty {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.editScheduleBtn {
+  align-self: flex-start;
+  margin-top: 8px;
+  padding: 8px 16px;
+  border: 1px solid #3b82f6;
+  border-radius: 8px;
+  background: transparent;
+  color: #3b82f6;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.editScheduleBtn:hover {
+  background: #eff6ff;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldFull {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label,
+.fieldFull label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.field input,
+.field select,
+.fieldFull textarea,
+.fieldFull input,
+.fieldFull select {
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  color: #334155;
+  background: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field input:focus,
+.field select:focus,
+.fieldFull textarea:focus,
+.fieldFull input:focus,
+.fieldFull select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.fieldFull textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+.toggleGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.toggleItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.toggleItem:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.toggleItem input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #3b82f6;
+  cursor: pointer;
+}
+
+.toggleLabel {
+  font-size: 0.875rem;
+  color: #334155;
+  font-weight: 500;
+}
+
+.toggleSectionTitle {
+  margin: 8px 0 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.accessNote {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-style: italic;
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.saveBtn {
+  background: #3b82f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.saveBtn:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.saveBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancelBtn {
+  background: #ffffff;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.cancelBtn:hover {
+  background: #f8fafc;
+}
+
+.logoSection {
+  margin-bottom: 20px;
 }
 
 .logoLabel {
   font-size: 0.8rem;
   font-weight: 600;
   color: #334155;
+  display: block;
+  margin-bottom: 8px;
 }
 
 .logoSquare {
@@ -55,82 +339,260 @@ h2 {
   border: 1px solid #e2e8f0;
 }
 
-input[type="file"] {
-  font-size: 0.85rem;
-  color: #0f172a;
-}
-
 .note {
   font-size: 0.8rem;
   color: #64748b;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 18px;
-}
-
-.field {
+.sectionHeader {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.fieldFull {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.fieldFull textarea {
-  width: 100%;
-  resize: vertical;
-}
-
-.field label {
-  font-size: 0.8rem;
+.sectionTitle {
+  margin: 0;
+  font-size: 1.1rem;
   font-weight: 600;
-  color: #334155;
+  color: #0f172a;
 }
 
-.field input,
-.fieldFull textarea {
-  padding: 11px 14px;
-  border: 1px solid #cbd5e1;
-  border-radius: 12px;
-  font-size: 0.9rem;
+.sectionSubtitle {
+  margin: 2px 0 0;
+  font-size: 0.875rem;
+  color: #64748b;
 }
 
-.field input:focus,
-.fieldFull textarea:focus {
-  outline: 2px solid #3b82f6;
-  outline-offset: 1px;
-  border-color: #3b82f6;
-}
-
-.actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.saveBtn {
-  background: #2a5298;
-  color: #ffffff;
+.addBtn {
+  padding: 10px 18px;
   border: none;
-  border-radius: 12px;
-  padding: 12px 24px;
-  font-size: 0.95rem;
+  border-radius: 10px;
+  background: #3b82f6;
+  color: #ffffff;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s ease;
 }
 
-.saveBtn:hover:not(:disabled) {
-  background: #1e3a7a;
+.addBtn:hover {
+  background: #2563eb;
 }
 
-.saveBtn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.periodsTable {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.periodsHeader {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 1.2fr 1fr 0.8fr 1.2fr;
+  gap: 12px;
+  padding: 14px 20px;
+  background: #f8fafc;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.periodRow {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 1.2fr 1fr 0.8fr 1.2fr;
+  gap: 12px;
+  padding: 14px 20px;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.875rem;
+  color: #334155;
+}
+
+.periodRow:last-child {
+  border-bottom: none;
+}
+
+.periodRow:hover {
+  background: #f8fafc;
+}
+
+.periodName {
+  display: flex;
+  flex-direction: column;
+}
+
+.periodMeta {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.periodStatusBadge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.periodActions {
+  display: flex;
+  gap: 8px;
+}
+
+.periodEditBtn {
+  padding: 6px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.periodEditBtn:hover {
+  background: #f8fafc;
+}
+
+.periodDeleteBtn {
+  padding: 6px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #dc2626;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.periodDeleteBtn:hover {
+  background: #fef2f2;
+}
+
+.emptyPeriods {
+  padding: 40px 20px;
+  text-align: center;
+  color: #94a3b8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.emptyPeriods p {
+  margin: 0;
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.modalClose {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.modalClose:hover {
+  background: #e2e8f0;
+}
+
+.modalForm {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toggleGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .periodsHeader,
+  .periodRow {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .periodsHeader {
+    display: none;
+  }
+
+  .periodRow {
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin: 8px;
+  }
+
+  .tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+
+  .tab {
+    white-space: nowrap;
+  }
 }

@@ -10,6 +10,73 @@ const {
   LOCK_TIME_MINUTES,
 } = require('../utils/loginAttempts');
 
+function parseLocalDate(dateStr) {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) {
+    return new Date(dateStr.getFullYear(), dateStr.getMonth(), dateStr.getDate());
+  }
+  const str = String(dateStr);
+  const [y, m, d] = str.substring(0, 10).split('-').map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
+}
+
+async function checkImmersionPeriodAccess(role) {
+  try {
+    const result = await pool.query(
+      `SELECT immersion_start_date, immersion_end_date,
+              access_student, access_teacher, access_coordinator, access_supervisor
+       FROM system_settings WHERE id = 1`
+    );
+    const settings = result.rows[0];
+    if (!settings || !settings.immersion_start_date || !settings.immersion_end_date) {
+      return { blocked: false };
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = parseLocalDate(settings.immersion_start_date);
+    const end = parseLocalDate(settings.immersion_end_date);
+
+    if (!start || !end) return { blocked: false };
+
+    let phase = 'ongoing';
+    if (today < start) phase = 'upcoming';
+    else if (today > end) phase = 'completed';
+
+    const roleAccess = {
+      student: settings.access_student,
+      teacher: settings.access_teacher,
+      coordinator: settings.access_coordinator,
+      supervisor: settings.access_supervisor,
+    };
+
+    if (phase === 'ongoing' && roleAccess[role]) {
+      return { blocked: false };
+    }
+
+    let message = 'Your access to immersion features is currently restricted.';
+    if (phase === 'upcoming') {
+      message = `Work Immersion has not started yet. Your access will be available on ${start.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}.`;
+    } else if (phase === 'completed') {
+      message = 'Work Immersion has been completed. Login is no longer allowed for this period.';
+    } else if (!roleAccess[role]) {
+      message = `Your role (${role}) does not have access to immersion features during this period.`;
+    }
+
+    return {
+      blocked: true,
+      message,
+      phase,
+      startDate: settings.immersion_start_date,
+      endDate: settings.immersion_end_date,
+    };
+  } catch (err) {
+    console.error('checkImmersionPeriodAccess error:', err);
+    return { blocked: false };
+  }
+}
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -145,7 +212,7 @@ const registerStudent = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required.' });
@@ -173,6 +240,14 @@ const login = async (req, res) => {
     }
 
     const user = result.rows[0];
+
+    // Validate role: if a role is requested, the user's account must match it
+    if (role && user.role !== role) {
+      await incrementLoginAttempts(trimmedEmail);
+      return res.status(401).json({
+        error: `This account is not registered as a ${role}. Please select the correct role.`,
+      });
+    }
 
     let profile = {};
     if (user.role === 'student') {
@@ -225,6 +300,19 @@ const login = async (req, res) => {
     }
     if (user.status === 'disapproved') {
       return res.status(403).json({ error: 'Your account was not approved. Contact your coordinator or admin.' });
+    }
+
+    // Block login outside the active immersion period (except for admins).
+    if (user.role !== 'admin') {
+      const accessBlock = await checkImmersionPeriodAccess(user.role);
+      if (accessBlock.blocked) {
+        return res.status(403).json({
+          error: accessBlock.message,
+          phase: accessBlock.phase,
+          startDate: accessBlock.startDate,
+          endDate: accessBlock.endDate,
+        });
+      }
     }
 
     // Successful login — clear any failed attempt counter
@@ -349,9 +437,11 @@ module.exports = {
   login,
   getMe,
   setPassword,
+  checkImmersionPeriodAccess,
 };
 
 exports.registerStudent = registerStudent;
 exports.login = login;
 exports.getMe = getMe;
 exports.setPassword = setPassword;
+exports.checkImmersionPeriodAccess = checkImmersionPeriodAccess;
