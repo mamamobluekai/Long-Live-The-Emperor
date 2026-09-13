@@ -5,10 +5,32 @@ const streamifier = require('streamifier');
 const cloudinary = require('../../db/cloudinary');
 const pool = require('../../db');
 const { getIO } = require('../../sockets');
+const { nowInManilaDateOnly, isValidManilaDate } = require('../../utils/manilaDate');
+
+// Format a DATE column from node-postgres as a stable YYYY-MM-DD string.
+// node-postgres returns DATE columns as JS Date objects anchored to UTC
+// midnight; serializing them as JSON produces an ISO timestamp in UTC.
+// Clients in any other timezone would then substring(0, 10) and get the
+// wrong calendar day. We use the date's UTC components (the calendar day
+// the DB actually stored) so the wire format is timezone-independent.
+function formatDateColumn(value) {
+  if (value == null) return null;
+  if (value instanceof Date) {
+    return `${value.getUTCFullYear()}-${String(value.getUTCMonth() + 1).padStart(2, '0')}-${String(value.getUTCDate()).padStart(2, '0')}`;
+  }
+  return String(value).slice(0, 10);
+}
+
+function formatAppealDates(appeal) {
+  if (!appeal) return appeal;
+  return { ...appeal, appeal_date: formatDateColumn(appeal.appeal_date) };
+}
 
 const TZ = 'Asia/Manila';
 
 function nowLocalDate(timezone = TZ) {
+  // Backwards-compat shim — delegates to the shared Manila helper.
+  if (timezone === TZ) return nowInManilaDateOnly();
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: timezone,
     year: 'numeric',
@@ -72,9 +94,62 @@ const submitAppeal = async (req, res) => {
       return res.status(400).json({ message: 'You are not assigned to a batch yet.' });
     }
     const { teacher_batch_id, teacher_id } = batchRes.rows[0];
-    const appealDate = /^\d{4}-\d{2}-\d{2}$/.test(String(appeal_date || ''))
-      ? appeal_date
-      : nowLocalDate();
+
+    // The appeal date is the date the student is appealing FOR, not today.
+    // The client always sends the day that was clicked in the calendar; we
+    // validate it against the student's actual batch attendance dates
+    // (mirroring the same weekday-skipping logic that generates the
+    // student's My Schedule list) and fall back to Manila today only if
+    // the client didn't send one. This makes the audit trail accurate:
+    // "appealed Aug 28" really is Aug 28, and the teacher can see exactly
+    // which day the student is appealing for.
+    //
+    // We deliberately do NOT trust work_immersion_schedules.end_date here:
+    // older rows may have end_date = NULL (the column was added in a
+    // later migration), and using a stored end_date would also mis-validate
+    // whenever the stored range is wider than the actual attendance dates
+    // (e.g. a schedule that includes a holiday that the teacher removed).
+    let appealDate = null;
+    const sentDate = String(appeal_date || '').trim();
+    if (isValidManilaDate(sentDate)) {
+      const batchSchedules = await client.query(
+        `SELECT start_date, duration_type, duration_value
+         FROM work_immersion_schedules
+         WHERE teacher_batch_id = $1`,
+        [teacher_batch_id]
+      );
+      const dateOnly = (v) => {
+        if (!v) return null;
+        if (v instanceof Date) {
+          return `${v.getUTCFullYear()}-${String(v.getUTCMonth() + 1).padStart(2, '0')}-${String(v.getUTCDate()).padStart(2, '0')}`;
+        }
+        return String(v).slice(0, 10);
+      };
+      // Build the same Mon–Fri attendance date list the client sees in
+      // its schedule, and accept the appeal if `sentDate` is in that set.
+      const isInAnySchedule = batchSchedules.rows.some((r) => {
+        const startStr = dateOnly(r.start_date);
+        if (!startStr) return false;
+        const [y, m, d] = startStr.split('-').map(Number);
+        const cur = new Date(Date.UTC(y, m - 1, d));
+        const totalDays = r.duration_type === 'hours'
+          ? Math.ceil(Number(r.duration_value) / 8)
+          : Number(r.duration_value);
+        for (let i = 0; i < totalDays; i++) {
+          const dow = cur.getUTCDay();
+          if (dow !== 0 && dow !== 6) {
+            const curStr = `${cur.getUTCFullYear()}-${String(cur.getUTCMonth() + 1).padStart(2, '0')}-${String(cur.getUTCDate()).padStart(2, '0')}`;
+            if (curStr === sentDate) return true;
+          }
+          cur.setUTCDate(cur.getUTCDate() + 1);
+        }
+        return false;
+      });
+      if (isInAnySchedule) {
+        appealDate = sentDate;
+      }
+    }
+    if (!appealDate) appealDate = nowLocalDate();
 
     let fileUrl = null;
     let fileName = null;
@@ -99,9 +174,9 @@ const submitAppeal = async (req, res) => {
       [insert.rows[0].id]
     );
 
-    getIO().to(`batch:${teacher_batch_id}`).emit('attendance:appeal_submitted', full.rows[0]);
+    getIO().to(`batch:${teacher_batch_id}`).emit('attendance:appeal_submitted', formatAppealDates(full.rows[0]));
 
-    res.status(201).json({ message: 'Appeal submitted.', appeal: full.rows[0] });
+    res.status(201).json({ message: 'Appeal submitted.', appeal: formatAppealDates(full.rows[0]) });
   } catch (err) {
     console.error('submitAppeal error:', err);
     res.status(500).json({ message: 'Failed to submit appeal.' });
@@ -123,11 +198,42 @@ const getMyAppeals = async (req, res) => {
       `SELECT * FROM attendance_appeals WHERE student_id = $1 ORDER BY created_at DESC`,
       [student.id]
     );
-    res.json({ appeals: result.rows });
+    const appeals = result.rows.map(formatAppealDates);
+    res.json({ appeals });
   } catch (err) {
     console.error('getMyAppeals error:', err);
     res.status(500).json({ message: 'Failed to fetch appeals.' });
   }
 };
 
-module.exports = { upload, submitAppeal, getMyAppeals };
+// DELETE /api/attendance/appeals/:appealId
+// Students may delete only their own appeals that are still pending.
+const deleteMyAppeal = async (req, res) => {
+  const { appealId } = req.params;
+  try {
+    await ensureAppealDateColumn();
+    const userId = req.user.id;
+    const studentRes = await pool.query('SELECT id FROM students WHERE user_id = $1', [userId]);
+    const student = studentRes.rows[0];
+    if (!student) return res.status(404).json({ message: 'Student profile not found.' });
+
+    const existing = await pool.query(
+      `SELECT id, status FROM attendance_appeals WHERE id = $1 AND student_id = $2`,
+      [appealId, student.id]
+    );
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ message: 'Appeal not found.' });
+    }
+    if (existing.rows[0].status !== 'pending') {
+      return res.status(400).json({ message: 'Only pending appeals can be deleted.' });
+    }
+
+    await pool.query(`DELETE FROM attendance_appeals WHERE id = $1`, [appealId]);
+    res.json({ message: 'Appeal deleted.', appealId: Number(appealId) });
+  } catch (err) {
+    console.error('deleteMyAppeal error:', err);
+    res.status(500).json({ message: 'Failed to delete appeal.' });
+  }
+};
+
+module.exports = { upload, submitAppeal, getMyAppeals, deleteMyAppeal };

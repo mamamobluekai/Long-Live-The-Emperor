@@ -8,6 +8,7 @@ import {
   CalendarDays,
   MessageCircle,
   UserRound,
+  NotebookPen,
 } from 'lucide-react';
 
 import DashboardSidebar from '../sharedSidebar/DashboardSidebar';
@@ -55,6 +56,18 @@ const links = [
     to: '/dashboard/student/attendance',
     label: 'Attendance',
     icon: CalendarDays,
+  },
+
+  {
+    to: '/dashboard/student/daily-documentation',
+    label: 'Daily Documentation',
+    icon: NotebookPen,
+  },
+
+  {
+    to: '/dashboard/student/documentation-progress',
+    label: 'Documentation Progress',
+    icon: TrendingUp,
   },
 
   {

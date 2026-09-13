@@ -1,0 +1,376 @@
+/* =========================================
+   PAGE LAYOUT
+   ========================================= */
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  color: #0f172a;
+}
+
+/* =========================================
+   PAGE HEADER
+   ========================================= */
+.pageHeader {
+  margin-bottom: 24px;
+}
+.pageHeader h2 {
+  margin: 0 0 4px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+.pageHeader p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9375rem;
+}
+
+/* =========================================
+   OVERALL STATUS CARD
+   ========================================= */
+.statusCard {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 18px;
+  padding: 26px 28px;
+  margin-bottom: 20px;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 12px 32px -8px rgba(15, 23, 42, 0.08);
+}
+.statusCard.completed {
+  border-color: #c7f0d8;
+}
+.statusCard.inProgress {
+  border-color: #fed7aa;
+}
+.statusHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.statusTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.statusBadge.completed {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+.statusBadge.inProgress {
+  background: #ffedd5;
+  color: #9a3412;
+  border: 1px solid #fed7aa;
+}
+.statusBadgeDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.statusBadgeDot.completed {
+  background: #22c55e;
+}
+.statusBadgeDot.inProgress {
+  background: #f97316;
+}
+
+/* =========================================
+   PROGRESS SCORE
+   ========================================= */
+.progressScore {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.scoreText {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+.scoreSub {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+/* Progress bar */
+.progressBarWrap {
+  margin-top: 14px;
+}
+.progressBar {
+  width: 100%;
+  height: 10px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progressBarFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.45s ease;
+}
+.progressBarFill.completed {
+  background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%);
+}
+.progressBarFill.inProgress {
+  background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%);
+}
+
+/* =========================================
+   DAYS GRID
+   ========================================= */
+.daysGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.dayCard {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+.dayCard.done {
+  border-color: #c7f0d8;
+}
+.dayCard.submitted {
+  border-color: #bfdbfe;
+}
+.dayCard.pending {
+  border-color: #fef3c7;
+}
+.dayCard.empty {
+  border-color: #e2e8f0;
+  background: #fafbfc;
+}
+.dayNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+.dayNumber.done {
+  background: #dcfce7;
+  color: #15803d;
+}
+.dayNumber.submitted {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.dayNumber.pending {
+  background: #fef3c7;
+  color: #9a3412;
+}
+.dayNumber.empty {
+  background: #e2e8f0;
+  color: #94a3b8;
+}
+.dayBody {
+  flex: 1;
+  min-width: 0;
+}
+.dayDate {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+.dayMeta {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.dayDocStatus {
+  font-size: 0.81rem;
+  font-weight: 600;
+  margin-top: 6px;
+}
+.dayScore {
+  font-size: 0.81rem;
+  font-weight: 600;
+  color: #15803d;
+}
+.dayFeedback {
+  font-size: 0.76rem;
+  color: #475569;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* =========================================
+   STATUS BADGES IN TABLE
+   ========================================= */
+.docBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.badgeGraded {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+.badgeReviewed {
+  background: #ede9fe;
+  color: #4c1d94;
+  border: 1px solid #c4b5fd;
+}
+.badgeSubmitted {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+.badgePending {
+  background: #fef3c7;
+  color: #9a3412;
+  border: 1px solid #fed7aa;
+}
+.badgeNotSubmitted {
+  background: #f1f5f9;
+  color: #94a3b8;
+  border: 1px solid #e2e8f0;
+}
+.badgeEmpty {
+  background: #f1f5f9;
+  color: #cbd5e1;
+  border: 1px dashed #e2e8f0;
+}
+
+/* =========================================
+   ACTION BUTTONS
+   ========================================= */
+.actions {
+  margin-top: 24px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.primaryBtn {
+  background: linear-gradient(135deg, #3b82f6, #2a5298);
+  color: #fff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(42, 82, 152, 0.32);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+.primaryBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(42, 82, 152, 0.4);
+}
+.primaryBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+.secondaryBtn {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.secondaryBtn:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+/* =========================================
+   EMPTY / ERROR / LOADING
+   ========================================= */
+.empty {
+  background: #fff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.9375rem;
+}
+.loading {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  padding: 50px 0;
+  text-align: center;
+}
+.error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  padding: 10px 16px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 0.875rem;
+}
+.info {
+  color: #64748b;
+  font-size: 0.9rem;
+  padding: 24px 0;
+  text-align: center;
+}
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+@media (max-width: 700px) {
+  .statusCard {
+    padding: 22px 20px;
+  }
+  .statusHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .scoreText {
+    font-size: 1.35rem;
+  }
+  .actions {
+    flex-direction: column;
+  }
+  .primaryBtn, .secondaryBtn {
+    width: 100%;
+  }
+}

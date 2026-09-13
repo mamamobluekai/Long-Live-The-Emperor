@@ -23,13 +23,67 @@ function parseLocalDate(dateStr) {
 
 async function checkImmersionPeriodAccess(role) {
   try {
-    const result = await pool.query(
+    const settingsResult = await pool.query(
       `SELECT immersion_start_date, immersion_end_date,
               access_student, access_teacher, access_coordinator, access_supervisor
        FROM system_settings WHERE id = 1`
     );
-    const settings = result.rows[0];
-    if (!settings || !settings.immersion_start_date || !settings.immersion_end_date) {
+    const settings = settingsResult.rows[0] || {};
+
+    const periodsResult = await pool.query(
+      `SELECT id, period_name, start_date, end_date, is_active, status
+       FROM immersion_periods
+       WHERE is_active = true
+       ORDER BY start_date DESC`
+    );
+    const activePeriod = periodsResult.rows.find((p) => {
+      if (!p.start_date || !p.end_date) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const start = parseLocalDate(p.start_date);
+      const end = parseLocalDate(p.end_date);
+      if (!start || !end) return false;
+      return today >= start && today <= end;
+    }) || periodsResult.rows[0] || null;
+
+    const roleAccess = {
+      student: settings.access_student,
+      teacher: settings.access_teacher,
+      coordinator: settings.access_coordinator,
+      supervisor: settings.access_supervisor,
+    };
+
+    if (activePeriod) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const start = parseLocalDate(activePeriod.start_date);
+      const end = parseLocalDate(activePeriod.end_date);
+      if (start && end) {
+        if (today >= start && today <= end && roleAccess[role]) {
+          return { blocked: false };
+        }
+        if (today < start) {
+          return {
+            blocked: true,
+            phase: 'upcoming',
+            message: `Work Immersion has not started yet. Your access will be available on ${start.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}.`,
+            startDate: activePeriod.start_date,
+            endDate: activePeriod.end_date,
+          };
+        }
+        if (today > end) {
+          return {
+            blocked: true,
+            phase: 'completed',
+            message: 'Work Immersion has been completed. Login is no longer allowed for this period.',
+            startDate: activePeriod.start_date,
+            endDate: activePeriod.end_date,
+          };
+        }
+      }
+    }
+
+    if (!settings.immersion_start_date || !settings.immersion_end_date) {
       return { blocked: false };
     }
 
@@ -43,13 +97,6 @@ async function checkImmersionPeriodAccess(role) {
     let phase = 'ongoing';
     if (today < start) phase = 'upcoming';
     else if (today > end) phase = 'completed';
-
-    const roleAccess = {
-      student: settings.access_student,
-      teacher: settings.access_teacher,
-      coordinator: settings.access_coordinator,
-      supervisor: settings.access_supervisor,
-    };
 
     if (phase === 'ongoing' && roleAccess[role]) {
       return { blocked: false };

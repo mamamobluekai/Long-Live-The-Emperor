@@ -1,4 +1,5 @@
 const pool = require('../db');
+const { nowInManilaDateOnly, isValidManilaDate } = require('../utils/manilaDate');
 
 async function ensureDocumentationTables() {
   await pool.query(`
@@ -103,6 +104,14 @@ async function submitDailyDoc(req, res) {
 
     const { date, reasoning, fileId, batchId, day_number } = req.body || {};
     if (!date) return res.status(400).json({ error: 'Date is required.' });
+    if (!isValidManilaDate(date)) {
+      return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD.' });
+    }
+
+    const today = nowInManilaDateOnly();
+    if (date > today) {
+      return res.status(400).json({ error: 'Cannot upload documentation for a future date.' });
+    }
 
     let finalBatchId = batchId;
     if (!finalBatchId) {
@@ -121,6 +130,27 @@ async function submitDailyDoc(req, res) {
     const dayNumber = parseInt(day_number || '0', 10);
     if (isNaN(dateObj.getTime()) || dayNumber < 1 || dayNumber > 10) {
       return res.status(400).json({ error: 'Invalid date or day number.' });
+    }
+
+    // No attendance gate: students may upload documentation regardless of
+    // whether they completed Time In / Time Out for the day.
+
+    // Block re-submission once a teacher has reviewed or graded the doc.
+    // Only one submission/edit is allowed per day until the teacher
+    // finalizes the review.
+    const existing = await pool.query(
+      `SELECT status, date FROM student_daily_documentation
+       WHERE student_id = $1 AND teacher_batch_id = $2 AND date = $3`,
+      [studentId, finalBatchId, date]
+    );
+    if (existing.rows.length > 0 && ['reviewed', 'graded'].includes(existing.rows[0].status)) {
+      const blockedDate =
+        existing.rows[0].date instanceof Date
+          ? existing.rows[0].date.toISOString().slice(0, 10)
+          : String(existing.rows[0].date);
+      return res.status(409).json({
+        error: `Documentation for ${blockedDate} has already been reviewed by your teacher and cannot be edited.`,
+      });
     }
 
     const result = await pool.query(

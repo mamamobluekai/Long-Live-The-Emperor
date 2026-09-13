@@ -4,6 +4,22 @@ import { useTeacherBatch } from '../../../hooks/useTeacherBatch';
 import { getBatchAppeals, reviewAppeal } from '../../../api/teacherApi';
 import styles from './TeacherAppeals.module.css';
 
+function formatAppealDate(value) {
+  if (!value) return '';
+  const str = String(value);
+  const key = str.includes('T') ? str.substring(0, 10) : str.slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return str;
+  const d = new Date(`${key}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return key;
+  return d.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
 function TeacherAppeals() {
   const { token } = useAuth();
   const { batchId: selectedBatchId, batchLabel } = useTeacherBatch();
@@ -81,6 +97,9 @@ function TeacherAppeals() {
               <div>
                 <strong>{a.first_name} {a.last_name}</strong>
                 <span className={styles.meta}> · {a.student_number || '—'} · {a.attendance_type === 'time_in' ? 'Time In' : 'Time Out'}</span>
+                {a.appeal_date && (
+                  <span className={styles.meta}> · For {formatAppealDate(a.appeal_date)}</span>
+                )}
               </div>
               <span className={`${styles.badge} ${styles['badge_' + a.status]}`}>{a.status}</span>
             </div>

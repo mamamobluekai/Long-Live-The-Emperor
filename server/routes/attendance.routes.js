@@ -29,6 +29,7 @@ router.put('/teacher/batch/:batchId/schedules', authenticate, authorize('teacher
 
 // ----- Student: view own schedule -----
 router.get('/student/schedule', authenticate, authorize('student'), immersionSchedule.getMySchedule);
+router.get('/student/records', authenticate, authorize('student'), attendanceController.getMyAttendanceRecords);
 
 // ----- Student: status, check-in/out, appeals -----
 router.get('/student/status', authenticate, authorize('student'), attendanceController.getStudentAttendanceAccess);
@@ -37,5 +38,6 @@ router.post('/check-out', authenticate, authorize('student'), attendanceControll
 router.post('/location-issue', authenticate, authorize('student'), attendanceController.reportLocationIssue);
 router.post('/appeal', authenticate, authorize('student'), attendanceAppeal.upload.single('file'), attendanceAppeal.submitAppeal);
 router.get('/appeals/me', authenticate, authorize('student'), attendanceAppeal.getMyAppeals);
+router.delete('/appeals/:appealId', authenticate, authorize('student'), attendanceAppeal.deleteMyAppeal);
 
 module.exports = router;

@@ -34,6 +34,10 @@ const {
   updateImmersionPeriod,
   deleteImmersionPeriod,
   getImmersionAccess,
+  previewPeriodArchive,
+  archivePeriod,
+  listArchivePeriods,
+  getArchivePeriod,
 } = require('../controllers/adminContollers/admin.controller');
 
 const { login, logout, profile, updateProfile } = require('../controllers/adminContollers/auth.controller');
@@ -97,6 +101,11 @@ router.post('/immersion/periods', createImmersionPeriod);
 router.put('/immersion/periods/:id', updateImmersionPeriod);
 router.delete('/immersion/periods/:id', deleteImmersionPeriod);
 router.get('/immersion/access', getImmersionAccess);
+
+router.get('/immersion/periods/:periodId/archive-preview', previewPeriodArchive);
+router.post('/immersion/periods/:periodId/archive', archivePeriod);
+router.get('/archives', listArchivePeriods);
+router.get('/archives/:archiveId', getArchivePeriod);
 
 router.post('/upload/teachers', upload.single('file'), uploadTeachersExcel);
 router.post('/upload/supervisors', upload.single('file'), uploadSupervisorsExcel);

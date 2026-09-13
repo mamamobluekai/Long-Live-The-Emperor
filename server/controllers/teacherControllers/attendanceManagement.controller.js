@@ -19,6 +19,26 @@ async function ensureAppealDateColumn(client = pool) {
   await client.query(`ALTER TABLE attendance_appeals ADD COLUMN IF NOT EXISTS appeal_date DATE DEFAULT CURRENT_DATE`);
 }
 
+// Format a DATE column from node-postgres as a stable YYYY-MM-DD string.
+// node-postgres returns DATE columns as JS Date objects anchored to UTC
+// midnight; serializing them as JSON would otherwise produce an ISO
+// timestamp in UTC, and clients in other timezones would substring(0, 10)
+// and end up on the wrong calendar day. We use the date's UTC components
+// (the calendar day the DB actually stored) so the wire format is
+// timezone-independent.
+function formatDateOnly(value) {
+  if (value == null) return null;
+  if (value instanceof Date) {
+    return `${value.getUTCFullYear()}-${String(value.getUTCMonth() + 1).padStart(2, '0')}-${String(value.getUTCDate()).padStart(2, '0')}`;
+  }
+  return String(value).slice(0, 10);
+}
+
+function formatAppealDates(appeal) {
+  if (!appeal) return appeal;
+  return { ...appeal, appeal_date: formatDateOnly(appeal.appeal_date) };
+}
+
 // Ensure the requesting teacher owns the batch.
 async function assertOwnsBatch(teacherUserId, batchId) {
   const teacherRow = await pool.query('SELECT id FROM teachers WHERE user_id = $1', [teacherUserId]);
@@ -73,12 +93,14 @@ const getBatchStats = async (req, res) => {
     );
     const timedIn = await pool.query(
       `SELECT COUNT(*)::int AS n FROM student_attendance
-       WHERE teacher_batch_id = $1 AND date = $2 AND check_in_time IS NOT NULL`,
+       WHERE teacher_batch_id = $1 AND date = $2
+         AND (check_in_time IS NOT NULL OR status = 'present')`,
       [batchId, date]
     );
     const timedOut = await pool.query(
       `SELECT COUNT(*)::int AS n FROM student_attendance
-       WHERE teacher_batch_id = $1 AND date = $2 AND check_out_time IS NOT NULL`,
+       WHERE teacher_batch_id = $1 AND date = $2
+         AND (check_out_time IS NOT NULL OR status = 'present')`,
       [batchId, date]
     );
     const pendingAppeals = await pool.query(
@@ -128,7 +150,8 @@ const getBatchAppeals = async (req, res) => {
        ORDER BY a.created_at DESC`,
       params
     );
-    res.json({ appeals: result.rows });
+    const appeals = result.rows.map(formatAppealDates);
+    res.json({ appeals });
   } catch (err) {
     console.error('getBatchAppeals error:', err);
     res.status(500).json({ error: 'Server error.' });
@@ -170,33 +193,41 @@ const reviewAppeal = async (req, res) => {
       [status, comment || null, req.user.id, appealId]
     );
 
-    // If approved, update the attendance record accordingly.
+    // If approved, mark the appealed date as fully present for that student.
+    // - Always sets status = 'present' regardless of attendance_type (time_in
+    //   or time_out) so an appeal for either event covers the whole day.
+    // - If the student already has a check_in / check_out timestamp for the
+    //   day (partial attendance), keep the existing timestamps.
+    // - If they were completely absent, no timestamps are fabricated — the
+    //   day simply flips from absent → present.
+    // - Falls back to a legacy status if the DB's check constraint doesn't
+    //   yet allow 'present' (run migration 016 to widen the constraint).
     if (status === 'approved') {
       const appealDate = row.appeal_date || nowLocalDate();
-      if (row.attendance_type === 'time_in') {
-        await client.query(
-          `INSERT INTO student_attendance (student_id, teacher_batch_id, date, status, check_in_time, appeal_time_in_id)
-           VALUES ($1, $2, $4, 'checked_in', CURRENT_TIMESTAMP, $3)
-           ON CONFLICT (student_id, date) DO UPDATE SET
-             check_in_time = COALESCE(student_attendance.check_in_time, CURRENT_TIMESTAMP),
-             appeal_time_in_id = $3,
-             updated_at = CURRENT_TIMESTAMP`,
-          [row.student_id, row.teacher_batch_id, appealId, appealDate]
-        );
-      } else {
-        await client.query(
-          `INSERT INTO student_attendance (student_id, teacher_batch_id, date, status, check_out_time, appeal_time_out_id)
-           VALUES ($1, $2, $4, 'checked_out', CURRENT_TIMESTAMP, $3)
-           ON CONFLICT (student_id, date) DO UPDATE SET
-             check_out_time = COALESCE(student_attendance.check_out_time, CURRENT_TIMESTAMP),
-             appeal_time_out_id = $3,
-             updated_at = CURRENT_TIMESTAMP`,
-          [row.student_id, row.teacher_batch_id, appealId, appealDate]
-        );
+      const tryUpsert = (st) => client.query(
+        `INSERT INTO student_attendance
+          (student_id, teacher_batch_id, date, status, appeal_time_in_id, appeal_time_out_id)
+         VALUES ($1, $2, $3, $4, $5, $5)
+         ON CONFLICT (student_id, date) DO UPDATE SET
+           status = EXCLUDED.status,
+           appeal_time_in_id = COALESCE(student_attendance.appeal_time_in_id, EXCLUDED.appeal_time_in_id),
+           appeal_time_out_id = COALESCE(student_attendance.appeal_time_out_id, EXCLUDED.appeal_time_out_id),
+           updated_at = CURRENT_TIMESTAMP`,
+        [row.student_id, row.teacher_batch_id, appealDate, st, appealId]
+      );
+
+      try {
+        await tryUpsert('present');
+      } catch (e) {
+        // Constraint still restricts to legacy values — fall back to the
+        // appropriate one for the appealed attendance_type.
+        const fallback = row.attendance_type === 'time_out' ? 'checked_out' : 'checked_in';
+        if (e.code !== '23514') throw e;
+        await tryUpsert(fallback);
       }
     }
 
-    res.json({ appeal: updated.rows[0], message: `Appeal ${status}.` });
+    res.json({ appeal: formatAppealDates(updated.rows[0]), message: `Appeal ${status}.` });
   } catch (err) {
     console.error('reviewAppeal error:', err);
     res.status(500).json({ error: 'Server error.' });

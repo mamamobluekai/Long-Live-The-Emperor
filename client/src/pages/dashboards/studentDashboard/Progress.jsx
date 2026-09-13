@@ -152,8 +152,8 @@ function Progress() {
       key: 'documentation',
       label: 'Documentation',
       detail: documentation?.graded
-        ? 'All documents graded'
-        : `${documentation?.verified || 0}/${documentation?.total || 0} documents graded`,
+        ? `${documentation.verified || 0}/${documentation.total || 0} daily docs graded`
+        : `${documentation?.submitted || 0}/${documentation?.total || 0} daily docs submitted`,
       done: !!documentation?.graded,
       icon: '2',
     },
@@ -161,8 +161,8 @@ function Progress() {
       key: 'attendance',
       label: 'Attendance',
       detail: attendance?.complete
-        ? `${attendance.days} days completed`
-        : `${attendance?.days || 0}/${attendance?.required || 10} immersion days completed`,
+        ? `${attendance.days} days attended`
+        : `${attendance?.days || 0}/${attendance?.required || 10} immersion days attended`,
       done: !!attendance?.complete,
       icon: '3',
     },

@@ -4,7 +4,7 @@ const pool = require('../../db/');
 function parseLocalDate(dateStr) {
   if (dateStr instanceof Date) {
     if (isNaN(dateStr.getTime())) return dateStr;
-    return new Date(dateStr.getFullYear(), dateStr.getMonth(), dateStr.getDate());
+    return new Date(dateStr.getUTCFullYear(), dateStr.getUTCMonth(), dateStr.getUTCDate());
   }
   const [y, m, d] = String(dateStr).split('-').map(Number);
   return new Date(y, m - 1, d);

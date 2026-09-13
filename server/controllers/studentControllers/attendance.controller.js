@@ -260,7 +260,11 @@ exports.getStudentAttendanceAccess = async (req, res) => {
 
     const state = await resolveAttendanceState(batch.teacher_batch_id);
 
-    const today = todayInTimezone(state?.timezone || 'Asia/Manila');
+    // Always anchor "today" to Asia/Manila regardless of any per-batch timezone
+    // override on attendance_config. Using a non-Manila TZ here has caused the
+    // returned `date` to be off by one day, which in turn caused submitted
+    // appeals to be saved with the wrong date. Manila is the system-wide TZ.
+    const today = todayInTimezone('Asia/Manila');
     const schedule = await getBatchScheduleForDate(batch.teacher_batch_id, today);
 
     const rec = await pool.query(
@@ -299,5 +303,25 @@ exports.getTodayStatus = async (req, res) => {
   } catch (err) {
     console.error('getTodayStatus error:', err);
     res.status(500).json({ message: 'Failed to fetch attendance status.' });
+  }
+};
+
+// GET /api/attendance/student/records -> all attendance records for the logged-in student
+exports.getMyAttendanceRecords = async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const result = await pool.query(
+      `SELECT sa.id, sa.teacher_batch_id, sa.date, sa.status,
+              sa.check_in_time, sa.check_out_time
+       FROM student_attendance sa
+       JOIN students s ON s.id = sa.student_id
+       WHERE s.user_id = $1
+       ORDER BY sa.date DESC`,
+      [userId]
+    );
+    res.json({ records: result.rows });
+  } catch (err) {
+    console.error('getMyAttendanceRecords error:', err);
+    res.status(500).json({ message: 'Failed to fetch attendance records.' });
   }
 };

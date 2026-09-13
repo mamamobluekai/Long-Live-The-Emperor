@@ -7,6 +7,8 @@ import {
   createImmersionPeriod,
   updateImmersionPeriod,
   deleteImmersionPeriod,
+  previewPeriodArchive,
+  archiveImmersionPeriod,
 } from '../../../api/adminApi';
 import { useToast } from '../../../components/admin/ToastContainer';
 import ConfirmModal from '../../../components/admin/ConfirmModal';
@@ -64,6 +66,8 @@ export default function SettingsPage() {
   const [periodEditing, setPeriodEditing] = useState(null);
   const [periodModal, setPeriodModal] = useState(false);
   const [deletePeriodModal, setDeletePeriodModal] = useState({ open: false, id: null, name: '' });
+  const [archiveModal, setArchiveModal] = useState({ open: false, period: null, preview: null, loading: false, error: '' });
+  const [archiving, setArchiving] = useState(false);
 
   const loadSettings = useCallback(async () => {
     try {
@@ -214,8 +218,44 @@ export default function SettingsPage() {
     }
   };
 
-  const immersionStatus = computeStatus(form.immersion_start_date, form.immersion_end_date);
-  const daysUntil = getDaysUntil(form.immersion_start_date);
+  const openArchiveModal = async (period) => {
+    setArchiveModal({ open: true, period, preview: null, loading: true, error: '' });
+    try {
+      const data = await previewPeriodArchive(period.id);
+      setArchiveModal((m) => ({ ...m, preview: data.preview, loading: false }));
+    } catch (err) {
+      setArchiveModal((m) => ({ ...m, loading: false, error: err.message }));
+    }
+  };
+
+  const closeArchiveModal = () => {
+    if (archiving) return;
+    setArchiveModal({ open: false, period: null, preview: null, loading: false, error: '' });
+  };
+
+  const handleArchivePeriod = async () => {
+    if (!archiveModal.period) return;
+    setArchiving(true);
+    try {
+      await archiveImmersionPeriod(archiveModal.period.id);
+      showToast('Period archived. View it in Archived Periods.', 'success');
+      setArchiving(false);
+      closeArchiveModal();
+      loadPeriods();
+    } catch (err) {
+      showToast(err.message, 'error');
+      setArchiving(false);
+    }
+  };
+
+  const activePeriod = (periods || []).find((p) => p.is_active) || (periods || [])[0] || null;
+  const periodStart = activePeriod?.start_date || '';
+  const periodEnd = activePeriod?.end_date || '';
+  const statusStart = periodStart || form.immersion_start_date || '';
+  const statusEnd = periodEnd || form.immersion_end_date || '';
+
+  const immersionStatus = computeStatus(statusStart, statusEnd);
+  const daysUntil = getDaysUntil(statusStart);
 
   const statusConfig = {
     upcoming: { label: 'Upcoming', color: '#f59e0b', icon: '🟡' },
@@ -284,11 +324,16 @@ export default function SettingsPage() {
                 {statusInfo.icon} {statusInfo.label}
               </span>
             </div>
-            {form.immersion_start_date && form.immersion_end_date ? (
+            {statusStart && statusEnd ? (
               <>
                 <p className={styles.statusDates}>
-                  {formatDate(form.immersion_start_date)} – {formatDate(form.immersion_end_date)}
+                  {formatDate(statusStart)} – {formatDate(statusEnd)}
                 </p>
+                {activePeriod && (
+                  <p className={styles.statusCountdown}>
+                    {activePeriod.period_name} ({activePeriod.academic_year} · {activePeriod.semester})
+                  </p>
+                )}
                 {immersionStatus === 'upcoming' && daysUntil !== null && (
                   <p className={styles.statusCountdown}>Starts in: {daysUntil} day{daysUntil !== 1 ? 's' : ''}</p>
                 )}
@@ -489,6 +534,14 @@ export default function SettingsPage() {
                         onClick={() => openPeriodModal(period)}
                       >
                         Edit
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.periodArchiveBtn}
+                        onClick={() => openArchiveModal(period)}
+                        title="Snapshot this period and remove its live data. Snapshot is viewable in Archived Periods."
+                      >
+                        Archive
                       </button>
                       <button
                         type="button"
@@ -703,6 +756,62 @@ export default function SettingsPage() {
         onConfirm={handleDeletePeriod}
         onClose={() => setDeletePeriodModal({ open: false, id: null, name: '' })}
       />
+
+      {archiveModal.open && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <h3>Archive Immersion Period</h3>
+              <button type="button" className={styles.modalClose} onClick={closeArchiveModal} disabled={archiving}>✕</button>
+            </div>
+            <div className={styles.modalForm}>
+              <p className={styles.archiveIntro}>
+                <strong>{archiveModal.period?.period_name}</strong> will be snapshotted into the
+                archive. All student, teacher, supervisor, and coordinator accounts linked to this
+                period (directly or via its batches) will be <strong>deleted</strong> along with
+                their attendance, GPS logs, appeals, evaluations, certificates, deployment
+                requests, and documents.
+              </p>
+              {archiveModal.loading ? (
+                <p className={styles.muted}>Loading snapshot preview…</p>
+              ) : archiveModal.error ? (
+                <p className={styles.error}>{archiveModal.error}</p>
+              ) : archiveModal.preview?.alreadyArchived ? (
+                <p className={styles.error}>This period has already been archived.</p>
+              ) : archiveModal.preview ? (
+                <div className={styles.archiveSummary}>
+                  <div className={styles.archiveStat}><span>Students</span><strong>{archiveModal.preview.counts.students}</strong></div>
+                  <div className={styles.archiveStat}><span>Teachers</span><strong>{archiveModal.preview.counts.teachers}</strong></div>
+                  <div className={styles.archiveStat}><span>Supervisors</span><strong>{archiveModal.preview.counts.supervisors}</strong></div>
+                  <div className={styles.archiveStat}><span>Coordinators</span><strong>{archiveModal.preview.counts.coordinators}</strong></div>
+                  <div className={styles.archiveStat}><span>Batches</span><strong>{archiveModal.preview.counts.batches}</strong></div>
+                </div>
+              ) : null}
+              <p className={styles.archiveWarning}>
+                This cannot be undone. The original data is removed; only the archive snapshot remains.
+              </p>
+              <div className={styles.modalActions}>
+                <button
+                  type="button"
+                  className={styles.cancelBtn}
+                  onClick={closeArchiveModal}
+                  disabled={archiving}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className={styles.archiveConfirmBtn}
+                  onClick={handleArchivePeriod}
+                  disabled={archiving || archiveModal.loading || !!archiveModal.error || !!archiveModal.preview?.alreadyArchived}
+                >
+                  {archiving ? 'Archiving…' : 'Archive period'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

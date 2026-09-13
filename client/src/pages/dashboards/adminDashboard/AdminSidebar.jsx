@@ -10,6 +10,7 @@ import {
   Search,
   Bell,
   Upload,
+  Archive,
 } from 'lucide-react';
 
 const links = [
@@ -58,6 +59,11 @@ const links = [
     to: '/dashboard/admin/upload-users',
     label: 'Upload Users',
     icon: Upload,
+  },
+  {
+    to: '/dashboard/admin/archives',
+    label: 'Archived Periods',
+    icon: Archive,
   },
 ];
 

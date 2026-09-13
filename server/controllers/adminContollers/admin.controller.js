@@ -9,6 +9,7 @@ const { hashPassword } = require('../../utils/hashPassword');
 const { generateTemporaryPassword } = require('../../utils/generatePassword');
 const { login } = require('../user.controller');
 const adminService = require('../../services/admin.service');
+const periodArchiveService = require('../../services/periodArchive.service');
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -833,6 +834,61 @@ const getImmersionAccess = async (req, res) => {
   }
 };
 
+const previewPeriodArchive = async (req, res) => {
+  try {
+    const periodId = Number(req.params.periodId);
+    if (!periodId) return res.status(400).json({ error: 'Invalid period id.' });
+    const preview = await periodArchiveService.previewPeriodArchive(periodId);
+    if (!preview) return res.status(404).json({ error: 'Immersion period not found.' });
+    res.json({ preview });
+  } catch (err) {
+    console.error('Preview archive error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+const archivePeriod = async (req, res) => {
+  try {
+    const periodId = Number(req.params.periodId);
+    if (!periodId) return res.status(400).json({ error: 'Invalid period id.' });
+    const result = await periodArchiveService.archivePeriod(periodId, req.user?.id);
+    await writeAuditLog(req, 'immersion_period_archive', `Archived immersion period: ${result.period.period_name}`);
+    res.json({ message: 'Period archived successfully.', archiveId: result.archiveId });
+  } catch (err) {
+    console.error('Archive period error:', err);
+    if (err.message === 'Immersion period not found.') {
+      return res.status(404).json({ error: err.message });
+    }
+    if (err.message === 'This period has already been archived.') {
+      return res.status(409).json({ error: err.message });
+    }
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+const listArchivePeriods = async (req, res) => {
+  try {
+    const periods = await periodArchiveService.listArchivePeriods();
+    res.json({ periods });
+  } catch (err) {
+    console.error('List archive periods error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+const getArchivePeriod = async (req, res) => {
+  try {
+    const archiveId = Number(req.params.archiveId);
+    if (!archiveId) return res.status(400).json({ error: 'Invalid archive id.' });
+    const data = await periodArchiveService.getArchivePeriod(archiveId);
+    if (!data) return res.status(404).json({ error: 'Archived period not found.' });
+    res.json({ archive: data });
+  } catch (err) {
+    console.error('Get archive period error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getCoordinators,
@@ -867,6 +923,10 @@ module.exports = {
   updateImmersionPeriod,
   deleteImmersionPeriod,
   getImmersionAccess,
+  previewPeriodArchive,
+  archivePeriod,
+  listArchivePeriods,
+  getArchivePeriod,
 };
 
 

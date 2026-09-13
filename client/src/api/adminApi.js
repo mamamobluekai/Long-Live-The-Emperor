@@ -281,3 +281,22 @@ export async function deleteImmersionPeriod(id) {
 export async function getImmersionAccess() {
   return fetchJsonOrThrow(`${API_BASE}/admin/immersion/access`, { headers: authHeaders() });
 }
+
+export async function previewPeriodArchive(periodId) {
+  return fetchJsonOrThrow(`${API_BASE}/admin/immersion/periods/${periodId}/archive-preview`, { headers: authHeaders() });
+}
+
+export async function archiveImmersionPeriod(periodId) {
+  return fetchJsonOrThrow(`${API_BASE}/admin/immersion/periods/${periodId}/archive`, {
+    method: 'POST',
+    headers: authHeaders(),
+  });
+}
+
+export async function listArchivePeriods() {
+  return fetchJsonOrThrow(`${API_BASE}/admin/archives`, { headers: authHeaders() });
+}
+
+export async function getArchivePeriod(archiveId) {
+  return fetchJsonOrThrow(`${API_BASE}/admin/archives/${archiveId}`, { headers: authHeaders() });
+}

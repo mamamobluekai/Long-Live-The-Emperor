@@ -199,7 +199,38 @@ function uploadToCloudinary(buffer, resourceType) {
 // GET /api/student/progress
 // Aggregates immersion completion across requirements, documentation, and
 // attendance so the student dashboard can render a single progress view.
+//
+// The documentation and attendance figures are sourced from the SAME tables
+// the student sees on their Daily Documentation and Attendance pages:
+//   - student_attendance  (dates with at least a Time In = "present")
+//   - student_daily_documentation  (dates with submitted / graded docs)
+// instead of the unrelated student_documents (requirements uploads) table.
 const REQUIRED_ATTENDANCE_DAYS = 10;
+
+// Parse a DATE column (now a 'YYYY-MM-DD' string after the pg setTypeParser(1082)
+// fix) into a local-timezone Date for weekday expansion, matching the logic in
+// immersionSchedule.controller.js getMySchedule so scheduled-day counts stay in
+// sync with what the Daily Documentation page renders.
+function parseDateKey(dateStr) {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) {
+    const y = dateStr.getUTCFullYear();
+    const m = dateStr.getUTCMonth();
+    const d = dateStr.getUTCDate();
+    return new Date(y, m, d);
+  }
+  const [y, m, d] = String(dateStr).slice(0, 10).split('-').map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
+}
+
+function formatDateKey(date) {
+  if (!date || isNaN(date.getTime())) return null;
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
 
 const getProgress = async (req, res) => {
   const client = await pool.connect();
@@ -211,25 +242,76 @@ const getProgress = async (req, res) => {
     const submission = await getOrCreateSubmission(client, student, req.user.id);
     const requirementsApproved = submission.status === 'Approved';
 
-    // Documentation graded: every requirement document that has been uploaded
-    // must have been verified (graded) by the coordinator.
-    const docs = await client.query(
-      `SELECT status FROM student_documents WHERE student_id = $1`,
+    // --- Scheduled days: expand work_immersion_schedules into weekdays (Mon–Fri),
+    // mirroring the Daily Documentation page's schedule computation. ---
+    const scheduleResult = await client.query(
+      `SELECT start_date, duration_type, duration_value
+       FROM work_immersion_schedules wis
+       JOIN teacher_batch_students tbs ON tbs.teacher_batch_id = wis.teacher_batch_id
+       WHERE tbs.student_id = $1`,
       [studentId]
     );
-    const totalDocs = docs.rows.length;
-    const verifiedDocs = docs.rows.filter((d) => d.status === 'Verified').length;
-    const documentationGraded = totalDocs > 0 && verifiedDocs === totalDocs;
 
-    // Attendance: count distinct days with both time-in and time-out recorded.
-    const att = await client.query(
-      `SELECT COUNT(DISTINCT date)::int AS days
-       FROM student_attendance
-       WHERE student_id = $1 AND check_in_time IS NOT NULL AND check_out_time IS NOT NULL`,
+    const scheduledDates = new Set();
+    scheduleResult.rows.forEach((row) => {
+      const start = parseDateKey(row.start_date);
+      if (!start) return;
+      const totalDays =
+        row.duration_type === 'hours'
+          ? Math.ceil(Number(row.duration_value) / 8)
+          : Number(row.duration_value);
+      let added = 0;
+      const cursor = new Date(start);
+      while (added < totalDays) {
+        const day = cursor.getDay();
+        if (day !== 0 && day !== 6) {
+          scheduledDates.add(formatDateKey(cursor));
+          added++;
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    });
+    const scheduledDays = scheduledDates.size;
+
+    // --- Attendance: days where the student was present (at least Time In
+    // recorded), sourced from the same student_attendance table the Attendance
+    // page reads. ---
+    const attRecords = await client.query(
+      `SELECT DISTINCT date FROM student_attendance
+       WHERE student_id = $1 AND check_in_time IS NOT NULL`,
       [studentId]
     );
-    const attendanceDays = att.rows[0]?.days || 0;
+    const attendedDates = new Set(
+      attRecords.rows.map((r) => String(r.date).slice(0, 10))
+    );
+    const attendanceDays = attendedDates.size;
     const attendanceComplete = attendanceDays >= REQUIRED_ATTENDANCE_DAYS;
+
+    // --- Daily Documentation: sourced from student_daily_documentation (the same
+    // table the Daily Documentation page reads), not student_documents. ---
+    const docRecords = await client.query(
+      `SELECT DISTINCT date, status FROM student_daily_documentation
+       WHERE student_id = $1`,
+      [studentId]
+    );
+    const submittedDates = new Set();
+    const gradedDates = new Set();
+    docRecords.rows.forEach((r) => {
+      const d = String(r.date).slice(0, 10);
+      if (r.status === 'submitted' || r.status === 'reviewed' || r.status === 'graded') {
+        submittedDates.add(d);
+      }
+      if (r.status === 'reviewed' || r.status === 'graded') {
+        gradedDates.add(d);
+      }
+    });
+    const documentedDays = submittedDates.size;
+    const gradedDays = gradedDates.size;
+    // "graded" = every scheduled immersion day has a graded documentation entry
+    // (not merely all submitted docs are graded). This ensures the Progress page
+    // only marks documentation as "Completed" when the full 10/10 (or all scheduled
+    // days) have been graded by the teacher; otherwise it stays "In Progress".
+    const documentationGraded = scheduledDays > 0 && gradedDays >= scheduledDays;
 
     const completed =
       requirementsApproved && documentationGraded && attendanceComplete;
@@ -248,12 +330,14 @@ const getProgress = async (req, res) => {
       requirements: { approved: requirementsApproved, status: submission.status },
       documentation: {
         graded: documentationGraded,
-        total: totalDocs,
-        verified: verifiedDocs,
+        total: scheduledDays,
+        submitted: documentedDays,
+        verified: gradedDays,
       },
       attendance: {
         complete: attendanceComplete,
         days: attendanceDays,
+        scheduled: scheduledDays,
         required: REQUIRED_ATTENDANCE_DAYS,
       },
       completed,

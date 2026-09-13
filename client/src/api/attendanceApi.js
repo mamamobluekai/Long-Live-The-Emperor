@@ -44,6 +44,11 @@ export async function getMyAppeals(token) {
   return res.data;
 }
 
+export async function deleteMyAppeal(appealId, token) {
+  const res = await axios.delete(`${API_URL}/attendance/appeals/${appealId}`, { headers: authHeaders(token) });
+  return res.data;
+}
+
 // ---------- Teacher ----------
 export async function getTeacherBatchStatus(batchId, token) {
   const res = await axios.get(`${API_URL}/attendance/teacher/batch/${batchId}/status`, { headers: authHeaders(token) });
@@ -111,6 +116,11 @@ export async function upsertBatchSchedule(batchId, payload, token) {
 
 export async function getMySchedule(token) {
   const res = await axios.get(`${API_URL}/attendance/student/schedule`, { headers: authHeaders(token) });
+  return res.data;
+}
+
+export async function getMyAttendanceRecords(token) {
+  const res = await axios.get(`${API_URL}/attendance/student/records`, { headers: authHeaders(token) });
   return res.data;
 }
 

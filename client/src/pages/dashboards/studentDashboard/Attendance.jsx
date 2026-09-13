@@ -7,6 +7,8 @@ import {
   submitAppeal,
   getMyAppeals,
   getMySchedule,
+  getMyAttendanceRecords,
+  deleteMyAppeal,
 } from '../../../api/attendanceApi';
 import {
   uploadMyFile,
@@ -115,9 +117,9 @@ function normalizeDateKey(dateValue) {
   }
 
   if (dateValue instanceof Date) {
-    const y = dateValue.getFullYear();
-    const m = String(dateValue.getMonth() + 1).padStart(2, '0');
-    const d = String(dateValue.getDate()).padStart(2, '0');
+    const y = dateValue.getUTCFullYear();
+    const m = String(dateValue.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(dateValue.getUTCDate()).padStart(2, '0');
 
     return `${y}-${m}-${d}`;
   }
@@ -139,9 +141,9 @@ function normalizeDateKey(dateValue) {
   const parsed = new Date(dateValue);
 
   if (!isNaN(parsed.getTime())) {
-    const y = parsed.getFullYear();
-    const m = String(parsed.getMonth() + 1).padStart(2, '0');
-    const d = String(parsed.getDate()).padStart(2, '0');
+    const y = parsed.getUTCFullYear();
+    const m = String(parsed.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(parsed.getUTCDate()).padStart(2, '0');
 
     return `${y}-${m}-${d}`;
   }
@@ -188,28 +190,34 @@ function getDayStatus(
 }
 
 function formatDateLabel(dateStr) {
-  let date;
+  if (!dateStr) return 'Invalid Date';
 
-  if (dateStr instanceof Date) {
-    date = dateStr;
-  } else {
-    const [y, m, d] = String(dateStr)
-      .split('-')
-      .map(Number);
+  const normalized = normalizeDateKey(dateStr);
+  const [year, month, day] = normalized.split('-');
 
-    date = new Date(y, m - 1, d);
-  }
-
-  if (isNaN(date.getTime())) {
+  if (!year || !month || !day) {
     return 'Invalid Date';
   }
 
-  return date.toLocaleDateString('en-US', {
+  const date = new Date(
+    Date.UTC(
+      Number(year),
+      Number(month) - 1,
+      Number(day)
+    )
+  );
+
+  const weekday = date.toLocaleDateString('en-US', {
     weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
+    timeZone: 'UTC',
   });
+
+  const monthName = date.toLocaleDateString('en-US', {
+    month: 'short',
+    timeZone: 'UTC',
+  });
+
+  return `${weekday}, ${monthName} ${Number(day)}, ${year}`;
 }
 
 function buildScheduleDays(schedules) {
@@ -338,18 +346,28 @@ function Attendance() {
   const [appealSubmitting, setAppealSubmitting] =
     useState(false);
 
+  const [deletingAppealId, setDeletingAppealId] =
+    useState(null);
+
   const watchIdRef = useRef(null);
 
   const refresh = useCallback(async () => {
     try {
-      const [status, mine] = await Promise.all([
+      const [status, mine, records] = await Promise.all([
         getStudentAttendanceStatus(token),
         getMyAppeals(token),
+        getMyAttendanceRecords(token),
       ]);
 
       setAccess(status);
       setAppeals(mine.appeals || []);
       setToday(status?.today || null);
+
+      const recMap = {};
+      (records.records || []).forEach((r) => {
+        recMap[normalizeDateKey(r.date)] = r;
+      });
+      setAttendanceMap(recMap);
     } catch (err) {
       console.error('refresh failed', err);
     } finally {
@@ -455,36 +473,31 @@ function Attendance() {
 
     async function loadSchedule() {
       try {
-        const data =
-          await getMySchedule(token);
+        const [scheduleData, recordsData] = await Promise.all([
+          getMySchedule(token),
+          getMyAttendanceRecords(token),
+        ]);
 
         if (!cancelled) {
-          setSchedules(
-            data.schedules || []
-          );
+          setSchedules(scheduleData.schedules || []);
 
-          setAttendanceMap(
-            data.attendanceMap || {}
-          );
+          const recMap = {};
+          (recordsData.records || []).forEach((r) => {
+            recMap[normalizeDateKey(r.date)] = r;
+          });
+          setAttendanceMap(recMap);
 
           const batchIds = [
             ...new Set(
-              (data.schedules || [])
-                .map(
-                  (s) =>
-                    s.teacher_batch_id
-                )
+              (scheduleData.schedules || [])
+                .map((s) => s.teacher_batch_id)
                 .filter(Boolean)
             ),
           ];
 
           for (const bid of batchIds) {
             loadDocs(bid).catch(
-              (err) =>
-                console.error(
-                  'loadDocs failed:',
-                  err
-                )
+              (err) => console.error('loadDocs failed:', err)
             );
           }
         }
@@ -906,6 +919,30 @@ function Attendance() {
       }
     };
 
+  const handleDeleteAppeal =
+    async (appealId) => {
+      if (!appealId) return;
+      if (!window.confirm('Delete this appeal? This cannot be undone.')) {
+        return;
+      }
+      setDeletingAppealId(appealId);
+      try {
+        await deleteMyAppeal(appealId, token);
+        setAppeals((currentAppeals) =>
+          currentAppeals.filter((appeal) => appeal.id !== appealId)
+        );
+        flash('success', 'Appeal deleted.');
+      } catch (err) {
+        flash(
+          'error',
+          err.response?.data?.message ||
+            'Failed to delete appeal.'
+        );
+      } finally {
+        setDeletingAppealId(null);
+      }
+    };
+
   const phaseMessage = () => {
     if (!assigned) {
       return 'You are not assigned to a teacher batch yet.';
@@ -940,7 +977,7 @@ function Attendance() {
     }
   };
 
-  const openAppeal = (
+const openAppeal = (
     type,
     date = todayDate
   ) => {
@@ -1367,556 +1404,7 @@ function Attendance() {
                 </p>
               )}
 
-            {/* IMMERSION SCHEDULE WITH DOCUMENTATION */}
-
-            {!scheduleLoading &&
-              schedules.length >
-                0 && (
-                <div
-                  className={
-                    styles.section
-                  }
-                >
-
-                  <h3
-                    className={
-                      styles.sectionTitle
-                    }
-                  >
-                    My Schedule
-                  </h3>
-
-                  <div
-                    className={
-                      styles.dayList
-                    }
-                  >
-
-                    {scheduleDays.map(
-                      (day) => {
-                        const isToday =
-                          day.date ===
-                          todayDate;
-
-                        const rec =
-                          attendanceMap[
-                            day.date
-                          ] || null;
-
-                        const dayStatus =
-                          getDayStatus(
-                            day,
-                            todayDate,
-                            rec,
-                            open,
-                            timedIn,
-                            timedOut,
-                            canTimeIn,
-                            canTimeOut
-                          );
-
-                        const inTime =
-                          rec
-                            ? formatTimeFromDate(
-                                rec.check_in_time
-                              )
-                            : null;
-
-                        const outTime =
-                          rec
-                            ? formatTimeFromDate(
-                                rec.check_out_time
-                              )
-                            : null;
-
-                        const inWindow =
-                          schedule
-                            ? `${formatTime12(
-                                schedule.time_in
-                                  .open
-                              )} – ${formatTime12(
-                                schedule.time_in
-                                  .close
-                              )}`
-                            : '';
-
-                        const outWindow =
-                          schedule
-                            ? `${formatTime12(
-                                schedule.time_out
-                                  .open
-                              )} – ${formatTime12(
-                                schedule.time_out
-                                  .close
-                              )}`
-                            : '';
-
-                        /*
-                         * FIX:
-                         * Normalize the schedule date
-                         * before looking up the document.
-                         */
-                        const docKey =
-                          normalizeDateKey(
-                            day.date
-                          );
-
-                        const doc =
-                          docMap[
-                            docKey
-                          ] ||
-                          docMap[
-                            String(
-                              day.date
-                            ).slice(
-                              0,
-                              10
-                            )
-                          ] ||
-                          null;
-
-                        const docLabel =
-                          getDocStatusLabel(
-                            doc
-                          );
-
-                        const docClass =
-                          getDocStatusClass(
-                            doc
-                          );
-
-                        console.log(
-                          '[DEBUG DOC] Day:',
-                          {
-                            date:
-                              day.date,
-                            docKey,
-                            found:
-                              !!doc,
-                            docId:
-                              doc?.id,
-                            status:
-                              doc?.status,
-                          }
-                        );
-
-                        const statusLabel =
-                          () => {
-                            switch (
-                              dayStatus
-                            ) {
-                              case 'present':
-                                return 'Present';
-
-                              case 'absent':
-                                return 'Absent';
-
-                              case 'checked_in':
-                                return 'Checked In';
-
-                              case 'can_time_in':
-                                return 'Can Time In';
-
-                              case 'can_time_out':
-                                return 'Can Time Out';
-
-                              case 'open':
-                                return 'Open Today';
-
-                              case 'closed':
-                                return 'Closed Today';
-
-                              case 'scheduled':
-                                return 'Scheduled';
-
-                              default:
-                                return '';
-                            }
-                          };
-
-                        return (
-                          <div
-                            key={
-                              day.key
-                            }
-                            className={`${styles.dayCard} ${
-                              isToday
-                                ? styles.dayToday
-                                : ''
-                            }`}
-                          >
-
-                            <div
-                              className={
-                                styles.dayMain
-                              }
-                            >
-
-                              <span
-                                className={
-                                  styles.dayNumber
-                                }
-                              >
-                                Day{' '}
-                                {
-                                  day.dayNumber
-                                }
-                              </span>
-
-                              <span
-                                className={
-                                  styles.dayDate
-                                }
-                              >
-                                {formatDateLabel(
-                                  day.date
-                                )}
-                              </span>
-
-                              <span
-                                className={
-                                  styles.dayMeta
-                                }
-                              >
-                                {
-                                  day.batchLabel
-                                }{' '}
-                                ·{' '}
-                                {
-                                  day.supervisorName
-                                }
-                              </span>
-
-                              {inWindow && (
-                                <span
-                                  className={
-                                    styles.dayTime
-                                  }
-                                >
-                                  Time In:{' '}
-                                  {
-                                    inWindow
-                                  }
-                                </span>
-                              )}
-
-                              {outWindow && (
-                                <span
-                                  className={
-                                    styles.dayTime
-                                  }
-                                >
-                                  Time Out:{' '}
-                                  {
-                                    outWindow
-                                  }
-                                </span>
-                              )}
-
-                              {inTime && (
-                                <span
-                                  className={
-                                    styles.dayTimeActual
-                                  }
-                                >
-                                  In:{' '}
-                                  {
-                                    inTime
-                                  }
-                                </span>
-                              )}
-
-                              {outTime && (
-                                <span
-                                  className={
-                                    styles.dayTimeActual
-                                  }
-                                >
-                                  Out:{' '}
-                                  {
-                                    outTime
-                                  }
-                                </span>
-                              )}
-
-                              {docLabel && (
-                                <span
-                                  className={`${styles.dayDocStatus} ${docClass}`}
-                                >
-                                  Doc:{' '}
-                                  {
-                                    docLabel
-                                  }
-                                </span>
-                              )}
-
-                            </div>
-
-                            <div
-                              className={
-                                styles.dayActions
-                              }
-                            >
-
-                              <span
-                                className={`${styles.dayStatus} ${
-                                  dayStatus ===
-                                    'present' ||
-                                  dayStatus ===
-                                    'checked_in'
-                                    ? styles.dayOpen
-                                    : dayStatus ===
-                                        'absent'
-                                      ? styles.dayAbsent
-                                      : ''
-                                }`}
-                              >
-                                {statusLabel()}
-                              </span>
-
-                              {isToday &&
-                                dayStatus ===
-                                  'can_time_in' && (
-                                  <button
-                                    className={
-                                      styles.smallPrimaryBtn
-                                    }
-                                    onClick={
-                                      doCheckIn
-                                    }
-                                    disabled={
-                                      busy
-                                    }
-                                  >
-                                    Time In
-                                  </button>
-                                )}
-
-                              {isToday &&
-                                dayStatus ===
-                                  'can_time_out' && (
-                                  <button
-                                    className={
-                                      styles.smallSecondaryBtn
-                                    }
-                                    onClick={
-                                      doCheckOut
-                                    }
-                                    disabled={
-                                      busy
-                                    }
-                                  >
-                                    Time Out
-                                  </button>
-                                )}
-
-                              {/* =================================================
-                                  DOCUMENT BUTTON
-                                  ================================================= */}
-
-                              {(() => {
-                                /*
-                                 * No document found
-                                 */
-                                if (!doc) {
-                                  return (
-                                    <button
-                                      className={
-                                        styles.docBtn
-                                      }
-                                      onClick={() =>
-                                        openDocModal(
-                                          day
-                                        )
-                                      }
-                                    >
-                                      Upload Doc
-                                    </button>
-                                  );
-                                }
-
-                                /*
-                                 * Document exists but is still pending.
-                                 * Allow editing.
-                                 */
-                                if (
-                                  doc.status ===
-                                  'pending'
-                                ) {
-                                  return (
-                                    <button
-                                      className={
-                                        styles.docBtn
-                                      }
-                                      onClick={() =>
-                                        openDocModal(
-                                          day
-                                        )
-                                      }
-                                      title="Edit your documentation"
-                                    >
-                                      Edit Documentation
-                                    </button>
-                                  );
-                                }
-
-                                /*
-                                 * Document has already been submitted/reviewed/graded.
-                                 * Prevent further changes.
-                                 */
-                                const tooltip =
-                                  doc.status ===
-                                  'graded'
-                                    ? `Graded: ${
-                                        doc.teacher_score !=
-                                        null
-                                          ? `${doc.teacher_score}/100`
-                                          : 'Not graded'
-                                      }`
-                                    : doc.status ===
-                                        'reviewed'
-                                      ? 'Reviewed'
-                                      : 'Submitted';
-
-                                return (
-                                  <button
-                                    className={
-                                      styles.docBtn
-                                    }
-                                    disabled
-                                    title={
-                                      tooltip
-                                    }
-                                  >
-                                    Submitted
-                                  </button>
-                                );
-                              })()}
-
-                              {(dayStatus ===
-                                'absent' ||
-                                dayStatus ===
-                                  'closed') && (
-                                <button
-                                  className={
-                                    styles.appealLink
-                                  }
-                                  onClick={() =>
-                                    openAppeal(
-                                      dayStatus ===
-                                        'absent'
-                                        ? 'time_in'
-                                        : 'time_in',
-                                      day.date
-                                    )
-                                  }
-                                >
-                                  Appeal
-                                </button>
-                              )}
-
-                            </div>
-                          </div>
-                        );
-                      }
-                    )}
-
-                  </div>
-
-                  {schedules.map(
-                    (s) => {
-                      const dates =
-                        s.attendance_dates
-                          ? s.attendance_dates.split(
-                              ','
-                            )
-                          : [];
-
-                      return (
-                        <div
-                          key={s.id}
-                          className={
-                            styles.scheduleCard
-                          }
-                        >
-
-                          <div
-                            className={
-                              styles.scheduleHeader
-                            }
-                          >
-
-                            <div>
-                              <strong>
-                                Supervisor:
-                              </strong>{' '}
-                              {s.supervisor_first_name &&
-                              s.supervisor_last_name
-                                ? `${s.supervisor_first_name} ${s.supervisor_last_name}`
-                                : 'Batch'}
-                            </div>
-
-                            <div>
-                              <strong>
-                                Duration:
-                              </strong>{' '}
-                              {
-                                s.duration_value
-                              }{' '}
-                              {
-                                s.duration_type
-                              }{' '}
-                              (
-                              {
-                                dates.length
-                              }{' '}
-                              days)
-                            </div>
-
-                            <div>
-                              <strong>
-                                Start:
-                              </strong>{' '}
-                              {
-                                s.start_date
-                              }{' '}
-                              →{' '}
-                              <strong>
-                                End:
-                              </strong>{' '}
-                              {
-                                s.end_date
-                              }
-                            </div>
-
-                          </div>
-
-                          <div
-                            className={
-                              styles.dateChips
-                            }
-                          >
-                            {dates.map(
-                              (d) => (
-                                <span
-                                  key={d}
-                                  className={
-                                    styles.dateChip
-                                  }
-                                >
-                                  {d}
-                                </span>
-                              )
-                            )}
-                          </div>
-
-                        </div>
-                      );
-                    }
-                  )}
-
-                </div>
-              )}
+            {/* Daily Documentation now lives in its own sidebar page. */}
 
             {/* TIME IN */}
 
@@ -1999,15 +1487,7 @@ function Attendance() {
                     className={
                       styles.appealLink
                     }
-                    onClick={() => {
-                      setAppealType(
-                        'time_in'
-                      );
-
-                      setShowAppealForm(
-                        true
-                      );
-                    }}
+                    onClick={() => openAppeal('time_in', todayDate)}
                   >
                     Submit an appeal
                   </button>
@@ -2097,15 +1577,7 @@ function Attendance() {
                     className={
                       styles.appealLink
                     }
-                    onClick={() => {
-                      setAppealType(
-                        'time_out'
-                      );
-
-                      setShowAppealForm(
-                        true
-                      );
-                    }}
+                    onClick={() => openAppeal('time_out', todayDate)}
                   >
                     Submit an appeal
                   </button>
@@ -2122,151 +1594,244 @@ function Attendance() {
 
             </div>
 
-            {/* APPEAL FORM */}
+            {/* SCHEDULE — Day 1, Day 2, ... with per-day actions */}
+
+            {!scheduleLoading &&
+              scheduleDays.length > 0 && (
+                <div className={styles.section}>
+                  <h3 className={styles.sectionTitle}>
+                    My Schedule ({scheduleDays.length} day{scheduleDays.length !== 1 ? 's' : ''})
+                  </h3>
+
+                  <div className={styles.dayList}>
+                    {scheduleDays.map((day) => {
+                      const dayKey = normalizeDateKey(day.date);
+                      const rec = attendanceMap[dayKey] || null;
+                      const dayStatus = getDayStatus(
+                        day,
+                        todayDate,
+                        rec,
+                        open,
+                        timedIn,
+                        timedOut,
+                        canTimeIn,
+                        canTimeOut
+                      );
+                      const isToday = day.date === todayDate;
+                      const inWindow = schedule
+                        ? `${formatTime12(schedule.time_in.open)} – ${formatTime12(schedule.time_in.close)}`
+                        : '';
+                      const outWindow = schedule
+                        ? `${formatTime12(schedule.time_out.open)} – ${formatTime12(schedule.time_out.close)}`
+                        : '';
+                      const inTime = rec
+                        ? formatTimeFromDate(rec.check_in_time)
+                        : null;
+                      const outTime = rec
+                        ? formatTimeFromDate(rec.check_out_time)
+                        : null;
+
+                      const statusLabel = (() => {
+                        switch (dayStatus) {
+                          case 'present':
+                            return 'Present';
+                          case 'absent':
+                            return 'Absent';
+                          case 'checked_in':
+                            return 'Checked In';
+                          case 'can_time_in':
+                            return 'Can Time In';
+                          case 'can_time_out':
+                            return 'Can Time Out';
+                          case 'open':
+                            return 'Open Today';
+                          case 'closed':
+                            return 'Closed';
+                          case 'scheduled':
+                            return 'Scheduled';
+                          default:
+                            return '';
+                        }
+                      })();
+
+                      return (
+                        <div
+                          key={day.key}
+                          className={`${styles.dayCard} ${isToday ? styles.dayToday : ''}`}
+                        >
+                          <div className={styles.dayMain}>
+                            <span className={styles.dayNumber}>
+                              Day {day.dayNumber}
+                            </span>
+                            <span className={styles.dayDate}>
+                              {formatDateLabel(day.date)}
+                            </span>
+                            <span className={styles.dayMeta}>
+                              {day.batchLabel} · {day.supervisorName}
+                            </span>
+
+                            {inWindow && (
+                              <span className={styles.dayTime}>
+                                Time In: {inWindow}
+                              </span>
+                            )}
+                            {outWindow && (
+                              <span className={styles.dayTime}>
+                                Time Out: {outWindow}
+                              </span>
+                            )}
+                            {inTime && (
+                              <span className={styles.dayTimeActual}>
+                                In: {inTime}
+                              </span>
+                            )}
+                            {outTime && (
+                              <span className={styles.dayTimeActual}>
+                                Out: {outTime}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className={styles.dayActions}>
+                            <span
+                              className={`${styles.dayStatus} ${
+                                dayStatus === 'present' || dayStatus === 'checked_in'
+                                  ? styles.dayOpen
+                                  : dayStatus === 'absent'
+                                    ? styles.dayAbsent
+                                    : ''
+                              }`}
+                            >
+                              {statusLabel}
+                            </span>
+
+                            {isToday && dayStatus === 'can_time_in' && (
+                              <button
+                                className={styles.smallPrimaryBtn}
+                                onClick={doCheckIn}
+                                disabled={busy}
+                              >
+                                Time In
+                              </button>
+                            )}
+
+                            {isToday && dayStatus === 'can_time_out' && (
+                              <button
+                                className={styles.smallSecondaryBtn}
+                                onClick={doCheckOut}
+                                disabled={busy}
+                              >
+                                Time Out
+                              </button>
+                            )}
+
+                            {(dayStatus === 'absent' || (dayStatus === 'closed' && isToday)) && (
+                              <button
+                                className={styles.appealLink}
+                                onClick={() => openAppeal('time_in', day.date)}
+                              >
+                                Appeal
+                              </button>
+                            )}
+
+                            {dayStatus === 'present' && !isToday && (
+                              <span className={styles.dayTimeActual}>✓ Completed</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+            {/* APPEAL MODAL */}
 
             {showAppealForm && (
               <div
-                className={
-                  styles.appealSection
-                }
+                className={styles.modalBackdrop}
+                onClick={() => {
+                  if (!appealSubmitting) setShowAppealForm(false);
+                }}
               >
-
-                <h3
-                  className={
-                    styles.sectionTitle
-                  }
+                <div
+                  className={styles.modalContent}
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  Submit Appeal
-                </h3>
-
-                <form
-                  className={
-                    styles.appealForm
-                  }
-                  onSubmit={
-                    submitAppealForm
-                  }
-                >
-
-                  {appealDate && (
-                    <div
-                      className={
-                        styles.appealDate
-                      }
-                    >
-                      Appeal for{' '}
-                      {formatDateLabel(
-                        appealDate
-                      )}
-                    </div>
-                  )}
-
-                  <label
-                    className={
-                      styles.field
-                    }
-                  >
-                    Type
-
-                    <select
-                      value={
-                        appealType
-                      }
-                      onChange={(e) =>
-                        setAppealType(
-                          e.target.value
-                        )
-                      }
-                    >
-                      <option value="time_in">
-                        Time In
-                      </option>
-
-                      <option value="time_out">
-                        Time Out
-                      </option>
-                    </select>
-                  </label>
-
-                  <label
-                    className={
-                      styles.field
-                    }
-                  >
-                    Reason for missing attendance
-
-                    <textarea
-                      value={
-                        appealExcuse
-                      }
-                      onChange={(e) =>
-                        setAppealExcuse(
-                          e.target.value
-                        )
-                      }
-                      rows={3}
-                      placeholder="Explain why you missed the window…"
-                    />
-                  </label>
-
-                  <label
-                    className={
-                      styles.field
-                    }
-                  >
-                    Attachment (image / PDF, optional)
-
-                    <input
-                      type="file"
-                      accept="image/*,application/pdf"
-                      onChange={(e) =>
-                        setAppealFile(
-                          e.target
-                            .files[0]
-                        )
-                      }
-                    />
-                  </label>
-
-                  <div
-                    className={
-                      styles.appealActions
-                    }
-                  >
-
-                    <button
-                      type="submit"
-                      className={
-                        styles.primaryBtn
-                      }
-                      disabled={
-                        appealSubmitting
-                      }
-                    >
-                      {appealSubmitting
-                        ? 'Submitting…'
-                        : 'Submit Appeal'}
-                    </button>
-
+                  <div className={styles.modalHeader}>
+                    <h3>Submit Appeal</h3>
                     <button
                       type="button"
-                      className={
-                        styles.cancelBtn
-                      }
-                      onClick={() =>
-                        setShowAppealForm(
-                          false
-                        )
-                      }
+                      className={styles.modalClose}
+                      onClick={() => setShowAppealForm(false)}
+                      disabled={appealSubmitting}
                     >
-                      Cancel
+                      ×
                     </button>
-
                   </div>
 
-                </form>
+                  <form
+                    className={styles.modalBody}
+                    onSubmit={submitAppealForm}
+                  >
+                    {appealDate && (
+                      <div className={styles.appealDate}>
+                        Appeal for {formatDateLabel(appealDate)}
+                      </div>
+                    )}
+
+                    <label className={styles.field}>
+                      Type
+                      <select
+                        value={appealType}
+                        onChange={(e) => setAppealType(e.target.value)}
+                      >
+                        <option value="time_in">Time In</option>
+                        <option value="time_out">Time Out</option>
+                      </select>
+                    </label>
+
+                    <label className={styles.field}>
+                      Reason for missing attendance
+                      <textarea
+                        value={appealExcuse}
+                        onChange={(e) => setAppealExcuse(e.target.value)}
+                        rows={3}
+                        placeholder="Explain why you missed the window…"
+                      />
+                    </label>
+
+                    <label className={styles.field}>
+                      Attachment (image / PDF, optional)
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        onChange={(e) => setAppealFile(e.target.files[0])}
+                      />
+                    </label>
+
+                    <div className={styles.appealActions}>
+                      <button
+                        type="submit"
+                        className={styles.primaryBtn}
+                        disabled={appealSubmitting}
+                      >
+                        {appealSubmitting ? 'Submitting…' : 'Submit Appeal'}
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.cancelBtn}
+                        onClick={() => setShowAppealForm(false)}
+                        disabled={appealSubmitting}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             )}
+
 
             {/* EXISTING APPEALS */}
 
@@ -2332,12 +1897,7 @@ function Attendance() {
                           >
                             For{' '}
                             {formatDateLabel(
-                              String(
-                                a.appeal_date
-                              ).slice(
-                                0,
-                                10
-                              )
+                              normalizeDateKey(a.appeal_date)
                             )}
                           </p>
                         )}
@@ -2378,6 +1938,20 @@ function Attendance() {
                           </p>
                         )}
 
+                        {a.status === 'pending' && (
+                          <button
+                            type="button"
+                            className={styles.appealLink}
+                            style={{ color: '#dc2626' }}
+                            onClick={() => handleDeleteAppeal(a.id)}
+                            disabled={deletingAppealId === a.id}
+                          >
+                            {deletingAppealId === a.id
+                              ? 'Deleting…'
+                              : 'Delete Appeal'}
+                          </button>
+                        )}
+
                       </li>
                     )
                   )}
@@ -2400,398 +1974,6 @@ function Attendance() {
             </p>
           )}
 
-        {/* =========================================================
-            DOCUMENTATION UPLOAD MODAL
-            ========================================================= */}
-
-        {showDocModal &&
-          docDay && (
-            <div
-              className={
-                styles.docModal
-              }
-              onClick={
-                closeDocModal
-              }
-            >
-
-              <div
-                className={
-                  styles.docModalContent
-                }
-                onClick={(e) =>
-                  e.stopPropagation()
-                }
-              >
-
-                <div
-                  className={
-                    styles.docModalHeader
-                  }
-                >
-
-                  <h3>
-                    Day{' '}
-                    {
-                      docDay.dayNumber
-                    }{' '}
-                    Documentation —{' '}
-                    {formatDateLabel(
-                      docDay.date
-                    )}
-                  </h3>
-
-                  <button
-                    className={
-                      styles.closeBtn
-                    }
-                    onClick={
-                      closeDocModal
-                    }
-                  >
-                    ×
-                  </button>
-
-                </div>
-
-                <div
-                  className={
-                    styles.docModalBody
-                  }
-                >
-
-                  {(() => {
-                    /*
-                     * FIX:
-                     * Find the existing document using
-                     * the same normalized key used by
-                     * the schedule list.
-                     */
-                    const docKey =
-                      normalizeDateKey(
-                        docDay.date
-                      );
-
-                    const existingDoc =
-                      docMap[
-                        docKey
-                      ] ||
-                      docMap[
-                        String(
-                          docDay.date
-                        ).slice(
-                          0,
-                          10
-                        )
-                      ] ||
-                      null;
-
-                    if (
-                      existingDoc &&
-                      existingDoc.status !==
-                        'pending'
-                    ) {
-                      const statusText =
-                        existingDoc.status ===
-                        'graded'
-                          ? 'graded'
-                          : existingDoc.status ===
-                              'reviewed'
-                            ? 'reviewed'
-                            : 'submitted';
-
-                      return (
-                        <div
-                          className={
-                            styles.docGradedView
-                          }
-                        >
-
-                          <p>
-                            This document has been{' '}
-                            {
-                              statusText
-                            }{' '}
-                            and can no longer be modified.
-                          </p>
-
-                          {existingDoc.status ===
-                            'graded' && (
-                            <p>
-                              <strong>
-                                Score:
-                              </strong>{' '}
-                              {existingDoc.teacher_score !=
-                              null
-                                ? `${existingDoc.teacher_score}/100`
-                                : 'Not graded'}
-                            </p>
-                          )}
-
-                          {(existingDoc.status ===
-                            'graded' ||
-                            existingDoc.status ===
-                              'reviewed') &&
-                            existingDoc.teacher_feedback && (
-                              <p>
-                                <strong>
-                                  Feedback:
-                                </strong>{' '}
-                                {
-                                  existingDoc.teacher_feedback
-                                }
-                              </p>
-                            )}
-
-                          {existingDoc.original_name && (
-                            <p>
-                              <strong>
-                                File:
-                              </strong>{' '}
-                              {
-                                existingDoc.original_name
-                              }
-                            </p>
-                          )}
-
-                          {existingDoc.reasoning && (
-                            <p>
-                              <strong>
-                                Reasoning:
-                              </strong>{' '}
-                              {
-                                existingDoc.reasoning
-                              }
-                            </p>
-                          )}
-
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <form
-                        onSubmit={
-                          handleSubmitDoc
-                        }
-                        className={
-                          styles.docUploadForm
-                        }
-                      >
-
-                        <h4>
-                          {editingDocId
-                            ? 'Edit Documentation'
-                            : 'Submit Documentation'}
-                        </h4>
-
-                        {existingDoc && (
-                          <div
-                            className={
-                              styles.existingDoc
-                            }
-                          >
-
-                            <strong>
-                              Current Submission:
-                            </strong>{' '}
-                            {
-                              existingDoc.status ||
-                              'submitted'
-                            }
-
-                            {existingDoc.teacher_score !=
-                              null && (
-                              <span>
-                                {' '}
-                                — Score:{' '}
-                                {
-                                  existingDoc.teacher_score
-                                }
-                                /100
-                              </span>
-                            )}
-
-                            {existingDoc.teacher_feedback && (
-                              <p>
-                                Feedback:{' '}
-                                {
-                                  existingDoc.teacher_feedback
-                                }
-                              </p>
-                            )}
-
-                          </div>
-                        )}
-
-                        {uploadedFile &&
-                          !docFile && (
-                            <div
-                              className={
-                                styles.uploadedFileInfo
-                              }
-                            >
-
-                              <span>
-                                ✓ Uploaded:{' '}
-                                {
-                                  uploadedFile.original_name ||
-                                  'File'
-                                }{' '}
-                                (
-                                {formatSize(
-                                  uploadedFile.file_size
-                                )}
-                                )
-                              </span>
-
-                              {uploadedFile.cloudinary_url && (
-                                <a
-                                  href={
-                                    uploadedFile.cloudinary_url
-                                  }
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className={
-                                    styles.fileLink
-                                  }
-                                >
-                                  View File
-                                </a>
-                              )}
-
-                            </div>
-                          )}
-
-                        {docFile &&
-                          !uploadedFile && (
-                            <p
-                              className={
-                                styles.fileMeta
-                              }
-                            >
-                              Selected:{' '}
-                              {
-                                docFile.name
-                              }{' '}
-                              (
-                              {formatSize(
-                                docFile.size
-                              )}
-                              ) — will upload on submit
-                            </p>
-                          )}
-
-                        {docFile &&
-                          uploadedFile && (
-                            <p
-                              className={
-                                styles.fileMeta
-                              }
-                            >
-                              Replacing:{' '}
-                              {
-                                docFile.name
-                              }{' '}
-                              (
-                              {formatSize(
-                                docFile.size
-                              )}
-                              ) — will upload on submit
-                            </p>
-                          )}
-
-                        <label
-                          className={
-                            styles.field
-                          }
-                        >
-                          {editingDocId
-                            ? 'Replace File (optional)'
-                            : 'File (image / PDF)'}
-
-                          <input
-                            type="file"
-                            accept="image/*,application/pdf"
-                            onChange={(e) =>
-                              setDocFile(
-                                e.target
-                                  .files[0] ||
-                                  null
-                              )
-                            }
-                          />
-                        </label>
-
-                        <label
-                          className={
-                            styles.field
-                          }
-                        >
-                          Reasoning / Reflection
-
-                          <textarea
-                            value={
-                              docReasoning
-                            }
-                            onChange={(e) =>
-                              setDocReasoning(
-                                e.target
-                                  .value
-                              )
-                            }
-                            rows={5}
-                            placeholder="Describe what you did today, what you learned, and how it relates to your work immersion..."
-                            required
-                          />
-                        </label>
-
-                        <div
-                          className={
-                            styles.docActions
-                          }
-                        >
-
-                          <button
-                            type="submit"
-                            className={
-                              styles.primaryBtn
-                            }
-                            disabled={
-                              docSubmitting
-                            }
-                          >
-                            {docSubmitting
-                              ? docFile
-                                ? 'Uploading & Submitting...'
-                                : 'Submitting...'
-                              : editingDocId
-                                ? 'Save Changes'
-                                : 'Submit Documentation'}
-                          </button>
-
-                          <button
-                            type="button"
-                            className={
-                              styles.cancelBtn
-                            }
-                            onClick={
-                              closeDocModal
-                            }
-                          >
-                            Cancel
-                          </button>
-
-                        </div>
-
-                      </form>
-                    );
-                  })()}
-
-                </div>
-              </div>
-            </div>
-          )}
 
       </div>
     </div>
