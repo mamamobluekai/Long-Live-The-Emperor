@@ -8,7 +8,6 @@ import PlacementStatus from './PlacementStatus';
 import Announcements from './Announcements';
 import Attendance from './Attendance';
 import DailyDocumentation from './DailyDocumentation';
-import DocumentationProgress from './DocumentationProgress';
 import Progress from './Progress';
 import StudentEvaluation from './StudentEvaluation';
 import BatchChat from '../../../components/social/BatchChat';
@@ -30,7 +29,6 @@ function StudentDashboard({ user, onLogout }) {
         <Route path="announcements" element={<Announcements />} />
         <Route path="attendance" element={<Attendance />} />
         <Route path="daily-documentation" element={<DailyDocumentation />} />
-        <Route path="documentation-progress" element={<DocumentationProgress />} />
         <Route path="group-chat" element={<BatchChat user={user} />} />
         <Route path="profile" element={<UserProfileSettings />} />
         <Route path="*" element={<Navigate to="overview" replace />} />

@@ -1,5 +1,6 @@
 // Teacher-facing attendance management: records, statistics, and appeals.
 const pool = require('../../db/');
+const { createNotification, getStudentUserId } = require('../../services/notification.service');
 
 const TZ = 'Asia/Manila';
 
@@ -226,6 +227,21 @@ const reviewAppeal = async (req, res) => {
         await tryUpsert(fallback);
       }
     }
+
+    const studentUserId = await getStudentUserId(row.student_id);
+    void createNotification({
+      userId: studentUserId,
+      title: `Attendance appeal ${status}`,
+      message: `Your ${row.attendance_type.replace('_', ' ')} attendance appeal was ${status}.`,
+      type: 'appeal',
+      category: 'attendance',
+      priority: 'high',
+      actionUrl: '/dashboard/student/attendance',
+      relatedUserId: req.user.id,
+      entityType: 'attendance_appeal',
+      entityId: Number(appealId),
+      eventKey: `attendance-appeal:${appealId}:${status}`,
+    }).catch((notificationError) => console.error('Appeal decision notification failed:', notificationError.message));
 
     res.json({ appeal: formatAppealDates(updated.rows[0]), message: `Appeal ${status}.` });
   } catch (err) {

@@ -3,8 +3,6 @@ import { useAuth } from '../../../context/AuthContext';
 import { useTeacherBatch } from '../../../hooks/useTeacherBatch';
 import {
   getTeacherBatchStatus,
-  openBatchAttendance,
-  closeBatchAttendance,
   getBatchConfig,
   updateBatchConfig,
   getBatchRecords,
@@ -61,6 +59,11 @@ function normalizeDateInput(value) {
   return toLocalDateString(d);
 }
 
+function normalizeTimeInput(value) {
+  if (!value) return '';
+  return String(value).slice(0, 5);
+}
+
 function TeacherAttendance() {
   const { token } = useAuth();
   const { batchId: selectedBatchId, batchLabel } = useTeacherBatch();
@@ -79,6 +82,7 @@ function TeacherAttendance() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
+  const [editingHours, setEditingHours] = useState(false);
 
   // Location modal state
   const [locationModal, setLocationModal] = useState(null);
@@ -105,7 +109,13 @@ function TeacherAttendance() {
       ]);
 
       setStatus(s);
-      setConfig(c);
+      setConfig({
+        ...c,
+        time_in_open: normalizeTimeInput(c.time_in_open),
+        time_in_close: normalizeTimeInput(c.time_in_close),
+        time_out_open: normalizeTimeInput(c.time_out_open),
+        time_out_close: normalizeTimeInput(c.time_out_close),
+      });
       setRecords(r.records || []);
       setStats(st);
       setGroups(g.groups || []);
@@ -140,36 +150,6 @@ function TeacherAttendance() {
 
     return () => clearInterval(id);
   }, [selectedBatchId, date, token]);
-
-  const handleToggle = async () => {
-    setBusy(true);
-
-    try {
-      if (status?.manual_open) {
-        await closeBatchAttendance(selectedBatchId, token);
-      } else {
-        await openBatchAttendance(selectedBatchId, token);
-      }
-
-      const s = await getTeacherBatchStatus(
-        selectedBatchId,
-        token
-      );
-
-      setStatus(s);
-
-      flash(
-        'info',
-        s.manual_open
-          ? 'Attendance manually opened.'
-          : 'Manual override turned off.'
-      );
-    } catch {
-      flash('error', 'Could not update attendance state.');
-    } finally {
-      setBusy(false);
-    }
-  };
 
   const showLocationModal = (record, type) => {
     const lat =
@@ -239,9 +219,22 @@ function TeacherAttendance() {
         token
       );
 
-      setConfig(c);
+      setConfig({
+        ...c,
+        time_in_open: normalizeTimeInput(c.time_in_open),
+        time_in_close: normalizeTimeInput(c.time_in_close),
+        time_out_open: normalizeTimeInput(c.time_out_open),
+        time_out_close: normalizeTimeInput(c.time_out_close),
+      });
+
+      const s = await getTeacherBatchStatus(
+        selectedBatchId,
+        token
+      );
+      setStatus(s);
 
       flash('success', 'Schedule updated.');
+      setEditingHours(false);
     } catch {
       flash('error', 'Failed to update schedule.');
     } finally {
@@ -318,18 +311,6 @@ function TeacherAttendance() {
 
     return dates;
   }
-
-  const today = toLocalDateString(new Date());
-
-  const isTodayInSchedule = groups.some((g) => {
-    const s = g.schedule;
-
-    if (!s || !s.start_date) return false;
-
-    const dates = computeDates(s.start_date);
-
-    return dates.includes(today);
-  });
 
   return (
     <div className={styles.page}>
@@ -422,21 +403,39 @@ function TeacherAttendance() {
           {config && (
             <div className={styles.panel}>
 
-              <h3 className={styles.panelTitle}>
-                Attendance Schedule ({config.timezone})
-              </h3>
+              <div className={styles.panelHeader}>
+                <div className={styles.scheduleHeading}>
+                  <h3 className={styles.panelTitle}>
+                    Attendance Schedule ({config.timezone})
+                  </h3>
+                  <p className={styles.scheduleSummary}>
+                    Time In: {normalizeTimeInput(config.time_in_open)} - {normalizeTimeInput(config.time_in_close)}
+                    {' | '}
+                    Time Out: {normalizeTimeInput(config.time_out_open)} - {normalizeTimeInput(config.time_out_close)}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className={styles.editHoursButton}
+                  onClick={() => setEditingHours((value) => !value)}
+                  disabled={busy}
+                >
+                  {editingHours ? 'Hide Hour Editor' : 'Edit Attendance Hours'}
+                </button>
+              </div>
 
-              <form
-                className={styles.configForm}
-                onSubmit={saveConfig}
-              >
+              {editingHours && (
+                <form
+                  className={styles.configForm}
+                  onSubmit={saveConfig}
+                >
 
                 <label className={styles.cfgField}>
                   Time In Open
 
                   <input
                     type="time"
-                    value={config.time_in_open}
+                    value={normalizeTimeInput(config.time_in_open)}
                     onChange={(e) =>
                       onConfigChange(
                         'time_in_open',
@@ -451,7 +450,7 @@ function TeacherAttendance() {
 
                   <input
                     type="time"
-                    value={config.time_in_close}
+                    value={normalizeTimeInput(config.time_in_close)}
                     onChange={(e) =>
                       onConfigChange(
                         'time_in_close',
@@ -466,7 +465,7 @@ function TeacherAttendance() {
 
                   <input
                     type="time"
-                    value={config.time_out_open}
+                    value={normalizeTimeInput(config.time_out_open)}
                     onChange={(e) =>
                       onConfigChange(
                         'time_out_open',
@@ -481,7 +480,7 @@ function TeacherAttendance() {
 
                   <input
                     type="time"
-                    value={config.time_out_close}
+                    value={normalizeTimeInput(config.time_out_close)}
                     onChange={(e) =>
                       onConfigChange(
                         'time_out_close',
@@ -491,15 +490,16 @@ function TeacherAttendance() {
                   />
                 </label>
 
-                <button
-                  type="submit"
-                  className={styles.saveBtn}
-                  disabled={busy}
-                >
-                  Save Schedule
-                </button>
+                  <button
+                    type="submit"
+                    className={styles.saveBtn}
+                    disabled={busy}
+                  >
+                    Save Schedule
+                  </button>
 
-              </form>
+                </form>
+              )}
             </div>
           )}
 
@@ -748,35 +748,6 @@ function TeacherAttendance() {
                         ? 'Time Out window active'
                         : 'No active window'}
                     </span>
-
-                    {!isTodayInSchedule && (
-                      <span
-                        className={styles.stateMeta}
-                        style={{
-                          color: '#dc2626',
-                          fontWeight: 600,
-                        }}
-                      >
-                        Today is not a scheduled
-                        immersion date — manual
-                        override is still available.
-                      </span>
-                    )}
-
-                    <button
-                      type="button"
-                      className={
-                        status?.manual_open
-                          ? styles.closeBtn
-                          : styles.openBtn
-                      }
-                      onClick={handleToggle}
-                      disabled={busy}
-                    >
-                      {status?.manual_open
-                        ? 'Close Attendance'
-                        : 'Open Attendance'}
-                    </button>
 
                   </div>
 

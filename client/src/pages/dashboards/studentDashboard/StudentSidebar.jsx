@@ -65,12 +65,6 @@ const links = [
   },
 
   {
-    to: '/dashboard/student/documentation-progress',
-    label: 'Documentation Progress',
-    icon: TrendingUp,
-  },
-
-  {
     to: '/dashboard/student/group-chat',
     label: 'Group Chat',
     icon: MessageCircle,

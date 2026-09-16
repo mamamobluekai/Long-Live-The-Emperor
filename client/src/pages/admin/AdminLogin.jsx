@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../context/AdminAuthContext';
+import { getErrorMessage } from '../../utils/errors';
 import styles from './AdminLogin.module.css';
 
 export default function AdminLogin() {
@@ -30,7 +31,7 @@ export default function AdminLogin() {
         navigate(`/dashboard/${role}`, { replace: true });
       }
     } catch (err) {
-      setError(err.message || 'Unable to complete login.');
+      setError(getErrorMessage(err.message));
     } finally {
       setLoading(false);
     }
@@ -47,15 +48,6 @@ export default function AdminLogin() {
           <h1 className={styles.title}>Admin Login</h1>
           <p className={styles.subtitle}>Sign in to access the administration dashboard.</p>
         </div>
-
-        {error ? (
-          <div className={styles.errorBox} role="alert">
-            <svg className={styles.errorIcon} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9a1 1 0 112 0v3a1 1 0 11-2 0V9zm1-4a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd" />
-            </svg>
-            {error}
-          </div>
-        ) : null}
 
         <form onSubmit={handleSubmit} noValidate className={styles.form}>
           <div className={styles.field}>

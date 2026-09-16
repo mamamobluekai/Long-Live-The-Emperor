@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthForm } from '../../hooks/useAuthForm';
 import '../../pages/LoginAndRegister/LoginAndFRegister.css';
-import { Mail, Lock, User, Phone, IdCard } from 'lucide-react';
+import { Mail, Lock, User, Phone, IdCard, AlertCircle } from 'lucide-react';
 
 
 function AuthForm({ onAuthSuccess }) {
@@ -17,7 +17,6 @@ function AuthForm({ onAuthSuccess }) {
     handleChange,
     loading,
     message,
-    error,
     handleSubmit,
     loginSuccess,
   } = useAuthForm((data) => {
@@ -135,17 +134,9 @@ function AuthForm({ onAuthSuccess }) {
               MESSAGE
           ================================= */}
           {message ? (
-            <div className="message">
-              {message}
-            </div>
-          ) : null}
-
-          {/* =================================
-              ERROR
-          ================================= */}
-          {error ? (
-            <div className="error">
-              {error}
+            <div className="alert alert-success" role="alert">
+              <AlertCircle className="alert-icon" size={16} />
+              <span className="alert-text">{message}</span>
             </div>
           ) : null}
 

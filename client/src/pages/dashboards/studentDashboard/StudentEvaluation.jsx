@@ -83,12 +83,32 @@ function StudentEvaluation() {
 
   const categoryScores = evaluation.category_scores || {};
   const overallPercentage = evaluation.overall_percentage || (evaluation.overall_score ? Math.round((evaluation.overall_score / 5) * 10000) / 100 : 0);
+  const safeOverallPercentage = Math.min(100, Math.max(0, Number(overallPercentage) || 0));
 
-  const gradeLabel = overallPercentage >= 90 ? 'Outstanding' :
-                     overallPercentage >= 80 ? 'Very Satisfactory' :
-                     overallPercentage >= 75 ? 'Satisfactory' :
-                     overallPercentage >= 70 ? 'Fair' :
-                     overallPercentage >= 0 ? 'Needs Improvement' : 'N/A';
+  const gradeLabel = safeOverallPercentage >= 90 ? 'Outstanding' :
+                     safeOverallPercentage >= 80 ? 'Very Satisfactory' :
+                     safeOverallPercentage >= 75 ? 'Satisfactory' :
+                     safeOverallPercentage >= 70 ? 'Fair' :
+                     safeOverallPercentage >= 0 ? 'Needs Improvement' : 'N/A';
+
+  const getProgressColor = (value) => {
+    if (value >= 90) return '#22c55e';
+    if (value >= 80) return '#3b82f6';
+    if (value >= 70) return '#f59e0b';
+    return '#ef4444';
+  };
+
+  const categoryEntries = criteria.map((cat) => {
+    const catData = categoryScores[String(cat.id)] || {};
+    const categoryPercentage = Number(catData.category_percentage || 0);
+    return {
+      id: cat.id,
+      name: cat.category_name,
+      percentage: Math.min(100, Math.max(0, categoryPercentage)),
+    };
+  });
+
+  const strongCategories = categoryEntries.filter((item) => item.percentage >= 80).length;
 
   return (
     <div>
@@ -100,6 +120,84 @@ function StudentEvaluation() {
       {error && <div className={styles.error}>{error}</div>}
 
       <div className={styles.section}>
+        <div className={styles.summaryCard}>
+          <div
+            className={styles.overallProgressRing}
+            style={{
+              background: `conic-gradient(${getProgressColor(safeOverallPercentage)} ${safeOverallPercentage * 3.6}deg, #e2e8f0 0deg)`,
+            }}
+          >
+            <div className={styles.overallProgressInner}>
+              <span>{safeOverallPercentage}%</span>
+            </div>
+          </div>
+
+          <div className={styles.summaryStatusWrap}>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Overall Rating</span>
+              <span className={styles.summaryValue}>{safeOverallPercentage}%</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Grade</span>
+              <span className={styles.summaryValue}>{gradeLabel}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Date Evaluated</span>
+              <span className={styles.summaryValue}>
+                {evaluation.created_at
+                  ? new Date(evaluation.created_at).toLocaleDateString()
+                  : 'N/A'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.section}>
+        <h3 className={styles.sectionTitle}>Performance Overview</h3>
+        <div className={styles.performanceGrid}>
+          <div className={styles.performanceCard}>
+            <span className={styles.performanceLabel}>Strong areas</span>
+            <strong className={styles.performanceValue}>{strongCategories}</strong>
+            <small className={styles.performanceNote}>categories at 80% or higher</small>
+          </div>
+          <div className={styles.performanceCard}>
+            <span className={styles.performanceLabel}>Categories</span>
+            <strong className={styles.performanceValue}>{categoryEntries.length}</strong>
+            <small className={styles.performanceNote}>evaluation categories</small>
+          </div>
+          <div className={styles.performanceCard}>
+            <span className={styles.performanceLabel}>Rating</span>
+            <strong className={styles.performanceValue}>{gradeLabel}</strong>
+            <small className={styles.performanceNote}>current performance level</small>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.section}>
+        <h3 className={styles.sectionTitle}>Category Progress</h3>
+        <div className={styles.categoryChartList}>
+          {categoryEntries.map((category) => (
+            <div key={category.id} className={styles.categoryChartRow}>
+              <div className={styles.categoryChartHeader}>
+                <span>{category.name}</span>
+                <strong>{category.percentage}%</strong>
+              </div>
+              <div className={styles.categoryChartTrack}>
+                <div
+                  className={styles.categoryChartFill}
+                  style={{
+                    width: `${category.percentage}%`,
+                    background: getProgressColor(category.percentage),
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className={styles.section}>
         <h3 className={styles.sectionTitle}>Rating Scale</h3>
         <div className={styles.ratingScaleGrid}>
           {RATING_SCALE.map((r) => (
@@ -109,27 +207,6 @@ function StudentEvaluation() {
               <span className={styles.ratingScaleDesc}>{r.desc}</span>
             </div>
           ))}
-        </div>
-      </div>
-
-      <div className={styles.section}>
-        <div className={styles.summaryCard}>
-          <div className={styles.summaryItem}>
-            <span className={styles.summaryLabel}>Overall Rating</span>
-            <span className={styles.summaryValue}>{overallPercentage}%</span>
-          </div>
-          <div className={styles.summaryItem}>
-            <span className={styles.summaryLabel}>Grade</span>
-            <span className={styles.summaryValue}>{gradeLabel}</span>
-          </div>
-          <div className={styles.summaryItem}>
-            <span className={styles.summaryLabel}>Date Evaluated</span>
-            <span className={styles.summaryValue}>
-              {evaluation.created_at 
-                ? new Date(evaluation.created_at).toLocaleDateString()
-                : 'N/A'}
-            </span>
-          </div>
         </div>
       </div>
 

@@ -1,15 +1,18 @@
+import { mapErrorResponse } from '../utils/errors';
+
 async function fetchJsonOrThrow(url, options) {
   try {
     const response = await fetch(url, options);
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(data.error || data.message || 'Request failed.');
+      const { message } = mapErrorResponse(data);
+      throw new Error(message);
     }
     return data;
   } catch (err) {
-    const msg = err?.message ? err.message : String(err);
-    throw new Error(`Network/CORS error calling ${url}: ${msg}`, { cause: err });
+    const { message } = mapErrorResponse({ error: err.message });
+    throw new Error(message);
   }
 }
 
@@ -90,7 +93,10 @@ export async function uploadAdminProfilePicture(file) {
     headers: authHeaders(),
     body: formData,
   }).then((res) => res.json().then((data) => {
-    if (!res.ok) throw new Error(data.error || data.message || 'Upload failed');
+    if (!res.ok) {
+      const { message } = mapErrorResponse(data);
+      throw new Error(message);
+    }
     return data;
   }));
 }
@@ -161,7 +167,10 @@ export async function uploadLogo(file) {
     headers: authHeaders(),
     body: formData,
   }).then((res) => res.json().then((data) => {
-    if (!res.ok) throw new Error(data.error || data.message || 'Logo upload failed');
+    if (!res.ok) {
+      const { message } = mapErrorResponse(data);
+      throw new Error(message);
+    }
     return data;
   }));
 }
@@ -220,7 +229,10 @@ export async function uploadTeachersExcel(file) {
     headers: authHeaders(),
     body: formData,
   }).then(res => res.json().then(data => {
-    if (!res.ok) throw new Error(data.error || data.message || 'Upload failed');
+    if (!res.ok) {
+      const { message } = mapErrorResponse(data);
+      throw new Error(message);
+    }
     return data;
   }));
 }
@@ -233,7 +245,10 @@ export async function uploadSupervisorsExcel(file) {
     headers: authHeaders(),
     body: formData,
   }).then(res => res.json().then(data => {
-    if (!res.ok) throw new Error(data.error || data.message || 'Upload failed');
+    if (!res.ok) {
+      const { message } = mapErrorResponse(data);
+      throw new Error(message);
+    }
     return data;
   }));
 }
@@ -246,7 +261,10 @@ export async function uploadCoordinatorsExcel(file) {
     headers: authHeaders(),
     body: formData,
   }).then(res => res.json().then(data => {
-    if (!res.ok) throw new Error(data.error || data.message || 'Upload failed');
+    if (!res.ok) {
+      const { message } = mapErrorResponse(data);
+      throw new Error(message);
+    }
     return data;
   }));
 }

@@ -239,8 +239,8 @@ function LiveMap() {
         const res = await getBatchCurrentLocations(selectedBatchId, token, {
           signal: abortControllerRef.current.signal,
         });
-        setStudents(res.data?.students || []);
-        setScheduleMessage(res.data?.message || null);
+        setStudents(res.students || []);
+        setScheduleMessage(res.message || null);
         setLastUpdate(new Date());
       } catch (err) {
         if (err.name !== 'CanceledError') {
@@ -317,7 +317,14 @@ function LiveMap() {
           updated[idx] = { ...updated[idx], ...patch };
           return updated;
         }
-        return prev;
+        return [
+          ...prev,
+          {
+            student_id: data.studentId,
+            student_number: data.studentNumber,
+            ...patch,
+          },
+        ];
       });
       setLastUpdate(new Date());
     });
@@ -386,12 +393,12 @@ function LiveMap() {
 
         {!loading && selectedBatchId && (
           <div className={styles.mapWrapper}>
-            {scheduleMessage && <p className={styles.info}>{scheduleMessage}</p>}
+            {scheduleMessage && students.length === 0 && <p className={styles.info}>{scheduleMessage}</p>}
             {!scheduleMessage && students.length === 0 && <p className={styles.info}>No student data available for this batch.</p>}
-            {!scheduleMessage && students.length > 0 && activeStudents.length === 0 && (
+            {students.length > 0 && activeStudents.length === 0 && (
               <p className={styles.info}>No students are currently checked in for this batch.</p>
             )}
-            {!scheduleMessage && students.length > 0 && (
+            {students.length > 0 && (
               <MapContainer
                 center={MAP_CONFIG.center}
                 zoom={MAP_CONFIG.initialZoom}

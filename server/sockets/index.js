@@ -1,4 +1,5 @@
 const { Server } = require('socket.io');
+const { verifyAccessToken } = require('../utils/generateToken');
 
 let io;
 
@@ -11,6 +12,14 @@ function initializeSocket(server) {
   });
 
   io.on('connection', (socket) => {
+    try {
+      const token = socket.handshake.auth?.token;
+      const user = token ? verifyAccessToken(token) : null;
+      if (user?.id) socket.join(`user:${user.id}`);
+    } catch (err) {
+      console.warn(`Socket ${socket.id} connected without a valid user token.`);
+    }
+
     socket.on('student:join_batch', (teacherBatchId) => {
       if (teacherBatchId) {
         socket.join(`batch:${teacherBatchId}`);

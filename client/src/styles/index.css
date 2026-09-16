@@ -26,6 +26,10 @@ body {
   overflow-wrap: break-word;
 }
 
+body.server-error-open {
+  overflow: hidden;
+}
+
 img, picture, video, canvas, svg {
   display: block;
   max-width: 100%;

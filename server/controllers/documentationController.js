@@ -1,5 +1,6 @@
 const pool = require('../db');
 const { nowInManilaDateOnly, isValidManilaDate } = require('../utils/manilaDate');
+const { createNotification, getStudentUserId, getBatchTeacherUserId } = require('../services/notification.service');
 
 async function ensureDocumentationTables() {
   await pool.query(`
@@ -164,6 +165,19 @@ async function submitDailyDoc(req, res) {
        RETURNING *`,
       [studentId, finalBatchId, date, dayNumber, fileId || null, reasoning || '']
     );
+    const teacherUserId = await getBatchTeacherUserId(finalBatchId);
+    void createNotification({
+      userId: teacherUserId,
+      title: 'Daily documentation submitted',
+      message: 'A student submitted daily documentation for review.',
+      type: 'documentation',
+      category: 'documentation',
+      actionUrl: '/dashboard/teacher/documentation',
+      relatedUserId: req.user.id,
+      entityType: 'daily_documentation',
+      entityId: result.rows[0].id,
+      eventKey: `documentation-submitted:${result.rows[0].id}:${result.rows[0].updated_at}`,
+    }).catch((err) => console.error('Documentation submission notification failed:', err.message));
     res.status(201).json({ doc: result.rows[0] });
   } catch (err) {
     console.error('submitDailyDoc error:', err);
@@ -192,6 +206,19 @@ async function gradeDailyDoc(req, res) {
       [score, teacherFeedback || '', req.user.id, docId]
     );
     if (!result.rows.length) return res.status(404).json({ error: 'Documentation not found.' });
+    const studentUserId = await getStudentUserId(result.rows[0].student_id);
+    void createNotification({
+      userId: studentUserId,
+      title: 'Daily documentation graded',
+      message: `Your daily documentation received a score of ${score}/100.`,
+      type: 'documentation',
+      category: 'documentation',
+      actionUrl: '/dashboard/student/daily-documentation',
+      relatedUserId: req.user.id,
+      entityType: 'daily_documentation',
+      entityId: result.rows[0].id,
+      eventKey: `documentation-graded:${result.rows[0].id}:${result.rows[0].updated_at}`,
+    }).catch((err) => console.error('Documentation grading notification failed:', err.message));
     res.json({ doc: result.rows[0] });
   } catch (err) {
     console.error('gradeDailyDoc error:', err);

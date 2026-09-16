@@ -6,6 +6,10 @@ const cloudinary = require('../../db/cloudinary');
 const pool = require('../../db');
 const { getIO } = require('../../sockets');
 const { nowInManilaDateOnly, isValidManilaDate } = require('../../utils/manilaDate');
+const {
+  createNotification,
+  getBatchTeacherUserId,
+} = require('../../services/notification.service');
 
 // Format a DATE column from node-postgres as a stable YYYY-MM-DD string.
 // node-postgres returns DATE columns as JS Date objects anchored to UTC
@@ -175,6 +179,21 @@ const submitAppeal = async (req, res) => {
     );
 
     getIO().to(`batch:${teacher_batch_id}`).emit('attendance:appeal_submitted', formatAppealDates(full.rows[0]));
+
+    const teacherUserId = await getBatchTeacherUserId(teacher_batch_id);
+    void createNotification({
+      userId: teacherUserId,
+      title: 'Attendance appeal submitted',
+      message: `${full.rows[0].first_name} ${full.rows[0].last_name} submitted an attendance appeal.`,
+      type: 'appeal',
+      category: 'attendance',
+      priority: 'high',
+      actionUrl: '/dashboard/teacher/attendance',
+      relatedUserId: userId,
+      entityType: 'attendance_appeal',
+      entityId: insert.rows[0].id,
+      eventKey: `attendance-appeal:${insert.rows[0].id}:teacher`,
+    }).catch((err) => console.error('Attendance appeal notification failed:', err.message));
 
     res.status(201).json({ message: 'Appeal submitted.', appeal: formatAppealDates(full.rows[0]) });
   } catch (err) {

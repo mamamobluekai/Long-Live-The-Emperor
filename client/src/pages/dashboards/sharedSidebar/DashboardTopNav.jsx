@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import {
   Menu,
-  Bell,
   ChevronDown,
 } from 'lucide-react';
 import styles from './DashboardTopNav.module.css';
+import NotificationBell from '../../../components/common/NotificationBell';
 
 function DashboardTopNav({
   user,
@@ -75,16 +75,7 @@ function DashboardTopNav({
       <div className={styles.right}>
 
         {/* NOTIFICATIONS */}
-        <button
-          type="button"
-          className={styles.notificationButton}
-          aria-label="Notifications"
-        >
-          <Bell size={19} strokeWidth={1.8} />
-
-          {/* Remove this if you don't have notifications yet */}
-          <span className={styles.notificationDot} />
-        </button>
+        <NotificationBell />
 
 
         <div className={styles.verticalDivider} />

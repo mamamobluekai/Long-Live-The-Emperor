@@ -124,6 +124,18 @@ function DailyDocumentation() {
 
   const today = useMemo(() => todayKey(), []);
 
+  const scheduledCount = scheduleDays.filter((day) => day.date).length;
+  const submittedCount = scheduleDays.filter((day) => {
+    const doc = docMap[normalizeDateKey(day.date)];
+    return doc && ['submitted', 'reviewed', 'graded'].includes(doc.status);
+  }).length;
+  const gradedCount = scheduleDays.filter((day) => {
+    const doc = docMap[normalizeDateKey(day.date)];
+    return doc && ['reviewed', 'graded'].includes(doc.status);
+  }).length;
+  const progressPercent = scheduledCount > 0 ? Math.round((gradedCount / scheduledCount) * 100) : 0;
+  const progressLabel = scheduledCount > 0 && gradedCount >= scheduledCount ? 'Completed' : 'In Progress';
+
   function openModal(day) {
     setActiveDay(day);
     setDocFile(null);
@@ -217,6 +229,41 @@ function DailyDocumentation() {
       <p className={styles.subtitle}>
         Upload your daily work immersion documentation. You must be present (Time In or Time Out) for the day to upload.
       </p>
+
+      <div className={styles.progressOverview}>
+        <div
+          className={styles.progressRing}
+          style={{
+            background: `conic-gradient(#3b82f6 ${progressPercent * 3.6}deg, #e2e8f0 0deg)`,
+          }}
+        >
+          <div className={styles.progressRingInner}>{progressPercent}%</div>
+        </div>
+
+        <div className={styles.progressSummary}>
+          <div className={styles.progressHeaderRow}>
+            <h2>Documentation Progress</h2>
+            <span className={`${styles.progressState} ${progressLabel === 'Completed' ? styles.progressStateDone : styles.progressStateInProgress}`}>
+              {progressLabel}
+            </span>
+          </div>
+
+          <div className={styles.progressStats}>
+            <div className={styles.progressStat}>
+              <span className={styles.progressStatLabel}>Scheduled Days</span>
+              <strong>{scheduledCount}</strong>
+            </div>
+            <div className={styles.progressStat}>
+              <span className={styles.progressStatLabel}>Submitted</span>
+              <strong>{submittedCount}</strong>
+            </div>
+            <div className={styles.progressStat}>
+              <span className={styles.progressStatLabel}>Graded</span>
+              <strong>{gradedCount}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {scheduleDays.length === 0 ? (
         <div className={styles.empty}>

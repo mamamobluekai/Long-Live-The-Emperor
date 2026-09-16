@@ -2,6 +2,7 @@
 const pool = require("../db");
 const { getIO } = require("../sockets");
 const { getBatchScheduleForDate } = require("./teacherControllers/immersionSchedule.controller");
+const { nowInManilaDateOnly } = require("../utils/manilaDate");
 
 // POST /api/location/update
 // Called repeatedly by the student's browser (e.g. every 5-10s) while
@@ -79,27 +80,40 @@ exports.updateLocation = async (req, res) => {
 // Only returns students whose attendance date falls within an active work immersion schedule.
 exports.getBatchCurrentLocations = async (req, res) => {
   const { teacherBatchId } = req.params;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = nowInManilaDateOnly();
 
   try {
     const schedule = await getBatchScheduleForDate(teacherBatchId, today);
-    if (!schedule) {
-      return res.json({ students: [], in_schedule: false, message: 'Today is not within the work immersion schedule.' });
-    }
 
     const result = await pool.query(
-      `SELECT DISTINCT ON (sl.student_id)
-              sl.student_id, st.first_name, st.last_name,
-              sl.latitude, sl.longitude, sl.accuracy, sl.recorded_at,
+      `SELECT sa.student_id, st.first_name, st.last_name,
+              COALESCE(sl.latitude, sa.check_in_lat) AS latitude,
+              COALESCE(sl.longitude, sa.check_in_lng) AS longitude,
+              COALESCE(sl.accuracy, sa.check_in_accuracy) AS accuracy,
+              COALESCE(sl.recorded_at, sa.check_in_time) AS recorded_at,
               sa.status, sa.check_in_time
-       FROM student_locations sl
-       JOIN student_attendance sa ON sa.id = sl.attendance_id
-       JOIN students st ON st.id = sl.student_id
-       WHERE sa.teacher_batch_id = $1 AND sa.date = $2
-       ORDER BY sl.student_id, sl.recorded_at DESC`,
+       FROM student_attendance sa
+      JOIN students st ON st.id = sa.student_id
+       LEFT JOIN LATERAL (
+         SELECT latitude, longitude, accuracy, recorded_at
+         FROM student_locations
+         WHERE attendance_id = sa.id
+         ORDER BY recorded_at DESC
+         LIMIT 1
+       ) sl ON TRUE
+       WHERE sa.teacher_batch_id = $1
+         AND sa.date = $2
+         AND sa.status = 'checked_in'
+         AND (sl.latitude IS NOT NULL OR sa.check_in_lat IS NOT NULL)`,
       [teacherBatchId, today]
     );
-    res.json({ students: result.rows, in_schedule: true });
+    res.json({
+      students: result.rows,
+      in_schedule: Boolean(schedule),
+      message: schedule || result.rows.length > 0
+        ? null
+        : 'Today is not within the work immersion schedule.',
+    });
   } catch (err) {
     console.error("getBatchCurrentLocations error:", err);
     res.status(500).json({ message: "Failed to fetch locations." });

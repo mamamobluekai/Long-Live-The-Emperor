@@ -4,6 +4,10 @@ const pool = require('../../db');
 const { getIO } = require('../../sockets');
 const { resolveAttendanceState } = require('../teacherControllers/attendanceSettings.controller');
 const { getBatchScheduleForDate } = require('../teacherControllers/immersionSchedule.controller');
+const {
+  createNotification,
+  getBatchTeacherUserId,
+} = require('../../services/notification.service');
 
 // Find the student's currently assigned batch (teacher_batch_students stores user id).
 async function getActiveBatch(userId) {
@@ -103,7 +107,10 @@ exports.checkIn = async (req, res) => {
     if (!batch) return res.status(400).json({ message: 'You are not assigned to a batch yet.' });
 
     const attendanceDate = todayInTimezone();
-    await assertDateInSchedule(batch.teacher_batch_id, attendanceDate);
+    const state = await resolveAttendanceState(batch.teacher_batch_id);
+    if (!state.manual_open) {
+      await assertDateInSchedule(batch.teacher_batch_id, attendanceDate);
+    }
     await assertTypeOpen(batch.teacher_batch_id, 'time_in');
 
     // Prevent duplicate Time In for today.
@@ -132,6 +139,12 @@ exports.checkIn = async (req, res) => {
     );
     const attendance = attendanceRes.rows[0];
 
+    await client.query(
+      `INSERT INTO student_locations (student_id, attendance_id, latitude, longitude, accuracy)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [student.id, attendance.id, latitude, longitude, accuracy || null]
+    );
+
     await logGps({
       student, teacherBatchId: batch.teacher_batch_id, attendanceId: attendance.id,
       eventType: 'check_in', latitude, longitude, accuracy,
@@ -145,6 +158,31 @@ exports.checkIn = async (req, res) => {
       latitude, longitude, accuracy,
       time: attendance.check_in_time,
     });
+
+    const teacherUserId = await getBatchTeacherUserId(batch.teacher_batch_id);
+    void createNotification({
+      userId,
+      title: 'Time-in recorded',
+      message: 'Your time-in and location were recorded successfully.',
+      type: 'attendance',
+      category: 'attendance',
+      actionUrl: '/dashboard/student/attendance',
+      entityType: 'attendance',
+      entityId: attendance.id,
+      eventKey: `attendance-check-in:${attendance.id}:student`,
+    }).catch((err) => console.error('Student time-in notification failed:', err.message));
+    void createNotification({
+      userId: teacherUserId,
+      title: 'Student timed in',
+      message: `${studentName(student)} has timed in and is sharing their location.`,
+      type: 'attendance',
+      category: 'attendance',
+      actionUrl: '/dashboard/teacher/live-map',
+      relatedUserId: userId,
+      entityType: 'attendance',
+      entityId: attendance.id,
+      eventKey: `attendance-check-in:${attendance.id}:teacher`,
+    }).catch((err) => console.error('Teacher time-in notification failed:', err.message));
 
     res.status(200).json({
       message: 'Timed in successfully. Your location is now shared with your teacher.',
@@ -173,7 +211,10 @@ exports.checkOut = async (req, res) => {
     if (!batch) return res.status(400).json({ message: 'You are not assigned to a batch yet.' });
 
     const attendanceDate = todayInTimezone();
-    await assertDateInSchedule(batch.teacher_batch_id, attendanceDate);
+    const state = await resolveAttendanceState(batch.teacher_batch_id);
+    if (!state.manual_open) {
+      await assertDateInSchedule(batch.teacher_batch_id, attendanceDate);
+    }
     await assertTypeOpen(batch.teacher_batch_id, 'time_out');
 
     const existing = await client.query(
@@ -213,6 +254,20 @@ exports.checkOut = async (req, res) => {
       studentNumber: student.student_number,
       time: attendance.check_out_time,
     });
+
+    const teacherUserId = await getBatchTeacherUserId(batch.teacher_batch_id);
+    void createNotification({
+      userId: teacherUserId,
+      title: 'Student timed out',
+      message: `${studentName(student)} has timed out for today.`,
+      type: 'attendance',
+      category: 'attendance',
+      actionUrl: '/dashboard/teacher/attendance',
+      relatedUserId: userId,
+      entityType: 'attendance',
+      entityId: attendance.id,
+      eventKey: `attendance-check-out:${attendance.id}:teacher`,
+    }).catch((err) => console.error('Teacher time-out notification failed:', err.message));
 
     res.status(200).json({ message: 'Timed out successfully. Location sharing stopped.', attendance });
   } catch (err) {
@@ -268,7 +323,7 @@ exports.getStudentAttendanceAccess = async (req, res) => {
     const schedule = await getBatchScheduleForDate(batch.teacher_batch_id, today);
 
     const rec = await pool.query(
-      `SELECT id, status, check_in_time, check_out_time, appeal_time_in_id, appeal_time_out_id
+      `SELECT id, student_id, status, check_in_time, check_out_time, appeal_time_in_id, appeal_time_out_id
        FROM student_attendance WHERE student_id = $1 AND date = $2`,
       [student.id, today]
     );
@@ -277,6 +332,8 @@ exports.getStudentAttendanceAccess = async (req, res) => {
       assigned: true,
       teacherBatchId: batch.teacher_batch_id,
       teacherId: batch.teacher_id,
+      studentId: student.id,
+      studentNumber: student.student_number,
       date: today,
       in_schedule: !!schedule,
       active_schedule: schedule || null,

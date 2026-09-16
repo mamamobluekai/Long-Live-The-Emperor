@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { loginUser, registerUser } from '../api/authApi';
+import { getErrorMessage } from '../utils/errors';
 
 export function useAuthForm(onAuthSuccess) {
   const [mode, setMode] = useState('login');
@@ -68,11 +69,11 @@ export function useAuthForm(onAuthSuccess) {
         phone: '',
       });
     } catch (err) {
-      setError(err.message || 'Unable to complete request.');
+      setError(getErrorMessage(err.message));
     } finally {
       setLoading(false);
     }
   };
 
-  return { mode, setMode, role, setRole, form, handleChange, loading, message, error, handleSubmit, loginSuccess };
+  return { mode, setMode, role, setRole, form, handleChange, loading, message, setMessage, error, setError, handleSubmit, loginSuccess };
 }

@@ -1,4 +1,5 @@
 const pool = require('../../db');
+const { createNotification, getStudentUserId } = require('../../services/notification.service');
 
 async function ensureEvaluationTables() {
   await pool.query(`
@@ -202,6 +203,21 @@ async function submitEvaluation(req, res) {
         [studentId, req.user.id, batchId || null, JSON.stringify(category_scores), overall_score, overall_percentage, comments || null]
       );
     }
+
+    const studentUserId = await getStudentUserId(studentId);
+    void createNotification({
+      userId: studentUserId,
+      title: 'Evaluation updated',
+      message: 'Your work immersion evaluation is now available to review.',
+      type: 'evaluation',
+      category: 'evaluation',
+      priority: 'high',
+      actionUrl: '/dashboard/student/evaluation',
+      relatedUserId: req.user.id,
+      entityType: 'student_evaluation',
+      entityId: result.rows[0].id,
+      eventKey: `evaluation:${result.rows[0].id}:${result.rows[0].updated_at}`,
+    }).catch((err) => console.error('Evaluation notification failed:', err.message));
 
     res.status(existing.rows.length ? 200 : 201).json({ evaluation: result.rows[0] });
   } catch (err) {

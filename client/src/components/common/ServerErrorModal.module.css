@@ -1,0 +1,10 @@
+.overlay { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; padding: 20px; background: rgba(20, 8, 10, 0.68); animation: fadeIn 180ms ease-out; }
+.modal { position: relative; width: min(100%, 430px); padding: 38px 32px 30px; border: 1px solid rgba(125, 20, 35, 0.12); border-radius: 18px; background: #fff; box-shadow: 0 24px 70px rgba(20, 8, 10, 0.3); color: #32171b; text-align: center; animation: riseIn 220ms ease-out; }
+.closeButton { position: absolute; top: 14px; right: 14px; display: grid; width: 36px; height: 36px; place-items: center; border: 0; border-radius: 50%; background: transparent; color: #80676b; cursor: pointer; }
+.closeButton:hover { background: #f7edef; color: #761b2a; }
+.iconWrap { display: grid; width: 70px; height: 70px; margin: 0 auto 18px; place-items: center; border-radius: 50%; background: #f8e8eb; color: #861f31; }
+.title { margin: 0; color: #641827; font-size: 24px; line-height: 1.2; }
+.message { margin: 12px auto 26px; max-width: 340px; color: #735c61; font-size: 15px; line-height: 1.6; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes riseIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@media (max-width: 480px) { .modal { padding: 34px 20px 24px; } }

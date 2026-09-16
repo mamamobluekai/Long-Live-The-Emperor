@@ -17,6 +17,7 @@ const feedRoutes = require('./routes/feed.routes');
 const chatRoutes = require('./routes/chat.routes');
 const evaluationRoutes = require('./routes/evaluation.routes');
 const documentationRoutes = require('./routes/documentationRoutes');
+const notificationRoutes = require('./routes/notification.routes');
 
 const app = express();
 
@@ -45,6 +46,7 @@ app.use('/api/feed', feedRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/evaluation', evaluationRoutes);
 app.use('/api/documentation', documentationRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found.' });

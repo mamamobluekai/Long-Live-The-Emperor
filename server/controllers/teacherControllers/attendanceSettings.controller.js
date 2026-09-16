@@ -4,6 +4,7 @@
 // The teacher can also force-open (override) attendance for a batch at any time.
 const pool = require('../../db/');
 const { getBatchScheduleForDate } = require('./immersionSchedule.controller');
+const { notifyUsers, getBatchStudentUserIds } = require('../../services/notification.service');
 
 const TZ = 'Asia/Manila';
 
@@ -159,11 +160,11 @@ const updateBatchConfig = async (req, res) => {
 
     const fields = [];
     const values = [];
-    let idx = 1;
+    let idx = 2;
     const pushTime = (key, val) => {
-      if (val && /^\d{2}:\d{2}$/.test(val)) {
+      if (val && /^\d{2}:\d{2}(:\d{2})?$/.test(String(val))) {
         fields.push(`${key} = $${idx++}`);
-        values.push(val);
+        values.push(String(val).slice(0, 5));
       }
     };
     pushTime('time_in_open', time_in_open);
@@ -218,6 +219,18 @@ const openBatchAttendance = async (req, res) => {
        RETURNING manual_open`,
       [batchId]
     );
+    const studentUserIds = await getBatchStudentUserIds(batchId);
+    void notifyUsers(studentUserIds, {
+      title: 'Attendance is open',
+      message: 'Your teacher has opened attendance. You may time in now.',
+      type: 'attendance',
+      category: 'attendance',
+      priority: 'high',
+      actionUrl: '/dashboard/student/attendance',
+      entityType: 'teacher_batch',
+      entityId: Number(batchId),
+      eventKey: `attendance-open:${batchId}:${new Date().toISOString().slice(0, 10)}`,
+    }).catch((err) => console.error('Attendance-open notification failed:', err.message));
     res.json({ message: 'Attendance opened (manual override).', manual_open: r.rows[0].manual_open });
   } catch (err) {
     console.error('openBatchAttendance error:', err);
@@ -241,6 +254,17 @@ const closeBatchAttendance = async (req, res) => {
        RETURNING manual_open`,
       [batchId]
     );
+    const studentUserIds = await getBatchStudentUserIds(batchId);
+    void notifyUsers(studentUserIds, {
+      title: 'Attendance closed',
+      message: 'Your teacher has closed the attendance window.',
+      type: 'attendance',
+      category: 'attendance',
+      actionUrl: '/dashboard/student/attendance',
+      entityType: 'teacher_batch',
+      entityId: Number(batchId),
+      eventKey: `attendance-close:${batchId}:${new Date().toISOString().slice(0, 10)}`,
+    }).catch((err) => console.error('Attendance-close notification failed:', err.message));
     res.json({ message: 'Attendance closed (manual override off).', manual_open: r.rows[0].manual_open });
   } catch (err) {
     console.error('closeBatchAttendance error:', err);

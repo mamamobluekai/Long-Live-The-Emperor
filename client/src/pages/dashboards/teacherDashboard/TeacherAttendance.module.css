@@ -266,6 +266,17 @@
   border-bottom: 1px solid #eadfe1;
 }
 
+.scheduleHeading {
+  min-width: 0;
+}
+
+.scheduleSummary {
+  margin: 6px 0 0;
+  color: #817176;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
 .muted {
   margin: 6px 0 0;
 
@@ -391,6 +402,38 @@
 
   box-shadow:
     0 8px 18px rgba(104, 31, 45, 0.23);
+}
+
+.editHoursButton {
+  flex-shrink: 0;
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1px solid #8b3345;
+  border-radius: 9px;
+  background: #fff4f5;
+  color: #7b293b;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 750;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.editHoursButton:hover:not(:disabled) {
+  background: #7b293b;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(104, 31, 45, 0.2);
+}
+
+.editHoursButton:focus-visible {
+  outline: 3px solid rgba(139, 51, 69, 0.25);
+  outline-offset: 2px;
+}
+
+.editHoursButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .closeBtn {

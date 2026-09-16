@@ -9,6 +9,11 @@ function authHeaders(token) {
 }
 
 // ---------- Student ----------
+export async function getStudentAttendanceAccess(token) {
+  const res = await axios.get(`${API_URL}/attendance/student/status`, { headers: authHeaders(token) });
+  return res.data;
+}
+
 export async function getStudentAttendanceStatus(token) {
   const res = await axios.get(`${API_URL}/attendance/student/status`, { headers: authHeaders(token) });
   return res.data;
@@ -121,6 +126,20 @@ export async function getMySchedule(token) {
 
 export async function getMyAttendanceRecords(token) {
   const res = await axios.get(`${API_URL}/attendance/student/records`, { headers: authHeaders(token) });
+  return res.data;
+}
+
+export async function updateStudentLocation(lat, lng, accuracy, token) {
+  const res = await axios.post(
+    `${API_URL}/tracking/location/update`,
+    { latitude: lat, longitude: lng, accuracy },
+    { headers: authHeaders(token) }
+  );
+  return res.data;
+}
+
+export async function getStudentLocationHistory(studentId, token) {
+  const res = await axios.get(`${API_URL}/tracking/location/history/${studentId}`, { headers: authHeaders(token) });
   return res.data;
 }
 

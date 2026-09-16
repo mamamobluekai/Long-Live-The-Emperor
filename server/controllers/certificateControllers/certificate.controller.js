@@ -2,6 +2,7 @@ const PDFDocument = require('pdfkit');
 const cloudinary = require('../../db/cloudinary');
 const streamifier = require('streamifier');
 const pool = require('../../db');
+const { createNotification } = require('../../services/notification.service');
 
 async function uploadPdfToCloudinary(buffer, publicId) {
   return new Promise((resolve, reject) => {
@@ -332,6 +333,20 @@ const generateCertificate = async (req, res) => {
       ]
     );
 
+    void createNotification({
+      userId: student.user_id,
+      title: 'Certificate available',
+      message: 'Your work immersion certificate is now available for download.',
+      type: 'certificate',
+      category: 'certificate',
+      priority: 'high',
+      actionUrl: '/dashboard/student/certificate',
+      relatedUserId: supervisorUserId,
+      entityType: 'certificate',
+      entityId: insert.rows[0].id,
+      eventKey: `certificate:${insert.rows[0].id}`,
+    }).catch((err) => console.error('Certificate notification failed:', err.message));
+
     res.status(201).json({ certificate: insert.rows[0] });
   } catch (err) {
     console.error('generateCertificate error:', err);
@@ -587,6 +602,20 @@ const forceGenerateCertificate = async (req, res) => {
         cloudinaryDownloadUrl(uploadResult.secure_url),
       ]
     );
+
+    void createNotification({
+      userId: student.user_id,
+      title: 'Certificate available',
+      message: 'Your work immersion certificate is now available for download.',
+      type: 'certificate',
+      category: 'certificate',
+      priority: 'high',
+      actionUrl: '/dashboard/student/certificate',
+      relatedUserId: supervisorUserId,
+      entityType: 'certificate',
+      entityId: insert.rows[0].id,
+      eventKey: `certificate:${insert.rows[0].id}`,
+    }).catch((err) => console.error('Certificate notification failed:', err.message));
 
     res.status(201).json({ certificate: insert.rows[0], forced: true });
   } catch (err) {
