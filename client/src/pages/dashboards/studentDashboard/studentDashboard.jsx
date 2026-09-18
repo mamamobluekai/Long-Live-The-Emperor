@@ -21,7 +21,7 @@ function StudentDashboard({ user, onLogout }) {
     >
       <Routes>
         <Route index element={<Navigate to="overview" replace />} />
-        <Route path="overview" element={<Overview />} />
+          <Route path="overview" element={<Overview user={user} />} />
         <Route path="progress" element={<Progress />} />
         <Route path="requirements" element={<Requirements user={user} />} />
         <Route path="placement-status" element={<PlacementStatus />} />

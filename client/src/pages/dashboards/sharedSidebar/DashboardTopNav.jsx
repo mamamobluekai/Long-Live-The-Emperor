@@ -1,7 +1,11 @@
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  Menu,
   ChevronDown,
+  LogOut,
+  Menu,
+  Settings,
+  UserRound,
 } from 'lucide-react';
 import styles from './DashboardTopNav.module.css';
 import NotificationBell from '../../../components/common/NotificationBell';
@@ -10,8 +14,12 @@ function DashboardTopNav({
   user,
   onLogout,
   onMenuClick,
+  title,
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const profileRef = useRef(null);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   const displayName =
     user?.first_name || user?.last_name
@@ -24,6 +32,30 @@ function DashboardTopNav({
       : '';
 
   const profilePath = `/dashboard/${user?.role?.toLowerCase()}/profile`;
+  const dashboardPath = `/dashboard/${user?.role?.toLowerCase()}`;
+
+  useEffect(() => {
+    setProfileOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    function handlePointerDown(event) {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileOpen(false);
+      }
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') setProfileOpen(false);
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   return (
     <header className={styles.topnav}>
@@ -47,7 +79,8 @@ function DashboardTopNav({
         <button
           type="button"
           className={styles.brand}
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate(dashboardPath)}
+          aria-label={`Go to ${role || 'dashboard'} dashboard`}
         >
           <div className={styles.brandLogo}>
             <img
@@ -57,10 +90,8 @@ function DashboardTopNav({
           </div>
 
           <div className={styles.brandText}>
-            <span className={styles.brandName}>
-              e-MMERSION
-            </span>
-
+            <span className={styles.brandName}>e-MMERSION</span>
+            <span className={styles.brandSubtitle}>{title || `${role} Dashboard`}</span>
           </div>
         </button>
 
@@ -82,11 +113,15 @@ function DashboardTopNav({
 
 
         {/* PROFILE */}
-        <button
-          type="button"
-          onClick={() => navigate(profilePath)}
-          className={styles.profileBtn}
-        >
+        <div className={styles.profileWrap} ref={profileRef}>
+          <button
+            type="button"
+            onClick={() => setProfileOpen((value) => !value)}
+            className={styles.profileBtn}
+            aria-haspopup="menu"
+            aria-expanded={profileOpen}
+            aria-label={`Open ${displayName} account menu`}
+          >
 
           {/* AVATAR */}
           {user?.photo_url ? (
@@ -114,25 +149,30 @@ function DashboardTopNav({
             </span>
           </div>
 
-          <ChevronDown
-            className={styles.chevron}
-            size={16}
-            strokeWidth={1.8}
-          />
-
-        </button>
-
-
-        {/* LOGOUT */}
-        {onLogout && (
-          <button
-            type="button"
-            className={styles.logoutBtn}
-            onClick={onLogout}
-          >
-            Log out
+            <ChevronDown className={styles.chevron} size={16} strokeWidth={1.8} />
           </button>
-        )}
+
+          {profileOpen && (
+            <div className={styles.profileMenu} role="menu" aria-label="Account menu">
+              <div className={styles.profileMenuHeader}>
+                <strong>{displayName}</strong>
+                <span>{user?.email || role}</span>
+              </div>
+              <button type="button" role="menuitem" onClick={() => navigate(profilePath)}>
+                <UserRound size={16} /> View profile
+              </button>
+              <button type="button" role="menuitem" onClick={() => navigate(profilePath)}>
+                <Settings size={16} /> Profile settings
+              </button>
+              {onLogout && (
+                <button type="button" role="menuitem" className={styles.menuLogout} onClick={onLogout}>
+                  <LogOut size={16} /> Log out
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
 
       </div>
 

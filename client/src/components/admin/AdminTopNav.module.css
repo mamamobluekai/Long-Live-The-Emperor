@@ -176,6 +176,83 @@
   text-align: left;
 }
 
+.profileBtn:focus-visible,
+.profileMenu button:focus-visible,
+.notifBtn:focus-visible {
+  outline: 3px solid rgba(42, 82, 152, 0.22);
+  outline-offset: 2px;
+}
+
+.profileWrap {
+  position: relative;
+}
+
+.profileMenu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 220;
+  width: 230px;
+  padding: 7px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16);
+}
+
+.profileMenuHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 11px 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.profileMenuHeader strong {
+  overflow: hidden;
+  color: #0f172a;
+  font-size: 0.8rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileMenuHeader span {
+  overflow: hidden;
+  color: #94a3b8;
+  font-size: 0.7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileMenu button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 11px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #334155;
+  font: inherit;
+  font-size: 0.78rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.profileMenu button:hover {
+  background: #f1f5f9;
+  color: #2a5298;
+}
+
+.profileMenu .menuLogout {
+  margin-top: 4px;
+  border-top: 1px solid #eef2f7;
+  border-radius: 0 0 9px 9px;
+  color: #b42318;
+}
+
 .avatar {
   width: 36px;
   height: 36px;
@@ -229,12 +306,12 @@
     display: none;
   }
 
-  .logoutBtn {
-    padding: 8px 12px;
-  }
-
   .dropdown {
     width: 300px;
     right: -8px;
+  }
+
+  .profileMenu {
+    right: -4px;
   }
 }

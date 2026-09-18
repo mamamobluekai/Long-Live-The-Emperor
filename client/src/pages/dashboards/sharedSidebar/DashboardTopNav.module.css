@@ -89,6 +89,14 @@
   text-align: left;
 }
 
+.brand:focus-visible,
+.menuButton:focus-visible,
+.profileBtn:focus-visible,
+.profileMenu button:focus-visible {
+  outline: 3px solid rgba(157, 35, 57, 0.24);
+  outline-offset: 2px;
+}
+
 
 /* LOGO */
 
@@ -282,6 +290,82 @@
   background: #f8f9fa;
 }
 
+.profileWrap {
+  position: relative;
+}
+
+.profileMenu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 220;
+  width: 238px;
+  padding: 7px;
+  border: 1px solid #eadfe1;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 18px 42px rgba(50, 20, 25, 0.16);
+  animation: profileMenuIn 0.16s ease-out;
+}
+
+.profileMenuHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 11px 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #f0e9ea;
+}
+
+.profileMenuHeader strong {
+  overflow: hidden;
+  color: #101828;
+  font-size: 0.8rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileMenuHeader span {
+  overflow: hidden;
+  color: #98a2b3;
+  font-size: 0.7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileMenu button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 11px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #344054;
+  font: inherit;
+  font-size: 0.78rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.profileMenu button:hover {
+  background: #faf4f5;
+  color: #7f0d2b;
+}
+
+.profileMenu .menuLogout {
+  margin-top: 4px;
+  border-top: 1px solid #f0e9ea;
+  border-radius: 0 0 9px 9px;
+  color: #b42318;
+}
+
+@keyframes profileMenuIn {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 
 /* =========================================
    AVATAR
@@ -408,6 +492,11 @@
   color: #f0c8d3;
 }
 
+.logoutBtn:focus-visible {
+  outline: 3px solid rgba(157, 35, 57, 0.24);
+  outline-offset: 2px;
+}
+
 
 /* =========================================
    TABLET
@@ -446,7 +535,7 @@
   }
 
   .brandText {
-    display: none;
+    display: flex;
   }
 
   .brandLogo {
@@ -469,6 +558,14 @@
     display: none;
   }
 
+  .brandName {
+    font-size: 16px;
+  }
+
+  .brandSubtitle {
+    display: none;
+  }
+
   .profileBtn {
     padding: 0;
   }
@@ -477,16 +574,12 @@
     display: none;
   }
 
-  .logoutBtn {
-    height: 36px;
-
-    padding: 0 11px;
-
-    font-size: 11px;
-  }
-
   .right {
     gap: 5px;
+  }
+
+  .profileMenu {
+    right: -5px;
   }
 }
 
@@ -504,7 +597,5 @@
     margin-right: 7px;
   }
 
-  .logoutBtn {
-    padding: 0 9px;
-  }
+  .brandName { font-size: 15px; }
 }

@@ -9,7 +9,6 @@ function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleOpenSidebar = () => {
-    console.log('menu clicked');
     setSidebarOpen(true);
   };
 

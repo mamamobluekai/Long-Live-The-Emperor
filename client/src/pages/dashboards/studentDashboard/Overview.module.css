@@ -42,13 +42,14 @@
 
 .greetingDate {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  padding: 12px 16px;
-  border: 1px solid #e5e7eb;
-  background: #fff;
-  border-radius: 12px;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 15px;
+  border: 1px solid #eadfe1;
+  background: linear-gradient(135deg, #fff 0%, #fff8f7 100%);
+  border-radius: 14px;
   white-space: nowrap;
+  color: #8b1e2d;
 }
 
 .greetingDate span {
@@ -60,6 +61,50 @@
   margin-top: 3px;
   color: #334155;
   font-size: 0.85rem;
+}
+
+.greetingDate svg {
+  margin-right: 2px;
+}
+
+.stateCard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 180px;
+  padding: 28px;
+  border: 1px solid #eadfe1;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #fff 0%, #fff8f7 100%);
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.stateCard svg {
+  color: #8b1e2d;
+}
+
+.errorState {
+  justify-content: space-between;
+  color: #9f1239;
+  background: #fff1f2;
+  border-color: #fecdd3;
+}
+
+.errorState button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 11px;
+  background: #8b1e2d;
+  color: #fff;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 
@@ -234,6 +279,35 @@
   font-size: 0.75rem;
 }
 
+.progressLinks {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 15px;
+  border-top: 1px solid #eef2f7;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.progressLinks a,
+.progressLinks span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.progressLinks a {
+  color: #8b1e2d;
+  text-decoration: none;
+}
+
+.progressLinks span {
+  color: #15803d;
+  font-weight: 600;
+}
+
 
 /* =========================================
    ATTENDANCE
@@ -314,7 +388,9 @@
 }
 
 .viewButton {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 
   margin-top: 15px;
 
