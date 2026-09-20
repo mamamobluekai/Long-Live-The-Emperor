@@ -61,6 +61,12 @@
   color: #1d2939;
 }
 
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .readAll {
   display: inline-flex;
   align-items: center;
@@ -70,6 +76,21 @@
   color: #7f0d2b;
   font-size: 12px;
   cursor: pointer;
+}
+
+.clearAll {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  background: transparent;
+  color: #c1294e;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.clearAll:hover {
+  text-decoration: underline;
 }
 
 .list {

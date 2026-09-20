@@ -399,6 +399,65 @@
   border-radius: 11px;
 }
 
+/* =========================================
+   FILTERS
+   ========================================= */
+
+.filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid #edf0f4;
+  background: #fafbfc;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filterLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: #8993a5;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.filterSelect {
+  padding: 6px 10px;
+  border: 1px solid #d4d9e2;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  color: #253247;
+  cursor: pointer;
+  min-width: 140px;
+}
+
+.filterSelect:focus {
+  outline: 2px solid #94112d;
+  border-color: #94112d;
+}
+
+.searchInput {
+  padding: 6px 12px;
+  border: 1px solid #d4d9e2;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 12px;
+  color: #253247;
+  min-width: 180px;
+}
+
+.searchInput:focus {
+  outline: 2px solid #94112d;
+  border-color: #94112d;
+}
+
 .studentCount strong {
   color: #94112d;
   font-size: 19px;
@@ -427,7 +486,7 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 760px;
+  min-width: 900px;
 }
 
 .table thead {
@@ -518,6 +577,21 @@
 
 .email {
   color: #657184;
+}
+
+.studentId {
+  color: #475569;
+  font-weight: 500;
+}
+
+.gradeSection {
+  color: #475569;
+  font-weight: 500;
+}
+
+.registeredDate {
+  color: #94a3b8;
+  font-size: 11px;
 }
 
 /* =========================================
@@ -617,6 +691,77 @@
 .rejectBtn:hover {
   background: #fff1f3;
   border-color: #ddb5bc;
+}
+
+.deleteBtn {
+  height: 32px;
+  padding: 0 11px;
+
+  border: 1px solid #fde2e4;
+  border-radius: 8px;
+
+  background: #ffffff;
+  color: #dc2626;
+
+  font-size: 10px;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition: 0.15s ease;
+}
+
+.deleteBtn:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+/* Delete confirmation inline */
+.deleteConfirm {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  min-width: 120px;
+}
+
+.deleteConfirm span {
+  font-size: 11px;
+  color: #475569;
+  font-weight: 600;
+  text-align: right;
+}
+
+.confirmDeleteBtn {
+  height: 28px;
+  padding: 0 8px;
+
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+
+  background: #fef2f2;
+  color: #b42332;
+
+  font-size: 10px;
+  font-weight: 750;
+
+  cursor: pointer;
+}
+
+.cancelDeleteBtn {
+  height: 28px;
+  padding: 0 8px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+
+  background: #f8fafc;
+  color: #475569;
+
+  font-size: 10px;
+  font-weight: 750;
+
+  cursor: pointer;
 }
 
 /* =========================================

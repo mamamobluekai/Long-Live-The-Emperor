@@ -57,7 +57,7 @@ CREATE TABLE students (
   contact_number VARCHAR(50),
   email VARCHAR(255),
   home_address TEXT,
-  grade_level VARCHAR(50),
+  grade_level VARCHAR(50) NOT NULL DEFAULT '12',
   section VARCHAR(100),
   track_strand VARCHAR(255),
   school VARCHAR(255),

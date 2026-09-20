@@ -47,7 +47,7 @@ function UploadStudents() {
       <div className={styles.section}>
         <p className={styles.muted}>
           Required columns: <strong>Student ID</strong>, <strong>First Name</strong>,{' '}
-          <strong>Last Name</strong>, <strong>Email</strong>. Optional: Middle Name, Grade Level,
+          <strong>Last Name</strong>, <strong>Email</strong>. Optional: Middle Name,
           Section, Strand, School, Contact Number, Gender.
         </p>
         <input type="file" accept=".xlsx,.xls" onChange={(e) => setFile(e.target.files[0])} />

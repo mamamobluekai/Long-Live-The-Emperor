@@ -42,4 +42,14 @@ async function markAllRead(req, res) {
   }
 }
 
-module.exports = { getNotifications, getUnreadCount, markRead, markAllRead };
+async function deleteAll(req, res) {
+  try {
+    await notificationService.deleteAllNotifications(req.user.id);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Delete all notifications error:', err);
+    res.status(500).json({ error: 'Failed to delete notifications.' });
+  }
+}
+
+module.exports = { getNotifications, getUnreadCount, markRead, markAllRead, deleteAll };

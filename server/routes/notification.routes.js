@@ -9,5 +9,6 @@ router.get('/', controller.getNotifications);
 router.get('/unread-count', controller.getUnreadCount);
 router.patch('/:id/read', controller.markRead);
 router.patch('/read-all', controller.markAllRead);
+router.delete('/', controller.deleteAll);
 
 module.exports = router;

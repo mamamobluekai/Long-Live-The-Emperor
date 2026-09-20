@@ -8,6 +8,7 @@ import TeacherBatches from './TeacherBatches';
 import Supervisors from './Supervisors';
 import SocialFeed from '../studentDashboard/SocialFeed';
 import UserProfileSettings from '../UserProfileSettings';
+import CoordinatorOverview from './CoordinatorOverview';
 
 function CoordinatorDashboard({ user, onLogout }) {
   return (
@@ -16,7 +17,7 @@ function CoordinatorDashboard({ user, onLogout }) {
       sidebar={<CoordinatorSidebar />}
     >
       <Routes>
-        <Route index element={<Navigate to="students" replace />} />
+        <Route index element={<CoordinatorOverview />} />
         <Route path="students" element={<StudentApprovals />} />
         <Route path="upload-students" element={<Navigate to="/dashboard/coordinator/students" replace />} />
         <Route path="requirements" element={<RequirementsReview />} />

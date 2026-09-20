@@ -11,6 +11,7 @@ import {
   MessageCircle,
   MessagesSquare,
   User,
+  FileText,
 } from 'lucide-react';
 
 const links = [
@@ -49,6 +50,11 @@ const links = [
     to: '/dashboard/supervisor/certifications',
     label: 'Certifications',
     icon: ScrollText,
+  },
+  {
+    to: '/dashboard/supervisor/grade-appeals',
+    label: 'Grade Appeals',
+    icon: FileText,
   },
   {
     to: '/dashboard/supervisor/social-feed',

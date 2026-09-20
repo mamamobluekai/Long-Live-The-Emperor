@@ -230,6 +230,57 @@ function AuthForm({ onAuthSuccess }) {
               </div>
             </div>
 
+            <div className="field">
+              <label htmlFor="middleName">Middle name</label>
+              <div className="input-box">
+                <User className="input-icon" size={18} />
+                <input id="middleName" name="middleName" type="text" placeholder="Enter your middle name" value={form.middleName} onChange={handleChange} />
+              </div>
+            </div>
+
+            <div className="field">
+              <label htmlFor="gender">Gender</label>
+              <div className="input-box">
+                <User className="input-icon" size={18} />
+                <select id="gender" name="gender" value={form.gender} onChange={handleChange} required>
+                  <option value="">Select your gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="field">
+              <label htmlFor="section">Section</label>
+              <div className="input-box">
+                <IdCard className="input-icon" size={18} />
+                <input id="section" name="section" type="text" placeholder="Enter your section" value={form.section} onChange={handleChange} />
+              </div>
+            </div>
+
+            <div className="field">
+              <label htmlFor="strand">Strand</label>
+              <div className="input-box">
+                <IdCard className="input-icon" size={18} />
+                <select id="strand" name="strand" value={form.strand} onChange={handleChange} required>
+                  <option value="">Select your strand</option>
+                  <option value="STEM">STEM</option>
+                  <option value="ABM">ABM</option>
+                  <option value="HUMSS">HUMSS</option>
+                  <option value="GAS">GAS</option>
+                  <option value="TVL">TVL</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="field">
+              <label htmlFor="school">School</label>
+              <div className="input-box">
+                <IdCard className="input-icon" size={18} />
+                <input id="school" name="school" type="text" placeholder="Enter your school" value={form.school} onChange={handleChange} />
+              </div>
+            </div>
+
               </div>
             ) : null}
 

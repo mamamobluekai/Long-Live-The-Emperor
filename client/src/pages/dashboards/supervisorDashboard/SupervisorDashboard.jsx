@@ -25,13 +25,13 @@ import SupervisorAttendance from './SupervisorAttendance';
 import SupervisorEvaluateStudent from './SupervisorEvaluateStudent';
 import SupervisorEvaluation from './SupervisorEvaluation';
 import SupervisorCertifications from './SupervisorCertifications';
+import SupervisorGradeAppeals from './SupervisorGradeAppeals';
 import SocialFeed from '../studentDashboard/SocialFeed';
 import BatchChat from '../../../components/social/BatchChat';
 import UserProfileSettings from '../UserProfileSettings';
 
 import {
-  getSupervisorBatches,
-  getSupervisorBatchAttendance,
+  getSupervisorDashboard,
 } from '../../../api/supervisorApi';
 
 import styles from './SupervisorDashboard.module.css';
@@ -75,6 +75,11 @@ function SupervisorDashboard({ user, onLogout }) {
           element={<SupervisorCertifications />}
         />
 
+        <Route
+          path="grade-appeals"
+          element={<SupervisorGradeAppeals />}
+        />
+
         <Route path="social-feed" element={<SocialFeed />} />
 
         <Route
@@ -103,6 +108,7 @@ function SupervisorDashboard({ user, onLogout }) {
 function SupervisorOverview({ user }) {
   const [batches, setBatches] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
+  const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
@@ -116,40 +122,12 @@ function SupervisorOverview({ user }) {
       setError('');
       setLoading(true);
 
-      const batchResponse = await getSupervisorBatches();
-
-      const batchList = normalizeArray(batchResponse);
+      const response = await getSupervisorDashboard();
+      const batchList = normalizeArray(response);
 
       setBatches(batchList);
-
-      if (!batchList.length) {
-        setAttendanceData([]);
-        return;
-      }
-
-      const attendanceResults = await Promise.allSettled(
-        batchList.map(async (batch) => {
-          const requestId =
-            batch.request_id ??
-            batch.deployment_request_id ??
-            batch.id;
-
-          if (!requestId) {
-            return [];
-          }
-
-          const response =
-            await getSupervisorBatchAttendance(requestId);
-
-          return normalizeAttendanceResponse(response, batch);
-        })
-      );
-
-      const mergedAttendance = attendanceResults
-        .filter((result) => result.status === 'fulfilled')
-        .flatMap((result) => result.value);
-
-      setAttendanceData(mergedAttendance);
+      setDashboardData(response);
+      setAttendanceData(normalizeAttendanceResponse({ attendance: response.attendanceRecords || [] }, {}));
     } catch (err) {
       console.error('Supervisor dashboard error:', err);
 
@@ -242,8 +220,7 @@ function SupervisorOverview({ user }) {
       .sort(
         (a, b) =>
           new Date(a.date) - new Date(b.date)
-      )
-      .slice(-7);
+      );
   }, [attendanceData]);
 
   const batchStats = useMemo(() => {
@@ -260,7 +237,8 @@ function SupervisorOverview({ user }) {
               item.request_id ??
                 item.deployment_request_id ??
                 item.batch_id
-            ) === String(requestId)
+            ) === String(requestId) &&
+            (!item.source || !batch.source || item.source === batch.source)
         );
 
       const present = batchAttendance.filter(
@@ -397,6 +375,22 @@ function SupervisorOverview({ user }) {
           type="purple"
         />
 
+        <StatCard
+          icon={<UserCheck size={21} />}
+          label="Pending Evaluations"
+          value={dashboardData?.evaluations?.pending || 0}
+          description="Students still to evaluate"
+          type="orange"
+        />
+
+        <StatCard
+          icon={<GraduationCap size={21} />}
+          label="Certificate Ready"
+          value={dashboardData?.certifications?.eligible || 0}
+          description="Students meeting completion rules"
+          type="teal"
+        />
+
       </div>
 
       {/* ================= ATTENDANCE SUMMARY ================= */}
@@ -410,8 +404,7 @@ function SupervisorOverview({ user }) {
             <div>
               <h2>Attendance Overview</h2>
               <p>
-                Student attendance over the latest
-                immersion days.
+                Student attendance across the full work immersion schedule.
               </p>
             </div>
 
@@ -786,6 +779,7 @@ function StatusRow({
 
 function BatchCard({ batch }) {
   const name =
+    batch.batch_label ||
     batch.company_name ||
     batch.company ||
     batch.deployment_name ||
@@ -998,7 +992,9 @@ function normalizeAttendanceStatus(status) {
 
   if (
     value.includes('present') ||
-    value === 'on_time'
+    value === 'on_time' ||
+    value === 'checked_in' ||
+    value === 'checked_out'
   ) {
     return 'present';
   }

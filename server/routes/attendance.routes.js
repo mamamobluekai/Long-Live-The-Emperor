@@ -19,6 +19,7 @@ router.put('/teacher/batch/:batchId/config', authenticate, authorize('teacher', 
 
 // ----- Teacher: records, stats, appeals -----
 router.get('/teacher/batch/:batchId/records', authenticate, authorize('teacher', 'coordinator'), attendanceManagement.getBatchRecords);
+router.get('/teacher/batch/:batchId/report', authenticate, authorize('teacher', 'coordinator'), attendanceManagement.getBatchAttendanceReport);
 router.get('/teacher/batch/:batchId/stats', authenticate, authorize('teacher', 'coordinator'), attendanceManagement.getBatchStats);
 router.get('/teacher/batch/:batchId/appeals', authenticate, authorize('teacher', 'coordinator'), attendanceManagement.getBatchAppeals);
 router.post('/teacher/appeals/:appealId/review', authenticate, authorize('teacher', 'coordinator'), attendanceManagement.reviewAppeal);

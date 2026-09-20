@@ -168,7 +168,12 @@ const registerStudent = async (req, res) => {
     const {
       studentId,
       firstName,
+      middleName,
       lastName,
+      section,
+      strand,
+      school,
+      gender,
       email,
       password,
       confirmPassword,
@@ -222,16 +227,31 @@ const registerStudent = async (req, res) => {
       `INSERT INTO users (email, password, role, phone, status)
        VALUES ($1, $2, 'student', $3, 'pending')
        RETURNING id, email, role, status`,
-      [trimmedEmail, hashedPassword, phone ? String(phone).trim() : null]
+      [trimmedEmail, hashedPassword, String(phone || '').trim()]
     );
 
     const userId = userResult.rows[0].id;
 
     // Insert into students table
     await client.query(
-      `INSERT INTO students (user_id, student_number, first_name, last_name)
-       VALUES ($1, $2, $3, $4)`,
-      [userId, trimmedStudentId, firstName.trim(), lastName.trim()]
+      `INSERT INTO students
+        (user_id, student_number, first_name, middle_name, last_name, grade_level,
+         section, track_strand, school, contact_number, gender, email)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+      [
+        userId,
+        trimmedStudentId,
+        firstName.trim(),
+        String(middleName || '').trim(),
+        lastName.trim(),
+        '12',
+        String(section || '').trim(),
+        String(strand || '').trim(),
+        String(school || '').trim(),
+        String(phone || '').trim(),
+        String(gender || '').trim(),
+        trimmedEmail,
+      ]
     );
 
     await client.query('COMMIT');

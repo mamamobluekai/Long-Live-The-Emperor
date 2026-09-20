@@ -658,6 +658,39 @@
 
 
 /* =========================================================
+    CERTIFIED TEXT
+    ========================================================= */
+
+.certifiedText {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 90px;
+  min-height: 26px;
+
+  padding: 4px 10px;
+
+  border: 1px solid #b9ddc8;
+  border-radius: 999px;
+
+  background: #ecfdf0;
+
+  color: #0a8b45;
+
+  font-size: 0.72rem;
+  font-weight: 700;
+
+  line-height: 1;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.04em;
+}
+
+
+/* =========================================================
    LOADING
 ========================================================= */
 
@@ -916,4 +949,115 @@ select:focus-visible {
   .error {
     font-size: 0.78rem;
   }
+}
+
+
+/* =========================================================
+    BATCH CARD
+    ========================================================= */
+
+.batchCard {
+  position: relative;
+
+  margin-bottom: 20px;
+  padding: 22px 24px 16px;
+
+  border: 1px solid #f0e6e8;
+  border-radius: 15px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 2px 8px rgba(88, 23, 37, 0.035);
+}
+
+.batchCard::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  top: 18px;
+  bottom: 18px;
+
+  width: 3px;
+
+  border-radius: 0 4px 4px 0;
+
+  background:
+    linear-gradient(
+      180deg,
+      #581725,
+      #822d3e
+    );
+}
+
+.batchHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-bottom: 6px;
+}
+
+.batchLabel {
+  margin: 0;
+
+  color: #581725;
+
+  font-size: 0.98rem;
+  font-weight: 700;
+
+  letter-spacing: -0.015em;
+}
+
+.muted {
+  color: #89787d;
+
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.badge {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 60px;
+  min-height: 24px;
+
+  padding: 3px 9px;
+
+  border: 1px solid #ddc1c8;
+  border-radius: 999px;
+
+  background: #fbf2f5;
+
+  color: #6d1e30;
+
+  font-size: 0.62rem;
+  font-weight: 700;
+
+  line-height: 1;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.035em;
+}
+
+.badgeApproved {
+  border: 1px solid #b9ddc8;
+
+  background: #edf8f1;
+
+  color: #267347;
+}
+
+.badgePending {
+  border: 1px solid #ead7a8;
+
+  background: #fff8e7;
+
+  color: #956c13;
 }

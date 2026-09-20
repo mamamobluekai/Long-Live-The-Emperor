@@ -7,6 +7,7 @@ const {
   getPendingStudents,
   approveStudent,
   disapproveStudent,
+  deleteStudent,
   upsertRequirements,
   submitRequirements,
   getRequirements,
@@ -35,7 +36,9 @@ const {
   rejectDeploymentRequest,
   deleteDeploymentRequest,
   fulfillSupervisorRequest,
+  getCoordinatorDashboard,
 } = require('../controllers/coordinatorControllers');
+const { getTeacherReportsConcerns, confirmReportConcern } = require('../controllers/supervisorControllers/supervisor.controller');
 const { uploadStudentsExcel } = require('../controllers/coordinatorControllers/uploadStudents.controller');
 
 const authenticate = require('../middleware/verifyToken');
@@ -49,10 +52,13 @@ const uploadDoc = multer({ storage: multer.memoryStorage(), limits: { fileSize: 
 
 router.use(authenticate);
 
+router.get('/dashboard', authorize('coordinator', 'admin'), getCoordinatorDashboard);
+
 router.get('/students/pending', authorize('coordinator', 'admin'), getPendingStudents);
 router.post('/students/upload', authorize('coordinator', 'admin'), uploadExcel.single('file'), uploadStudentsExcel);
 router.put('/students/:id/approve', authorize('coordinator', 'admin'), approveStudent);
 router.put('/students/:id/disapprove', authorize('coordinator', 'admin'), disapproveStudent);
+router.delete('/students/:id', authorize('coordinator', 'admin'), deleteStudent);
 
 router.put('/requirements', authorize('student', 'coordinator', 'admin'), upsertRequirements);
 router.post('/requirements/submit', authorize('student', 'coordinator', 'admin'), submitRequirements);
@@ -70,6 +76,8 @@ router.delete('/teacher-batches/:batchId', authorize('coordinator', 'admin'), de
 router.post('/teacher-batches/:batchId/assign', authorize('coordinator', 'admin'), assignApprovedStudentsToBatch);
 router.get('/teacher-batches/me', authorize('teacher', 'coordinator', 'admin'), getMyTeacherBatches);
 router.get('/teacher-batches/:batchId/students', authorize('teacher', 'coordinator', 'admin'), getTeacherBatchStudents);
+router.get('/teacher/reports-concerns', authorize('teacher', 'coordinator', 'admin'), getTeacherReportsConcerns);
+router.patch('/teacher/reports-concerns/:reportId/confirm', authorize('teacher', 'coordinator', 'admin'), confirmReportConcern);
 router.get('/teachers', authorize('coordinator', 'admin'), getTeachersListForCoordinator);
 router.get('/supervisors', authorize('coordinator', 'admin'), getSupervisorsListForCoordinator);
 router.get('/coordinators', authorize('supervisor', 'coordinator', 'admin'), getCoordinatorsForSupervisor);

@@ -9,6 +9,7 @@ import {
   MessageCircle,
   UserRound,
   NotebookPen,
+  FileText,
 } from 'lucide-react';
 
 import DashboardSidebar from '../sharedSidebar/DashboardSidebar';
@@ -33,11 +34,21 @@ const links = [
     label: 'Requirements',
     icon: ClipboardList,
   },
+   {
+    to: '/dashboard/student/attendance',
+    label: 'Attendance',
+    icon: CalendarDays,
+  },
 
   {
     to: '/dashboard/student/placement-status',
     label: 'Placement Status',
     icon: MapPin,
+  },
+  {
+    to: '/dashboard/student/daily-documentation',
+    label: 'Daily Documentation',
+    icon: NotebookPen,
   },
 
   {
@@ -47,22 +58,20 @@ const links = [
   },
 
   {
+    to: '/dashboard/student/grade-appeal',
+    label: 'Grade Appeal',
+    icon: FileText,
+  },
+
+  {
     to: '/dashboard/student/announcements',
     label: 'Announcements',
     icon: Megaphone,
   },
 
-  {
-    to: '/dashboard/student/attendance',
-    label: 'Attendance',
-    icon: CalendarDays,
-  },
+ 
 
-  {
-    to: '/dashboard/student/daily-documentation',
-    label: 'Daily Documentation',
-    icon: NotebookPen,
-  },
+  
 
   {
     to: '/dashboard/student/group-chat',
@@ -72,7 +81,7 @@ const links = [
 
   {
     to: '/dashboard/student/profile',
-    label: 'Profile Settings',
+    label: 'Settings',
     icon: UserRound,
   },
 ];

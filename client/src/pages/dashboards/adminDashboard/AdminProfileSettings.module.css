@@ -170,6 +170,29 @@ h2 {
   cursor: not-allowed;
 }
 
+.secondaryButton {
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.secondaryButton:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.secondaryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @media (min-width: 640px) {
   .grid {
     grid-template-columns: 1fr 1fr;

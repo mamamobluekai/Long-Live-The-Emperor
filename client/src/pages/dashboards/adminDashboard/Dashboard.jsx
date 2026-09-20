@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAdminAuth } from '../../../context/AdminAuthContext';
 import { getAdminDashboard } from '../../../api/adminApi';
+import { LineChart, AreaChart, BarChart, DonutChart, FunnelChart } from '../../../components/charts';
 import styles from './Dashboard.module.css';
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
@@ -19,6 +20,10 @@ function buildWeekData(attendanceWeek) {
     day: label,
     percentage: byDay[label] ?? 0,
   }));
+}
+
+function formatDateForChart(dateStr) {
+  return dateStr;
 }
 
 export default function AdminDashboardPage() {
@@ -48,6 +53,66 @@ export default function AdminDashboardPage() {
   const reqs = stats?.requirements || {};
   const docs = stats?.documentation || {};
   const evals = stats?.evaluations || [];
+  const attendanceTrend = stats?.attendanceTrend || [];
+  const requirementsTrend = stats?.requirementsTrend || [];
+  const userGrowth = stats?.userGrowth || [];
+  const batchPerformance = stats?.batchPerformance || [];
+  const periodStatus = stats?.periodStatus || {};
+  const docGradingTrend = stats?.docGradingTrend || [];
+  const appeals = stats?.appeals || {};
+
+  // Prepare data for charts
+  const attendanceTrendData = attendanceTrend.map((d) => ({
+    date: formatDateForChart(d.date),
+    present: d.present,
+    total: d.total,
+    percentage: d.percentage,
+  }));
+
+  const requirementsTrendData = requirementsTrend.map((d) => ({
+    date: formatDateForChart(d.date),
+    completed: d.completed,
+    pending: d.pending,
+    under_review: d.under_review,
+    rejected: d.rejected,
+    total: d.total,
+  }));
+
+  const userGrowthData = userGrowth.map((d) => ({
+    month: d.month,
+    students: d.students,
+    teachers: d.teachers,
+    supervisors: d.supervisors,
+    coordinators: d.coordinators,
+    total: d.total,
+  }));
+
+  const batchPerformanceData = batchPerformance.map((d) => ({
+    name: d.batchLabel,
+    studentCount: d.studentCount,
+    attendanceRate: d.attendanceRate,
+    attendanceDays: d.attendanceDays,
+  }));
+
+  const periodStatusData = [
+    { label: 'Upcoming', value: periodStatus.upcoming || 0 },
+    { label: 'Ongoing', value: periodStatus.ongoing || 0 },
+    { label: 'Completed', value: periodStatus.completed || 0 },
+    { label: 'Inactive', value: periodStatus.inactive || 0 },
+  ].filter((d) => d.value > 0);
+
+  const docGradingData = docGradingTrend.map((d) => ({
+    date: formatDateForChart(d.date),
+    submitted: d.submitted,
+    graded: d.graded,
+    rate: d.rate,
+  }));
+
+  const appealsFunnel = [
+    { label: 'Pending', value: appeals.pending || 0, percentage: appeals.pending ? Math.round((appeals.pending / (appeals.pending + appeals.approved + appeals.rejected || 1)) * 100) : 0 },
+    { label: 'Approved', value: appeals.approved || 0, percentage: appeals.approved ? Math.round((appeals.approved / (appeals.pending + appeals.approved + appeals.rejected || 1)) * 100) : 0 },
+    { label: 'Rejected', value: appeals.rejected || 0, percentage: appeals.rejected ? Math.round((appeals.rejected / (appeals.pending + appeals.approved + appeals.rejected || 1)) * 100) : 0 },
+  ];
 
   return (
     <div className={styles.container}>
@@ -76,6 +141,7 @@ export default function AdminDashboardPage() {
         </div>
       ) : (
         <>
+          {/* KPI Cards */}
           <div className={styles.statsRow}>
             <div className={styles.statCard}>
               <span className={styles.statLabel}>Students</span>
@@ -95,24 +161,20 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
+          {/* Row 1: Users by Role, Account Status, Attendance This Week */}
           <div className={styles.chartsRow}>
             <div className={styles.chartCard}>
               <h3 className={styles.chartTitle}>Users by Role</h3>
               <div className={styles.donutContainer}>
                 <DonutChart
-                  segments={[
-                    { label: 'Students', value: stats?.totalStudents ?? 0, color: '#3b82f6' },
-                    { label: 'Teachers', value: stats?.totalTeachers ?? 0, color: '#22c55e' },
-                    { label: 'Supervisors', value: stats?.totalSupervisors ?? 0, color: '#f59e0b' },
-                    { label: 'Coordinators', value: stats?.totalCoordinators ?? 0, color: '#8b5cf6' },
+                  data={[
+                    { label: 'Students', value: stats?.totalStudents ?? 0 },
+                    { label: 'Teachers', value: stats?.totalTeachers ?? 0 },
+                    { label: 'Supervisors', value: stats?.totalSupervisors ?? 0 },
+                    { label: 'Coordinators', value: stats?.totalCoordinators ?? 0 },
                   ]}
+                  height={200}
                 />
-                <div className={styles.legend}>
-                  <LegendItem color="#3b82f6" label="Students" value={stats?.totalStudents ?? 0} />
-                  <LegendItem color="#22c55e" label="Teachers" value={stats?.totalTeachers ?? 0} />
-                  <LegendItem color="#f59e0b" label="Supervisors" value={stats?.totalSupervisors ?? 0} />
-                  <LegendItem color="#8b5cf6" label="Coordinators" value={stats?.totalCoordinators ?? 0} />
-                </div>
               </div>
             </div>
 
@@ -159,6 +221,110 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
+          {/* Row 2: Attendance Trend, Requirements Trend, Documentation Grading Rate */}
+          <div className={styles.chartsRow}>
+            <div className={styles.chartCardFull}>
+              <h3 className={styles.chartTitle}>Attendance Trend (30 Days)</h3>
+              <LineChart
+                data={attendanceTrendData}
+                xKey="date"
+                lines={[
+                  { dataKey: 'percentage', label: 'Attendance %', color: '#3b82f6' },
+                ]}
+                height={280}
+                tooltipFormatter={(value) => `${value}%`}
+              />
+            </div>
+
+            <div className={styles.chartCardFull}>
+              <h3 className={styles.chartTitle}>Requirements Trend (30 Days)</h3>
+              <AreaChart
+                data={requirementsTrendData}
+                xKey="date"
+                areas={[
+                  { dataKey: 'completed', label: 'Completed', color: '#22c55e' },
+                  { dataKey: 'pending', label: 'Pending', color: '#f59e0b' },
+                  { dataKey: 'under_review', label: 'Under Review', color: '#3b82f6' },
+                  { dataKey: 'rejected', label: 'Rejected', color: '#ef4444' },
+                ]}
+                height={280}
+                stacked
+                tooltipFormatter={(value, name) => [value, name]}
+              />
+            </div>
+          </div>
+
+          <div className={styles.chartCardFull}>
+            <h3 className={styles.chartTitle}>Documentation Grading Rate (30 Days)</h3>
+            <LineChart
+              data={docGradingData}
+              xKey="date"
+              lines={[
+                { dataKey: 'submitted', label: 'Submitted', color: '#3b82f6' },
+                { dataKey: 'graded', label: 'Graded', color: '#22c55e' },
+                { dataKey: 'rate', label: 'Grading Rate %', color: '#8b5cf6' },
+              ]}
+              height={280}
+              tooltipFormatter={(value, name) => name === 'Grading Rate %' ? `${value}%` : value}
+            />
+          </div>
+
+          {/* Row 3: User Growth, Batch Performance */}
+          <div className={styles.chartsRow}>
+            <div className={styles.chartCardFull}>
+              <h3 className={styles.chartTitle}>User Growth (12 Months)</h3>
+              <BarChart
+                data={userGrowthData}
+                xKey="month"
+                bars={[
+                  { dataKey: 'students', label: 'Students', color: '#3b82f6' },
+                  { dataKey: 'teachers', label: 'Teachers', color: '#22c55e' },
+                  { dataKey: 'supervisors', label: 'Supervisors', color: '#f59e0b' },
+                  { dataKey: 'coordinators', label: 'Coordinators', color: '#8b5cf6' },
+                ]}
+                height={320}
+                stacked
+              />
+            </div>
+
+            <div className={styles.chartCardFull}>
+              <h3 className={styles.chartTitle}>Batch Performance</h3>
+              <BarChart
+                data={batchPerformanceData}
+                xKey="name"
+                bars={[
+                  { dataKey: 'attendanceRate', label: 'Attendance Rate %', color: '#3b82f6' },
+                ]}
+                height={320}
+                horizontal
+                maxBarSize={40}
+                tooltipFormatter={(value) => `${value}%`}
+              />
+            </div>
+          </div>
+
+          {/* Row 4: Immersion Periods, Appeals Funnel, Evaluation Performance */}
+          <div className={styles.chartsRow}>
+            <div className={styles.chartCard}>
+              <h3 className={styles.chartTitle}>Immersion Periods</h3>
+              <DonutChart
+                data={periodStatusData}
+                height={260}
+                innerRadius={50}
+                outerRadius={70}
+              />
+            </div>
+
+            <div className={styles.chartCard}>
+              <h3 className={styles.chartTitle}>Appeals Funnel</h3>
+              <FunnelChart
+                stages={appealsFunnel}
+                height={260}
+              />
+            </div>
+          </div>
+
+          {/* Row 5: Requirements, Documentation, Evaluations (existing) */}
           <div className={styles.chartsRow}>
             <div className={styles.chartCard}>
               <h3 className={styles.chartTitle}>Requirements</h3>
@@ -216,71 +382,6 @@ export default function AdminDashboardPage() {
           </div>
         </>
       )}
-    </div>
-  );
-}
-
-function DonutChart({ segments }) {
-  const total = segments.reduce((sum, s) => sum + s.value, 0) || 1;
-
-  const size = 160;
-  const strokeWidth = 28;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-
-  const segmentData = [];
-  segments.reduce((acc, seg) => {
-    const pct = seg.value / total;
-    const dashLength = pct * circumference;
-    const dashOffset = -(acc * circumference);
-    segmentData.push({ ...seg, dashLength, dashOffset });
-    return acc + pct;
-  }, 0);
-
-  return (
-    <svg width={size} height={size} className={styles.donutSvg}>
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        stroke="#f1f5f9"
-        strokeWidth={strokeWidth}
-      />
-      {segmentData.map((seg, i) => (
-        <circle
-          key={i}
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={seg.color}
-          strokeWidth={strokeWidth}
-          strokeDasharray={`${seg.dashLength} ${circumference - seg.dashLength}`}
-          strokeDashoffset={seg.dashOffset}
-          strokeLinecap="butt"
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        />
-      ))}
-      <text
-        x={size / 2}
-        y={size / 2}
-        textAnchor="middle"
-        dominantBaseline="central"
-        className={styles.donutCenterText}
-      >
-        {total}
-      </text>
-    </svg>
-  );
-}
-
-function LegendItem({ color, label, value }) {
-  return (
-    <div className={styles.legendItem}>
-      <span className={styles.legendDot} style={{ background: color }} />
-      <span className={styles.legendLabel}>{label}</span>
-      <span className={styles.legendValue}>{value}</span>
     </div>
   );
 }

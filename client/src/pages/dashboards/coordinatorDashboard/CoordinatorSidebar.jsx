@@ -7,9 +7,15 @@ import {
   BriefcaseBusiness,
   MessageCircle,
   User,
+  LayoutDashboard,
 } from 'lucide-react';
 
 const links = [
+  {
+    to: '/dashboard/coordinator',
+    label: 'Overview',
+    icon: LayoutDashboard,
+  },
   {
     to: '/dashboard/coordinator/students',
     label: 'Student Approvals',

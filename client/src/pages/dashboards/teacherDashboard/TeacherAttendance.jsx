@@ -5,7 +5,6 @@ import {
   getTeacherBatchStatus,
   getBatchConfig,
   updateBatchConfig,
-  getBatchRecords,
   getBatchStats,
   getBatchSchedules,
   upsertBatchSchedule,
@@ -40,7 +39,6 @@ function normalizeDateInput(value) {
 
   const str = String(value);
 
-  // Already YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
     return str;
   }
@@ -70,11 +68,10 @@ function TeacherAttendance() {
 
   const [status, setStatus] = useState(null);
   const [config, setConfig] = useState(null);
-  const [records, setRecords] = useState([]);
   const [stats, setStats] = useState(null);
   const [groups, setGroups] = useState([]);
 
-  const [date, setDate] = useState(
+  const [date] = useState(
     toLocalDateString(new Date())
   );
 
@@ -85,7 +82,6 @@ function TeacherAttendance() {
   const [editingHours, setEditingHours] = useState(false);
 
   // Location modal state
-  const [locationModal, setLocationModal] = useState(null);
 
   const flash = (type, text) => {
     setNotice({ type, text });
@@ -100,10 +96,9 @@ function TeacherAttendance() {
     setError(null);
 
     try {
-      const [s, c, r, st, g] = await Promise.all([
+      const [s, c, st, g] = await Promise.all([
         getTeacherBatchStatus(selectedBatchId, token),
         getBatchConfig(selectedBatchId, token),
-        getBatchRecords(selectedBatchId, date, token),
         getBatchStats(selectedBatchId, date, token),
         getBatchSchedules(selectedBatchId, token),
       ]);
@@ -116,7 +111,6 @@ function TeacherAttendance() {
         time_out_open: normalizeTimeInput(c.time_out_open),
         time_out_close: normalizeTimeInput(c.time_out_close),
       });
-      setRecords(r.records || []);
       setStats(st);
       setGroups(g.groups || []);
     } catch {
@@ -136,13 +130,11 @@ function TeacherAttendance() {
 
     const id = setInterval(async () => {
       try {
-        const [s, r] = await Promise.all([
+        const [s] = await Promise.all([
           getTeacherBatchStatus(selectedBatchId, token),
-          getBatchRecords(selectedBatchId, date, token),
         ]);
 
         setStatus(s);
-        setRecords(r.records || []);
       } catch {
         /* ignore */
       }
@@ -150,50 +142,6 @@ function TeacherAttendance() {
 
     return () => clearInterval(id);
   }, [selectedBatchId, date, token]);
-
-  const showLocationModal = (record, type) => {
-    const lat =
-      type === 'check_in'
-        ? record.check_in_lat
-        : record.check_out_lat;
-
-    const lng =
-      type === 'check_in'
-        ? record.check_in_lng
-        : record.check_out_lng;
-
-    const accuracy =
-      type === 'check_in'
-        ? record.check_in_accuracy
-        : record.check_out_accuracy;
-
-    const time =
-      type === 'check_in'
-        ? record.check_in_time
-        : record.check_out_time;
-
-    if (!lat || !lng) {
-      flash(
-        'error',
-        'No location data available for this attendance.'
-      );
-
-      return;
-    }
-
-    setLocationModal({
-      record,
-      type,
-      lat,
-      lng,
-      accuracy,
-      time,
-    });
-  };
-
-  const closeLocationModal = () => {
-    setLocationModal(null);
-  };
 
   const saveConfig = async (e) => {
     e.preventDefault();
@@ -318,7 +266,7 @@ function TeacherAttendance() {
       <div className={styles.header}>
         <div>
           <h2 className={styles.title}>
-            Attendance Management
+            Teacher Attendance & Work Immersion Schedule
           </h2>
 
           {batchLabel && (
@@ -326,6 +274,9 @@ function TeacherAttendance() {
               Batch: {batchLabel}
             </p>
           )}
+          <p className={styles.pageDescription}>
+            Configure attendance windows and set the work immersion duration for this batch.
+          </p>
         </div>
       </div>
 
@@ -756,222 +707,6 @@ function TeacherAttendance() {
             })}
           </div>
 
-          {/* Records */}
-          <div className={styles.panel}>
-
-            <div
-              className={styles.panelHeader}
-            >
-
-              <h3
-                className={styles.panelTitle}
-              >
-                Attendance Records
-              </h3>
-
-              <input
-                type="date"
-                className={styles.dateInput}
-                value={date || ''}
-                onClick={(e) => {
-                  if (
-                    e.currentTarget.showPicker
-                  ) {
-                    e.currentTarget.showPicker();
-                  }
-                }}
-                onChange={(e) => {
-                  const val = e.target.value;
-
-                  if (!val) return;
-
-                  if (isWeekend(val)) {
-                    flash(
-                      'error',
-                      'Attendance records are not available on weekends.'
-                    );
-
-                    return;
-                  }
-
-                  setDate(val);
-                }}
-              />
-
-            </div>
-
-            <div
-              className={styles.tableWrap}
-            >
-
-              <table className={styles.table}>
-
-                <thead>
-                  <tr>
-                    <th>Student</th>
-                    <th>ID</th>
-                    <th>Grade / Strand</th>
-                    <th>Time In</th>
-                    <th>Time Out</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-
-                  {records.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan="6"
-                        className={
-                          styles.empty
-                        }
-                      >
-                        No records for this date.
-                      </td>
-                    </tr>
-                  )}
-
-                  {records.map((r) => (
-                    <tr key={r.id}>
-
-                      <td>
-                        {r.first_name}{' '}
-                        {r.last_name}
-                      </td>
-
-                      <td>
-                        {r.student_number || '—'}
-                      </td>
-
-                      <td>
-                        {[
-                          r.grade_level,
-                          r.track_strand,
-                        ]
-                          .filter(Boolean)
-                          .join(' / ') || '—'}
-                      </td>
-
-                      <td
-                        style={{
-                          cursor: r.check_in_time
-                            ? 'pointer'
-                            : 'default',
-                        }}
-                        onClick={() =>
-                          r.check_in_time &&
-                          showLocationModal(
-                            r,
-                            'check_in'
-                          )
-                        }
-                      >
-                        {r.check_in_time ? (
-                          <span
-                            style={{
-                              color: '#0066cc',
-                              textDecoration:
-                                'underline',
-                            }}
-                          >
-                            {new Date(
-                              r.check_in_time
-                            ).toLocaleTimeString()}
-                          </span>
-                        ) : (
-                          <span
-                            className={
-                              styles.missed
-                            }
-                          >
-                            missed
-                          </span>
-                        )}
-                      </td>
-
-                      <td
-                        style={{
-                          cursor: r.check_out_time
-                            ? 'pointer'
-                            : 'default',
-                        }}
-                        onClick={() =>
-                          r.check_out_time &&
-                          showLocationModal(
-                            r,
-                            'check_out'
-                          )
-                        }
-                      >
-                        {r.check_out_time ? (
-                          <span
-                            style={{
-                              color: '#0066cc',
-                              textDecoration:
-                                'underline',
-                            }}
-                          >
-                            {new Date(
-                              r.check_out_time
-                            ).toLocaleTimeString()}
-                          </span>
-                        ) : (
-                          <span
-                            className={
-                              styles.missed
-                            }
-                          >
-                            missed
-                          </span>
-                        )}
-                      </td>
-
-                      <td>
-
-                        <span
-                          className={`${styles.badge} ${
-                            styles[
-                              'badge_' +
-                                (r.status ||
-                                  'none')
-                            ]
-                          }`}
-                        >
-                          {r.status}
-                        </span>
-
-                        {r.appeal_time_in_id && (
-                          <span
-                            className={
-                              styles.appealTag
-                            }
-                          >
-                            appeal
-                          </span>
-                        )}
-
-                        {r.appeal_time_out_id && (
-                          <span
-                            className={
-                              styles.appealTag
-                            }
-                          >
-                            appeal
-                          </span>
-                        )}
-
-                      </td>
-
-                    </tr>
-                  ))}
-
-                </tbody>
-
-              </table>
-
-            </div>
-          </div>
         </>
       )}
 
@@ -979,249 +714,6 @@ function TeacherAttendance() {
         <p className={styles.info}>
           You are not assigned to a batch yet.
         </p>
-      )}
-
-      {/* Location Modal */}
-      {locationModal && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor:
-              'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
-          onClick={closeLocationModal}
-        >
-
-          <div
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              padding: '24px',
-              maxWidth: '400px',
-              width: '90%',
-              boxShadow:
-                '0 4px 20px rgba(0, 0, 0, 0.15)',
-            }}
-            onClick={(e) =>
-              e.stopPropagation()
-            }
-          >
-
-            <h3
-              style={{
-                margin: '0 0 16px 0',
-                fontSize: '1.2rem',
-              }}
-            >
-              {locationModal.type === 'check_in'
-                ? 'Check-In'
-                : 'Check-Out'}{' '}
-              Location
-            </h3>
-
-            <div
-              style={{
-                marginBottom: '12px',
-              }}
-            >
-              <p
-                style={{
-                  margin: '0 0 4px 0',
-                  fontSize: '0.85rem',
-                  color: '#666',
-                }}
-              >
-                Student
-              </p>
-
-              <p
-                style={{
-                  margin: 0,
-                  fontWeight: 500,
-                }}
-              >
-                {locationModal.record.first_name}{' '}
-                {locationModal.record.last_name}
-              </p>
-            </div>
-
-            <div
-              style={{
-                marginBottom: '12px',
-              }}
-            >
-              <p
-                style={{
-                  margin: '0 0 4px 0',
-                  fontSize: '0.85rem',
-                  color: '#666',
-                }}
-              >
-                Time
-              </p>
-
-              <p
-                style={{
-                  margin: 0,
-                  fontWeight: 500,
-                }}
-              >
-                {new Date(
-                  locationModal.time
-                ).toLocaleString()}
-              </p>
-            </div>
-
-            <div
-              style={{
-                marginBottom: '12px',
-              }}
-            >
-              <p
-                style={{
-                  margin: '0 0 4px 0',
-                  fontSize: '0.85rem',
-                  color: '#666',
-                }}
-              >
-                Latitude
-              </p>
-
-              <p
-                style={{
-                  margin: 0,
-                  fontFamily: 'monospace',
-                  fontSize: '0.9rem',
-                }}
-              >
-                {locationModal.lat.toFixed(6)}
-              </p>
-            </div>
-
-            <div
-              style={{
-                marginBottom: '12px',
-              }}
-            >
-              <p
-                style={{
-                  margin: '0 0 4px 0',
-                  fontSize: '0.85rem',
-                  color: '#666',
-                }}
-              >
-                Longitude
-              </p>
-
-              <p
-                style={{
-                  margin: 0,
-                  fontFamily: 'monospace',
-                  fontSize: '0.9rem',
-                }}
-              >
-                {locationModal.lng.toFixed(6)}
-              </p>
-            </div>
-
-            {locationModal.accuracy && (
-              <div
-                style={{
-                  marginBottom: '12px',
-                }}
-              >
-
-                <p
-                  style={{
-                    margin: '0 0 4px 0',
-                    fontSize: '0.85rem',
-                    color: '#666',
-                  }}
-                >
-                  Accuracy
-                </p>
-
-                <p
-                  style={{
-                    margin: 0,
-                    fontFamily: 'monospace',
-                    fontSize: '0.9rem',
-                  }}
-                >
-                  ±
-                  {locationModal.accuracy.toFixed(
-                    2
-                  )}{' '}
-                  meters
-                </p>
-
-              </div>
-            )}
-
-            <div
-              style={{
-                marginBottom: '12px',
-              }}
-            >
-
-              <p
-                style={{
-                  margin: '0 0 4px 0',
-                  fontSize: '0.85rem',
-                  color: '#666',
-                }}
-              >
-                Map Link
-              </p>
-
-              <a
-                href={`https://www.google.com/maps?q=${locationModal.lat},${locationModal.lng}`}
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  color: '#0066cc',
-                  textDecoration: 'none',
-                  display: 'inline-block',
-                  padding: '6px 12px',
-                  border:
-                    '1px solid #0066cc',
-                  borderRadius: '4px',
-                  fontSize: '0.85rem',
-                  fontWeight: 500,
-                }}
-              >
-                Open in Google Maps
-              </a>
-
-            </div>
-
-            <button
-              onClick={closeLocationModal}
-              style={{
-                width: '100%',
-                padding: '10px',
-                marginTop: '16px',
-                backgroundColor: '#f3f4f6',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: 500,
-                fontSize: '0.9rem',
-              }}
-            >
-              Close
-            </button>
-
-          </div>
-        </div>
       )}
 
     </div>

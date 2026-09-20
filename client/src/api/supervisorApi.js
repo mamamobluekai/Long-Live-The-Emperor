@@ -20,6 +20,10 @@ async function apiFetch(path, options = {}) {
   return data;
 }
 
+export async function getSupervisorDashboard() {
+  return apiFetch('/dashboard');
+}
+
 // The supervisor's deployment "batches" and the students in each.
 export async function getSupervisorBatches() {
   return apiFetch('/batches');
@@ -32,4 +36,16 @@ export async function getSupervisorBatchAttendance(requestId, { from, to } = {})
   if (to) params.set('to', to);
   const qs = params.toString();
   return apiFetch(`/batches/${requestId}/attendance${qs ? `?${qs}` : ''}`);
+}
+
+export async function createSupervisorReportConcern(payload) {
+  return apiFetch('/reports-concerns', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getSupervisorReportsConcerns() {
+  return apiFetch('/reports-concerns');
 }

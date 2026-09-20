@@ -4,6 +4,7 @@ import {
   getNotifications,
   markAllNotificationsRead,
   markNotificationRead,
+  deleteAllNotifications,
 } from '../api/notificationApi';
 import { useAuth } from './AuthContext';
 import { NotificationContext } from './notificationContext';
@@ -75,12 +76,19 @@ export function NotificationProvider({ children }) {
     setUnreadCount(0);
   };
 
+  const deleteAll = async () => {
+    await deleteAllNotifications();
+    setNotifications([]);
+    setUnreadCount(0);
+  };
+
   const value = useMemo(() => ({
     notifications,
     unreadCount,
     loading,
     markRead,
     markAllRead,
+    deleteAll,
   }), [notifications, unreadCount, loading]);
 
   return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;

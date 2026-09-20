@@ -158,6 +158,14 @@ async function markAllNotificationsRead(userId) {
   );
 }
 
+async function deleteAllNotifications(userId) {
+  await ensureNotificationSchema();
+  await pool.query(
+    `DELETE FROM notifications WHERE user_id = $1`,
+    [userId]
+  );
+}
+
 module.exports = {
   ensureNotificationSchema,
   createNotification,
@@ -169,4 +177,5 @@ module.exports = {
   getUnreadCount,
   markNotificationRead,
   markAllNotificationsRead,
+  deleteAllNotifications,
 };

@@ -28,9 +28,16 @@ function jsonBody(body) {
   };
 }
 
+export async function getCoordinatorDashboard() {
+  return apiFetch('/dashboard');
+}
+
 /* ---------------- Student approvals ---------------- */
-export async function getPendingStudents() {
-  return apiFetch('/students/pending');
+export async function getPendingStudents(status = 'pending') {
+  const params = new URLSearchParams();
+  if (status && status !== 'all') params.set('status', status);
+  const qs = params.toString();
+  return apiFetch(`/students/pending${qs ? `?${qs}` : ''}`);
 }
 
 export async function approveStudent(id) {
@@ -39,6 +46,10 @@ export async function approveStudent(id) {
 
 export async function disapproveStudent(id) {
   return apiFetch(`/students/${id}/disapprove`, { method: 'PUT' });
+}
+
+export async function deleteStudent(id) {
+  return apiFetch(`/students/${id}`, { method: 'DELETE' });
 }
 
 export async function uploadStudentsExcel(file) {

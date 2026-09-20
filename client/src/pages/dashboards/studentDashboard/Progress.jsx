@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { downloadMyCertificate, getMyProgress } from '../../../api/studentApi';
 import Feedback from '../../../components/Feedback';
 import styles from './Progress.module.css';
@@ -18,6 +18,7 @@ function CheckIcon({ color = '#fff', size = 14 }) {
     </svg>
   );
 }
+
 
 function RibbonIcon({ color = GOLD, size = 30 }) {
   return (
@@ -114,6 +115,18 @@ function Progress() {
 
   const [certLoading, setCertLoading] = useState(false);
 
+  const fetchProgress = useCallback(async () => {
+    try {
+      const res = await getMyProgress();
+      setData(res);
+      setError('');
+    } catch (err) {
+      setError(err.message || 'Failed to load progress.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     async function init() {
@@ -131,6 +144,14 @@ function Progress() {
     init();
     return () => { cancelled = true; };
   }, []);
+
+  // Auto-refresh every 15 seconds to keep attendance in sync
+  useEffect(() => {
+    const id = setInterval(() => {
+      fetchProgress();
+    }, 15000);
+    return () => clearInterval(id);
+  }, [fetchProgress]);
 
   const requirements = data?.requirements;
   const documentation = data?.documentation;
@@ -161,8 +182,8 @@ function Progress() {
       key: 'attendance',
       label: 'Attendance',
       detail: attendance?.complete
-        ? `${attendance.days} days attended`
-        : `${attendance?.days || 0}/${attendance?.required || 10} immersion days attended`,
+        ? `${attendance.days} of ${attendance.scheduled || attendance.required || 10} scheduled days attended`
+        : `${attendance?.days || 0}/${attendance?.scheduled || attendance?.required || 10} scheduled immersion days attended`,
       done: !!attendance?.complete,
       icon: '3',
     },

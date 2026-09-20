@@ -36,7 +36,6 @@ const uploadStudentsExcel = async (req, res) => {
         const lastName = String(row['Last Name']).trim();
         const email = String(row['Email']).trim();
         const middleName = String(row['Middle Name'] || '').trim();
-        const gradeLevel = String(row['Grade Level'] || '').trim();
         const section = String(row['Section'] || '').trim();
         const strand = String(row['Strand'] || '').trim();
         const school = String(row['School'] || '').trim();
@@ -80,7 +79,7 @@ const uploadStudentsExcel = async (req, res) => {
           `INSERT INTO users (email, password, role, phone, status)
            VALUES ($1, $2, 'student', $3, 'pending')
            RETURNING id`,
-          [email, hashedPassword, contact || null]
+          [email, hashedPassword, contact]
         );
 
         const userId = userResult.rows[0].id;
@@ -95,13 +94,13 @@ const uploadStudentsExcel = async (req, res) => {
             studentId,
             firstName,
             lastName,
-            middleName || null,
-            gradeLevel || null,
-            section || null,
-            strand || null,
-            school || null,
-            contact || null,
-            gender || null,
+            middleName,
+            '12',
+            section,
+            strand,
+            school,
+            contact,
+            gender,
             email,
           ]
         );

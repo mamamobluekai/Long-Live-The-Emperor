@@ -20,7 +20,7 @@ function formatAppealDate(value) {
   });
 }
 
-function TeacherAppeals() {
+function TeacherAppeals({ embedded = false }) {
   const { token } = useAuth();
   const { batchId: selectedBatchId, batchLabel } = useTeacherBatch();
   const [filter, setFilter] = useState('pending');
@@ -65,7 +65,7 @@ function TeacherAppeals() {
   };
 
   return (
-    <div className={styles.page}>
+    <div className={embedded ? styles.embeddedPage : styles.page}>
       <div className={styles.header}>
         <div>
           <h2 className={styles.title}>Attendance Appeals</h2>

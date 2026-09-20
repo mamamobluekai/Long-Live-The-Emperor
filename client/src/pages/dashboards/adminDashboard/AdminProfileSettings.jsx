@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { Edit, Save, X } from 'lucide-react';
 import {
   getAdminProfile,
   updateAdminProfile,
@@ -17,8 +18,17 @@ export default function AdminProfileSettings() {
   const [saving, setSaving] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [pictureUploading, setPictureUploading] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   const [form, setForm] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    department: '',
+  });
+
+  const [originalForm, setOriginalForm] = useState({
     first_name: '',
     last_name: '',
     email: '',
@@ -39,13 +49,15 @@ export default function AdminProfileSettings() {
     try {
       const data = await getAdminProfile();
       setProfile(data.user);
-      setForm({
+      const initialForm = {
         first_name: data.user.first_name || '',
         last_name: data.user.last_name || '',
         email: data.user.email || '',
         phone: data.user.phone || '',
         department: data.user.department || '',
-      });
+      };
+      setForm(initialForm);
+      setOriginalForm(initialForm);
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
@@ -65,17 +77,29 @@ export default function AdminProfileSettings() {
     setPwdForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleEdit = () => {
+    setEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setForm(originalForm);
+    setEditing(false);
+  };
+
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
       const data = await updateAdminProfile(form);
       setProfile(data.user);
+      setOriginalForm(form);
+      updateUser(data.user);
       showToast('Profile updated successfully.', 'success');
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
       setSaving(false);
+      setEditing(false);
     }
   };
 
@@ -179,7 +203,7 @@ export default function AdminProfileSettings() {
         <div className={styles.cardHeader}>
           <h3>Profile Information</h3>
         </div>
-        <form className={styles.form} onSubmit={handleSaveProfile} noValidate>
+        <form className={styles.form} onSubmit={editing ? handleSaveProfile : undefined} noValidate>
           <div className={styles.field}>
             <label htmlFor="first_name">First Name</label>
             <input
@@ -187,7 +211,7 @@ export default function AdminProfileSettings() {
               name="first_name"
               value={form.first_name}
               onChange={handleFieldChange}
-              disabled={saving}
+              disabled={!editing || saving}
             />
           </div>
           <div className={styles.field}>
@@ -197,7 +221,7 @@ export default function AdminProfileSettings() {
               name="last_name"
               value={form.last_name}
               onChange={handleFieldChange}
-              disabled={saving}
+              disabled={!editing || saving}
             />
           </div>
           <div className={styles.field}>
@@ -208,7 +232,7 @@ export default function AdminProfileSettings() {
               type="email"
               value={form.email}
               onChange={handleFieldChange}
-              disabled={saving}
+              disabled={!editing || saving}
             />
           </div>
           <div className={styles.field}>
@@ -218,7 +242,7 @@ export default function AdminProfileSettings() {
               name="phone"
               value={form.phone}
               onChange={handleFieldChange}
-              disabled={saving}
+              disabled={!editing || saving}
             />
           </div>
           <div className={styles.fieldFull}>
@@ -228,13 +252,27 @@ export default function AdminProfileSettings() {
               name="department"
               value={form.department}
               onChange={handleFieldChange}
-              disabled={saving}
+              disabled={!editing || saving}
             />
           </div>
           <div className={styles.actions}>
-            <button type="submit" className={styles.saveBtn} disabled={saving}>
-              {saving ? 'Saving…' : 'Save Profile'}
-            </button>
+            {editing ? (
+              <>
+                <button type="button" className={styles.secondaryButton} onClick={handleCancelEdit} disabled={saving}>
+                  <X size={16} />
+                  Cancel
+                </button>
+                <button type="submit" className={styles.saveBtn} disabled={saving}>
+                  <Save size={16} />
+                  {saving ? 'Saving…' : 'Save Changes'}
+                </button>
+              </>
+            ) : (
+              <button type="button" className={styles.saveBtn} onClick={handleEdit}>
+                <Edit size={16} />
+                Edit Profile
+              </button>
+            )}
           </div>
         </form>
       </section>

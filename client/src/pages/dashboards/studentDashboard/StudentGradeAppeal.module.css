@@ -1,0 +1,770 @@
+/* =========================================================
+   MODERN STUDENT PORTAL
+   ========================================================= */
+
+.container {
+  padding: 28px 32px 52px;
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
+
+.pageHeader {
+  margin-bottom: 28px;
+}
+
+.pageHeader h2 {
+  margin: 0 0 5px;
+  font-size: 25px;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.3px;
+}
+
+.pageHeader p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   ALERTS
+   ========================================================= */
+
+.message,
+.error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 17px;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid;
+}
+
+.message {
+  color: #166534;
+  background: #f0fdf4;
+  border-color: #a7d8b5;
+}
+
+.error {
+  color: #991b1b;
+  background: #fef2f2;
+  border-color: #e9aaaa;
+}
+
+/* =========================================================
+   MAIN SECTIONS
+   ========================================================= */
+
+.section {
+  margin-bottom: 30px;
+}
+
+.sectionTitle {
+  margin: 0 0 17px;
+  font-size: 16px;
+  font-weight: 650;
+  color: #172033;
+}
+
+/* =========================================================
+   SUMMARY CARD
+   ========================================================= */
+
+.summaryCard {
+  background: #ffffff;
+  border: 1px solid #b9c0c9;
+  border-radius: 15px;
+  padding: 23px;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.05),
+    0 7px 24px rgba(15, 23, 42, 0.045);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.summaryCard:hover {
+  border-color: #a3abb6;
+  box-shadow:
+    0 2px 4px rgba(15, 23, 42, 0.05),
+    0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+/* =========================================================
+   OVERALL GRADE
+   ========================================================= */
+
+.overallGrade {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.gradeCircle {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gradeCircle span {
+  font-size: 21px;
+  font-weight: 700;
+  color: #172033;
+}
+
+.gradeInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.gradeLabel {
+  font-size: 18px;
+  font-weight: 700;
+  color: #172033;
+}
+
+.gradeMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 17px;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+/* =========================================================
+   CATEGORY GRID
+   ========================================================= */
+
+.categoryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.categoryCard {
+  background: #ffffff;
+  border: 1px solid #b9c0c9;
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.035);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.categoryCard:hover {
+  border-color: #9ca5b0;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.065);
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   CATEGORY HEADER
+   ========================================================= */
+
+.categoryHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.categoryHeader h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+  color: #172033;
+}
+
+.categoryScore {
+  font-size: 18px;
+  font-weight: 700;
+  color: #172033;
+}
+
+/* =========================================================
+   PROGRESS
+   ========================================================= */
+
+.progressTrack {
+  height: 9px;
+  background: #d9dee4;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.3s ease;
+}
+
+/* =========================================================
+   CATEGORY ACTIONS
+   ========================================================= */
+
+.categoryActions {
+  margin-top: 5px;
+}
+
+.appealButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid #b7bec7;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #7f0d2b;
+  font-size: 13px;
+  font-weight: 550;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.appealButton:hover {
+  background: #fff8fa;
+  border-color: #a51f43;
+  box-shadow: 0 3px 8px rgba(127, 13, 43, 0.08);
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   APPEAL BADGE
+   ========================================================= */
+
+.appealBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+/* =========================================================
+   APPEAL FORM OVERLAY
+   ========================================================= */
+
+.appealFormOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(16, 24, 40, 0.56);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+/* =========================================================
+   APPEAL FORM
+   ========================================================= */
+
+.appealForm {
+  background: #ffffff;
+  border: 1px solid #b9c0c9;
+  border-radius: 17px;
+  padding: 26px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 45px rgba(16, 24, 40, 0.25);
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   APPEAL FORM HEADER
+   ========================================================= */
+
+.appealFormHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 9px;
+}
+
+.appealFormHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 650;
+  color: #172033;
+}
+
+.closeButton {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #c2c8d0;
+  background: #f1f3f5;
+  border-radius: 8px;
+  font-size: 20px;
+  color: #4b5563;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.closeButton:hover {
+  background: #e5e7eb;
+  border-color: #9da6b1;
+  color: #172033;
+}
+
+/* =========================================================
+   APPEAL FORM SUBTITLE
+   ========================================================= */
+
+.appealFormSubtitle {
+  margin: 0 0 21px;
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   APPEAL TEXTAREA
+   ========================================================= */
+
+.appealTextarea {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid #b7bec7;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #172033;
+  background: #ffffff;
+  resize: vertical;
+  min-height: 120px;
+  box-sizing: border-box;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.appealTextarea:hover {
+  border-color: #929ba7;
+}
+
+.appealTextarea:focus {
+  outline: none;
+  border-color: #7f0d2b;
+  box-shadow: 0 0 0 3px rgba(127, 13, 43, 0.15);
+}
+
+.appealTextarea::placeholder {
+  color: #6b7280;
+}
+
+/* =========================================================
+   FORM MESSAGES
+   ========================================================= */
+
+.formError {
+  margin: 13px 0;
+  padding: 11px 13px;
+  background: #fef3f2;
+  border: 1px solid #e8b4b1;
+  border-radius: 8px;
+  color: #b42318;
+  font-size: 13px;
+}
+
+.formSuccess {
+  margin: 13px 0;
+  padding: 11px 13px;
+  background: #f0fdf4;
+  border: 1px solid #a7d8b5;
+  border-radius: 8px;
+  color: #166534;
+  font-size: 13px;
+}
+
+/* =========================================================
+   FORM ACTIONS
+   ========================================================= */
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #d0d5dc;
+}
+
+.btnPrimary {
+  padding: 10px 21px;
+  border: 1px solid #70102a;
+  border-radius: 8px;
+  background: #7f0d2b;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: #5d091e;
+  box-shadow: 0 5px 12px rgba(93, 9, 30, 0.18);
+  transform: translateY(-1px);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  padding: 10px 21px;
+  border: 1px solid #aeb6c1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #344054;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.btnSecondary:hover {
+  background: #faf7f8;
+  border-color: #a51f43;
+  color: #7f0d2b;
+}
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.empty {
+  text-align: center;
+  padding: 52px 20px;
+  color: #4b5563;
+}
+
+.empty svg {
+  margin-bottom: 12px;
+  opacity: 0.55;
+}
+
+.empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* =========================================================
+   APPEALS LIST
+   ========================================================= */
+
+.appealsList {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}
+
+.appealItem {
+  background: #ffffff;
+  border: 1px solid #b9c0c9;
+  border-radius: 14px;
+  padding: 18px 21px;
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.035);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.appealItem:hover {
+  border-color: #9fa7b2;
+  box-shadow: 0 7px 20px rgba(15, 23, 42, 0.055);
+}
+
+/* =========================================================
+   APPEAL ITEM HEADER
+   ========================================================= */
+
+.appealItemHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 9px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.appealCategory {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 650;
+  color: #172033;
+}
+
+.appealStatus {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+  text-transform: capitalize;
+}
+
+/* =========================================================
+   APPEAL META
+   ========================================================= */
+
+.appealMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 17px;
+  font-size: 12px;
+  color: #5b6470;
+  margin-bottom: 13px;
+}
+
+/* =========================================================
+   APPEAL REASON
+   ========================================================= */
+
+.appealReason {
+  margin-bottom: 13px;
+}
+
+.appealReason strong {
+  display: block;
+  font-size: 13px;
+  color: #303845;
+  margin-bottom: 5px;
+}
+
+.appealReason p {
+  margin: 0;
+  font-size: 13px;
+  color: #46505d;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+/* =========================================================
+   APPEAL RESPONSE
+   ========================================================= */
+
+.appealResponse {
+  padding: 13px 15px;
+  background: #faf7f8;
+  border-radius: 8px;
+  border-left: 3px solid #7f0d2b;
+}
+
+.responseHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: #7f0d2b;
+  font-weight: 650;
+}
+
+.appealResponse p {
+  margin: 0;
+  font-size: 13px;
+  color: #46505d;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 65px;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+/* =========================================================
+   ERROR
+   ========================================================= */
+
+.error {
+  padding: 13px 16px;
+  background: #fef3f2;
+  border: 1px solid #e8b4b1;
+  border-radius: 9px;
+  color: #b42318;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1024px) {
+  .container {
+    padding: 24px 22px 44px;
+  }
+
+  .summaryCard {
+    padding: 21px;
+  }
+
+  .categoryGrid {
+    gap: 16px;
+  }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+  .container {
+    padding: 21px 16px 34px;
+  }
+
+  .pageHeader {
+    margin-bottom: 23px;
+  }
+
+  .pageHeader h2 {
+    font-size: 23px;
+  }
+
+  .pageHeader p {
+    font-size: 13px;
+  }
+
+  .section {
+    margin-bottom: 24px;
+  }
+
+  .sectionTitle {
+    margin-bottom: 14px;
+  }
+
+  .summaryCard {
+    padding: 18px;
+    border-radius: 14px;
+  }
+
+  .categoryGrid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .categoryCard {
+    padding: 17px;
+  }
+
+  .overallGrade {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .gradeCircle {
+    width: 78px;
+    height: 78px;
+  }
+
+  .gradeMeta {
+    gap: 9px 14px;
+  }
+
+  .appealFormOverlay {
+    padding: 10px;
+  }
+
+  .appealForm {
+    margin: 10px;
+    padding: 21px;
+    max-height: calc(100vh - 20px);
+    border-radius: 14px;
+  }
+
+  .appealItem {
+    padding: 16px;
+  }
+
+  .formActions {
+    flex-direction: column-reverse;
+  }
+
+  .btnPrimary,
+  .btnSecondary {
+    width: 100%;
+  }
+
+  .loading {
+    padding: 45px 20px;
+  }
+}

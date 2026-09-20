@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Camera,
   User,
@@ -9,9 +9,11 @@ import {
   GraduationCap,
   Building2,
   BriefcaseBusiness,
+  Edit,
   Save,
   KeyRound,
   ChevronRight,
+  X,
 } from 'lucide-react';
 
 import {
@@ -76,8 +78,16 @@ export default function UserProfileSettings() {
   const [saving, setSaving] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [pictureUploading, setPictureUploading] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   const [form, setForm] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+  });
+
+  const [originalForm, setOriginalForm] = useState({
     first_name: '',
     last_name: '',
     email: '',
@@ -92,7 +102,7 @@ export default function UserProfileSettings() {
 
   const fileInputRef = useRef(null);
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     setLoading(true);
 
     try {
@@ -100,22 +110,25 @@ export default function UserProfileSettings() {
 
       setProfile(data.user);
 
-      setForm({
+      const initialForm = {
         first_name: data.user.first_name || '',
         last_name: data.user.last_name || '',
         email: data.user.email || '',
         phone: data.user.phone || '',
-      });
+      };
+
+      setForm(initialForm);
+      setOriginalForm(initialForm);
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
   useEffect(() => {
     loadProfile();
-  }, []);
+  }, [loadProfile]);
 
   const handleFieldChange = (e) => {
     const { name, value } = e.target;
@@ -142,6 +155,15 @@ export default function UserProfileSettings() {
     }));
   };
 
+  const handleEdit = () => {
+    setEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setForm(originalForm);
+    setEditing(false);
+  };
+
   const handleSaveProfile = async (e) => {
     e.preventDefault();
 
@@ -161,9 +183,10 @@ export default function UserProfileSettings() {
         }
       }
 
-      const data = await updateUserProfile(payload);
+       const data = await updateUserProfile(payload);
 
       setProfile(data.user);
+      setOriginalForm(form);
 
       updateUser({
         ...data.user,
@@ -174,6 +197,7 @@ export default function UserProfileSettings() {
       showToast(err.message, 'error');
     } finally {
       setSaving(false);
+      setEditing(false);
     }
   };
 
@@ -365,7 +389,7 @@ export default function UserProfileSettings() {
 
           <form
             className={styles.form}
-            onSubmit={handleSaveProfile}
+            onSubmit={editing ? handleSaveProfile : undefined}
             noValidate
           >
 
@@ -381,7 +405,7 @@ export default function UserProfileSettings() {
                     name="first_name"
                     value={form.first_name}
                     onChange={handleFieldChange}
-                    disabled={saving}
+                    disabled={!editing || saving}
                   />
                 </div>
               </div>
@@ -396,7 +420,7 @@ export default function UserProfileSettings() {
                     name="last_name"
                     value={form.last_name}
                     onChange={handleFieldChange}
-                    disabled={saving}
+                    disabled={!editing || saving}
                   />
                 </div>
               </div>
@@ -412,7 +436,7 @@ export default function UserProfileSettings() {
                     type="email"
                     value={form.email}
                     onChange={handleFieldChange}
-                    disabled={saving}
+                    disabled={!editing || saving}
                   />
                 </div>
               </div>
@@ -427,7 +451,7 @@ export default function UserProfileSettings() {
                     name="phone"
                     value={form.phone}
                     onChange={handleFieldChange}
-                    disabled={saving}
+                    disabled={!editing || saving}
                   />
                 </div>
               </div>
@@ -454,7 +478,7 @@ export default function UserProfileSettings() {
                             e.target.value
                           )
                         }
-                        disabled={saving}
+                        disabled={!editing || saving}
                       />
                     </div>
                   </div>
@@ -464,21 +488,40 @@ export default function UserProfileSettings() {
             </div>
 
             <div className={styles.formFooter}>
-              <span className={styles.helperText}>
-                Keep your information up to date.
-              </span>
+              {editing ? (
+                <>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={handleCancelEdit}
+                    disabled={saving}
+                  >
+                    <X size={17} />
+                    Cancel
+                  </button>
 
-              <button
-                type="submit"
-                className={styles.primaryButton}
-                disabled={saving}
-              >
-                <Save size={17} />
+                  <button
+                    type="submit"
+                    className={styles.primaryButton}
+                    disabled={saving}
+                  >
+                    <Save size={17} />
 
-                {saving
-                  ? 'Saving...'
-                  : 'Save Changes'}
-              </button>
+                    {saving
+                      ? 'Saving...'
+                      : 'Save Changes'}
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.primaryButton}
+                  onClick={handleEdit}
+                >
+                  <Edit size={17} />
+                  Edit Profile
+                </button>
+              )}
             </div>
 
           </form>

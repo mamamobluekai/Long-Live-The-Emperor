@@ -17,6 +17,12 @@ const registerValidation = [
     .isLength({ min: 1, max: 100 }).withMessage('Last name is required')
     .escape(),
 
+  body('middleName').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 100 }).withMessage('Middle name is too long').escape(),
+  body('section').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 100 }).withMessage('Section is too long').escape(),
+  body('strand').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 255 }).withMessage('Strand is too long').escape(),
+  body('school').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 255 }).withMessage('School is too long').escape(),
+  body('gender').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 20 }).withMessage('Gender is too long').escape(),
+
   body('email')
     .trim()
     .isEmail().withMessage('Valid email is required')

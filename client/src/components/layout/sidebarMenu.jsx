@@ -28,33 +28,35 @@ export const sidebarMenu = {
       path: '/student/requirements',
       icon: ClipboardList,
     },
-    {
-      label: 'Documentation',
-      path: '/student/documentation',
-      icon: FileText,
+     {
+      label: 'Attendance',
+      path: '/student/attendance',
+      icon: CalendarCheck,
     },
+    
     {
       label: 'Placement Status',
       path: '/student/placement',
       icon: MapPin,
     },
     {
+      label: 'Documentation',
+      path: '/student/documentation',
+      icon: FileText,
+    },
+    {
       label: 'Announcements',
       path: '/student/announcements',
       icon: Megaphone,
     },
-    {
-      label: 'Attendance',
-      path: '/student/attendance',
-      icon: CalendarCheck,
-    },
+   
     {
       label: 'Group Chat',
       path: '/student/group-chat',
       icon: MessageCircle,
     },
     {
-      label: 'Profile Settings',
+      label: 'Settings',
       path: '/student/profile',
       icon: UserCog,
     },

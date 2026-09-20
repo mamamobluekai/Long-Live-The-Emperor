@@ -14,7 +14,6 @@ function DashboardTopNav({
   user,
   onLogout,
   onMenuClick,
-  title,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -91,7 +90,6 @@ function DashboardTopNav({
 
           <div className={styles.brandText}>
             <span className={styles.brandName}>e-MMERSION</span>
-            <span className={styles.brandSubtitle}>{title || `${role} Dashboard`}</span>
           </div>
         </button>
 

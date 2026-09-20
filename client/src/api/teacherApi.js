@@ -26,6 +26,20 @@ export async function getTeacherBatchStudents(batchId, token) {
   return res.data;
 }
 
+export async function getTeacherReportsConcerns(token) {
+  const res = await axios.get(`${API_URL}/coordinator/teacher/reports-concerns`, {
+    headers: authHeaders(token),
+  });
+  return res.data;
+}
+
+export async function confirmReportConcern(reportId, token) {
+  const res = await axios.patch(`${API_URL}/coordinator/teacher/reports-concerns/${reportId}/confirm`, {}, {
+    headers: authHeaders(token),
+  });
+  return res.data;
+}
+
 /* ---------------- Attendance ---------------- */
 
 export async function getTeacherBatchStatus(batchId, token) {
@@ -67,6 +81,13 @@ export async function getBatchRecords(batchId, date, token) {
   const res = await axios.get(`${API_URL}/attendance/teacher/batch/${batchId}/records`, {
     headers: authHeaders(token),
     params: date ? { date } : {},
+  });
+  return res.data;
+}
+
+export async function getBatchAttendanceReport(batchId, token) {
+  const res = await axios.get(`${API_URL}/attendance/teacher/batch/${batchId}/report`, {
+    headers: authHeaders(token),
   });
   return res.data;
 }

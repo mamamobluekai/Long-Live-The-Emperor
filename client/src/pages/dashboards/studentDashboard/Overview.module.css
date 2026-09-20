@@ -36,7 +36,7 @@
 
 .greetingText {
   margin: 7px 0 0;
-  color: #64748b;
+  color: #303844;
   font-size: 0.92rem;
 }
 
@@ -45,7 +45,9 @@
   align-items: center;
   gap: 8px;
   padding: 12px 15px;
-  border: 1px solid #eadfe1;
+
+  border: 1px solid #aeb4bd;
+
   background: linear-gradient(135deg, #fff 0%, #fff8f7 100%);
   border-radius: 14px;
   white-space: nowrap;
@@ -54,12 +56,12 @@
 
 .greetingDate span {
   font-size: 0.72rem;
-  color: #94a3b8;
+  color: #46505d;
 }
 
 .greetingDate strong {
   margin-top: 3px;
-  color: #334155;
+  color: #202733;
   font-size: 0.85rem;
 }
 
@@ -74,10 +76,12 @@
   gap: 10px;
   min-height: 180px;
   padding: 28px;
-  border: 1px solid #eadfe1;
+
+  border: 1px solid #aeb4bd;
+
   border-radius: 18px;
   background: linear-gradient(135deg, #fff 0%, #fff8f7 100%);
-  color: #64748b;
+  color: #303844;
   font-size: 0.9rem;
 }
 
@@ -89,7 +93,7 @@
   justify-content: space-between;
   color: #9f1239;
   background: #fff1f2;
-  border-color: #fecdd3;
+  border-color: #d99aa6;
 }
 
 .errorState button {
@@ -136,9 +140,12 @@
 .attendanceCard,
 .activityCard {
   background: #fff;
-  border: 1px solid #e5e7eb;
+
+  /* MUCH DARKER CARD BORDER */
+  border: 1px solid #aeb4bd;
+
   border-radius: 18px;
-  box-shadow: 0 5px 20px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 5px 20px rgba(15, 23, 42, 0.07);
 }
 
 
@@ -171,13 +178,15 @@
 .sectionHeader p:not(.cardEyebrow),
 .sectionTitle p {
   margin: 5px 0 0;
-  color: #64748b;
+  color: #303844;
   font-size: 0.82rem;
   line-height: 1.5;
 }
 
 
-/* Circular progress */
+/* =========================================
+   CIRCULAR PROGRESS
+========================================= */
 
 .progressCircle {
   width: 92px;
@@ -198,7 +207,7 @@
 }
 
 .progressBackground {
-  stroke: #eee5e6;
+  stroke: #c7cdd5;
 }
 
 .progressValue {
@@ -221,13 +230,16 @@
 }
 
 
-/* Progress bar */
+/* =========================================
+   PROGRESS BAR
+========================================= */
 
 .progressBar {
   height: 9px;
   margin-top: 22px;
 
-  background: #f1f5f9;
+  background: #c7cdd5;
+
   border-radius: 999px;
   overflow: hidden;
 }
@@ -246,7 +258,9 @@
 }
 
 
-/* Stats */
+/* =========================================
+   STATS
+========================================= */
 
 .progressStats {
   display: grid;
@@ -255,7 +269,7 @@
   margin-top: 20px;
   padding-top: 18px;
 
-  border-top: 1px solid #eef2f7;
+  border-top: 1px solid #a6adb7;
 }
 
 .progressStats div {
@@ -266,7 +280,7 @@
 
 .progressStats div:not(:first-child) {
   padding-left: 20px;
-  border-left: 1px solid #eef2f7;
+  border-left: 1px solid #a6adb7;
 }
 
 .progressStats strong {
@@ -275,7 +289,7 @@
 }
 
 .progressStats span {
-  color: #64748b;
+  color: #303844;
   font-size: 0.75rem;
 }
 
@@ -286,7 +300,9 @@
   gap: 12px;
   margin-top: 18px;
   padding-top: 15px;
-  border-top: 1px solid #eef2f7;
+
+  border-top: 1px solid #a6adb7;
+
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -348,6 +364,8 @@
 
   border-radius: 14px;
   background: #f8fafc;
+
+  border: 1px solid #aeb5bf;
 }
 
 .attendanceItem {
@@ -358,7 +376,7 @@
 
 .attendanceLabel {
   font-size: 0.72rem;
-  color: #64748b;
+  color: #303844;
   font-weight: 600;
 }
 
@@ -383,7 +401,9 @@
 .attendanceDivider {
   height: 45px;
   width: 1px;
-  background: #e2e8f0;
+
+  background: #a6adb7;
+
   margin: 0 25px;
 }
 
@@ -440,7 +460,7 @@
   gap: 13px;
   padding: 15px 0;
 
-  border-bottom: 1px solid #eef2f7;
+  border-bottom: 1px solid #a6adb7;
 }
 
 .activityItem:last-child {
@@ -489,12 +509,13 @@
 
   font-size: 0.76rem;
   line-height: 1.45;
-  color: #64748b;
+
+  color: #303844;
 }
 
 .activityItem span {
   font-size: 0.68rem;
-  color: #94a3b8;
+  color: #46505d;
 }
 
 
@@ -515,15 +536,18 @@
   padding-right: 6px;
 
   border-left: 1.5px solid #3e3e3f;
-  box-shadow: -8px 0 20px rgba(15, 23, 42, 0.025);
+
+  box-shadow: -8px 0 20px rgba(15, 23, 42, 0.04);
 
   scroll-behavior: smooth;
 
   scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
+  scrollbar-color: #8d96a2 transparent;
 }
 
+
 /* Chrome / Edge / Safari */
+
 .rightColumn::-webkit-scrollbar {
   width: 6px;
 }
@@ -533,12 +557,12 @@
 }
 
 .rightColumn::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #8d96a2;
   border-radius: 999px;
 }
 
 .rightColumn::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #68727f;
 }
 
 .rightColumn .feedHeader {
@@ -549,6 +573,8 @@
   background: #f8fafc;
   padding-bottom: 12px;
 }
+
+
 @media (max-width: 1100px) {
   .rightColumn {
     height: auto;
@@ -562,6 +588,7 @@
     box-shadow: none;
   }
 }
+
 
 /* =========================================
    TABLET
@@ -672,8 +699,9 @@
   .progressStats div:not(:first-child) {
     padding-left: 0;
     padding-top: 12px;
+
     border-left: none;
-    border-top: 1px solid #eef2f7;
+    border-top: 1px solid #a6adb7;
   }
 
 }

@@ -1,244 +1,304 @@
+
+/* =========================================================
+   USER PROFILE SETTINGS
+   Modern e-MMERSION Design
+   Extra Dark Text, Icons & Borders Version
+   ========================================================= */
+
 .page {
   width: 100%;
-  max-width: 1180px;
-  margin: 0 auto;
-  
-  color: #171923;
+  min-height: 100%;
+  padding: 24px 28px 40px;
+  background: #f5f6f8;
+  box-sizing: border-box;
 }
 
-/* =========================================
-   PAGE HEADER
-========================================= */
-
-.pageHeader {
-  margin-bottom: 24px;
-}
-
-.eyebrow {
-  color: #8f092d;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  margin-bottom: 6px;
-}
-
-.pageHeader h1 {
-  margin: 0;
-  font-size: 28px;
-  line-height: 1.2;
-  font-weight: 750;
-  letter-spacing: -0.025em;
-}
-
-.pageHeader p {
-  margin: 7px 0 0;
-  color: #777b87;
-  font-size: 14px;
-}
-
-/* =========================================
+/* =========================================================
    PROFILE HERO
-========================================= */
+   ========================================================= */
 
 .profileHero {
   position: relative;
+  width: 100%;
+  min-height: 225px;
   overflow: hidden;
-  min-height: 210px;
-  margin-bottom: 18px;
+  border-radius: 22px;
   background: #ffffff;
-  border: 1px solid #e8e9ed;
-  border-radius: 20px;
-  box-shadow: 0 8px 30px rgba(20, 25, 40, 0.05);
+  border: 1px solid #cbd0d7;
+  box-shadow: 0 8px 30px rgba(20, 25, 35, 0.09);
+  margin-bottom: 22px;
 }
 
 .heroBackground {
-  height: 110px;
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 148px;
   background:
+    radial-gradient(
+      circle at 90% 10%,
+      rgba(255, 255, 255, 0.13),
+      transparent 25%
+    ),
+    radial-gradient(
+      circle at 70% 100%,
+      rgba(255, 255, 255, 0.08),
+      transparent 30%
+    ),
     linear-gradient(
-      135deg,
-      #730620 0%,
-      #930c32 50%,
-      #a91a45 100%
+      120deg,
+      #78001f 0%,
+      #99052f 45%,
+      #b20b3c 100%
     );
 }
 
 .heroBackground::after {
-  content: '';
+  content: "";
   position: absolute;
-  top: -90px;
-  right: -60px;
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
+  right: -70px;
+  top: -100px;
+  width: 330px;
+  height: 250px;
   background: rgba(255, 255, 255, 0.06);
+  transform: rotate(-25deg);
+  border-radius: 50%;
 }
 
 .profileContent {
   position: relative;
+  z-index: 2;
   display: flex;
-  align-items: flex-end;
-  gap: 10px;
-  padding: 0 28px 24px;
-  margin-top: -52px;
+  align-items: center;
+  min-height: 225px;
+  padding: 35px 30px 22px;
+  box-sizing: border-box;
 }
+
+/* =========================================================
+   PROFILE PHOTO
+   ========================================================= */
 
 .avatarWrapper {
   position: relative;
   flex-shrink: 0;
+  width: 200px;
+  height: 200px;
+  margin-right: 25px;
 }
 
 .avatar {
-  width: 104px;
-  height: 104px;
   display: block;
+  width: 200px;
+  height: 200px;
   object-fit: cover;
   border-radius: 50%;
   border: 5px solid #ffffff;
-  background: #f3f4f6;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.12);
+  background: #ffffff;
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.25);
 }
 
 .avatarPlaceholder {
-  width: 104px;
-  height: 104px;
+  width: 200px;
+  height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   border: 5px solid #ffffff;
-  background: #f5dce3;
-  color: #8f092d;
-  font-size: 30px;
-  font-weight: 800;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.12);
+  background: linear-gradient(
+    135deg,
+    #f6d7df,
+    #ffffff
+  );
+  color: #760526;
+  font-size: 40px;
+  font-weight: 700;
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
 }
+
+/* =========================================================
+   CAMERA BUTTON
+   ========================================================= */
 
 .cameraButton {
   position: absolute;
-  right: 2px;
-  bottom: 3px;
-  width: 32px;
-  height: 32px;
-  border: 3px solid #ffffff;
-  border-radius: 50%;
+  right: -3px;
+  bottom: 5px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #8f092d;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  background: #8b052d;
   color: #ffffff;
   cursor: pointer;
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.22);
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .cameraButton:hover {
-  background: #720622;
+  transform: scale(1.08);
+  background: #690020;
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.28);
 }
 
+.cameraButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   PROFILE IDENTITY
+   ========================================================= */
+
 .profileIdentity {
+  flex: 1;
   min-width: 0;
-  padding-bottom: 4px;
+  padding-top: 35px;
 }
 
 .profileIdentity h2 {
-  margin: 0 0 5px;
-  font-size: 21px;
+  margin: 0 0 7px;
+  margin-bottom: 30px;
+  color: #f2f5f8;
+  font-size: 34px;
+  line-height: 1.2;
   font-weight: 750;
+  letter-spacing: -0.4px;
 }
 
 .profileMeta {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #777b87;
-  font-size: 13px;
+  flex-wrap: wrap;
+  gap: 9px;
+  color: #3f4652;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.profileMeta span:first-child {
+  color: #790629;
+  font-weight: 750;
 }
 
 .dot {
-  color: #b8bac1;
+  color: #535b68;
 }
 
+/* =========================================================
+   CHANGE PHOTO BUTTON
+   ========================================================= */
+
 .photoButton {
-  margin-left: auto;
-  margin-bottom: 4px;
-  display: flex;
+  align-self: flex-end;
+  display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 9px 14px;
-  border: 1px solid #dedfe4;
-  border-radius: 9px;
+  justify-content: center;
+  gap: 8px;
+  min-width: 135px;
+  height: 42px;
+  margin-left: 20px;
+  border: 1px solid #aeb5bf;
+  border-radius: 10px;
   background: #ffffff;
-  color: #383b44;
+  color: #202631;
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 700;
   cursor: pointer;
-  transition: 0.18s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .photoButton:hover {
-  background: #f8f8f9;
-  border-color: #c9cad0;
+  background: #faf0f3;
+  border-color: #9f6478;
+  transform: translateY(-1px);
 }
 
-.hiddenInput {
-  display: none;
+.photoButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-/* =========================================
+/* =========================================================
    CONTENT GRID
-========================================= */
+   ========================================================= */
 
 .contentGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.85fr);
-  gap: 20px;
+  grid-template-columns:
+    minmax(0, 1.55fr)
+    minmax(330px, 0.75fr);
+  gap: 22px;
   align-items: start;
 }
 
-/* =========================================
-   CARD
-========================================= */
+/* =========================================================
+   CARDS
+   ========================================================= */
 
 .card {
   background: #ffffff;
-  border: 1px solid #e8e9ed;
+  border: 1px solid #cbd0d7;
   border-radius: 18px;
-  padding: 24px;
-  box-shadow: 0 6px 24px rgba(20, 25, 40, 0.04);
+  padding: 25px;
+  box-shadow:
+    0 6px 25px rgba(20, 25, 35, 0.07);
+  box-sizing: border-box;
 }
 
 .cardHeader {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 22px;
+  gap: 13px;
+  padding-bottom: 20px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #c5cad2;
 }
 
 .cardIcon {
-  width: 38px;
-  height: 38px;
+  width: 43px;
+  height: 43px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  border-radius: 10px;
-  background: #f9e8ed;
-  color: #8f092d;
+  border-radius: 12px;
+  background: #fcecef;
+  color: #82052a;
 }
 
 .cardHeader h3 {
-  margin: 0;
-  font-size: 16px;
+  margin: 0 0 4px;
+  color: #11151d;
+  font-size: 17px;
   font-weight: 750;
 }
 
 .cardHeader p {
-  margin: 3px 0 0;
-  color: #858893;
+  margin: 0;
+  color: #444c58;
   font-size: 12px;
+  line-height: 1.5;
+  font-weight: 600;
 }
 
-/* =========================================
+/* =========================================================
    FORM
-========================================= */
+   ========================================================= */
 
 .form {
   width: 100%;
@@ -246,8 +306,10 @@
 
 .formGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
   gap: 17px 16px;
+  padding-top: 17px;
 }
 
 .field {
@@ -257,309 +319,515 @@
 .field label {
   display: block;
   margin-bottom: 7px;
-  color: #525560;
+  color: #252b35;
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 750;
 }
 
+/* =========================================================
+   INPUT
+   ========================================================= */
+
 .inputWrapper {
-  height: 42px;
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 0 12px;
-  border: 1px solid #e1e2e6;
-  border-radius: 9px;
-  background: #fafafa;
-  color: #9a9da6;
-  transition: 0.18s ease;
+  width: 100%;
+  height: 43px;
+  box-sizing: border-box;
+  border: 1px solid #aeb5bf;
+  border-radius: 10px;
+  background: #fbfbfc;
+  color: #3d4552;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.inputWrapper svg {
+  flex-shrink: 0;
+  margin-left: 13px;
+  margin-right: 9px;
+  color: #3d4552;
+  stroke-width: 2.2;
 }
 
 .inputWrapper:focus-within {
   background: #ffffff;
-  border-color: #9a284b;
-  box-shadow: 0 0 0 3px rgba(143, 9, 45, 0.08);
-  color: #8f092d;
+  border-color: #92052f;
+  box-shadow:
+    0 0 0 3px rgba(146, 5, 47, 0.10);
+}
+
+.inputWrapper:focus-within svg {
+  color: #82052a;
 }
 
 .inputWrapper input {
   width: 100%;
   height: 100%;
   min-width: 0;
-  border: 0;
+  padding: 0 12px 0 0;
+  border: none;
   outline: none;
   background: transparent;
-  color: #20222a;
-  font: inherit;
+  color: #171c24;
+  font-family: inherit;
   font-size: 13px;
+  font-weight: 600;
+}
+
+.inputWrapper input::placeholder {
+  color: #626a75;
+  opacity: 1;
 }
 
 .inputWrapper input:disabled {
-  opacity: 0.65;
   cursor: not-allowed;
+  opacity: 0.7;
 }
+
+.inputWrapper input[type="date"] {
+  color-scheme: light;
+}
+
+/* =========================================================
+   FORM FOOTER
+   ========================================================= */
 
 .formFooter {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 15px;
-  margin-top: 22px;
-  padding-top: 18px;
-  border-top: 1px solid #eeeeef;
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #c5cad2;
 }
 
 .helperText {
-  color: #9699a2;
-  font-size: 11px;
+  color: #444c58;
+  font-size: 12px;
+  font-weight: 600;
 }
 
-.primaryButton,
-.secondaryButton {
-  min-height: 40px;
+.primaryButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 0;
-  border-radius: 9px;
-  padding: 0 16px;
-  font-size: 12px;
+  min-width: 138px;
+  height: 43px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(
+    135deg,
+    #85052b,
+    #a70837
+  );
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  transition: 0.18s ease;
-}
-
-.primaryButton {
-  background: #8f092d;
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(143, 9, 45, 0.18);
+  box-shadow:
+    0 5px 14px rgba(145, 5, 47, 0.22);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
 }
 
 .primaryButton:hover {
-  background: #720622;
   transform: translateY(-1px);
+  box-shadow:
+    0 8px 18px rgba(145, 5, 47, 0.30);
 }
 
-.primaryButton:disabled,
-.secondaryButton:disabled {
-  opacity: 0.55;
+.primaryButton:active {
+  transform: translateY(0);
+}
+
+.primaryButton:disabled {
+  opacity: 0.65;
   cursor: not-allowed;
   transform: none;
 }
 
-/* =========================================
-   SECURITY
-========================================= */
+/* =========================================================
+   SECURITY CARD
+   ========================================================= */
 
 .securityBanner {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 13px;
-  margin-bottom: 20px;
-  border: 1px solid #eee0e5;
-  border-radius: 11px;
-  background: #fcf7f9;
+  margin-top: 18px;
+  margin-bottom: 21px;
+  padding: 14px;
+  border: 1px solid #d6b8c1;
+  border-radius: 12px;
+  background:
+    linear-gradient(
+      135deg,
+      #fff8fa,
+      #fdf2f5
+    );
 }
 
 .securityIcon {
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  border-radius: 9px;
-  background: #f5dce3;
-  color: #8f092d;
+  border-radius: 11px;
+  background: #f7dfe6;
+  color: #85052b;
 }
 
 .securityBanner strong {
   display: block;
   margin-bottom: 3px;
-  font-size: 12px;
+  color: #252b35;
+  font-size: 13px;
+  font-weight: 750;
 }
 
 .securityBanner p {
   margin: 0;
-  color: #858893;
+  color: #444c58;
   font-size: 11px;
-  line-height: 1.4;
+  line-height: 1.45;
+  font-weight: 600;
 }
+
+/* =========================================================
+   PASSWORD HINT
+   ========================================================= */
 
 .passwordHint {
   display: flex;
   align-items: center;
   gap: 7px;
-  margin-top: 14px;
-  color: #777b85;
+  margin-top: 10px;
+  margin-bottom: 17px;
+  color: #444c58;
   font-size: 11px;
+  font-weight: 600;
 }
 
 .checkCircle {
-  width: 17px;
-  height: 17px;
+  width: 18px;
+  height: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   border-radius: 50%;
-  background: #e7f7ed;
-  color: #1d9b50;
-  font-size: 10px;
+  background: #e4f7ed;
+  color: #0b7d48;
+  font-size: 11px;
   font-weight: 800;
 }
 
+/* =========================================================
+   CHANGE PASSWORD BUTTON
+   ========================================================= */
+
 .secondaryButton {
   width: 100%;
-  margin-top: 17px;
-  background: #f4f4f5;
-  color: #34363e;
+  height: 43px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid #c3c8d0;
+  border-radius: 10px;
+  background: #f1f2f4;
+  color: #292f39;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
-.secondaryButton:hover {
-  background: #e9e9eb;
+.secondaryButton svg {
+  color: #3c4450;
+  stroke-width: 2.2;
 }
 
 .secondaryButton svg:last-child {
   margin-left: auto;
 }
 
-/* =========================================
-   ACCOUNT CARD
-========================================= */
+.secondaryButton:hover {
+  background: #f8e9ee;
+  border-color: #ad7889;
+  color: #85052b;
+  transform: translateY(-1px);
+}
+
+.secondaryButton:hover svg {
+  color: #85052b;
+}
+
+.secondaryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* =========================================================
+   ACCOUNT INFORMATION
+   ========================================================= */
 
 .accountCard {
   display: grid;
-  grid-template-columns: 1fr auto 1fr auto 1fr;
+  grid-template-columns:
+    repeat(3, 1fr);
   align-items: center;
-  margin-top: 20px;
+  margin-top: 22px;
   padding: 18px 22px;
   background: #ffffff;
-  border: 1px solid #e8e9ed;
+  border: 1px solid #cbd0d7;
   border-radius: 16px;
-  box-shadow: 0 6px 24px rgba(20, 25, 40, 0.035);
+  box-shadow:
+    0 5px 20px rgba(20, 25, 35, 0.06);
 }
 
 .accountItem {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 12px;
+  min-width: 0;
 }
 
 .accountItemIcon {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 9px;
-  background: #f5f5f6;
-  color: #777b84;
+  border-radius: 10px;
+  background: #f9e8ed;
+  color: #85052b;
 }
 
 .accountItem span {
   display: block;
-  margin-bottom: 3px;
-  color: #999ca5;
+  margin-bottom: 4px;
+  color: #4a525e;
   font-size: 10px;
+  font-weight: 700;
 }
 
 .accountItem strong {
   display: block;
-  color: #363840;
+  overflow: hidden;
+  color: #202630;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .activeStatus {
-  color: #24934c !important;
+  color: #087c46 !important;
 }
 
 .accountDivider {
   width: 1px;
   height: 38px;
-  background: #ededee;
-  margin: 0 24px;
+  justify-self: center;
+  background: #c4cad2;
 }
 
-/* =========================================
+/* =========================================================
    LOADING
-========================================= */
+   ========================================================= */
 
 .loadingPage {
-  min-height: 300px;
+  min-height: 500px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  color: #888b94;
+  gap: 14px;
+  color: #444c58;
   font-size: 13px;
+  font-weight: 600;
+}
+
+.loadingPage p {
+  margin: 0;
 }
 
 .loadingSpinner {
-  width: 26px;
-  height: 26px;
-  border: 3px solid #eeeeef;
-  border-top-color: #8f092d;
+  width: 34px;
+  height: 34px;
+  border: 3px solid #e2cbd2;
+  border-top-color: #85052b;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: profileSpin 0.8s linear infinite;
 }
 
-@keyframes spin {
+@keyframes profileSpin {
   to {
     transform: rotate(360deg);
   }
 }
 
-/* =========================================
-   RESPONSIVE
-========================================= */
+/* =========================================================
+   HIDDEN FILE INPUT
+   ========================================================= */
 
-@media (max-width: 1000px) {
+.hiddenInput {
+  display: none;
+}
+
+/* =========================================================
+   RESPONSIVE - TABLET
+   ========================================================= */
+
+@media (max-width: 1100px) {
+  .page {
+    padding: 20px;
+  }
+
   .contentGrid {
     grid-template-columns: 1fr;
   }
 
   .accountCard {
+    grid-template-columns:
+      repeat(3, 1fr);
+  }
+}
+
+/* =========================================================
+   RESPONSIVE - SMALL TABLET
+   ========================================================= */
+
+@media (max-width: 760px) {
+  .page {
+    padding: 16px;
+  }
+
+  .profileHero {
+    min-height: 275px;
+  }
+
+  .heroBackground {
+    height: 155px;
+  }
+
+  .profileContent {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    min-height: 275px;
+    padding: 28px 22px 20px;
+  }
+
+  .avatarWrapper {
+    width: 120px;
+    height: 120px;
+    margin-right: 15px;
+  }
+
+  .avatar,
+  .avatarPlaceholder {
+    width: 120px;
+    height: 120px;
+  }
+
+  .avatarPlaceholder {
+    font-size: 32px;
+  }
+
+  .cameraButton {
+    width: 37px;
+    height: 37px;
+  }
+
+  .profileIdentity {
+    padding-top: 24px;
+  }
+
+  .profileIdentity h2 {
+    font-size: 22px;
+  }
+
+  .profileMeta {
+    font-size: 12px;
+  }
+
+  .photoButton {
+    width: 100%;
+    margin: 18px 0 0;
+    align-self: auto;
+  }
+
+  .formGrid {
     grid-template-columns: 1fr;
-    gap: 15px;
+  }
+
+  .accountCard {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .accountDivider {
     width: 100%;
     height: 1px;
-    margin: 0;
   }
 }
 
-@media (max-width: 700px) {
+/* =========================================================
+   RESPONSIVE - MOBILE
+   ========================================================= */
+
+@media (max-width: 480px) {
   .page {
-    padding: 22px 16px 40px;
+    padding: 12px;
   }
 
-  .pageHeader h1 {
-    font-size: 24px;
+  .profileHero {
+    border-radius: 16px;
+    min-height: 275px;
   }
 
   .profileContent {
-    flex-wrap: wrap;
-    padding: 0 18px 20px;
+    padding: 25px 17px 18px;
   }
 
-  .profileIdentity {
-    flex: 1;
-    min-width: 180px;
+  .avatarWrapper {
+    width: 110px;
+    height: 110px;
   }
 
-  .profileMeta {
-    flex-wrap: wrap;
+  .avatar,
+  .avatarPlaceholder {
+    width: 110px;
+    height: 110px;
   }
 
-  .photoButton {
-    width: 100%;
-    margin: 0;
+  .avatarPlaceholder {
+    font-size: 30px;
+  }
+
+  .cameraButton {
+    width: 35px;
+    height: 35px;
   }
 
   .card {
@@ -567,8 +835,13 @@
     border-radius: 15px;
   }
 
-  .formGrid {
-    grid-template-columns: 1fr;
+  .cardHeader {
+    gap: 10px;
+  }
+
+  .cardIcon {
+    width: 38px;
+    height: 38px;
   }
 
   .formFooter {
@@ -576,39 +849,15 @@
     align-items: stretch;
   }
 
+  .helperText {
+    text-align: center;
+  }
+
   .primaryButton {
     width: 100%;
   }
-}
 
-@media (max-width: 450px) {
-  .profileHero {
-    border-radius: 15px;
-  }
-
-  .heroBackground {
-    height: 78px;
-  }
-
-  .profileContent {
-    margin-top: -43px;
-  }
-
-  .avatar,
-  .avatarPlaceholder {
-    width: 86px;
-    height: 86px;
-  }
-
-  .avatarPlaceholder {
-    font-size: 24px;
-  }
-
-  .profileIdentity h2 {
-    font-size: 18px;
-  }
-
-  .profileMeta {
-    font-size: 11px;
+  .securityBanner {
+    padding: 12px;
   }
 }

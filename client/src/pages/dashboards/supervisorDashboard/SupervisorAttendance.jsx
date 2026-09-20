@@ -24,8 +24,6 @@ function SupervisorAttendance() {
   const [loadingBatches, setLoadingBatches] = useState(true);
   const [loadingAtt, setLoadingAtt] = useState(false);
   const [error, setError] = useState('');
-  const [from, setFrom] = useState('');
-  const [to, setTo] = useState('');
 
   const loadBatches = async () => {
     setLoadingBatches(true);
@@ -52,7 +50,7 @@ function SupervisorAttendance() {
     setLoadingAtt(true);
     setError('');
     try {
-      const res = await getSupervisorBatchAttendance(selectedId, { from, to });
+      const res = await getSupervisorBatchAttendance(selectedId);
       setAttendance(res || { students: [], days: [], batch_label: null });
     } catch (err) {
       setError(err.message);
@@ -75,7 +73,40 @@ function SupervisorAttendance() {
       0
     );
     return { total, days: days.length, presentDays };
-  }, [attendance]);
+  }, [students, days]);
+
+  const chart = useMemo(() => {
+    if (students.length === 0 || days.length === 0) {
+      return { points: '', items: [], width: 720, height: 240, maxValue: 1 };
+    }
+
+    const width = Math.max(720, days.length * 92);
+    const height = 240;
+    const padding = { top: 28, right: 28, bottom: 44, left: 46 };
+    const maxValue = students.length;
+    const usableWidth = width - padding.left - padding.right;
+    const usableHeight = height - padding.top - padding.bottom;
+
+    const items = days.map((day, index) => {
+      const presentCount = students.reduce((count, student) => {
+        const record = student.days?.[String(day)];
+        return count + (dayStatus(record) !== 'absent' ? 1 : 0);
+      }, 0);
+      const x = days.length === 1
+        ? padding.left + usableWidth / 2
+        : padding.left + (index / (days.length - 1)) * usableWidth;
+      const y = padding.top + usableHeight - (presentCount / maxValue) * usableHeight;
+      return { day, presentCount, x, y };
+    });
+
+    return {
+      points: items.map((item) => `${item.x},${item.y}`).join(' '),
+      items,
+      width,
+      height,
+      maxValue,
+    };
+  }, [students, days]);
 
   return (
     <div>
@@ -87,71 +118,77 @@ function SupervisorAttendance() {
       {error && <Feedback type="error" message={error} />}
 
       {loadingBatches ? (
-        <p className={styles.loading}>Loading batches…</p>
+        <p className={styles.loading}>Loading batches...</p>
       ) : batches.length === 0 ? (
         <p className={styles.empty}>No approved deployment batches assigned to you yet.</p>
       ) : (
         <>
-          <div className={styles.batchTabs}>
-            {batches.map((b) => (
-              <button
-                key={b.request_id}
-                type="button"
-                className={`${styles.batchTab} ${selectedId === b.request_id ? styles.batchTabActive : ''}`}
-                onClick={() => setSelectedId(b.request_id)}
-              >
-                <span className={styles.batchTabLabel}>{b.batch_label}</span>
-                <span className={styles.batchTabMeta}>
-                  {b.students?.length || 0} students · {b.coordinator_first_name} {b.coordinator_last_name}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          <div className={styles.filters}>
-            <label className={styles.filterField}>
-              From
-              <input type="date" className={styles.input} value={from} onChange={(e) => setFrom(e.target.value)} />
-            </label>
-            <label className={styles.filterField}>
-              To
-              <input type="date" className={styles.input} value={to} onChange={(e) => setTo(e.target.value)} />
-            </label>
-            <button className={styles.btn} type="button" onClick={loadAttendance} disabled={loadingAtt}>
-              {loadingAtt ? 'Loading…' : 'Apply'}
-            </button>
-            <button
-              className={styles.btnSecondary}
-              type="button"
-              onClick={() => {
-                setFrom('');
-                setTo('');
-              }}
-              disabled={loadingAtt}
-            >
-              Reset
-            </button>
-          </div>
-
           {!loadingAtt && students.length > 0 && (
-            <div className={styles.statRow}>
-              <div className={styles.statCard}>
-                <span className={styles.statValue}>{summary.total}</span>
-                <span className={styles.statLabel}>Students</span>
+            <>
+              <section className={styles.chartCard}>
+                <div className={styles.chartHeader}>
+                  <div>
+                    <h3>Attendance Trend</h3>
+                    <p>Present students per immersion day</p>
+                  </div>
+                  <span>{summary.presentDays} present records</span>
+                </div>
+
+                <div className={styles.chartWrap}>
+                  <svg
+                    className={styles.lineChart}
+                    viewBox={`0 0 ${chart.width} ${chart.height}`}
+                    role="img"
+                    aria-label="Line graph of present students by immersion day"
+                  >
+                    <line className={styles.chartAxis} x1="46" y1="196" x2={chart.width - 28} y2="196" />
+                    <line className={styles.chartAxis} x1="46" y1="28" x2="46" y2="196" />
+                    {[0, 0.5, 1].map((tick) => {
+                      const y = 196 - tick * 168;
+                      return (
+                        <g key={tick}>
+                          <line className={styles.chartGrid} x1="46" y1={y} x2={chart.width - 28} y2={y} />
+                          <text className={styles.chartLabel} x="36" y={y + 4} textAnchor="end">
+                            {Math.round(chart.maxValue * tick)}
+                          </text>
+                        </g>
+                      );
+                    })}
+                    <polyline className={styles.chartLine} points={chart.points} />
+                    {chart.items.map((item) => (
+                      <g key={item.day}>
+                        <circle className={styles.chartPoint} cx={item.x} cy={item.y} r="5" />
+                        <text className={styles.chartValue} x={item.x} y={item.y - 12} textAnchor="middle">
+                          {item.presentCount}
+                        </text>
+                        <text className={styles.chartLabel} x={item.x} y="222" textAnchor="middle">
+                          Day {item.day}
+                        </text>
+                      </g>
+                    ))}
+                  </svg>
+                </div>
+              </section>
+
+              <div className={styles.statRow}>
+                <div className={styles.statCard}>
+                  <span className={styles.statValue}>{summary.total}</span>
+                  <span className={styles.statLabel}>Students</span>
+                </div>
+                <div className={styles.statCard}>
+                  <span className={styles.statValue}>{summary.days}</span>
+                  <span className={styles.statLabel}>Immersion Days</span>
+                </div>
+                <div className={styles.statCard}>
+                  <span className={styles.statValue}>{summary.presentDays}</span>
+                  <span className={styles.statLabel}>Present Records</span>
+                </div>
               </div>
-              <div className={styles.statCard}>
-                <span className={styles.statValue}>{summary.days}</span>
-                <span className={styles.statLabel}>Immersion Days</span>
-              </div>
-              <div className={styles.statCard}>
-                <span className={styles.statValue}>{summary.presentDays}</span>
-                <span className={styles.statLabel}>Present Records</span>
-              </div>
-            </div>
+            </>
           )}
 
           {loadingAtt ? (
-            <p className={styles.loading}>Loading attendance…</p>
+            <p className={styles.loading}>Loading attendance...</p>
           ) : students.length === 0 ? (
             <p className={styles.empty}>No attendance records for this batch yet.</p>
           ) : (
@@ -177,11 +214,11 @@ function SupervisorAttendance() {
                             {s.first_name} {s.last_name}
                           </span>
                           <span className={styles.studentMeta}>
-                            {[s.grade_level, s.track_strand].filter(Boolean).join(' · ') || '—'}
+                            {[s.grade_level, s.track_strand].filter(Boolean).join(' - ') || '-'}
                           </span>
                         </div>
                       </td>
-                      <td>{s.student_number || '—'}</td>
+                      <td>{s.student_number || '-'}</td>
                       {days.map((d) => {
                         const day = s.days[String(d)];
                         const status = dayStatus(day);
@@ -193,14 +230,14 @@ function SupervisorAttendance() {
                                   {status === 'complete' ? 'Present' : status === 'in' ? 'In' : 'Absent'}
                                 </span>
                                 <span className={styles.timeRow}>
-                                  {formatTime(day.check_in_time) || '—'} → {formatTime(day.check_out_time) || '—'}
+                                  {formatTime(day.check_in_time) || '-'} to {formatTime(day.check_out_time) || '-'}
                                 </span>
                                 {(day.appeal_time_in_id || day.appeal_time_out_id) && (
                                   <span className={styles.appealTag}>appeal</span>
                                 )}
                               </div>
                             ) : (
-                              <span className={styles.noRecord}>·</span>
+                              <span className={styles.noRecord}>-</span>
                             )}
                           </td>
                         );

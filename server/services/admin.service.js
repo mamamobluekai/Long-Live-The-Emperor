@@ -85,6 +85,143 @@ async function getDashboardStats() {
   const totalPendingAccounts = Number(row.total_pending_accounts) || 0;
   const totalDisabledAccounts = Number(row.total_disabled_accounts) || 0;
 
+  // --- Attendance Trend (last 30 days) ---
+  const attendanceTrendQuery = `
+    SELECT
+      TO_CHAR(date, 'MM/DD') AS date,
+      COUNT(*) AS total,
+      COUNT(*) FILTER (WHERE check_in_time IS NOT NULL) AS present
+    FROM student_attendance
+    WHERE date >= CURRENT_DATE - INTERVAL '29 days'
+      AND date <= CURRENT_DATE
+    GROUP BY date
+    ORDER BY date`;
+  const attendanceTrendResult = await pool.query(attendanceTrendQuery);
+  const attendanceTrend = attendanceTrendResult.rows.map((r) => ({
+    date: r.date,
+    total: Number(r.total) || 0,
+    present: Number(r.present) || 0,
+    percentage: r.total > 0 ? Math.round((Number(r.present) / Number(r.total)) * 100) : 0,
+  }));
+
+  // --- Requirements Trend (last 30 days) ---
+  const requirementsTrendQuery = `
+    SELECT
+      TO_CHAR(created_at::date, 'MM/DD') AS date,
+      COUNT(*) FILTER (WHERE status = 'completed') AS completed,
+      COUNT(*) FILTER (WHERE status = 'pending') AS pending,
+      COUNT(*) FILTER (WHERE status = 'under_review') AS under_review,
+      COUNT(*) FILTER (WHERE status = 'rejected') AS rejected
+    FROM student_requirement_submissions
+    WHERE created_at >= CURRENT_DATE - INTERVAL '29 days'
+    GROUP BY created_at::date
+    ORDER BY created_at::date`;
+  const requirementsTrendResult = await pool.query(requirementsTrendQuery);
+  const requirementsTrend = requirementsTrendResult.rows.map((r) => ({
+    date: r.date,
+    completed: Number(r.completed) || 0,
+    pending: Number(r.pending) || 0,
+    under_review: Number(r.under_review) || 0,
+    rejected: Number(r.rejected) || 0,
+    total: Number(r.completed) + Number(r.pending) + Number(r.under_review) + Number(r.rejected),
+  }));
+
+  // --- User Growth (last 12 months) ---
+  const userGrowthQuery = `
+    SELECT
+      TO_CHAR(date_trunc('month', created_at), 'Mon YYYY') AS month,
+      COUNT(*) FILTER (WHERE role = 'student') AS students,
+      COUNT(*) FILTER (WHERE role = 'teacher') AS teachers,
+      COUNT(*) FILTER (WHERE role = 'supervisor') AS supervisors,
+      COUNT(*) FILTER (WHERE role = 'coordinator') AS coordinators
+    FROM users
+    WHERE created_at >= date_trunc('month', CURRENT_DATE) - INTERVAL '11 months'
+    GROUP BY date_trunc('month', created_at)
+    ORDER BY date_trunc('month', created_at)`;
+  const userGrowthResult = await pool.query(userGrowthQuery);
+  const userGrowth = userGrowthResult.rows.map((r) => ({
+    month: r.month,
+    students: Number(r.students) || 0,
+    teachers: Number(r.teachers) || 0,
+    supervisors: Number(r.supervisors) || 0,
+    coordinators: Number(r.coordinators) || 0,
+    total: Number(r.students) + Number(r.teachers) + Number(r.supervisors) + Number(r.coordinators),
+  }));
+
+  // --- Batch Performance ---
+  const batchPerformanceQuery = `
+    SELECT
+      tb.batch_label,
+      tb.id AS batch_id,
+      COUNT(DISTINCT tbs.student_id) AS student_count,
+      COUNT(DISTINCT sa.date) FILTER (WHERE sa.check_in_time IS NOT NULL) AS attendance_days,
+      COUNT(DISTINCT CASE WHEN sa.check_in_time IS NOT NULL THEN sa.date END) * 100.0 / 
+        NULLIF(COUNT(DISTINCT sa.date), 0) AS attendance_rate
+    FROM teacher_batches tb
+    LEFT JOIN teacher_batch_students tbs ON tbs.teacher_batch_id = tb.id
+    LEFT JOIN student_attendance sa ON sa.teacher_batch_id = tb.id
+    GROUP BY tb.id, tb.batch_label
+    ORDER BY tb.batch_label`;
+  const batchPerformanceResult = await pool.query(batchPerformanceQuery);
+  const batchPerformance = batchPerformanceResult.rows.map((r) => ({
+    batchLabel: r.batch_label,
+    batchId: r.batch_id,
+    studentCount: Number(r.student_count) || 0,
+    attendanceDays: Number(r.attendance_days) || 0,
+    attendanceRate: r.attendance_rate ? Math.round(Number(r.attendance_rate)) : 0,
+  }));
+
+  // --- Immersion Period Status ---
+  const periodStatusQuery = `
+    SELECT status, COUNT(*) AS count
+    FROM immersion_periods
+    GROUP BY status`;
+  const periodStatusResult = await pool.query(periodStatusQuery);
+  const periodStatus = {
+    upcoming: 0,
+    ongoing: 0,
+    completed: 0,
+    inactive: 0,
+  };
+  periodStatusResult.rows.forEach((r) => {
+    if (periodStatus.hasOwnProperty(r.status)) {
+      periodStatus[r.status] = Number(r.count) || 0;
+    }
+  });
+
+  // --- Documentation Grading Rate (last 30 days) ---
+  const docGradingQuery = `
+    SELECT
+      TO_CHAR(date, 'MM/DD') AS date,
+      COUNT(*) FILTER (WHERE status IN ('submitted', 'reviewed', 'graded')) AS submitted,
+      COUNT(*) FILTER (WHERE status IN ('reviewed', 'graded')) AS graded
+    FROM student_daily_documentation
+    WHERE date >= CURRENT_DATE - INTERVAL '29 days'
+      AND date <= CURRENT_DATE
+    GROUP BY date
+    ORDER BY date`;
+  const docGradingResult = await pool.query(docGradingQuery);
+  const docGradingTrend = docGradingResult.rows.map((r) => ({
+    date: r.date,
+    submitted: Number(r.submitted) || 0,
+    graded: Number(r.graded) || 0,
+    rate: r.submitted > 0 ? Math.round((Number(r.graded) / Number(r.submitted)) * 100) : 0,
+  }));
+
+  // --- Appeals Stats ---
+  const appealsQuery = `
+    SELECT status, COUNT(*) AS count
+    FROM attendance_appeals
+    GROUP BY status`;
+  const appealsResult = await pool.query(appealsQuery);
+  const appeals = { pending: 0, approved: 0, rejected: 0 };
+  appealsResult.rows.forEach((r) => {
+    if (appeals.hasOwnProperty(r.status)) {
+      appeals[r.status] = Number(r.count) || 0;
+    }
+  });
+
+  // --- Existing queries ---
   const attendanceWeekQuery = `
     SELECT
       TO_CHAR(date, 'Dy') AS day,
@@ -166,6 +303,14 @@ async function getDashboardStats() {
     requirements,
     documentation,
     evaluations,
+    // New data
+    attendanceTrend,
+    requirementsTrend,
+    userGrowth,
+    batchPerformance,
+    periodStatus,
+    docGradingTrend,
+    appeals,
   };
 }
 

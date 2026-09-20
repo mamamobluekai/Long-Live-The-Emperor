@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bell, CheckCheck } from 'lucide-react';
+import { Bell, CheckCheck, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../../hooks/useNotifications';
 import styles from './NotificationBell.module.css';
@@ -15,7 +15,7 @@ function formatTime(value) {
 
 export default function NotificationBell() {
   const navigate = useNavigate();
-  const { notifications, unreadCount, loading, markRead, markAllRead } = useNotifications();
+  const { notifications, unreadCount, loading, markRead, markAllRead, deleteAll } = useNotifications();
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef(null);
 
@@ -59,11 +59,18 @@ export default function NotificationBell() {
         <div className={styles.panel} role="dialog" aria-label="Notifications">
           <div className={styles.header}>
             <strong>Notifications</strong>
-            {unreadCount > 0 && (
-              <button type="button" className={styles.readAll} onClick={markAllRead}>
-                <CheckCheck size={14} /> Mark all read
-              </button>
-            )}
+            <div className={styles.actions}>
+              {unreadCount > 0 && (
+                <button type="button" className={styles.readAll} onClick={markAllRead}>
+                  <CheckCheck size={14} /> Mark all read
+                </button>
+              )}
+              {notifications.length > 0 && (
+                <button type="button" className={styles.clearAll} onClick={deleteAll}>
+                  <Trash2 size={14} /> Clear all
+                </button>
+              )}
+            </div>
           </div>
           <div className={styles.list}>
             {loading && <p className={styles.empty}>Loading...</p>}

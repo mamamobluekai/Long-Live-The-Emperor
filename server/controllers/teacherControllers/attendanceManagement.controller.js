@@ -40,6 +40,24 @@ function formatAppealDates(appeal) {
   return { ...appeal, appeal_date: formatDateOnly(appeal.appeal_date) };
 }
 
+function immersionDates(startDate, durationType, durationValue) {
+  const [year, month, day] = String(startDate).slice(0, 10).split('-').map(Number);
+  const current = new Date(year, month - 1, day);
+  const totalDays = durationType === 'hours'
+    ? Math.ceil(Number(durationValue) / 8)
+    : Number(durationValue);
+  const dates = [];
+
+  while (dates.length < totalDays) {
+    if (current.getDay() !== 0 && current.getDay() !== 6) {
+      dates.push(`${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`);
+    }
+    current.setDate(current.getDate() + 1);
+  }
+
+  return dates;
+}
+
 // Ensure the requesting teacher owns the batch.
 async function assertOwnsBatch(teacherUserId, batchId) {
   const teacherRow = await pool.query('SELECT id FROM teachers WHERE user_id = $1', [teacherUserId]);
@@ -76,6 +94,61 @@ const getBatchRecords = async (req, res) => {
     res.json({ date, records: result.rows });
   } catch (err) {
     console.error('getBatchRecords error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+// GET /api/attendance/teacher/batch/:batchId/report
+// Returns every scheduled immersion date and every enrolled student, including
+// absent students who do not yet have an attendance row.
+const getBatchAttendanceReport = async (req, res) => {
+  try {
+    const { batchId } = req.params;
+    const own = await assertOwnsBatch(req.user.id, batchId);
+    if (own.error) return res.status(own.status).json({ error: own.error });
+
+    const schedules = await pool.query(
+      `SELECT start_date, duration_type, duration_value
+       FROM work_immersion_schedules
+       WHERE teacher_batch_id = $1
+       ORDER BY start_date ASC`,
+      [batchId]
+    );
+    const dates = [...new Set(schedules.rows.flatMap((schedule) =>
+      immersionDates(schedule.start_date, schedule.duration_type, schedule.duration_value)
+    ))].sort();
+
+    if (dates.length === 0) return res.json({ dates: [], records: [] });
+
+    const result = await pool.query(
+      `SELECT d.date,
+              s.id AS student_id, s.first_name, s.last_name, s.student_number,
+              s.grade_level, s.track_strand, s.photo_url,
+              sa.id AS attendance_id, sa.status,
+              sa.check_in_time, sa.check_out_time,
+              sa.appeal_time_in_id, sa.appeal_time_out_id
+       FROM unnest($2::date[]) AS d(date)
+       CROSS JOIN (
+         SELECT s.id, s.first_name, s.last_name, s.student_number,
+                s.grade_level, s.track_strand, s.photo_url
+         FROM teacher_batch_students tbs
+         JOIN students s ON s.id = tbs.student_id OR s.user_id = tbs.student_id
+         WHERE tbs.teacher_batch_id = $1
+       ) s
+       LEFT JOIN student_attendance sa
+         ON sa.student_id = s.id
+        AND sa.teacher_batch_id = $1
+        AND sa.date = d.date
+       ORDER BY s.last_name, s.first_name, d.date`,
+      [batchId, dates]
+    );
+
+    res.json({ dates, records: result.rows.map((row) => ({
+      ...row,
+      status: row.status || 'absent',
+    })) });
+  } catch (err) {
+    console.error('getBatchAttendanceReport error:', err);
     res.status(500).json({ error: 'Server error.' });
   }
 };
@@ -254,6 +327,7 @@ const reviewAppeal = async (req, res) => {
 
 module.exports = {
   getBatchRecords,
+  getBatchAttendanceReport,
   getBatchStats,
   getBatchAppeals,
   reviewAppeal,

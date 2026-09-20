@@ -11,9 +11,6 @@ import {
   deleteMyAppeal,
 } from '../../../api/attendanceApi';
 import {
-  uploadMyFile,
-  submitDailyDoc,
-  updateDailyDoc,
   getMyDailyDocs,
 } from '../../../api/fileApi';
 import styles from './Attendance.module.css';
@@ -276,19 +273,6 @@ function getCurrentPosition() {
   });
 }
 
-function formatSize(bytes) {
-  if (!bytes) return 'Unknown size';
-
-  if (bytes < 1024) {
-    return bytes + ' B';
-  }
-
-  if (bytes < 1024 * 1024) {
-    return (bytes / 1024).toFixed(1) + ' KB';
-  }
-
-  return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
-}
 
 function Attendance() {
   const { token } = useAuth();
@@ -307,24 +291,6 @@ function Attendance() {
   const [attendanceMap, setAttendanceMap] =
     useState({});
 
-  // Documentation
-  const [docMap, setDocMap] = useState({});
-  const [showDocModal, setShowDocModal] =
-    useState(false);
-
-  const [editingDocId, setEditingDocId] =
-    useState(null);
-
-  const [docDay, setDocDay] = useState(null);
-  const [docFile, setDocFile] = useState(null);
-  const [docReasoning, setDocReasoning] =
-    useState('');
-
-  const [docSubmitting, setDocSubmitting] =
-    useState(false);
-
-  const [uploadedFile, setUploadedFile] =
-    useState(null);
 
   // Appeals
   const [appeals, setAppeals] = useState([]);
@@ -408,6 +374,7 @@ function Attendance() {
         result
       );
 
+      // eslint-disable-next-line no-undef
       setDocMap((prev) => {
         const newMap = { ...prev };
 
@@ -988,307 +955,11 @@ const openAppeal = (
     setShowAppealForm(true);
   };
 
-  const openDocModal = (
-    day
-  ) => {
-    /*
-     * FIX:
-     * Always use the normalized date when
-     * looking for an existing document.
-     */
-    const docKey =
-      normalizeDateKey(
-        day.date
-      );
 
-    const existingDoc =
-      docMap[docKey] ||
-      docMap[
-        String(day.date).slice(
-          0,
-          10
-        )
-      ] ||
-      null;
 
-    console.log(
-      '[DEBUG DOC] Opening modal:',
-      {
-        dayDate: day.date,
-        docKey,
-        existingDoc,
-      }
-    );
 
-    setDocDay(day);
-    setDocFile(null);
 
-    setDocReasoning(
-      existingDoc?.reasoning ||
-        ''
-    );
 
-    setUploadedFile(
-      existingDoc?.file_id
-        ? {
-            id: existingDoc.file_id,
-            original_name:
-              existingDoc.original_name ||
-              'View file',
-            cloudinary_url:
-              existingDoc.cloudinary_url ||
-              '',
-            file_size:
-              existingDoc.file_size ||
-              0,
-            mime_type:
-              existingDoc.mime_type ||
-              '',
-          }
-        : null
-    );
-
-    setEditingDocId(
-      existingDoc?.id ||
-        null
-    );
-
-    setShowDocModal(true);
-  };
-
-  const closeDocModal = () => {
-    setShowDocModal(false);
-    setDocDay(null);
-    setDocFile(null);
-    setDocReasoning('');
-    setUploadedFile(null);
-    setEditingDocId(null);
-  };
-
-  const handleSubmitDoc =
-    async (e) => {
-      e.preventDefault();
-
-      setDocSubmitting(true);
-
-      try {
-        let finalFileId =
-          uploadedFile?.id ||
-          null;
-
-        /*
-         * Upload new file only if
-         * the user selected one.
-         */
-        if (docFile) {
-          const uploadResult =
-            await uploadMyFile(
-              docFile
-            );
-
-          setUploadedFile(
-            uploadResult
-          );
-
-          finalFileId =
-            uploadResult.id;
-
-          setDocFile(null);
-        }
-
-        if (!finalFileId) {
-          flash(
-            'error',
-            'Please select a file first.'
-          );
-
-          setDocSubmitting(
-            false
-          );
-
-          return;
-        }
-
-        if (
-          !docReasoning.trim()
-        ) {
-          flash(
-            'error',
-            'Please provide reasoning/reflection.'
-          );
-
-          setDocSubmitting(
-            false
-          );
-
-          return;
-        }
-
-        const payload = {
-          date: docDay.date,
-          day_number:
-            docDay.dayNumber,
-          reasoning:
-            docReasoning.trim(),
-          fileId:
-            finalFileId,
-          batchId:
-            docDay.batchId,
-        };
-
-        const result =
-          editingDocId
-            ? await updateDailyDoc(
-                payload
-              )
-            : await submitDailyDoc(
-                payload
-              );
-
-        const returnedDoc =
-          result.doc ||
-          result;
-
-        const docKey =
-          normalizeDateKey(
-            returnedDoc?.date ||
-              docDay.date
-          );
-
-        console.log(
-          '[DEBUG DOC] Submission result:',
-          {
-            returnedDoc,
-            docKey,
-            docDayDate:
-              docDay.date,
-            docDayBatchId:
-              docDay.batchId,
-            docDayDayNumber:
-              docDay.dayNumber,
-            hasDocProp:
-              !!result.doc,
-          }
-        );
-
-        /*
-         * FIX:
-         * Immediately put the returned document
-         * into docMap.
-         *
-         * This makes the button change without
-         * waiting for another page refresh.
-         */
-        if (
-          docKey &&
-          returnedDoc
-        ) {
-          setDocMap(
-            (prev) => {
-              const newMap = {
-                ...prev,
-                [docKey]:
-                  returnedDoc,
-              };
-
-              console.log(
-                '[DEBUG DOC] docMap after submission:',
-                Object.keys(
-                  newMap
-                ),
-                'doc at key:',
-                newMap[docKey]
-              );
-
-              return newMap;
-            }
-          );
-        }
-
-        flash(
-          'success',
-          editingDocId
-            ? 'Documentation updated successfully.'
-            : 'Documentation submitted successfully.'
-        );
-
-        /*
-         * Save batchId before closing the modal
-         * because closeDocModal clears docDay.
-         */
-        const submittedBatchId =
-          docDay?.batchId;
-
-        closeDocModal();
-
-        /*
-         * FIX:
-         * Wait for the server document list to
-         * finish loading so docMap stays synchronized
-         * with the database.
-         */
-        if (
-          submittedBatchId
-        ) {
-          await loadDocs(
-            submittedBatchId
-          );
-        }
-      } catch (err) {
-        console.error(
-          'handleSubmitDoc error:',
-          err
-        );
-
-        flash(
-          'error',
-          err.message ||
-            'Failed to submit documentation.'
-        );
-      } finally {
-        setDocSubmitting(
-          false
-        );
-      }
-    };
-
-  const getDocStatusLabel =
-    (doc) => {
-      if (!doc) return null;
-
-      switch (doc.status) {
-        case 'graded':
-          return `Graded: ${doc.teacher_score}/100`;
-
-        case 'submitted':
-          return 'Done';
-
-        case 'reviewed':
-          return 'Reviewed';
-
-        default:
-          return 'Pending';
-      }
-    };
-
-  const getDocStatusClass =
-    (doc) => {
-      if (!doc) return '';
-
-      switch (doc.status) {
-        case 'graded':
-          return styles.docGraded;
-
-        case 'submitted':
-          return styles.docSubmitted;
-
-        case 'reviewed':
-          return styles.docReviewed;
-
-        default:
-          return styles.docPending;
-      }
-    };
 
   return (
     <div className={styles.page}>
@@ -1297,21 +968,6 @@ const openAppeal = (
         <h2 className={styles.title}>
           Daily Attendance
         </h2>
-
-        <p className={styles.subtitle}>
-          {new Date().toLocaleDateString(
-            'en-US',
-            {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            }
-          )}
-
-          {' · '}
-          {tz}
-        </p>
 
         {notice && (
           <div

@@ -3,6 +3,7 @@ import {
   getPendingStudents,
   approveStudent,
   disapproveStudent,
+  deleteStudent,
   uploadStudentsExcel,
 } from '../../../api/coordinatorApi';
 import styles from './StudentApprovals.module.css';
@@ -12,6 +13,7 @@ const statusBadge = (status) => {
     pending: styles.badgePending,
     approved: styles.badgeApproved,
     rejected: styles.badgeRejected,
+    disapproved: styles.badgeRejected,
     'needs revision': styles.badgeNeeds,
   };
 
@@ -21,6 +23,8 @@ const statusBadge = (status) => {
 function StudentApprovals() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('pending');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -30,12 +34,16 @@ function StudentApprovals() {
   const [uploadMessage, setUploadMessage] = useState('');
   const [uploadError, setUploadError] = useState('');
 
+  // Delete confirmation state
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
   const load = async () => {
     setLoading(true);
     setError('');
 
     try {
-      const data = await getPendingStudents();
+      const data = await getPendingStudents(statusFilter);
       setStudents(data.students || []);
     } catch (err) {
       setError(err.message);
@@ -46,7 +54,16 @@ function StudentApprovals() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [statusFilter]);
+
+  const filteredStudents = students.filter((student) => {
+    if (!searchTerm) return true;
+    const fullName = `${student.first_name || ''} ${student.last_name || ''}`.toLowerCase();
+    const email = (student.email || '').toLowerCase();
+    const studentNumber = (student.student_number || '').toLowerCase();
+    const search = searchTerm.toLowerCase();
+    return fullName.includes(search) || email.includes(search) || studentNumber.includes(search);
+  });
 
   const handleUpload = async () => {
     if (!file) {
@@ -104,6 +121,39 @@ function StudentApprovals() {
     }
   };
 
+  const handleDeleteConfirm = (id) => {
+    setDeleteConfirmId(id);
+  };
+
+  const handleDelete = async (id) => {
+    setDeleting(true);
+    try {
+      await deleteStudent(id);
+      setMessage('Student deleted successfully.');
+      setDeleteConfirmId(null);
+      await load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeleting(false);
+      setDeleteConfirmId(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirmId(null);
+  };
+
+  const getStatusLabel = (status) => {
+    const labels = {
+      pending: 'Pending',
+      approved: 'Approved',
+      disapproved: 'Disapproved',
+      rejected: 'Rejected',
+    };
+    return labels[status] || status;
+  };
+
   return (
     <div className={styles.page}>
       {/* HEADER */}
@@ -118,8 +168,6 @@ function StudentApprovals() {
             pending registrations.
           </p>
         </div>
-
-        
       </div>
 
       {/* ALERTS */}
@@ -142,8 +190,6 @@ function StudentApprovals() {
       {/* BULK UPLOAD */}
       <section className={styles.uploadCard}>
         <div className={styles.cardHeader}>
-          
-
           <div>
             <h3>Bulk Upload Students</h3>
             <p>
@@ -224,7 +270,7 @@ function StudentApprovals() {
           <div>
             <span className={styles.sectionLabel}>REGISTRATION</span>
 
-            <h3>Pending Student Approvals</h3>
+            <h3>Student Approvals</h3>
 
             <p>
               Review and approve student accounts waiting for registration.
@@ -232,8 +278,36 @@ function StudentApprovals() {
           </div>
 
           <div className={styles.studentCount}>
-            <strong>{students.length}</strong>
-            <span>Pending</span>
+            <strong>{filteredStudents.length}</strong>
+            <span>Students</span>
+          </div>
+        </div>
+
+        {/* FILTERS */}
+        <div className={styles.filters}>
+          <div className={styles.filterGroup}>
+            <label className={styles.filterLabel}>Status</label>
+            <select
+              className={styles.filterSelect}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">All</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="disapproved">Disapproved</option>
+            </select>
+          </div>
+
+          <div className={styles.filterGroup}>
+            <label className={styles.filterLabel}>Search</label>
+            <input
+              type="text"
+              className={styles.searchInput}
+              placeholder="Search by name, email, or ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
         </div>
 
@@ -242,14 +316,16 @@ function StudentApprovals() {
             <span className={styles.spinnerDark}></span>
             <p>Loading students...</p>
           </div>
-        ) : students.length === 0 ? (
+        ) : filteredStudents.length === 0 ? (
           <div className={styles.empty}>
             <div className={styles.emptyIcon}>✓</div>
 
-            <h4>No pending students</h4>
+            <h4>No students found</h4>
 
             <p>
-              All student registrations have been processed.
+              {statusFilter === 'pending'
+                ? 'All student registrations have been processed.'
+                : 'No students match the current filter.'}
             </p>
           </div>
         ) : (
@@ -259,17 +335,18 @@ function StudentApprovals() {
                 <tr>
                   <th>STUDENT</th>
                   <th>EMAIL</th>
+                  <th>STUDENT ID</th>
+                  <th>GRADE / SECTION</th>
                   <th>STATUS</th>
+                  <th>REGISTERED</th>
                   <th className={styles.actionHeader}>ACTIONS</th>
                 </tr>
               </thead>
 
               <tbody>
-                {students.map((student) => {
+                {filteredStudents.map((student) => {
                   const fullName =
-                    `${student.first_name || ''} ${
-                      student.last_name || ''
-                    }`.trim();
+                    `${student.first_name || ''} ${student.last_name || ''}`.trim();
 
                   return (
                     <tr key={student.id}>
@@ -285,10 +362,6 @@ function StudentApprovals() {
                             <strong>
                               {fullName || 'Unnamed Student'}
                             </strong>
-
-                            <span>
-                              {student.student_number || 'No student ID'}
-                            </span>
                           </div>
                         </div>
                       </td>
@@ -300,35 +373,84 @@ function StudentApprovals() {
                       </td>
 
                       <td>
+                        <span className={styles.studentId}>
+                          {student.student_number || '-'}
+                        </span>
+                      </td>
+
+                      <td>
+                        <span className={styles.gradeSection}>
+                          {student.grade_level ? `${student.grade_level}` : ''}
+                          {student.section ? ` - ${student.section}` : ''}
+                          {student.track_strand ? ` (${student.track_strand})` : ''}
+                        </span>
+                      </td>
+
+                      <td>
                         <span
-                          className={`${styles.badge} ${statusBadge(
-                            student.status
-                          )}`}
+                          className={`${styles.badge} ${statusBadge(student.status)}`}
                         >
                           <span className={styles.statusDot}></span>
-                          {student.status || 'Pending'}
+                          {getStatusLabel(student.status)}
+                        </span>
+                      </td>
+
+                      <td>
+                        <span className={styles.registeredDate}>
+                          {student.created_at
+                            ? new Date(student.created_at).toLocaleDateString()
+                            : '-'}
                         </span>
                       </td>
 
                       <td>
                         <div className={styles.actions}>
-                          <button
-                            className={styles.approveBtn}
-                            onClick={() =>
-                              handleApprove(student.id)
-                            }
-                          >
-                            ✓ Approve
-                          </button>
+                          {deleteConfirmId === student.id ? (
+                            <div className={styles.deleteConfirm}>
+                              <span>Delete this student?</span>
+                              <button
+                                className={styles.confirmDeleteBtn}
+                                onClick={() => handleDelete(student.id)}
+                                disabled={deleting}
+                              >
+                                {deleting ? 'Deleting...' : 'Yes, Delete'}
+                              </button>
+                              <button
+                                className={styles.cancelDeleteBtn}
+                                onClick={handleCancelDelete}
+                                disabled={deleting}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              {student.status === 'pending' && (
+                                <>
+                                  <button
+                                    className={styles.approveBtn}
+                                    onClick={() => handleApprove(student.id)}
+                                  >
+                                    ✓ Approve
+                                  </button>
 
-                          <button
-                            className={styles.rejectBtn}
-                            onClick={() =>
-                              handleDisapprove(student.id)
-                            }
-                          >
-                            Disapprove
-                          </button>
+                                  <button
+                                    className={styles.rejectBtn}
+                                    onClick={() => handleDisapprove(student.id)}
+                                  >
+                                    Disapprove
+                                  </button>
+                                </>
+                              )}
+
+                              <button
+                                className={styles.deleteBtn}
+                                onClick={() => handleDeleteConfirm(student.id)}
+                              >
+                                Delete
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>

@@ -6,7 +6,6 @@ import {
   ClipboardPenLine,
   CalendarDays,
   Map,
-  ClipboardList,
   FileText,
   MessageCircle,
   MessagesSquare,
@@ -33,8 +32,13 @@ const links = [
     icon: ClipboardPenLine,
   },
   {
+    to: '/dashboard/teacher/attendance-reports',
+    label: 'Attendance Reports & Records',
+    icon: CalendarDays,
+  },
+  {
     to: '/dashboard/teacher/attendance',
-    label: 'Attendance',
+    label: 'Attendance Schedule',
     icon: CalendarDays,
   },
   {
@@ -48,13 +52,8 @@ const links = [
     icon: Map,
   },
   {
-    to: '/dashboard/teacher/appeals',
-    label: 'Appeals',
-    icon: ClipboardList,
-  },
-  {
-    to: '/dashboard/teacher/reports',
-    label: 'Reports',
+    to: '/dashboard/teacher/reports-concerns',
+    label: 'Reports & Concerns',
     icon: FileText,
   },
   {

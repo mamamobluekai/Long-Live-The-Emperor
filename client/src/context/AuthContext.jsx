@@ -45,11 +45,19 @@ export function AuthProvider({ children }) {
     setUser((prev) => (prev ? { ...prev, ...partial } : null));
   };
 
-  const value = useMemo(() => ({ user, token, login, logout, updateUser, isAuthenticated: Boolean(user) }), [user, token]);
+  const value = useMemo(
+    () => ({ user, token, login, logout, updateUser, isAuthenticated: Boolean(user) }),
+    [user, token]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
-  return useContext(AuthContext);
+  const ctx = useContext(AuthContext);
+  if (!ctx) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return ctx;
 }

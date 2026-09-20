@@ -26,3 +26,7 @@ export function markNotificationRead(id) {
 export function markAllNotificationsRead() {
   return request('/notifications/read-all', { method: 'PATCH' });
 }
+
+export function deleteAllNotifications() {
+  return request('/notifications', { method: 'DELETE' });
+}

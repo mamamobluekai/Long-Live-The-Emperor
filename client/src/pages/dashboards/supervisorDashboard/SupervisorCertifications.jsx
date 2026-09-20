@@ -1,12 +1,12 @@
 import { useEffect, useState, useMemo } from 'react';
 import {
-  supervisorGetAllStudents,
   supervisorGenerateCertificate,
   supervisorForceGenerateCertificate,
   supervisorUndoForceIssue,
   supervisorGetCertificateTemplate,
   supervisorSaveCertificateTemplate,
 } from '../../../api/certificateApi';
+import { getSupervisorBatches } from '../../../api/supervisorApi';
 import styles from './SupervisorDashboardCertifications.module.css';
 
 function CornerOrnament({ color, corner }) {
@@ -44,7 +44,7 @@ function CertificateSeal({ color }) {
 }
 
 function SupervisorCertifications() {
-  const [list, setList] = useState([]);
+  const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -68,18 +68,20 @@ function SupervisorCertifications() {
     setError('');
     setMessage('');
     try {
-      const [eligibleData, templateData] = await Promise.all([
-        supervisorGetAllStudents(),
+      const [batchesData, templateData] = await Promise.all([
+        getSupervisorBatches(),
         supervisorGetCertificateTemplate(),
       ]);
-      const raw = eligibleData.eligible || [];
-      setList(raw);
+      const rawBatches = batchesData.batches || [];
+      setBatches(rawBatches);
       setTemplate((prev) => ({ ...prev, ...(templateData || {}) }));
 
       const forced = {};
-      for (const s of raw) {
-        if (s.certificate_number && String(s.certificate_number).startsWith('CERT-FORCE-')) {
-          forced[s.user_id] = s.certificate_number;
+      for (const batch of rawBatches) {
+        for (const s of batch.students || []) {
+          if (s.certificate_number && String(s.certificate_number).startsWith('CERT-FORCE-')) {
+            forced[s.user_id] = s.certificate_number;
+          }
         }
       }
       setForcedIds(forced);
@@ -145,12 +147,17 @@ function SupervisorCertifications() {
         delete next[studentId];
         return next;
       });
-      setList((prev) =>
-        prev.map((student) =>
-          student.user_id === studentId
-            ? { ...student, certificate_number: null, certificate_url: null }
-            : student
-        )
+      setBatches((prev) =>
+        prev.map((batch) => ({
+          ...batch,
+          students: batch.students
+            ? batch.students.map((s) =>
+                s.user_id === studentId
+                  ? { ...s, certificate_number: null, certificate_url: null }
+                  : s
+              )
+            : batch.students,
+        }))
       );
       await loadAll();
     } catch (e) {
@@ -436,78 +443,98 @@ function SupervisorCertifications() {
             <option value="incomplete">Incomplete</option>
           </select>
           <span className={styles.muted} style={{ alignSelf: 'center' }}>
-            {list.length} total
+            {batches.reduce((sum, b) => sum + (b.students?.length || 0), 0)} total
           </span>
         </div>
         {loading ? (
           <p className={styles.loading}>Loading students...</p>
+        ) : batches.length === 0 ? (
+          <p className={styles.loading}>No batches assigned to you yet.</p>
         ) : (
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Student ID</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Grade</th>
-                  <th>Strand</th>
-                  <th>Attendance</th>
-                  <th>Docs</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {list
-                  .filter((s) => (filter === 'completed' ? s.completed : filter === 'incomplete' ? !s.completed : true))
-                  .map((s) => (
-                    <tr key={s.user_id}>
-                      <td>{s.student_number}</td>
-                      <td>{s.first_name} {s.last_name}</td>
-                      <td>{s.email}</td>
-                      <td>{s.grade_level || '-'}</td>
-                      <td>{s.track_strand || '-'}</td>
-                      <td>{s.attendance_days || 0}</td>
-                      <td>{s.verified_documents || 0}/{s.total_documents || 0}</td>
-                      <td>
-                        <span className={`${styles.badge} ${s.completed ? styles.badgeApproved : styles.badgePending}`}>
-                          {s.completed ? 'Completed' : 'Incomplete'}
-                        </span>
-                      </td>
-                      <td>
-                        {forcedIds[s.user_id] ? (
-                          <button
-                            className={styles.btnSecondary}
-                            type="button"
-                            onClick={() => handleUndoForce(s.user_id)}
-                            disabled={generatingId === s.user_id}
-                          >
-                            {generatingId === s.user_id ? 'Undoing...' : 'Undo Force Issue'}
-                          </button>
-                        ) : s.completed ? (
-                          <button
-                            className={styles.btn}
-                            onClick={() => handleGenerate(s.user_id)}
-                            disabled={generatingId === s.user_id}
-                          >
-                            {generatingId === s.user_id ? 'Generating...' : 'Generate Certificate'}
-                          </button>
-                        ) : (
-                          <button
-                            className={styles.btnSecondary}
-                            type="button"
-                            onClick={() => setConfirmForceId(s.user_id)}
-                            disabled={generatingId === s.user_id}
-                          >
-                            Force Issue
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
+          batches.map((b) => {
+            const batchStudents = (b.students || []).filter((s) =>
+              filter === 'completed' ? s.completed : filter === 'incomplete' ? !s.completed : true
+            );
+            if (batchStudents.length === 0) return null;
+            return (
+              <div key={`${b.source}-${b.request_id}`} className={styles.batchCard}>
+                <div className={styles.batchHeader}>
+                  <h4 className={styles.batchLabel}>{b.batch_label}</h4>
+                  <span className={styles.badge}>{b.strand || 'General'}</span>
+                </div>
+                <p className={styles.muted}>
+                  Coordinator: {b.coordinator_first_name} {b.coordinator_last_name} -{' '}
+                  {b.students?.length || 0} students
+                </p>
+                <div className={styles.tableWrap}>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>Student ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Grade</th>
+                        <th>Strand</th>
+                        <th>Attendance</th>
+                        <th>Docs</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {batchStudents.map((s) => (
+                        <tr key={s.user_id}>
+                          <td>{s.student_number}</td>
+                          <td>{s.first_name} {s.last_name}</td>
+                          <td>{s.email}</td>
+                          <td>{s.grade_level || '-'}</td>
+                          <td>{s.track_strand || '-'}</td>
+                          <td>{s.attendance_days || 0}</td>
+                          <td>{s.verified_documents || 0}/{s.total_documents || 0}</td>
+                          <td>
+                            <span className={`${styles.badge} ${s.completed ? styles.badgeApproved : styles.badgePending}`}>
+                              {s.completed ? 'Completed' : 'Incomplete'}
+                            </span>
+                          </td>
+                          <td>
+                            {s.certificate_number ? (
+                              <span className={styles.certifiedText}>Certified</span>
+                            ) : forcedIds[s.user_id] ? (
+                              <button
+                                className={styles.btnSecondary}
+                                type="button"
+                                onClick={() => handleUndoForce(s.user_id)}
+                                disabled={generatingId === s.user_id}
+                              >
+                                {generatingId === s.user_id ? 'Undoing...' : 'Undo Force Issue'}
+                              </button>
+                            ) : s.completed ? (
+                              <button
+                                className={styles.btn}
+                                onClick={() => handleGenerate(s.user_id)}
+                                disabled={generatingId === s.user_id}
+                              >
+                                {generatingId === s.user_id ? 'Generating...' : 'Generate Certificate'}
+                              </button>
+                            ) : (
+                              <button
+                                className={styles.btnSecondary}
+                                type="button"
+                                onClick={() => setConfirmForceId(s.user_id)}
+                                disabled={generatingId === s.user_id}
+                              >
+                                Force Issue
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          })
         )}
       </div>
 
