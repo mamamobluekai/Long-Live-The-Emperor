@@ -25,7 +25,7 @@ function formatMessageDate(date) {
 
 const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '👏', '🔥'];
 
-export default function BatchChat({ user }) {
+export default function BatchChat({ user, inModal = false }) {
   const [batches, setBatches] = useState([]);
   const [selectedBatchId, setSelectedBatchId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -395,13 +395,13 @@ export default function BatchChat({ user }) {
   const selectedBatch = batches.find((b) => b.id === selectedBatchId);
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${inModal ? styles.modalMode : ''}`}>
       <div className={styles.header}>
         <h2 className={styles.title}>Group Chat</h2>
         <p className={styles.subtitle}>Chat with your batch members</p>
       </div>
 
-      <div className={styles.layout}>
+      <div className={`${styles.layout} ${inModal ? styles.modalLayout : ''}`}>
         <div className={styles.sidebar}>
           <h3 className={styles.sidebarTitle}>My Batches</h3>
           {loading ? (

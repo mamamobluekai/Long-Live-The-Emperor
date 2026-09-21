@@ -1,3 +1,50 @@
+.greeting {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+  padding: 22px 24px;
+  border: 1px solid #e8d2d8;
+  border-radius: 18px;
+  background:
+    radial-gradient(130% 160% at 0% 0%, rgba(139, 30, 45, 0.1) 0%, rgba(139, 30, 45, 0) 58%),
+    radial-gradient(120% 150% at 100% 120%, rgba(190, 140, 63, 0.16) 0%, rgba(190, 140, 63, 0) 55%),
+    linear-gradient(120deg, #ffffff 0%, #fdf3f5 58%, #f9e8ec 100%);
+  box-shadow: 0 14px 32px -28px rgba(80, 20, 32, 0.55);
+}
+
+.greeting h2 {
+  margin: 0;
+  color: #172033;
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.greeting p {
+  margin: 6px 0 0;
+  max-width: 620px;
+  color: #596579;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.batchPill {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  border: 1px solid #e5d8dc;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #fff 0%, #fff8f8 100%);
+  color: #8b1e2d;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .pageHeader {
   margin-bottom: 22px;
 }
@@ -35,6 +82,224 @@
   color: #0f172a;
 }
 
+.sectionTitle svg {
+  vertical-align: -3px;
+  margin-right: 5px;
+  color: #8b1e2d;
+}
+
+.peopleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.personCard {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #e6dfe2;
+  border-radius: 14px;
+  background: linear-gradient(150deg, #ffffff 0%, #fdfafb 100%);
+}
+
+.personAvatar {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  place-items: center;
+  border-radius: 13px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  background: linear-gradient(140deg, #64748b, #94a3b8);
+}
+
+.accentTeacher .personAvatar {
+  background: linear-gradient(140deg, #8b1e2d, #b8394f);
+}
+
+.accentSupervisor .personAvatar {
+  background: linear-gradient(140deg, #37568c, #4f7bc0);
+}
+
+.accentCoordinator .personAvatar {
+  background: linear-gradient(140deg, #15803d, #27a35a);
+}
+
+.personInfo {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.personRole {
+  color: #8b1e2d;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.personName {
+  overflow: hidden;
+  color: #172033;
+  font-size: 0.98rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+}
+
+.personMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  color: #8490a1;
+  font-size: 0.8rem;
+  text-overflow: ellipsis;
+}
+
+.countChip {
+  margin-left: 10px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #f6ebee;
+  color: #8b1e2d;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  vertical-align: middle;
+}
+
+.classmateList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.classmateItem {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid #eef1f4;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.classmateMe {
+  border-color: #e7ccd3;
+  background: linear-gradient(140deg, #fff 0%, #fdf3f5 100%);
+}
+
+.classmateAvatar {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(140deg, #eef1f4, #dde3ea);
+  color: #52606d;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.classmateInfo {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.classmateInfo strong {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  overflow: hidden;
+  color: #172033;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.classmateMe .classmateInfo strong {
+  color: #8b1e2d;
+}
+
+.youTag {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #8b1e2d;
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.classmateMeta {
+  overflow: hidden;
+  color: #8490a1;
+  font-size: 0.8rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feedbackRow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 10px 0;
+}
+
+.feedbackText {
+  margin: 0;
+  color: #0f172a;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.pendingNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border: 1px dashed #ddcfd3;
+  border-radius: 13px;
+  background: linear-gradient(140deg, #fdfafb 0%, #fbf4f5 100%);
+  color: #8b1e2d;
+}
+
+.pendingNote strong {
+  display: block;
+  color: #26313f;
+  font-size: 0.95rem;
+}
+
+.pendingNote p {
+  margin: 4px 0 0;
+  color: #758195;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.footerNote {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.82rem;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -63,6 +328,11 @@
 .badgeReview {
   background: #e0e7ff;
   color: #3730a3;
+}
+
+.badgeNeeds {
+  background: #ffedd5;
+  color: #9a3412;
 }
 
 .badgeDeployed {
@@ -125,4 +395,51 @@
   font-weight: 600;
   color: #0f172a;
   text-align: right;
+}
+
+@media (max-width: 850px) {
+  .peopleGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .classmateList {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 650px) {
+  .greeting {
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+  }
+
+  .greeting h2 {
+    font-size: 1.3rem;
+  }
+
+  .greeting p {
+    font-size: 0.95rem;
+  }
+
+  .section {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .sectionTitle {
+    font-size: 1.05rem;
+  }
+
+  .personName,
+  .classmateInfo strong {
+    font-size: 1rem;
+  }
+
+  .personMeta,
+  .classmateMeta,
+  .infoRow,
+  .feedbackText {
+    font-size: 0.95rem;
+  }
 }

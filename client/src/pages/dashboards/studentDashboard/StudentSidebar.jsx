@@ -69,9 +69,11 @@ const links = [
     icon: Megaphone,
   },
 
- 
-
-  
+  {
+    to: '/dashboard/student/social-feed',
+    label: 'Community News Feed',
+    icon: MessageCircle,
+  },
 
   {
     to: '/dashboard/student/group-chat',

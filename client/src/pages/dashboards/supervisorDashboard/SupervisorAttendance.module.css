@@ -1,12 +1,11 @@
-/* =========================================================
-   SUPERVISOR ATTENDANCE
-   Modern Maroon Dashboard Theme
-========================================================= */
-
 :global(*) {
   box-sizing: border-box;
 }
 
+/* =========================================================
+   SUPERVISOR ATTENDANCE
+   Modern Maroon Dashboard Theme
+========================================================= */
 
 /* =========================================================
    PAGE HEADER
@@ -16,11 +15,8 @@
   position: relative;
   margin-bottom: 24px;
   padding: 28px 30px;
-
   overflow: hidden;
-
   border-radius: 20px;
-
   background:
     linear-gradient(
       135deg,
@@ -28,49 +24,37 @@
       #6d1e30 55%,
       #822d3e 100%
     );
-
   color: #ffffff;
-
   box-shadow:
     0 12px 30px rgba(88, 23, 37, 0.18);
 }
 
 .pageHeader::before {
   content: "";
-
   position: absolute;
   width: 240px;
   height: 240px;
-
   right: -80px;
   top: -130px;
-
   border-radius: 50%;
-
   background: rgba(255, 255, 255, 0.07);
 }
 
 .pageHeader::after {
   content: "";
-
   position: absolute;
   width: 150px;
   height: 150px;
-
   right: 140px;
   bottom: -110px;
-
   border-radius: 50%;
-
   background: rgba(255, 255, 255, 0.045);
 }
 
 .pageHeader h2 {
   position: relative;
   z-index: 1;
-
   margin: 0 0 6px;
-
   font-size: 1.55rem;
   font-weight: 750;
   letter-spacing: -0.025em;
@@ -79,17 +63,12 @@
 .pageHeader p {
   position: relative;
   z-index: 1;
-
   max-width: 760px;
-
   margin: 0;
-
   color: rgba(255, 255, 255, 0.78);
-
   font-size: 0.88rem;
   line-height: 1.6;
 }
-
 
 /* =========================================================
    BATCH TABS
@@ -97,42 +76,29 @@
 
 .batchTabs {
   display: grid;
-
   grid-template-columns: repeat(
     auto-fit,
     minmax(220px, 1fr)
   );
-
   gap: 12px;
-
   margin-bottom: 20px;
 }
 
 .batchTab {
   position: relative;
-
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-
   min-height: 78px;
-
   padding: 15px 17px;
-
-  border: 1px solid #e8d9dd;
+  border: 1px solid #817077;
   border-radius: 14px;
-
   background: #ffffff;
-
   color: #3a292e;
-
   text-align: left;
-
   cursor: pointer;
-
   box-shadow:
     0 3px 10px rgba(88, 23, 37, 0.04);
-
   transition:
     transform 0.18s ease,
     border-color 0.18s ease,
@@ -142,40 +108,31 @@
 
 .batchTab:hover {
   transform: translateY(-1px);
-
-  border-color: #cbaab3;
-
+  border-color: #6d4a54;
   box-shadow:
     0 7px 18px rgba(88, 23, 37, 0.08);
 }
 
 .batchTabActive {
   border-color: #6d1e30;
-
   background:
     linear-gradient(
       135deg,
       #fff8fa 0%,
       #ffffff 100%
     );
-
   box-shadow:
     0 7px 20px rgba(88, 23, 37, 0.10);
 }
 
 .batchTabActive::before {
   content: "";
-
   position: absolute;
-
   left: 0;
   top: 12px;
   bottom: 12px;
-
   width: 4px;
-
   border-radius: 0 5px 5px 0;
-
   background:
     linear-gradient(
       180deg,
@@ -186,22 +143,17 @@
 
 .batchTabLabel {
   margin-bottom: 5px;
-
   color: #581725;
-
   font-size: 0.91rem;
   font-weight: 750;
-
   line-height: 1.3;
 }
 
 .batchTabMeta {
   color: #89787d;
-
   font-size: 0.75rem;
   line-height: 1.4;
 }
-
 
 /* =========================================================
    FILTER BAR
@@ -211,15 +163,11 @@
   display: flex;
   align-items: flex-end;
   gap: 12px;
-
   margin-bottom: 20px;
   padding: 17px;
-
-  border: 1px solid #eadcdf;
+  border: 1px solid #817077;
   border-radius: 15px;
-
   background: #ffffff;
-
   box-shadow:
     0 4px 14px rgba(88, 23, 37, 0.045);
 }
@@ -228,11 +176,8 @@
   display: flex;
   flex-direction: column;
   gap: 7px;
-
   min-width: 170px;
-
   color: #624b52;
-
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -240,37 +185,28 @@
 .input {
   width: 100%;
   height: 42px;
-
   padding: 0 12px;
-
-  border: 1px solid #dccbd0;
+  border: 1px solid #76646a;
   border-radius: 9px;
-
   background: #fff;
-
   color: #34262a;
-
   font-family: inherit;
   font-size: 0.84rem;
-
   outline: none;
-
   transition:
     border-color 0.18s ease,
     box-shadow 0.18s ease;
 }
 
 .input:hover {
-  border-color: #c8aab2;
+  border-color: #5f454e;
 }
 
 .input:focus {
   border-color: #6d1e30;
-
   box-shadow:
     0 0 0 3px rgba(109, 30, 48, 0.10);
 }
-
 
 /* =========================================================
    PRIMARY BUTTON
@@ -278,12 +214,9 @@
 
 .btn {
   height: 42px;
-
   padding: 0 19px;
-
   border: 0;
   border-radius: 9px;
-
   background:
     linear-gradient(
       135deg,
@@ -291,18 +224,13 @@
       #6d1e30 55%,
       #822d3e 100%
     );
-
   color: #ffffff;
-
   font-family: inherit;
   font-size: 0.82rem;
   font-weight: 700;
-
   cursor: pointer;
-
   box-shadow:
     0 5px 13px rgba(88, 23, 37, 0.18);
-
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
@@ -311,10 +239,8 @@
 
 .btn:hover:not(:disabled) {
   transform: translateY(-1px);
-
   box-shadow:
     0 7px 18px rgba(88, 23, 37, 0.24);
-
   filter: brightness(1.04);
 }
 
@@ -327,29 +253,21 @@
   cursor: not-allowed;
 }
 
-
 /* =========================================================
    SECONDARY BUTTON
 ========================================================= */
 
 .btnSecondary {
   height: 42px;
-
   padding: 0 17px;
-
-  border: 1px solid #d8c1c7;
+  border: 1px solid #756068;
   border-radius: 9px;
-
   background: #ffffff;
-
   color: #6d1e30;
-
   font-family: inherit;
   font-size: 0.82rem;
   font-weight: 700;
-
   cursor: pointer;
-
   transition:
     background 0.18s ease,
     border-color 0.18s ease,
@@ -358,9 +276,7 @@
 
 .btnSecondary:hover:not(:disabled) {
   border-color: #6d1e30;
-
   background: #fbf4f6;
-
   transform: translateY(-1px);
 }
 
@@ -369,41 +285,29 @@
   cursor: not-allowed;
 }
 
-
 /* =========================================================
    STATISTICS
 ========================================================= */
 
 .statRow {
   display: grid;
-
   grid-template-columns: repeat(3, 1fr);
-
   gap: 14px;
-
   margin-bottom: 20px;
 }
 
 .statCard {
   position: relative;
-
   display: flex;
   flex-direction: column;
-
   min-height: 105px;
-
   padding: 20px;
-
   overflow: hidden;
-
-  border: 1px solid #eadcdf;
+  border: 1px solid #817077;
   border-radius: 15px;
-
   background: #ffffff;
-
   box-shadow:
     0 4px 14px rgba(88, 23, 37, 0.045);
-
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease;
@@ -411,23 +315,17 @@
 
 .statCard::after {
   content: "";
-
   position: absolute;
-
   width: 80px;
   height: 80px;
-
   right: -30px;
   bottom: -35px;
-
   border-radius: 50%;
-
   background: rgba(109, 30, 48, 0.055);
 }
 
 .statCard:hover {
   transform: translateY(-2px);
-
   box-shadow:
     0 8px 22px rgba(88, 23, 37, 0.08);
 }
@@ -435,27 +333,20 @@
 .statValue {
   position: relative;
   z-index: 1;
-
   color: #581725;
-
   font-size: 1.65rem;
   font-weight: 800;
-
   line-height: 1.1;
 }
 
 .statLabel {
   position: relative;
   z-index: 1;
-
   margin-top: 7px;
-
   color: #89787d;
-
   font-size: 0.76rem;
   font-weight: 600;
 }
-
 
 /* =========================================================
    ATTENDANCE TABLE CONTAINER
@@ -463,18 +354,13 @@
 
 .tableWrap {
   width: 100%;
-
   overflow: auto;
-
-  border: 1px solid #e6d9dd;
+  border: 1px solid #76646a;
   border-radius: 16px;
-
   background: #ffffff;
-
   box-shadow:
     0 5px 18px rgba(88, 23, 37, 0.055);
 }
-
 
 /* =========================================================
    TABLE
@@ -483,12 +369,9 @@
 .table {
   width: max-content;
   min-width: 100%;
-
   border-collapse: separate;
   border-spacing: 0;
-
   background: #ffffff;
-
   font-size: 0.78rem;
 }
 
@@ -504,21 +387,14 @@
 
 .table th {
   height: 52px;
-
   padding: 0 14px;
-
-  border-right: 1px solid rgba(255, 255, 255, 0.10);
-
+  border-right: 1px solid rgba(255, 255, 255, 0.18);
   color: #ffffff;
-
   font-size: 0.70rem;
   font-weight: 750;
-
   text-align: left;
   text-transform: uppercase;
-
   letter-spacing: 0.045em;
-
   white-space: nowrap;
 }
 
@@ -528,16 +404,11 @@
 
 .table td {
   height: 72px;
-
   padding: 10px 14px;
-
-  border-right: 1px solid #f0e5e8;
-  border-bottom: 1px solid #eee5e7;
-
+  border-right: 1px solid #a99a9f;
+  border-bottom: 1px solid #9f9095;
   color: #403236;
-
   vertical-align: middle;
-
   white-space: nowrap;
 }
 
@@ -553,29 +424,22 @@
   border-bottom: 0;
 }
 
-
 /* =========================================================
    STICKY STUDENT COLUMN
 ========================================================= */
 
 .stickyCol {
   position: sticky;
-
   left: 0;
-
   z-index: 3;
-
   min-width: 210px;
-
   background: #ffffff;
-
   box-shadow:
-    5px 0 9px rgba(88, 23, 37, 0.035);
+    5px 0 9px rgba(88, 23, 37, 0.09);
 }
 
 .table thead .stickyCol {
   z-index: 5;
-
   background:
     linear-gradient(
       135deg,
@@ -583,7 +447,6 @@
       #6d1e30 55%,
       #822d3e 100%
     );
-
   color: #ffffff;
 }
 
@@ -591,17 +454,14 @@
   background: #fdf7f9;
 }
 
-
 /* =========================================================
    DAY COLUMNS
 ========================================================= */
 
 .dayCol {
   min-width: 115px;
-
   text-align: center !important;
 }
-
 
 /* =========================================================
    STUDENT INFORMATION
@@ -610,24 +470,20 @@
 .studentCell {
   display: flex;
   flex-direction: column;
-
   gap: 4px;
 }
 
 .studentName {
   color: #321f24;
-
   font-size: 0.82rem;
   font-weight: 750;
 }
 
 .studentMeta {
   color: #95858a;
-
   font-size: 0.69rem;
   line-height: 1.3;
 }
-
 
 /* =========================================================
    ATTENDANCE DAY CELL
@@ -637,20 +493,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-
   gap: 5px;
 }
 
 .timeRow {
   color: #88777d;
-
   font-size: 0.66rem;
-
   line-height: 1.2;
-
   white-space: nowrap;
 }
-
 
 /* =========================================================
    STATUS PILLS
@@ -658,54 +509,39 @@
 
 .pill {
   display: inline-flex;
-
   align-items: center;
   justify-content: center;
-
   min-width: 58px;
   height: 24px;
-
   padding: 0 9px;
-
   border-radius: 999px;
-
   font-size: 0.65rem;
   font-weight: 750;
 }
 
-
 /* Complete / Present */
 
 .pill_complete {
-  border: 1px solid #b9ddc8;
-
+  border: 1px solid #6d9d7d;
   background: #edf8f1;
-
   color: #267347;
 }
-
 
 /* Currently In */
 
 .pill_in {
-  border: 1px solid #dcc487;
-
+  border: 1px solid #a78b4c;
   background: #fff8e6;
-
   color: #936b12;
 }
-
 
 /* Absent */
 
 .pill_absent {
-  border: 1px solid #e3c0c5;
-
+  border: 1px solid #ad6f78;
   background: #fff0f2;
-
   color: #a13b48;
 }
-
 
 /* =========================================================
    APPEAL
@@ -713,26 +549,18 @@
 
 .appealTag {
   display: inline-flex;
-
   align-items: center;
   justify-content: center;
-
   padding: 2px 7px;
-
-  border: 1px solid #d8c6e6;
+  border: 1px solid #947ba5;
   border-radius: 999px;
-
   background: #f6f1fb;
-
   color: #72508c;
-
   font-size: 0.60rem;
   font-weight: 700;
-
   text-transform: uppercase;
   letter-spacing: 0.035em;
 }
-
 
 /* =========================================================
    NO RECORD
@@ -740,17 +568,12 @@
 
 .noRecord {
   display: inline-flex;
-
   align-items: center;
   justify-content: center;
-
   width: 100%;
-
   color: #c4b7bb;
-
   font-size: 1rem;
 }
-
 
 /* =========================================================
    LOADING / EMPTY
@@ -759,25 +582,18 @@
 .loading,
 .empty {
   margin: 0 0 20px;
-
   padding: 27px 20px;
-
-  border: 1px dashed #dfcfd4;
+  border: 1px dashed #8c787f;
   border-radius: 13px;
-
   background: #fdfafb;
-
   color: #89787d;
-
   text-align: center;
-
   font-size: 0.86rem;
 }
 
 .loading {
   color: #6d1e30;
 }
-
 
 /* =========================================================
    TABLE SCROLLBAR
@@ -794,14 +610,13 @@
 }
 
 .tableWrap::-webkit-scrollbar-thumb {
-  background: #c7a7af;
+  background: #a4868f;
   border-radius: 10px;
 }
 
 .tableWrap::-webkit-scrollbar-thumb:hover {
   background: #8b4556;
 }
-
 
 /* =========================================================
    RESPONSIVE
@@ -827,7 +642,6 @@
     grid-template-columns: repeat(3, 1fr);
   }
 }
-
 
 @media (max-width: 700px) {
   .pageHeader {
@@ -877,7 +691,6 @@
     min-width: 185px;
   }
 }
-
 
 @media (max-width: 480px) {
   .pageHeader {
@@ -929,21 +742,17 @@
   }
 }
 
-
 /* =========================================================
    CHART CARD
-   ========================================================= */
+========================================================= */
 
 .chartCard {
   margin-bottom: 24px;
-
   background: #ffffff;
-  border: 1px solid #eadcdf;
+  border: 1px solid #76646a;
   border-radius: 16px;
-
   box-shadow:
     0 4px 14px rgba(88, 23, 37, 0.045);
-
   overflow: hidden;
 }
 
@@ -951,61 +760,51 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-
   padding: 16px 22px 12px;
-
-  border-bottom: 1px solid #f0e5e8;
+  border-bottom: 1px solid #9f9095;
 }
 
 .chartHeader h3 {
   margin: 0;
-
   color: #581725;
-
   font-size: 0.95rem;
   font-weight: 750;
 }
 
 .chartHeader p {
   margin: 4px 0 0;
-
   color: #95858a;
-
   font-size: 0.78rem;
 }
 
 .chartHeader span {
   color: #95858a;
-
   font-size: 0.8rem;
   font-weight: 700;
 }
 
 .chartWrap {
   padding: 20px 22px;
-
   overflow: auto;
-
   background: #ffffff;
 }
 
 /* Line chart (custom SVG) */
+
 .lineChart {
   display: block;
-
   width: 100%;
   height: auto;
-
   font-family: inherit;
 }
 
 .chartAxis {
-  stroke: #e6d9dd;
+  stroke: #8f7e84;
   stroke-width: 1;
 }
 
 .chartGrid {
-  stroke: #f0e5e8;
+  stroke: #b5a6ab;
   stroke-width: 1;
   stroke-dasharray: 4 3;
 }
@@ -1038,4 +837,199 @@
   fill: #581725;
   font-size: 10px;
   font-weight: 700;
+}
+
+/* =========================================================
+   SCHEDULING + REPORTS (supervisor-owned attendance)
+   ========================================================= */
+
+.batchPickerRow {
+  margin-bottom: 18px;
+  padding: 15px 17px;
+  border: 1px solid #817077;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow:
+    0 4px 14px rgba(88, 23, 37, 0.045);
+}
+
+.batchPickerRow label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #624b52;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.batchPickerRow select {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid #76646a;
+  border-radius: 9px;
+  background: #fff;
+  color: #34262a;
+  font-family: inherit;
+  font-size: 0.84rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.batchPickerRow select:focus {
+  border-color: #6d1e30;
+  box-shadow:
+    0 0 0 3px rgba(109, 30, 48, 0.10);
+}
+
+.section {
+  margin-bottom: 20px;
+  padding: 20px 22px;
+  border: 1px solid #817077;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow:
+    0 4px 14px rgba(88, 23, 37, 0.045);
+}
+
+.sectionTitle {
+  margin: 0 0 14px;
+  color: #581725;
+  font-size: 1rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+.scheduleForm {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.scheduleForm label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 150px;
+  color: #624b52;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.scheduleForm input {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid #76646a;
+  border-radius: 9px;
+  background: #fff;
+  color: #34262a;
+  font-family: inherit;
+  font-size: 0.84rem;
+  outline: none;
+}
+
+.scheduleForm input:focus {
+  border-color: #6d1e30;
+  box-shadow:
+    0 0 0 3px rgba(109, 30, 48, 0.10);
+}
+
+.primaryButton {
+  min-height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 9px;
+  background:
+    linear-gradient(
+      135deg,
+      #581725 0%,
+      #6d1e30 55%,
+      #822d3e 100%
+    );
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow:
+    0 5px 13px rgba(88, 23, 37, 0.18);
+}
+
+.primaryButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.secondaryButton {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid #756068;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #6d1e30;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.secondaryButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.muted {
+  color: #89787d;
+  font-size: 0.78rem;
+}
+
+.groupCard {
+  margin-top: 12px;
+  padding: 15px 17px;
+  border: 1px solid #d9c3ca;
+  border-radius: 12px;
+  background: #fffafb;
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  color: #581725;
+  font-size: 0.88rem;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 750;
+  text-transform: capitalize;
+  border: 1px solid #ad6f78;
+  background: #fff0f2;
+  color: #a13b48;
+}
+
+.status_present {
+  background: #f2fbf5;
+}
+
+.status_present .statusPill {
+  border-color: #6d9d7d;
+  background: #edf8f1;
+  color: #267347;
+}
+
+.status_checked_in .statusPill,
+.status_checked_out .statusPill {
+  border-color: #6d9d7d;
+  background: #edf8f1;
+  color: #267347;
 }

@@ -22,6 +22,8 @@ import SupervisorSidebar from './SupervisorSidebar';
 import CreateDeploymentRequest from './CreateDeploymentRequest';
 import SupervisorStudents from './SupervisorStudents';
 import SupervisorAttendance from './SupervisorAttendance';
+import SupervisorSchedule from './SupervisorSchedule';
+import SupervisorAttendanceReports from './SupervisorAttendanceReports';
 import SupervisorEvaluateStudent from './SupervisorEvaluateStudent';
 import SupervisorEvaluation from './SupervisorEvaluation';
 import SupervisorCertifications from './SupervisorCertifications';
@@ -59,6 +61,10 @@ function SupervisorDashboard({ user, onLogout }) {
         <Route path="students" element={<SupervisorStudents />} />
 
         <Route path="attendance" element={<SupervisorAttendance />} />
+
+        <Route path="attendance-schedule" element={<SupervisorSchedule />} />
+
+        <Route path="attendance-reports" element={<SupervisorAttendanceReports />} />
 
         <Route
           path="evaluate"

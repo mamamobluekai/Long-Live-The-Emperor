@@ -15,6 +15,17 @@
   color: #292524;
 }
 
+.modalMode {
+  min-height: 0;
+  height: 100%;
+  padding: 0;
+  background: #f8f7f6;
+}
+
+.modalMode .header {
+  display: none;
+}
+
 /* =========================================================
    HEADER
 ========================================================= */
@@ -73,6 +84,14 @@
   background: #ffffff;
   box-shadow:
     0 12px 40px rgba(88, 23, 37, 0.09);
+}
+
+.modalLayout {
+  height: 100%;
+  min-height: 0;
+  border-radius: 0;
+  border: 0;
+  box-shadow: none;
 }
 
 /* =========================================================

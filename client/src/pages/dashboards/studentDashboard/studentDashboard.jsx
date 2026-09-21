@@ -13,6 +13,7 @@ import StudentEvaluation from './StudentEvaluation';
 import StudentGradeAppeal from './StudentGradeAppeal';
 import BatchChat from '../../../components/social/BatchChat';
 import UserProfileSettings from '../UserProfileSettings';
+import SocialFeed from './SocialFeed';
 
 function StudentDashboard({ user, onLogout }) {
   return (
@@ -25,10 +26,11 @@ function StudentDashboard({ user, onLogout }) {
           <Route path="overview" element={<Overview user={user} />} />
         <Route path="progress" element={<Progress />} />
         <Route path="requirements" element={<Requirements user={user} />} />
-        <Route path="placement-status" element={<PlacementStatus />} />
+        <Route path="placement-status" element={<PlacementStatus user={user} />} />
         <Route path="evaluation" element={<StudentEvaluation />} />
         <Route path="grade-appeal" element={<StudentGradeAppeal />} />
         <Route path="announcements" element={<Announcements />} />
+        <Route path="social-feed" element={<SocialFeed />} />
         <Route path="attendance" element={<Attendance />} />
         <Route path="daily-documentation" element={<DailyDocumentation />} />
         <Route path="group-chat" element={<BatchChat user={user} />} />

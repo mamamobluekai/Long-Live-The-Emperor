@@ -34,13 +34,38 @@ const createTeacherBatch = async (req, res) => {
       return res.status(400).json({ error: 'Invalid teacher_id.' });
     }
 
-    const existingTeacherBatch = await client.query(
-      "SELECT id FROM teacher_batches WHERE teacher_id = $1 LIMIT 1",
-      [teachersId]
-    );
-    if (existingTeacherBatch.rows.length > 0) {
-      return res.status(409).json({ error: 'Teacher is already assigned to a batch.' });
+    // A supervisor can only be assigned to ONE batch. If the chosen supervisor
+    // is already supervising another batch, reject the assignment.
+    if (supervisor_id) {
+      const supervisorUserId = Number(supervisor_id);
+      const supervisorCheck = await client.query(
+        "SELECT id FROM users WHERE id = $1 AND role = 'supervisor'",
+        [supervisorUserId]
+      );
+      if (supervisorCheck.rows.length === 0) {
+        return res.status(400).json({ error: 'Invalid supervisor_id.' });
+      }
+
+      const supervisorConflict = await client.query(
+        `SELECT id, batch_label
+         FROM teacher_batches
+         WHERE supervisor_id = $1
+         LIMIT 1`,
+        [supervisorUserId]
+      );
+      if (supervisorConflict.rows.length > 0) {
+        const conflictBatch = supervisorConflict.rows[0];
+        return res.status(409).json({
+          error: conflictBatch.batch_label
+            ? `This supervisor is already assigned to batch "${conflictBatch.batch_label}". A supervisor can only be assigned to one batch.`
+            : 'This supervisor is already assigned to another batch. A supervisor can only be assigned to one batch.',
+        });
+      }
     }
+
+    // A teacher may handle MULTIPLE batches. The only uniqueness we enforce is
+    // that batch_label is unique per coordinator (enforced by the DB unique
+    // constraint / 23505 handler below).
 
     const result = await client.query(
       "INSERT INTO teacher_batches (coordinator_id, teacher_id, batch_label, max_students, supervisor_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, coordinator_id, teacher_id, batch_label, max_students, supervisor_id, created_at, updated_at",
@@ -50,7 +75,10 @@ const createTeacherBatch = async (req, res) => {
     res.status(201).json({ batch: result.rows[0] });
   } catch (err) {
     if (err.code === '23505') {
-      return res.status(409).json({ error: 'Batch already exists for this teacher.' });
+      if (err.constraint === 'idx_teacher_batches_supervisor_unique') {
+        return res.status(409).json({ error: 'This supervisor is already assigned to another batch. A supervisor can only be assigned to one batch.' });
+      }
+      return res.status(409).json({ error: 'A batch with this label already exists.' });
     }
     console.error('createTeacherBatch error:', err);
     res.status(500).json({ error: 'Server error.' });
@@ -99,6 +127,37 @@ const updateTeacherBatch = async (req, res) => {
 
     if (supervisor_id !== undefined) {
       const sup = supervisor_id ? Number(supervisor_id) : null;
+
+      if (sup) {
+        const supervisorCheck = await client.query(
+          "SELECT id FROM users WHERE id = $1 AND role = 'supervisor'",
+          [sup]
+        );
+        if (supervisorCheck.rows.length === 0) {
+          return res.status(400).json({ error: 'Invalid supervisor_id.' });
+        }
+
+        // A supervisor can only supervise ONE batch. Reject if they are
+        // already assigned to a DIFFERENT batch (keeping the supervisor on
+        // this same batch is still allowed).
+        const supervisorConflict = await client.query(
+          `SELECT id, batch_label
+           FROM teacher_batches
+           WHERE supervisor_id = $1
+             AND id <> $2
+           LIMIT 1`,
+          [sup, batchId]
+        );
+        if (supervisorConflict.rows.length > 0) {
+          const conflictBatch = supervisorConflict.rows[0];
+          return res.status(409).json({
+            error: conflictBatch.batch_label
+              ? `This supervisor is already assigned to batch "${conflictBatch.batch_label}". A supervisor can only be assigned to one batch.`
+              : 'This supervisor is already assigned to another batch. A supervisor can only be assigned to one batch.',
+          });
+        }
+      }
+
       fields.push(`supervisor_id = $${idx++}`);
       values.push(sup);
     }
@@ -121,6 +180,9 @@ const updateTeacherBatch = async (req, res) => {
 
     res.json({ batch: result.rows[0] });
   } catch (err) {
+    if (err.code === '23505' && err.constraint === 'idx_teacher_batches_supervisor_unique') {
+      return res.status(409).json({ error: 'This supervisor is already assigned to another batch. A supervisor can only be assigned to one batch.' });
+    }
     console.error('updateTeacherBatch error:', err);
     res.status(500).json({ error: 'Server error.' });
   } finally {
@@ -231,22 +293,28 @@ const assignApprovedStudentsToBatch = async (req, res) => {
       return res.status(400).json({ error: 'One or more students have not completed requirements or were not found.' });
     }
 
-    // Conflict rule: a student cannot be assigned to another teacher/batch (any teacher batch other than this one)
-    // Allow re-assigning within the same batchId.
+    // Conflict rule: a student can only ever belong to ONE teacher batch.
+    // This applies GLOBALLY (across every coordinator and supervisor), not just
+    // within the current coordinator's own batches. Re-assigning within the same
+    // batchId is still allowed (the student is already in this batch).
     const conflictCheck = await client.query(
-         `SELECT DISTINCT tbs.student_id
+      `SELECT DISTINCT tbs.student_id,
+              tb.batch_label,
+              tb.supervisor_id
        FROM teacher_batch_students tbs
        JOIN teacher_batches tb ON tb.id = tbs.teacher_batch_id
-       WHERE tb.coordinator_id = $1
-         AND tbs.student_id = ANY($2::int[])
-         AND tbs.teacher_batch_id <> $3`,
-      [coordinatorId, normalizedStudentIds, batchId]
+       WHERE tbs.student_id = ANY($1::int[])
+         AND tbs.teacher_batch_id <> $2`,
+      [normalizedStudentIds, batchId]
     );
 
     const conflictedIds = conflictCheck.rows.map((r) => r.student_id);
     if (conflictedIds.length > 0) {
+      const firstConflict = conflictCheck.rows[0];
       return res.status(409).json({
-        error: 'One or more students are already assigned to another teacher batch.',
+        error: firstConflict.batch_label
+          ? `One or more students are already assigned to another batch (${firstConflict.batch_label}). A student can only be assigned to one batch.`
+          : 'One or more students are already assigned to another teacher batch. A student can only be assigned to one batch.',
         conflicts: conflictedIds,
       });
     }
@@ -297,7 +365,12 @@ const getRequirementCompletedStudentsForCoordinator = async (req, res) => {
          u.status AS account_status,
          srs.status AS requirements_status,
          srs.progress,
-         srs.submitted_at
+         srs.submitted_at,
+         (SELECT tbs.teacher_batch_id FROM teacher_batch_students tbs
+            WHERE tbs.student_id = s.id LIMIT 1) AS assigned_batch_id,
+         (SELECT tb.batch_label FROM teacher_batch_students tbs
+            JOIN teacher_batches tb ON tb.id = tbs.teacher_batch_id
+            WHERE tbs.student_id = s.id LIMIT 1) AS assigned_batch_label
         FROM users u
         JOIN students s ON s.user_id = u.id
         JOIN student_requirement_submissions srs ON srs.user_id = u.id

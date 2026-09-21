@@ -1,0 +1,13 @@
+-- Migration: enforce one supervisor per batch (020)
+-- A supervisor (users.id) can only be assigned to ONE teacher batch.
+-- Run with the pg pool / psql against work_immersion_db.
+
+-- Drop the old non-unique index from migration 003 if it exists.
+DROP INDEX IF EXISTS idx_teacher_batches_supervisor;
+
+-- Create a unique index so the same supervisor can never be linked to
+-- multiple batches at the database level. NULLs (no supervisor) are allowed
+-- multiple times, so batches without a supervisor are unaffected.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_teacher_batches_supervisor_unique
+  ON teacher_batches (supervisor_id)
+  WHERE supervisor_id IS NOT NULL;

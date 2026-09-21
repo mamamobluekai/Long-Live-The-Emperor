@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  ChevronDown,
   LogOut,
   Menu,
   Settings,
@@ -9,6 +8,7 @@ import {
 } from 'lucide-react';
 import styles from './DashboardTopNav.module.css';
 import NotificationBell from '../../../components/common/NotificationBell';
+import GroupChatButton from '../../../components/common/GroupChatButton';
 
 function DashboardTopNav({
   user,
@@ -103,10 +103,11 @@ function DashboardTopNav({
       ===================================== */}
       <div className={styles.right}>
 
-        {/* NOTIFICATIONS */}
-        <NotificationBell />
+         {/* NOTIFICATIONS */}
+         <NotificationBell />
 
-
+         {/* GROUP CHAT */}
+         <GroupChatButton user={user} />
         <div className={styles.verticalDivider} />
 
 
@@ -147,7 +148,7 @@ function DashboardTopNav({
             </span>
           </div>
 
-            <ChevronDown className={styles.chevron} size={16} strokeWidth={1.8} />
+            
           </button>
 
           {profileOpen && (

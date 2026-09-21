@@ -4,7 +4,6 @@ import {
   AlertCircle,
   ArrowRight,
   ArrowUpRight,
-  ChevronRight,
   ClipboardCheck,
   FileCheck2,
   Layers3,
@@ -226,6 +225,9 @@ function CoordinatorOverview() {
     [approvals, requirements, batches, deploymentRequests],
   );
 
+  const summaryLine = attentionItems.length > 0
+    ? `${attentionItems.length} item${attentionItems.length === 1 ? '' : 's'} need your attention today.`
+    : 'Everything is on track. Great work!';
 
   const quickActions = [
     { id: 'students', icon: Users, label: 'Approve student accounts', to: ROUTES.students },
@@ -241,9 +243,13 @@ function CoordinatorOverview() {
           <h1>
             {getGreeting()}, {firstName}! <span aria-hidden="true">👋</span>
           </h1>
-          <p>Stay on top of today’s priorities with a quick overview of approvals, student requirements, and batch activities.
+          <p className={styles.greetingText}>
+            {summaryLine} Here is a quick read on approvals, requirements, and batches across the work immersion office.
           </p>
         </div>
+        <button type="button" className={styles.refreshButton} onClick={load} title="Refresh overview">
+          <RefreshCw size={15} /> Refresh
+        </button>
       </section>
 
       {loading && <LoadingCard />}

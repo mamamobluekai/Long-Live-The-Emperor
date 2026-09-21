@@ -1,0 +1,143 @@
+.wrapper {
+  position: relative;
+}
+
+.iconButton {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e3e6eb;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #344054;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.iconButton:hover {
+  background: #faf7f8;
+  border-color: #d7a8b5;
+  color: #7f0d2b;
+}
+
+.badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: #c1294e;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(24, 10, 14, 0.58);
+  backdrop-filter: blur(3px);
+}
+
+.modalContent {
+  width: min(1120px, 100%);
+  height: min(780px, 100%);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #e5d9d8;
+  border-radius: 20px;
+  background: #f8f7f6;
+  box-shadow: 0 24px 70px rgba(24, 10, 14, 0.3);
+}
+
+.modalHeader {
+  height: 70px;
+  flex: 0 0 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px;
+  border-bottom: 1px solid #eadfdd;
+  background: #ffffff;
+}
+
+.modalTitle {
+  margin: 0;
+  color: #581725;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.closeButton {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #eadfdd;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #581725;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  background: #fff5f6;
+  color: #822d3e;
+}
+
+.modalBody {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 760px) {
+  .modal {
+    padding: 0;
+  }
+
+  .modalContent {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+
+  .modalHeader {
+    height: 62px;
+    flex-basis: 62px;
+    padding: 0 14px;
+  }
+
+  .modalTitle {
+    font-size: 1rem;
+  }
+
+  .closeButton {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 420px) {
+  .iconButton {
+    width: 36px;
+    height: 36px;
+  }
+}

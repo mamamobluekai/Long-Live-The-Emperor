@@ -17,7 +17,6 @@
   padding: 30px 32px;
   border-radius: 20px;
   overflow: hidden;
-
   background:
     linear-gradient(
       135deg,
@@ -25,7 +24,6 @@
       #6d1e30 55%,
       #822d3e 100%
     );
-
   color: #ffffff;
   box-shadow:
     0 12px 30px rgba(88, 23, 37, 0.18);
@@ -72,7 +70,6 @@
   line-height: 1.6;
 }
 
-
 /* =========================
    SECTIONS / CARDS
 ========================= */
@@ -81,14 +78,12 @@
   position: relative;
   margin-bottom: 24px;
   padding: 26px;
-  border: 1px solid #eadcdf;
+  border: 1px solid #9b858c;
   border-radius: 18px;
   background: #ffffff;
-
   box-shadow:
     0 4px 14px rgba(88, 23, 37, 0.05),
     0 1px 3px rgba(0, 0, 0, 0.03);
-
   transition:
     box-shadow 0.2s ease,
     transform 0.2s ease;
@@ -103,9 +98,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-
   margin: 0 0 22px;
-
   color: #581725;
   font-size: 1.05rem;
   font-weight: 750;
@@ -117,7 +110,6 @@
   width: 4px;
   height: 21px;
   border-radius: 999px;
-
   background:
     linear-gradient(
       180deg,
@@ -125,7 +117,6 @@
       #822d3e
     );
 }
-
 
 /* =========================
    FORM LAYOUT
@@ -143,7 +134,6 @@
   min-width: 0;
 }
 
-
 /* =========================
    INPUTS
 ========================= */
@@ -152,16 +142,13 @@
 .select,
 .textarea {
   width: 100%;
-  border: 1px solid #ded0d4;
+  border: 1px solid #8f7b82;
   border-radius: 11px;
   background: #fff;
-
   color: #2a2022;
   font-family: inherit;
   font-size: 0.91rem;
-
   outline: none;
-
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease,
@@ -189,7 +176,7 @@
 .input:hover,
 .select:hover,
 .textarea:hover {
-  border-color: #c9aab2;
+  border-color: #72555e;
   background: #fffdfd;
 }
 
@@ -197,17 +184,14 @@
 .select:focus,
 .textarea:focus {
   border-color: #6d1e30;
-
   box-shadow:
     0 0 0 3px rgba(109, 30, 48, 0.10);
-
   background: #ffffff;
 }
 
 .select {
   cursor: pointer;
 }
-
 
 /* =========================
    ACTIONS
@@ -218,10 +202,8 @@
   justify-content: flex-end;
   align-items: center;
   gap: 10px;
-
   margin-top: 18px;
 }
-
 
 /* =========================
    PRIMARY BUTTON
@@ -230,10 +212,8 @@
 .btn {
   min-height: 44px;
   padding: 0 20px;
-
   border: 0;
   border-radius: 10px;
-
   background:
     linear-gradient(
       135deg,
@@ -241,17 +221,13 @@
       #6d1e30 55%,
       #822d3e 100%
     );
-
   color: #ffffff;
   font-family: inherit;
   font-size: 0.88rem;
   font-weight: 700;
-
   cursor: pointer;
-
   box-shadow:
     0 5px 14px rgba(88, 23, 37, 0.20);
-
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
@@ -260,10 +236,8 @@
 
 .btn:hover:not(:disabled) {
   transform: translateY(-1px);
-
   box-shadow:
     0 8px 20px rgba(88, 23, 37, 0.26);
-
   filter: brightness(1.04);
 }
 
@@ -276,7 +250,6 @@
   cursor: not-allowed;
 }
 
-
 /* =========================
    SECONDARY BUTTON
 ========================= */
@@ -284,19 +257,14 @@
 .btnSecondary {
   min-height: 38px;
   padding: 0 14px;
-
-  border: 1px solid #d9c2c8;
+  border: 1px solid #8e747c;
   border-radius: 9px;
-
   background: #fff;
   color: #6d1e30;
-
   font-family: inherit;
   font-size: 0.82rem;
   font-weight: 700;
-
   cursor: pointer;
-
   transition:
     background 0.18s ease,
     border-color 0.18s ease,
@@ -315,7 +283,6 @@
   transform: translateY(0);
 }
 
-
 /* =========================
    REQUEST LIST
 ========================= */
@@ -328,17 +295,14 @@
 
 .listItem {
   padding: 18px 20px;
-
-  border: 1px solid #eee3e6;
+  border: 1px solid #9c898f;
   border-radius: 14px;
-
   background:
     linear-gradient(
       180deg,
       #ffffff 0%,
       #fdfafb 100%
     );
-
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease,
@@ -346,17 +310,14 @@
 }
 
 .listItem:hover {
-  border-color: #d8bbc2;
-
+  border-color: #724d57;
   box-shadow:
     0 6px 18px rgba(88, 23, 37, 0.07);
-
   transform: translateY(-1px);
 }
 
 .listItem h4 {
   margin: 0 0 6px;
-
   color: #321c22;
   font-size: 0.96rem;
   font-weight: 700;
@@ -365,12 +326,10 @@
 
 .muted {
   margin: 0;
-
   color: #87777c;
   font-size: 0.82rem;
   line-height: 1.5;
 }
-
 
 /* =========================
    STATUS BADGES
@@ -380,12 +339,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   min-height: 28px;
   padding: 4px 11px;
-
   border-radius: 999px;
-
   font-size: 0.72rem;
   font-weight: 750;
   text-transform: capitalize;
@@ -393,29 +349,28 @@
 }
 
 .badgePending {
-  border: 1px solid #ead7a8;
+  border: 1px solid #c09d55;
   background: #fff8e7;
   color: #956c13;
 }
 
 .badgeApproved {
-  border: 1px solid #b9dfca;
+  border: 1px solid #75ad89;
   background: #edf9f1;
   color: #237447;
 }
 
 .badgeRejected {
-  border: 1px solid #e7c1c5;
+  border: 1px solid #c3848c;
   background: #fff0f1;
   color: #a33a46;
 }
 
 .badgeFulfilled {
-  border: 1px solid #c5c4e6;
+  border: 1px solid #9695c2;
   background: #f0f0fc;
   color: #514c91;
 }
-
 
 /* =========================
    LOADING / EMPTY STATES
@@ -425,12 +380,9 @@
 .empty {
   margin: 0;
   padding: 28px 20px;
-
-  border: 1px dashed #dfcfd4;
+  border: 1px dashed #927d84;
   border-radius: 12px;
-
   background: #fdfafb;
-
   color: #88777c;
   text-align: center;
   font-size: 0.88rem;
@@ -440,7 +392,6 @@
   color: #6d1e30;
 }
 
-
 /* =========================
    TABLE
 ========================= */
@@ -448,17 +399,14 @@
 .tableWrap {
   width: 100%;
   overflow-x: auto;
-
-  border: 1px solid #eadcdf;
+  border: 1px solid #9b858c;
   border-radius: 13px;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
-
   min-width: 650px;
-
   background: #ffffff;
 }
 
@@ -474,26 +422,20 @@
 
 .table th {
   padding: 14px 16px;
-
   color: #ffffff;
-
   font-size: 0.76rem;
   font-weight: 700;
   text-align: left;
   text-transform: uppercase;
   letter-spacing: 0.045em;
-
   white-space: nowrap;
 }
 
 .table td {
   padding: 14px 16px;
-
-  border-bottom: 1px solid #f0e7e9;
-
+  border-bottom: 1px solid #b1a0a5;
   color: #3c3033;
   font-size: 0.84rem;
-
   vertical-align: middle;
 }
 
@@ -514,7 +456,6 @@
   font-weight: 700;
 }
 
-
 /* =========================
    FORM SECTION ENHANCEMENT
 ========================= */
@@ -522,7 +463,6 @@
 .section:first-of-type {
   border-top: 3px solid #6d1e30;
 }
-
 
 /* =========================
    RESPONSIVE
@@ -573,7 +513,6 @@
     width: 100%;
   }
 }
-
 
 /* =========================
    SMALL MOBILE

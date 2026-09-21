@@ -6,7 +6,6 @@ import {
   MapPin,
   Megaphone,
   CalendarCheck,
-  MessageCircle,
   UserCog,
 } from 'lucide-react';
 
@@ -48,12 +47,6 @@ export const sidebarMenu = {
       label: 'Announcements',
       path: '/student/announcements',
       icon: Megaphone,
-    },
-   
-    {
-      label: 'Group Chat',
-      path: '/student/group-chat',
-      icon: MessageCircle,
     },
     {
       label: 'Settings',

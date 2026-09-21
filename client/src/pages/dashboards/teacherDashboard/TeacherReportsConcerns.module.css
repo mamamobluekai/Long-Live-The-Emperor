@@ -1,32 +1,36 @@
 /* =========================================================
    TEACHER REPORTS & CONCERNS
+   DEEP MAROON / BERRY THEME
+   VERY SMALL SIDE SPACE
    ========================================================= */
 
 .page {
-  --ink: #1c2333;
-  --ink-soft: #434b5c;
-  --ink-muted: #767f91;
+  --ink: #24151a;
+  --ink-soft: #4b3a40;
+  --ink-muted: #6f5b62;
 
-  --line: #e3e6ec;
-  --line-soft: #edeff3;
+  /* DARKER BORDERS */
+  --line: #b7a0a8;
+  --line-soft: #d4c4ca;
 
-  --canvas: #f4f5f8;
+  --canvas: #f7f3f4;
   --surface: #ffffff;
 
-  --accent: #3450c4;
-  --accent-soft: #eaeefb;
-  --accent-ink: #24338f;
+  /* MAROON */
+  --accent: #6d1e30;
+  --accent-soft: #f3e4e8;
+  --accent-ink: #581725;
 
-  --urgent: #be123c;
+  --urgent: #a9163a;
   --urgent-soft: #fbe7ec;
   --urgent-ink: #7a0d29;
 
-  --high: #2a3a4a;
-  --high-soft: #fbeee0;
+  --high: #4b343c;
+  --high-soft: #f8ece4;
   --high-ink: #7c3a06;
 
-  --open: #1d4ed8;
-  --open-soft: #e4ebfd;
+  --open: #7b2940;
+  --open-soft: #f1e4e8;
 
   --resolved: #15803d;
   --resolved-soft: #e3f4e9;
@@ -36,16 +40,21 @@
   --radius-sm: 0.4rem;
 
   --shadow-card:
-    0 1px 2px rgba(28, 35, 51, 0.04),
-    0 1px 1px rgba(28, 35, 51, 0.03);
+    0 1px 2px rgba(88, 23, 37, 0.05),
+    0 1px 1px rgba(88, 23, 37, 0.04);
 
   --shadow-raised:
-    0 6px 16px rgba(28, 35, 51, 0.08);
+    0 6px 16px rgba(88, 23, 37, 0.11);
 
-  max-width: 68rem;
-  margin-inline: auto;
+  width: 100%;
+  max-width: none;
 
-  padding: 2rem clamp(1rem, 3vw, 2rem) 4rem;
+  margin-inline: 0;
+
+  /* ALMOST NO SIDE SPACE */
+  padding: 1rem 0.15rem 4rem;
+
+  box-sizing: border-box;
 
   background: var(--canvas);
   color: var(--ink-soft);
@@ -77,20 +86,17 @@
 .header {
   margin-bottom: 1.75rem;
   padding-bottom: 1.5rem;
-
   border-bottom: 1px solid var(--line);
 }
 
 .eyebrow {
   display: inline-block;
-
   margin-bottom: 0.5rem;
   padding-bottom: 0.4rem;
 
   border-bottom: 2px solid var(--accent);
 
   color: var(--accent-ink);
-
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -99,22 +105,18 @@
 
 .header h1 {
   margin: 0;
-
-  color: var(--ink);
-
+  color: #581725;
   font-size: 1.85rem;
-  font-weight: 650;
+  font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.015em;
 }
 
 .header p {
   max-width: 46ch;
-
   margin: 0.5rem 0 0;
 
   color: var(--ink-muted);
-
   font-size: 0.95rem;
   line-height: 1.5;
 }
@@ -127,7 +129,7 @@
   margin-bottom: 1.25rem;
   padding: 0.75rem 1rem;
 
-  border: 1px solid transparent;
+  border: 1px solid var(--line);
   border-radius: var(--radius-sm);
 
   font-size: 0.87rem;
@@ -136,13 +138,13 @@
 
 .notice_error {
   background: var(--urgent-soft);
-  border-color: #a54f5e;
+  border-color: #b97886;
   color: var(--urgent-ink);
 }
 
 .notice_success {
   background: var(--resolved-soft);
-  border-color: #b9e6c6;
+  border-color: #8fc8a0;
   color: #14532d;
 }
 
@@ -157,17 +159,15 @@
 
   display: grid;
   grid-template-columns: 1fr 1fr;
-
   gap: 1rem;
 
   margin-bottom: 1.5rem;
   padding: 1rem 1.15rem;
 
   border: 1px solid var(--line);
-
   border-radius: var(--radius-lg);
 
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.97);
 
   box-shadow: var(--shadow-card);
 
@@ -184,23 +184,19 @@
   gap: 0.65rem;
 
   min-width: 0;
-
   padding: 0.25rem 0;
 }
 
 .filterIcon {
   flex-shrink: 0;
-
-  color: var(--ink-muted);
+  color: #694b55;
 }
 
 .filterLabel {
   flex-shrink: 0;
-
   min-width: auto;
 
-  color: var(--ink-muted);
-
+  color: #694b55;
   font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -213,7 +209,6 @@
 
 .filterBtn {
   min-height: 34px;
-
   padding: 0.4rem 0.8rem;
 
   border: 1px solid var(--line);
@@ -237,9 +232,9 @@
 }
 
 .filterBtn:hover {
-  background: var(--line-soft);
-  border-color: #d4d8e2;
-  color: var(--ink);
+  background: #f4e8eb;
+  border-color: #96727d;
+  color: #581725;
 }
 
 .filterBtn:active {
@@ -247,22 +242,26 @@
 }
 
 .filterBtn:focus-visible {
-  box-shadow: 0 0 0 3px rgba(52, 80, 196, 0.12);
+  box-shadow: 0 0 0 3px rgba(109, 30, 48, 0.16);
 }
 
 .filterActive,
 .filterActive:hover {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: linear-gradient(
+    135deg,
+    #581725 0%,
+    #6d1e30 55%,
+    #822d3e 100%
+  );
+
+  border-color: #50131f;
   color: #fff;
 
-  box-shadow: 0 2px 6px rgba(52, 80, 196, 0.18);
+  box-shadow: 0 3px 8px rgba(88, 23, 37, 0.18);
 }
 
 /* =========================================================
    FILTER BUTTON GROUP
-   If multiple buttons are inside a filter group,
-   they stay aligned together.
    ========================================================= */
 
 .filterGroup > .filterBtn {
@@ -275,9 +274,7 @@
 
 .info {
   padding: 1rem 0.2rem;
-
   color: var(--ink-muted);
-
   font-size: 0.9rem;
 }
 
@@ -285,11 +282,10 @@
   margin: 0;
   padding: 3rem 1rem;
 
-  border: 1px dashed #cfd4de;
+  border: 1px dashed #9f8991;
   border-radius: var(--radius-lg);
 
   background: var(--surface);
-
   color: var(--ink-muted);
 
   font-size: 0.92rem;
@@ -302,13 +298,12 @@
 
 .batchGroup {
   overflow: hidden;
-
   margin-bottom: 1rem;
 
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
 
   background: var(--surface);
-
   box-shadow: var(--shadow-card);
 }
 
@@ -326,19 +321,19 @@
 }
 
 .batchHeader:hover {
-  background: var(--line-soft);
+  background: #f7eef1;
 }
 
 .batchLabel {
-  color: var(--ink);
-
+  color: #581725;
   font-size: 0.98rem;
-  font-weight: 600;
+  font-weight: 650;
 }
 
 .batchCount {
   padding: 0.15rem 0.55rem;
 
+  border: 1px solid #c2aab2;
   border-radius: 999px;
 
   background: var(--accent-soft);
@@ -346,16 +341,13 @@
 
   font-size: 0.74rem;
   font-weight: 600;
-
   white-space: nowrap;
 }
 
 .batchToggle {
   flex-shrink: 0;
-
   margin-left: auto;
-
-  color: var(--ink-muted);
+  color: #694b55;
 }
 
 .batchContent {
@@ -365,7 +357,7 @@
 
   padding: 0.85rem 1.15rem 1.15rem;
 
-  border-top: 1px solid var(--line-soft);
+  border-top: 1px solid var(--line);
 }
 
 /* =========================================================
@@ -397,7 +389,7 @@
 }
 
 .itemHigh {
-  border-left-color: var(--high);
+  border-left-color: #613d49;
 }
 
 /* =========================================================
@@ -406,7 +398,6 @@
 
 .cardSummary {
   display: block;
-
   padding: 0.9rem 1.05rem;
 
   cursor: pointer;
@@ -419,7 +410,6 @@
   justify-content: space-between;
 
   gap: 0.75rem;
-
   flex-wrap: wrap;
 }
 
@@ -428,15 +418,13 @@
 }
 
 .studentName {
-  color: var(--ink);
-
+  color: #581725;
   font-size: 0.97rem;
-  font-weight: 600;
+  font-weight: 650;
 }
 
 .meta {
   color: var(--ink-muted);
-
   font-size: 0.79rem;
 }
 
@@ -450,7 +438,6 @@
   justify-content: flex-end;
 
   gap: 0.4rem;
-
   margin-left: auto;
 
   flex-wrap: wrap;
@@ -460,20 +447,22 @@
 .badge {
   padding: 0.18rem 0.55rem;
 
+  border: 1px solid rgba(88, 23, 37, 0.22);
   border-radius: 999px;
 
   font-size: 0.68rem;
   font-weight: 700;
   line-height: 1.4;
-
   white-space: nowrap;
 }
 
-/* Priority */
+/* =========================================================
+   PRIORITY
+   ========================================================= */
 
 .priority_low {
   background: var(--line-soft);
-  color: var(--ink-muted);
+  color: #65545b;
 }
 
 .priority_normal {
@@ -491,7 +480,9 @@
   color: var(--urgent-ink);
 }
 
-/* Status */
+/* =========================================================
+   STATUS
+   ========================================================= */
 
 .badge_open {
   background: var(--open-soft);
@@ -503,7 +494,9 @@
   color: var(--resolved);
 }
 
-/* Unknown values */
+/* =========================================================
+   UNKNOWN VALUES
+   ========================================================= */
 
 .priority:not([class*="priority_"]),
 .badge:not([class*="badge_"]) {
@@ -513,8 +506,7 @@
 
 .expandIcon {
   flex-shrink: 0;
-
-  color: var(--ink-muted);
+  color: #694b55;
 }
 
 /* =========================================================
@@ -523,33 +515,29 @@
 
 .summaryLine {
   margin-top: 0.55rem;
-
   color: var(--ink-muted);
-
   font-size: 0.82rem;
 }
 
 .supervisorSummary {
   display: inline-flex;
   align-items: center;
-
   gap: 0.4rem;
-
   flex-wrap: wrap;
 }
 
 .fromLabel {
   color: var(--ink-soft);
-
   font-weight: 600;
 }
 
 .companyTag {
   padding: 0.1rem 0.5rem;
 
+  border: 1px solid #c2aab2;
   border-radius: var(--radius-sm);
 
-  background: var(--line-soft);
+  background: #f3eaed;
   color: var(--ink-soft);
 
   font-size: 0.71rem;
@@ -562,8 +550,7 @@
 
 .cardDetails {
   padding: 0 1.05rem 1.05rem;
-
-  border-top: 1px solid var(--line-soft);
+  border-top: 1px solid var(--line);
 }
 
 .detailsRow {
@@ -573,7 +560,6 @@
     repeat(auto-fit, minmax(11rem, 1fr));
 
   gap: 0.85rem 1.5rem;
-
   padding-top: 0.95rem;
 }
 
@@ -583,17 +569,14 @@
   align-items: flex-start;
 
   gap: 0.2rem;
-
   min-width: 0;
 
   color: var(--ink-soft);
-
   font-size: 0.86rem;
 }
 
 .detailLabel {
   color: var(--ink-muted);
-
   font-size: 0.67rem;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -607,13 +590,14 @@
 .messageBox {
   display: flex;
   flex-direction: column;
-
   gap: 0.4rem;
 
   margin-top: 1rem;
   padding: 0.9rem 1rem;
 
+  border: 1px solid var(--line);
   border-left: 3px solid var(--accent);
+
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 
   background: var(--canvas);
@@ -621,11 +605,9 @@
 
 .message {
   max-width: 70ch;
-
   margin: 0;
 
   color: var(--ink);
-
   font-size: 0.9rem;
   line-height: 1.65;
 
@@ -640,13 +622,12 @@
 .confirmBtn {
   display: inline-flex;
   align-items: center;
-
   gap: 0.4rem;
 
   margin-top: 1rem;
   padding: 0.5rem 1rem;
 
-  border: 1px solid var(--resolved);
+  border: 1px solid #11632f;
   border-radius: var(--radius-sm);
 
   background: var(--resolved);
@@ -666,7 +647,7 @@
 
 .confirmBtn:hover:not(:disabled) {
   background: #14622f;
-  border-color: #14622f;
+  border-color: #0d4e26;
 }
 
 .confirmBtn:active:not(:disabled) {
@@ -683,6 +664,10 @@
    ========================================================= */
 
 @media (max-width: 900px) {
+  .page {
+    padding: 0.75rem 0.1rem 3.5rem;
+  }
+
   .filterRow {
     grid-template-columns: 1fr;
   }
@@ -698,23 +683,21 @@
 
 @media (max-width: 640px) {
   .page {
-    padding: 1.25rem 1rem 3rem;
+    padding: 0.6rem 0 3rem;
   }
 
   .filterRow {
     position: static;
-
     gap: 0.8rem;
-
     padding: 0.9rem;
+
+    border-color: #a99199;
   }
 
   .filterGroup {
     align-items: flex-start;
     flex-direction: column;
-
     gap: 0.45rem;
-
     padding: 0.2rem 0;
   }
 
@@ -742,9 +725,7 @@
 
   .cardTags {
     justify-content: flex-start;
-
     width: 100%;
-
     margin-left: 0;
   }
 
@@ -763,7 +744,8 @@
 
 @media (max-width: 420px) {
   .page {
-    padding-inline: 0.75rem;
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .filterRow {

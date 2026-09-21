@@ -193,7 +193,7 @@ CREATE TABLE submission_logs (
 CREATE TABLE teacher_batches (
   id SERIAL PRIMARY KEY,
   coordinator_id INTEGER NOT NULL REFERENCES coordinators(id) ON DELETE CASCADE,
-  teacher_id INTEGER NOT NULL UNIQUE REFERENCES teachers(id) ON DELETE CASCADE,
+  teacher_id INTEGER NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
   batch_label VARCHAR(255) NOT NULL,
   max_students INTEGER NOT NULL DEFAULT 30,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -318,6 +318,7 @@ CREATE INDEX idx_supervisors_user_id ON supervisors(user_id);
 CREATE INDEX idx_coordinators_user_id ON coordinators(user_id);
 CREATE INDEX idx_submission_status ON student_requirement_submissions(status);
 CREATE INDEX idx_teacher_batches_coordinator ON teacher_batches(coordinator_id);
+CREATE INDEX idx_teacher_batches_teacher ON teacher_batches(teacher_id);
 CREATE INDEX idx_deployment_requests_status ON deployment_requests(status);
 CREATE INDEX idx_login_attempts_email ON login_attempts(email);
 

@@ -6,6 +6,7 @@ import { io } from 'socket.io-client';
 import { useAuth } from '../../../context/AuthContext';
 import { useTeacherBatch } from '../../../hooks/useTeacherBatch';
 import { getBatchCurrentLocations } from '../../../api/teacherApi';
+import TeacherBatchPicker from './TeacherBatchPicker';
 import styles from './LiveMap.module.css';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
@@ -368,6 +369,7 @@ function LiveMap() {
       <div className={styles.card}>
         <div className={styles.header}>
           <h2 className={styles.title}>Live Student Map — Marinduque, Philippines</h2>
+          <TeacherBatchPicker />
           <div className={styles.statusBar}>
             <div className={`${styles.statusIndicator} ${statusIndicatorClass}`} />
             <span className={styles.statusText}>

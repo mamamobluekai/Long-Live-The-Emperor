@@ -1,5 +1,8 @@
 // Work Immersion Schedules: duration, date calculation, and batch grouping.
+// Schedules are managed by the SUPERVISOR (alongside attendance windows), and
+// may also be viewed/edited by the assigned teacher and batch coordinator.
 const pool = require('../../db/');
+const { assertBatchAccess } = require('../../utils/batchAccess');
 
 function parseLocalDate(dateStr) {
   if (dateStr instanceof Date) {
@@ -99,13 +102,10 @@ async function getBatchScheduleForDate(teacherBatchId, targetDate) {
   return null;
 }
 
-async function assertTeacherOwnsBatch(teacherUserId, batchId) {
-  const teacherRow = await pool.query('SELECT id FROM teachers WHERE user_id = $1', [teacherUserId]);
-  const teacherId = teacherRow.rows[0]?.id;
-  if (!teacherId) return { error: 'Teacher profile not found.', status: 400 };
-  const own = await pool.query('SELECT id FROM teacher_batches WHERE id = $1 AND teacher_id = $2', [batchId, teacherId]);
-  if (own.rows.length === 0) return { error: 'Access denied.', status: 403 };
-  return { teacherId };
+async function assertTeacherOwnsBatch(user, batchId) {
+  const gate = await assertBatchAccess(user, batchId);
+  if (!gate.ok) return { error: gate.denied.error, status: gate.denied.status };
+  return { teacherId: gate.access.teacherId, access: gate.access };
 }
 
 // GET /api/attendance/teacher/batch/:batchId/schedules
@@ -113,7 +113,7 @@ const getBatchSchedules = async (req, res) => {
   try {
     await ensureImmersionScheduleTable();
     const { batchId } = req.params;
-    const own = await assertTeacherOwnsBatch(req.user.id, batchId);
+    const own = await assertTeacherOwnsBatch(req.user, batchId);
     if (own.error) return res.status(own.status).json({ error: own.error });
 
     const schedulesResult = await pool.query(
@@ -174,7 +174,7 @@ const upsertBatchSchedule = async (req, res) => {
   try {
     await ensureImmersionScheduleTable();
     const { batchId } = req.params;
-    const own = await assertTeacherOwnsBatch(req.user.id, batchId);
+    const own = await assertTeacherOwnsBatch(req.user, batchId);
     if (own.error) return res.status(own.status).json({ error: own.error });
 
     const { supervisor_id, duration_type, duration_value, start_date } = req.body || {};

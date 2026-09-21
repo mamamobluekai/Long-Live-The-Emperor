@@ -3,41 +3,55 @@
 ========================= */
 
 .card {
+
   position: relative;
 
   width: 100%;
+
   box-sizing: border-box;
 
   padding: 24px;
 
-  border: 1px solid #e8dfdc;
+  border: 1px solid #8b7c78;
+
   border-radius: 20px;
 
   background: #ffffff;
 
   box-shadow:
+
     0 6px 22px rgba(69, 26, 26, 0.06);
 
   overflow: visible;
 
   transition:
+
     transform 0.2s ease,
+
     box-shadow 0.2s ease,
+
     border-color 0.2s ease;
+
 }
 
-.card:hover {
-  border-color: #dfd0d0;
+.card\:hover {
+
+  border-color: #6f5d59;
 
   box-shadow:
+
     0 10px 30px rgba(69, 26, 26, 0.09);
+
 }
 
 .pinned {
-  border-color: #d8b8bf;
+
+  border-color: #9b6f79;
 
   box-shadow:
+
     0 8px 28px rgba(88, 23, 37, 0.09);
+
 }
 
 /* =========================
@@ -45,20 +59,27 @@
 ========================= */
 
 .pinnedLabel {
+
   display: inline-flex;
+
   align-items: center;
+
   gap: 6px;
 
   margin-bottom: 16px;
+
   padding: 6px 11px;
 
   border-radius: 999px;
 
   background: #f8eeee;
+
   color: #6d1e30;
 
   font-size: 0.78rem;
+
   font-weight: 750;
+
 }
 
 /* =========================
@@ -66,71 +87,103 @@
 ========================= */
 
 .header {
+
   display: flex;
+
   align-items: flex-start;
+
   justify-content: space-between;
 
   gap: 15px;
+
 }
 
 .authorInfo {
+
   display: flex;
+
   align-items: center;
+
   gap: 13px;
 
   min-width: 0;
+
 }
 
 .avatar {
+
   flex: 0 0 48px;
 
   width: 48px;
+
   height: 48px;
 
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   border-radius: 50%;
 
   background: linear-gradient(
+
     135deg,
+
     #581725 0%,
+
     #6d1e30 55%,
+
     #822d3e 100%
+
   );
 
   color: #ffffff;
 
   font-size: 1.15rem;
+
   font-weight: 800;
 
   box-shadow:
+
     0 4px 12px rgba(88, 23, 37, 0.2);
+
 }
 
 .authorMeta {
+
   min-width: 0;
+
 }
 
 .authorNameRow {
+
   display: flex;
+
   align-items: center;
+
   flex-wrap: wrap;
+
   gap: 8px;
+
 }
 
 .authorName {
+
   color: #292524;
 
   font-size: 1.02rem;
+
   font-weight: 800;
 
   line-height: 1.3;
+
 }
 
 .roleBadge {
+
   display: inline-flex;
+
   align-items: center;
 
   padding: 4px 9px;
@@ -138,10 +191,13 @@
   border-radius: 999px;
 
   font-size: 0.7rem;
+
   font-weight: 750;
+
 }
 
 .timestamp {
+
   display: block;
 
   margin-top: 3px;
@@ -149,7 +205,9 @@
   color: #a8a29e;
 
   font-size: 0.8rem;
+
   font-weight: 500;
+
 }
 
 /* =========================
@@ -157,25 +215,35 @@
 ========================= */
 
 .menuWrapper {
+
   position: relative;
+
   z-index: 20;
+
 }
 
 .menuBtn {
+
   width: 38px;
+
   height: 38px;
 
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   border: none;
+
   border-radius: 10px;
 
   background: transparent;
+
   color: #78716c;
 
   font-size: 1.45rem;
+
   font-weight: 800;
 
   line-height: 1;
@@ -183,43 +251,61 @@
   cursor: pointer;
 
   transition:
+
     background 0.18s ease,
+
     color 0.18s ease;
+
 }
 
-.menuBtn:hover {
+.menuBtn\:hover {
+
   background: #f6f2f1;
+
   color: #581725;
+
 }
 
 .menuOverlay {
+
   position: fixed;
+
   inset: 0;
+
   z-index: 5;
 
   background: transparent;
+
 }
 
 .menuDropdown {
+
   position: absolute;
+
   top: 43px;
+
   right: 0;
+
   z-index: 30;
 
   min-width: 165px;
 
   padding: 6px;
 
-  border: 1px solid #e7dfdc;
+  border: 1px solid #81716d;
+
   border-radius: 13px;
 
   background: #ffffff;
 
   box-shadow:
+
     0 12px 30px rgba(28, 25, 23, 0.14);
+
 }
 
 .menuItem {
+
   display: block;
 
   width: 100%;
@@ -227,6 +313,7 @@
   padding: 10px 12px;
 
   border: none;
+
   border-radius: 8px;
 
   background: transparent;
@@ -236,28 +323,41 @@
   text-align: left;
 
   font-family: inherit;
+
   font-size: 0.85rem;
+
   font-weight: 650;
 
   cursor: pointer;
 
   transition:
+
     background 0.16s ease,
+
     color 0.16s ease;
+
 }
 
-.menuItem:hover {
+.menuItem\:hover {
+
   background: #f8f1f2;
+
   color: #6d1e30;
+
 }
 
 .menuItemDanger {
+
   color: #b91c1c;
+
 }
 
-.menuItemDanger:hover {
+.menuItemDanger\:hover {
+
   background: #fef2f2;
+
   color: #991b1b;
+
 }
 
 /* =========================
@@ -265,11 +365,15 @@
 ========================= */
 
 .typeChip {
+
   display: inline-flex;
+
   align-items: center;
+
   gap: 7px;
 
   margin-top: 18px;
+
   margin-bottom: 12px;
 
   padding: 6px 11px;
@@ -277,11 +381,15 @@
   border-radius: 999px;
 
   font-size: 0.76rem;
+
   font-weight: 750;
+
 }
 
 .typeIcon {
+
   font-size: 0.9rem;
+
 }
 
 /* =========================
@@ -289,14 +397,19 @@
 ========================= */
 
 .postTitle {
+
   margin: 5px 0 10px;
 
   color: #292524;
 
   font-size: 1.3rem;
+
   font-weight: 800;
+
   line-height: 1.35;
+
   letter-spacing: -0.02em;
+
 }
 
 /* =========================
@@ -304,16 +417,21 @@
 ========================= */
 
 .postContent {
+
   margin: 0;
 
   color: #44403c;
 
   font-size: 1rem;
+
   font-weight: 450;
+
   line-height: 1.7;
 
   white-space: pre-wrap;
+
   overflow-wrap: anywhere;
+
 }
 
 /* =========================
@@ -321,6 +439,7 @@
 ========================= */
 
 .postImageWrapper {
+
   width: 100%;
 
   margin-top: 18px;
@@ -330,15 +449,19 @@
   border-radius: 15px;
 
   background: #f5f3f2;
+
 }
 
 .postImage {
+
   display: block;
 
   width: 100%;
+
   max-height: 520px;
 
   object-fit: cover;
+
 }
 
 /* =========================
@@ -346,7 +469,9 @@
 ========================= */
 
 .linkCard {
+
   display: flex;
+
   align-items: stretch;
 
   margin-top: 18px;
@@ -355,75 +480,104 @@
 
   overflow: hidden;
 
-  border: 1px solid #e7dfdc;
+  border: 1px solid #81716d;
+
   border-radius: 14px;
 
   background: #faf9f8;
 
   color: inherit;
+
   text-decoration: none;
 
   transition:
+
     background 0.18s ease,
+
     border-color 0.18s ease,
+
     transform 0.18s ease;
+
 }
 
-.linkCard:hover {
-  border-color: #d9c4c8;
+.linkCard\:hover {
+
+  border-color: #6f565b;
+
   background: #f9f3f4;
 
   transform: translateY(-1px);
+
 }
 
 .linkThumb {
+
   width: 125px;
+
   min-height: 90px;
 
   object-fit: cover;
+
 }
 
 .linkInfo {
+
   min-width: 0;
 
   padding: 13px 15px;
+
 }
 
 .linkDomain {
+
   margin-bottom: 4px;
 
   color: #8a7f7c;
 
   font-size: 0.72rem;
+
   font-weight: 700;
 
   text-transform: uppercase;
+
   letter-spacing: 0.04em;
+
 }
 
 .linkTitle {
+
   color: #292524;
 
   font-size: 0.9rem;
+
   font-weight: 750;
+
   line-height: 1.35;
 
   overflow: hidden;
+
   text-overflow: ellipsis;
+
 }
 
 .linkDesc {
+
   margin-top: 5px;
 
   color: #78716c;
 
   font-size: 0.78rem;
+
   line-height: 1.4;
 
   display: -webkit-box;
+
   -webkit-line-clamp: 2;
+
   -webkit-box-orient: vertical;
+
   overflow: hidden;
+
 }
 
 /* =========================
@@ -431,21 +585,29 @@
 ========================= */
 
 .actions {
+
   display: flex;
+
   align-items: center;
 
   gap: 6px;
 
   margin-top: 22px;
+
   padding-top: 15px;
 
-  border-top: 1px solid #eee8e6;
+  border-top: 1px solid #8b7c78;
+
 }
 
 .actionBtn {
+
   display: inline-flex;
+
   align-items: center;
+
   justify-content: center;
+
   gap: 7px;
 
   min-height: 40px;
@@ -453,6 +615,7 @@
   padding: 7px 14px;
 
   border: none;
+
   border-radius: 10px;
 
   background: transparent;
@@ -460,31 +623,45 @@
   color: #6b6460;
 
   font-family: inherit;
+
   font-size: 0.86rem;
+
   font-weight: 700;
 
   cursor: pointer;
 
   transition:
+
     background 0.18s ease,
+
     color 0.18s ease,
+
     transform 0.18s ease;
+
 }
 
-.actionBtn:hover {
+.actionBtn\:hover {
+
   background: #f8f1f2;
+
   color: #6d1e30;
 
   transform: translateY(-1px);
+
 }
 
 .actionBtnActive {
+
   color: #6d1e30;
+
   background: #faf0f2;
+
 }
 
 .actionIcon {
+
   font-size: 1rem;
+
 }
 
 /* =========================
@@ -492,105 +669,157 @@
 ========================= */
 
 @media (max-width: 700px) {
+
   .card {
+
     padding: 19px;
 
     border-radius: 17px;
+
   }
 
   .avatar {
+
     flex-basis: 43px;
+
     width: 43px;
+
     height: 43px;
 
     font-size: 1rem;
+
   }
 
   .authorName {
+
     font-size: 0.95rem;
+
   }
 
   .postTitle {
+
     font-size: 1.15rem;
+
   }
 
   .postContent {
+
     font-size: 0.94rem;
+
     line-height: 1.6;
+
   }
 
   .actions {
+
     gap: 2px;
+
   }
 
   .actionBtn {
+
     flex: 1;
+
     padding: 7px 8px;
 
     font-size: 0.8rem;
+
   }
+
 }
 
 @media (max-width: 480px) {
+
   .card {
+
     padding: 16px;
 
     border-radius: 15px;
+
   }
 
   .header {
+
     gap: 8px;
+
   }
 
   .authorInfo {
+
     gap: 10px;
+
   }
 
   .avatar {
+
     flex-basis: 40px;
+
     width: 40px;
+
     height: 40px;
+
   }
 
   .roleBadge {
+
     font-size: 0.64rem;
+
   }
 
   .timestamp {
+
     font-size: 0.72rem;
+
   }
 
   .typeChip {
+
     font-size: 0.7rem;
+
   }
 
   .postTitle {
+
     font-size: 1.05rem;
+
   }
 
   .postContent {
+
     font-size: 0.9rem;
+
   }
 
   .linkThumb {
+
     width: 90px;
+
   }
 
   .linkTitle {
+
     font-size: 0.82rem;
+
   }
 
   .linkDesc {
+
     font-size: 0.72rem;
+
   }
 
   .actionBtn {
+
     min-height: 38px;
 
     font-size: 0.74rem;
+
   }
 
   .actionIcon {
+
     font-size: 0.9rem;
+
   }
+
 }

@@ -1,13 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { useTeacherBatch } from '../../../hooks/useTeacherBatch';
+import TeacherBatchPicker from './TeacherBatchPicker';
 import {
   getTeacherBatchStatus,
   getBatchConfig,
-  updateBatchConfig,
   getBatchStats,
   getBatchSchedules,
-  upsertBatchSchedule,
 } from '../../../api/teacherApi';
 import styles from './TeacherAttendance.module.css';
 
@@ -76,18 +75,7 @@ function TeacherAttendance() {
   );
 
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
-  const [notice, setNotice] = useState(null);
-  const [editingHours, setEditingHours] = useState(false);
-
-  // Location modal state
-
-  const flash = (type, text) => {
-    setNotice({ type, text });
-
-    setTimeout(() => setNotice(null), 4000);
-  };
 
   const loadAll = useCallback(async () => {
     if (!selectedBatchId) return;
@@ -143,103 +131,8 @@ function TeacherAttendance() {
     return () => clearInterval(id);
   }, [selectedBatchId, date, token]);
 
-  const saveConfig = async (e) => {
-    e.preventDefault();
-
-    setBusy(true);
-
-    try {
-      const payload = {
-        time_in_open: config.time_in_open,
-        time_in_close: config.time_in_close,
-        time_out_open: config.time_out_open,
-        time_out_close: config.time_out_close,
-      };
-
-      await updateBatchConfig(
-        selectedBatchId,
-        payload,
-        token
-      );
-
-      const c = await getBatchConfig(
-        selectedBatchId,
-        token
-      );
-
-      setConfig({
-        ...c,
-        time_in_open: normalizeTimeInput(c.time_in_open),
-        time_in_close: normalizeTimeInput(c.time_in_close),
-        time_out_open: normalizeTimeInput(c.time_out_open),
-        time_out_close: normalizeTimeInput(c.time_out_close),
-      });
-
-      const s = await getTeacherBatchStatus(
-        selectedBatchId,
-        token
-      );
-      setStatus(s);
-
-      flash('success', 'Schedule updated.');
-      setEditingHours(false);
-    } catch {
-      flash('error', 'Failed to update schedule.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const onConfigChange = (key, value) =>
-    setConfig((c) => ({
-      ...c,
-      [key]: value,
-    }));
-
-  const saveGroupSchedule = async (group, form) => {
-    setBusy(true);
-
-    try {
-      const payload = {
-        supervisor_id: group.supervisor_id,
-        duration_type: form.duration_type,
-        duration_value: form.duration_value,
-        start_date: form.start_date,
-      };
-
-      await upsertBatchSchedule(
-        selectedBatchId,
-        payload,
-        token
-      );
-
-      flash('success', 'Immersion schedule saved.');
-
-      const g = await getBatchSchedules(
-        selectedBatchId,
-        token
-      );
-
-      setGroups(g.groups || []);
-    } catch {
-      flash(
-        'error',
-        'Failed to save immersion schedule.'
-      );
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const isWeekend = (dateStr) => {
-    if (!dateStr) return false;
-
-    const d = parseLocalDate(dateStr);
-    const day = d.getDay();
-
-    return day === 0 || day === 6;
-  };
-
+  // Read-only monitor: the supervisor owns attendance scheduling, so the
+  // teacher cannot edit windows or immersion durations here.
   function computeDates(startDate) {
     const current = parseLocalDate(startDate);
 
@@ -266,7 +159,7 @@ function TeacherAttendance() {
       <div className={styles.header}>
         <div>
           <h2 className={styles.title}>
-            Teacher Attendance & Work Immersion Schedule
+            Attendance Monitor
           </h2>
 
           {batchLabel && (
@@ -275,20 +168,11 @@ function TeacherAttendance() {
             </p>
           )}
           <p className={styles.pageDescription}>
-            Configure attendance windows and set the work immersion duration for this batch.
+            View-only. Attendance windows and immersion schedules are set by the supervisor.
           </p>
         </div>
+        <TeacherBatchPicker />
       </div>
-
-      {notice && (
-        <div
-          className={`${styles.notice} ${
-            styles['notice_' + notice.type]
-          }`}
-        >
-          {notice.text}
-        </div>
-      )}
 
       {loading && (
         <p className={styles.info}>
@@ -357,100 +241,18 @@ function TeacherAttendance() {
               <div className={styles.panelHeader}>
                 <div className={styles.scheduleHeading}>
                   <h3 className={styles.panelTitle}>
-                    Attendance Schedule ({config.timezone})
+                    Attendance Schedule
                   </h3>
                   <p className={styles.scheduleSummary}>
                     Time In: {normalizeTimeInput(config.time_in_open)} - {normalizeTimeInput(config.time_in_close)}
                     {' | '}
                     Time Out: {normalizeTimeInput(config.time_out_open)} - {normalizeTimeInput(config.time_out_close)}
                   </p>
+                  <p className={styles.muted}>
+                    Set by the supervisor. Contact the supervisor to change these windows.
+                  </p>
                 </div>
-                <button
-                  type="button"
-                  className={styles.editHoursButton}
-                  onClick={() => setEditingHours((value) => !value)}
-                  disabled={busy}
-                >
-                  {editingHours ? 'Hide Hour Editor' : 'Edit Attendance Hours'}
-                </button>
               </div>
-
-              {editingHours && (
-                <form
-                  className={styles.configForm}
-                  onSubmit={saveConfig}
-                >
-
-                <label className={styles.cfgField}>
-                  Time In Open
-
-                  <input
-                    type="time"
-                    value={normalizeTimeInput(config.time_in_open)}
-                    onChange={(e) =>
-                      onConfigChange(
-                        'time_in_open',
-                        e.target.value
-                      )
-                    }
-                  />
-                </label>
-
-                <label className={styles.cfgField}>
-                  Time In Close
-
-                  <input
-                    type="time"
-                    value={normalizeTimeInput(config.time_in_close)}
-                    onChange={(e) =>
-                      onConfigChange(
-                        'time_in_close',
-                        e.target.value
-                      )
-                    }
-                  />
-                </label>
-
-                <label className={styles.cfgField}>
-                  Time Out Open
-
-                  <input
-                    type="time"
-                    value={normalizeTimeInput(config.time_out_open)}
-                    onChange={(e) =>
-                      onConfigChange(
-                        'time_out_open',
-                        e.target.value
-                      )
-                    }
-                  />
-                </label>
-
-                <label className={styles.cfgField}>
-                  Time Out Close
-
-                  <input
-                    type="time"
-                    value={normalizeTimeInput(config.time_out_close)}
-                    onChange={(e) =>
-                      onConfigChange(
-                        'time_out_close',
-                        e.target.value
-                      )
-                    }
-                  />
-                </label>
-
-                  <button
-                    type="submit"
-                    className={styles.saveBtn}
-                    disabled={busy}
-                  >
-                    Save Schedule
-                  </button>
-
-                </form>
-              )}
             </div>
           )}
 
@@ -542,95 +344,20 @@ function TeacherAttendance() {
                     className={styles.scheduleForm}
                   >
 
-                    <label
-                      className={styles.cfgField}
-                    >
-                      Total Days
+                    <div className={styles.cfgField}>
+                      <span className={styles.muted}>Total Days</span>
+                      <strong>{form.duration_value || 10} days</strong>
+                    </div>
 
-                      <input
-                        type="number"
-                        min="1"
-                        value={10}
-                        readOnly
-                        style={{
-                          backgroundColor:
-                            '#f3f4f6',
-                          cursor: 'not-allowed',
-                        }}
-                      />
-                    </label>
+                    <div className={styles.cfgField}>
+                      <span className={styles.muted}>Start Date</span>
+                      <strong>{form.start_date || '—'}</strong>
+                    </div>
 
-                    <label
-                      className={styles.cfgField}
-                    >
-                      Start Date
-
-                      <input
-                        type="date"
-                        className={styles.dateInput}
-                        value={form.start_date || ''}
-                        onClick={(e) => {
-                          if (
-                            e.currentTarget.showPicker
-                          ) {
-                            e.currentTarget.showPicker();
-                          }
-                        }}
-                        onChange={(e) => {
-                          const val =
-                            e.target.value;
-
-                          if (!val) return;
-
-                          if (isWeekend(val)) {
-                            flash(
-                              'error',
-                              'Start date cannot be a weekend (Saturday/Sunday).'
-                            );
-
-                            return;
-                          }
-
-                          setGroups((gs) =>
-                            gs.map((g) =>
-                              g.supervisor_id ===
-                              group.supervisor_id
-                                ? {
-                                    ...g,
-                                    schedule: {
-                                      ...(g.schedule ||
-                                        {}),
-                                      start_date:
-                                        val,
-                                    },
-                                  }
-                                : g
-                            )
-                          );
-                        }}
-                      />
-                    </label>
-
-                    <button
-                      type="button"
-                      className={styles.saveBtn}
-                      disabled={busy}
-                      onClick={() =>
-                        saveGroupSchedule(
-                          group,
-                          {
-                            ...form,
-                            duration_type:
-                              'days',
-                            duration_value: 10,
-                          }
-                        )
-                      }
-                    >
-                      {hasSchedule
-                        ? 'Update Schedule'
-                        : 'Save Schedule'}
-                    </button>
+                    <div className={styles.cfgField}>
+                      <span className={styles.muted}>Set by</span>
+                      <strong>Supervisor</strong>
+                    </div>
 
                   </div>
 
@@ -690,7 +417,7 @@ function TeacherAttendance() {
                       }
                     >
                       {status?.manual_open
-                        ? 'Manually opened by you'
+                        ? 'Manually opened'
                         : status?.active_type ===
                           'time_in'
                         ? 'Time In window active'

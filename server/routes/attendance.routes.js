@@ -10,23 +10,29 @@ const immersionSchedule = require('../controllers/teacherControllers/immersionSc
 const authenticate = require('../middleware/verifyToken');
 const authorize = require('../middleware/authorizeRole');
 
-// ----- Teacher / coordinator: schedule + manual override -----
-router.post('/teacher/batch/:batchId/open', authenticate, authorize('teacher', 'coordinator'), attendanceSettings.openBatchAttendance);
-router.post('/teacher/batch/:batchId/close', authenticate, authorize('teacher', 'coordinator'), attendanceSettings.closeBatchAttendance);
-router.get('/teacher/batch/:batchId/status', authenticate, authorize('teacher', 'coordinator'), attendanceSettings.getBatchAttendanceStatus);
-router.get('/teacher/batch/:batchId/config', authenticate, authorize('teacher', 'coordinator'), attendanceSettings.getBatchConfig);
-router.put('/teacher/batch/:batchId/config', authenticate, authorize('teacher', 'coordinator'), attendanceSettings.updateBatchConfig);
+// Batch-scoped attendance endpoints are shared by the SUPERVISOR (who owns
+// attendance scheduling), the TEACHER assigned to the batch, and the
+// COORDINATOR who created it. Fine-grained per-batch ownership is enforced
+// inside the controllers via utils/batchAccess.
+const BATCH_ROLES = ['teacher', 'supervisor', 'coordinator'];
 
-// ----- Teacher: records, stats, appeals -----
-router.get('/teacher/batch/:batchId/records', authenticate, authorize('teacher', 'coordinator'), attendanceManagement.getBatchRecords);
-router.get('/teacher/batch/:batchId/report', authenticate, authorize('teacher', 'coordinator'), attendanceManagement.getBatchAttendanceReport);
-router.get('/teacher/batch/:batchId/stats', authenticate, authorize('teacher', 'coordinator'), attendanceManagement.getBatchStats);
-router.get('/teacher/batch/:batchId/appeals', authenticate, authorize('teacher', 'coordinator'), attendanceManagement.getBatchAppeals);
+// ----- Schedule + manual override -----
+router.post('/teacher/batch/:batchId/open', authenticate, authorize(...BATCH_ROLES), attendanceSettings.openBatchAttendance);
+router.post('/teacher/batch/:batchId/close', authenticate, authorize(...BATCH_ROLES), attendanceSettings.closeBatchAttendance);
+router.get('/teacher/batch/:batchId/status', authenticate, authorize(...BATCH_ROLES), attendanceSettings.getBatchAttendanceStatus);
+router.get('/teacher/batch/:batchId/config', authenticate, authorize(...BATCH_ROLES), attendanceSettings.getBatchConfig);
+router.put('/teacher/batch/:batchId/config', authenticate, authorize(...BATCH_ROLES), attendanceSettings.updateBatchConfig);
+
+// ----- Records, stats, appeals -----
+router.get('/teacher/batch/:batchId/records', authenticate, authorize(...BATCH_ROLES), attendanceManagement.getBatchRecords);
+router.get('/teacher/batch/:batchId/report', authenticate, authorize(...BATCH_ROLES), attendanceManagement.getBatchAttendanceReport);
+router.get('/teacher/batch/:batchId/stats', authenticate, authorize(...BATCH_ROLES), attendanceManagement.getBatchStats);
+router.get('/teacher/batch/:batchId/appeals', authenticate, authorize(...BATCH_ROLES), attendanceManagement.getBatchAppeals);
 router.post('/teacher/appeals/:appealId/review', authenticate, authorize('teacher', 'coordinator'), attendanceManagement.reviewAppeal);
 
-// ----- Teacher: work immersion schedules -----
-router.get('/teacher/batch/:batchId/schedules', authenticate, authorize('teacher', 'coordinator'), immersionSchedule.getBatchSchedules);
-router.put('/teacher/batch/:batchId/schedules', authenticate, authorize('teacher', 'coordinator'), immersionSchedule.upsertBatchSchedule);
+// ----- Work immersion schedules -----
+router.get('/teacher/batch/:batchId/schedules', authenticate, authorize(...BATCH_ROLES), immersionSchedule.getBatchSchedules);
+router.put('/teacher/batch/:batchId/schedules', authenticate, authorize(...BATCH_ROLES), immersionSchedule.upsertBatchSchedule);
 
 // ----- Student: view own schedule -----
 router.get('/student/schedule', authenticate, authorize('student'), immersionSchedule.getMySchedule);

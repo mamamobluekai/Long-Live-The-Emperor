@@ -1,6 +1,9 @@
 // Teacher-facing attendance management: records, statistics, and appeals.
+// The SUPERVISOR (who owns attendance scheduling) plus the assigned teacher
+// and the batch coordinator may view records, reports, stats, and appeals.
 const pool = require('../../db/');
 const { createNotification, getStudentUserId } = require('../../services/notification.service');
+const { assertBatchAccess } = require('../../utils/batchAccess');
 
 const TZ = 'Asia/Manila';
 
@@ -58,14 +61,11 @@ function immersionDates(startDate, durationType, durationValue) {
   return dates;
 }
 
-// Ensure the requesting teacher owns the batch.
-async function assertOwnsBatch(teacherUserId, batchId) {
-  const teacherRow = await pool.query('SELECT id FROM teachers WHERE user_id = $1', [teacherUserId]);
-  const teacherId = teacherRow.rows[0]?.id;
-  if (!teacherId) return { error: 'Teacher profile not found.', status: 400 };
-  const own = await pool.query('SELECT id FROM teacher_batches WHERE id = $1 AND teacher_id = $2', [batchId, teacherId]);
-  if (own.rows.length === 0) return { error: 'Access denied.', status: 403 };
-  return { teacherId };
+// Ensure the requesting user may access the batch (teacher, supervisor, or coordinator).
+async function assertOwnsBatch(user, batchId) {
+  const gate = await assertBatchAccess(user, batchId);
+  if (!gate.ok) return { error: gate.denied.error, status: gate.denied.status };
+  return { teacherId: gate.access.teacherId, access: gate.access };
 }
 
 // GET /api/attendance/teacher/batch/:batchId/records?date=YYYY-MM-DD
@@ -74,7 +74,7 @@ const getBatchRecords = async (req, res) => {
     await ensureAppealDateColumn();
     const { batchId } = req.params;
     const date = req.query.date || nowLocalDate();
-    const own = await assertOwnsBatch(req.user.id, batchId);
+    const own = await assertOwnsBatch(req.user, batchId);
     if (own.error) return res.status(own.status).json({ error: own.error });
 
     const result = await pool.query(
@@ -104,7 +104,7 @@ const getBatchRecords = async (req, res) => {
 const getBatchAttendanceReport = async (req, res) => {
   try {
     const { batchId } = req.params;
-    const own = await assertOwnsBatch(req.user.id, batchId);
+    const own = await assertOwnsBatch(req.user, batchId);
     if (own.error) return res.status(own.status).json({ error: own.error });
 
     const schedules = await pool.query(
@@ -158,7 +158,7 @@ const getBatchStats = async (req, res) => {
   try {
     const { batchId } = req.params;
     const date = req.query.date || nowLocalDate();
-    const own = await assertOwnsBatch(req.user.id, batchId);
+    const own = await assertOwnsBatch(req.user, batchId);
     if (own.error) return res.status(own.status).json({ error: own.error });
 
     const total = await pool.query(
@@ -205,7 +205,7 @@ const getBatchAppeals = async (req, res) => {
   try {
     const { batchId } = req.params;
     const status = req.query.status;
-    const own = await assertOwnsBatch(req.user.id, batchId);
+    const own = await assertOwnsBatch(req.user, batchId);
     if (own.error) return res.status(own.status).json({ error: own.error });
 
     const params = [batchId];

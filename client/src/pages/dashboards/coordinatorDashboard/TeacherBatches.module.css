@@ -734,3 +734,45 @@
     min-width: 620px;
   }
 }
+
+
+/* =========================================================
+   STUDENT BATCH ASSIGNMENT BADGES
+   ========================================================= */
+
+.rowLocked {
+  opacity: 0.62;
+  background: var(--maroon-soft-2);
+}
+
+.rowLocked td {
+  color: var(--muted);
+}
+
+.lockBadge,
+.currentBadge,
+.availableBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.lockBadge {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.currentBadge {
+  background: var(--maroon-soft);
+  color: var(--maroon-700);
+}
+
+.availableBadge {
+  background: var(--success-soft);
+  color: var(--success);
+}

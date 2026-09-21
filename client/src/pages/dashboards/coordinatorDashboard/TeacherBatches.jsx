@@ -70,6 +70,27 @@ function TeacherBatches() {
     };
   }, []);
 
+  // A supervisor can only be assigned to ONE batch. Build a lookup of
+  // supervisor user IDs that already supervise a batch so the UI can block
+  // selecting them again (the server enforces this too).
+  const assignedSupervisorIds = new Set(
+    batches
+      .filter((b) => b.supervisor_id !== null && b.supervisor_id !== undefined)
+      .map((b) => Number(b.supervisor_id))
+  );
+
+  // In the Create form, any supervisor already assigned to a batch is blocked.
+  const isSupervisorTakenForCreate = (supervisorUserId) =>
+    assignedSupervisorIds.has(Number(supervisorUserId));
+
+  // In the Edit form, a supervisor assigned to a DIFFERENT batch is blocked.
+  // The supervisor currently on the batch being edited stays selectable.
+  const isSupervisorTakenForEdit = (supervisorUserId) => {
+    if (!editing) return false;
+    if (Number(editing.supervisor_id) === Number(supervisorUserId)) return false;
+    return assignedSupervisorIds.has(Number(supervisorUserId));
+  };
+
   const handleCreate = async (e) => {
     e.preventDefault();
     setCreating(true);
@@ -100,6 +121,16 @@ function TeacherBatches() {
     setSelectedStudents((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
+  };
+
+  // A student already assigned to a different batch is locked — the server
+  // rejects reassigning them, so prevent selecting them here too. Students who
+  // are already in THIS batch stay editable/selectable.
+  const isLockedStudent = (student) => {
+    if (!assigning) return false;
+    if (!student.assigned_batch_id) return false;
+    if (Number(student.assigned_batch_id) === Number(assigning.id)) return false;
+    return true;
   };
 
   const handleAssign = async () => {
@@ -189,11 +220,14 @@ function TeacherBatches() {
             onChange={(e) => setForm({ ...form, supervisor_id: e.target.value })}
           >
             <option value="">No Supervisor</option>
-            {supervisors.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.first_name} {s.last_name} ({s.company_name})
-              </option>
-            ))}
+            {supervisors.map((s) => {
+              const taken = isSupervisorTakenForCreate(s.id);
+              return (
+                <option key={s.id} value={s.id} disabled={taken}>
+                  {s.first_name} {s.last_name} ({s.company_name}){taken ? ' — already assigned to a batch' : ''}
+                </option>
+              );
+            })}
           </select>
           <input
             className={styles.input}
@@ -269,6 +303,7 @@ function TeacherBatches() {
           </h3>
           <p className={styles.muted}>
             {selectedStudents.length} selected. Only students with completed requirements are listed.
+            Students already assigned to another batch are locked and cannot be selected.
           </p>
           <div className={styles.tableWrap}>
             <table className={styles.table}>
@@ -279,18 +314,22 @@ function TeacherBatches() {
                   <th>Name</th>
                   <th>Email</th>
                   <th>Strand</th>
+                  <th>Batch Status</th>
                 </tr>
               </thead>
               <tbody>
                 {completed.map((s) => {
                   const assignmentId = s.student_id || s.id;
+                  const locked = isLockedStudent(s);
                   return (
-                  <tr key={assignmentId}>
+                  <tr key={assignmentId} className={locked ? styles.rowLocked : undefined}>
                     <td>
                       <input
                         type="checkbox"
                         checked={selectedStudents.includes(assignmentId)}
                         onChange={() => toggleStudent(assignmentId)}
+                        disabled={locked}
+                        title={locked ? `Already assigned to ${s.assigned_batch_label || 'another batch'}` : undefined}
                       />
                     </td>
                     <td>{s.student_id}</td>
@@ -299,6 +338,17 @@ function TeacherBatches() {
                     </td>
                     <td>{s.email}</td>
                     <td>{s.strand || '-'}</td>
+                    <td>
+                      {locked ? (
+                        <span className={styles.lockBadge} title={`Assigned to ${s.assigned_batch_label || 'another batch'}`}>
+                          Assigned · {s.assigned_batch_label || 'another batch'}
+                        </span>
+                      ) : s.assigned_batch_id ? (
+                        <span className={styles.currentBadge}>In this batch</span>
+                      ) : (
+                        <span className={styles.availableBadge}>Available</span>
+                      )}
+                    </td>
                   </tr>
                   );
                 })}
@@ -340,11 +390,14 @@ function TeacherBatches() {
               onChange={(e) => setEditForm({ ...editForm, supervisor_id: e.target.value })}
             >
               <option value="">No Supervisor</option>
-              {supervisors.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.first_name} {s.last_name} ({s.company_name})
-                </option>
-              ))}
+              {supervisors.map((s) => {
+                const taken = isSupervisorTakenForEdit(s.id);
+                return (
+                  <option key={s.id} value={s.id} disabled={taken}>
+                    {s.first_name} {s.last_name} ({s.company_name}){taken ? ' — already assigned to a batch' : ''}
+                  </option>
+                );
+              })}
             </select>
             <button className={styles.btn} type="submit">
               Save

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, ChevronDown, LogOut, Settings, UserRound } from 'lucide-react';
 import { getAdminNotifications, markNotificationsRead } from '../../api/adminApi';
+import { isGroupChatNotification } from '../../utils/notificationFilters';
 import styles from './AdminTopNav.module.css';
 
 function formatTime(date) {
@@ -31,7 +32,7 @@ export default function AdminTopNav({ user, onLogout }) {
       setLoading(true);
       try {
         const data = await getAdminNotifications();
-        const notes = data.notifications || [];
+        const notes = (data.notifications || []).filter(n => !isGroupChatNotification(n));
         setNotifications(notes);
         setUnread(notes.filter((n) => !n.is_read).length);
       } catch (e) {

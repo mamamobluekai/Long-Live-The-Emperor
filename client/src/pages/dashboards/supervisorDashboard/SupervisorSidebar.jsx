@@ -9,7 +9,6 @@ import {
   ClipboardList,
   ScrollText,
   MessageCircle,
-  MessagesSquare,
   User,
   FileText,
 } from 'lucide-react';
@@ -37,6 +36,16 @@ const links = [
     icon: CalendarDays,
   },
   {
+    to: '/dashboard/supervisor/attendance-schedule',
+    label: 'Attendance Schedule',
+    icon: CalendarDays,
+  },
+  {
+    to: '/dashboard/supervisor/attendance-reports',
+    label: 'Attendance Reports & Records',
+    icon: CalendarDays,
+  },
+  {
     to: '/dashboard/supervisor/evaluate',
     label: 'Evaluate Student',
     icon: ClipboardPenLine,
@@ -46,25 +55,21 @@ const links = [
     label: 'Student Criteria',
     icon: ClipboardList,
   },
-  {
-    to: '/dashboard/supervisor/certifications',
-    label: 'Certifications',
-    icon: ScrollText,
-  },
-  {
+   {
     to: '/dashboard/supervisor/grade-appeals',
     label: 'Grade Appeals',
     icon: FileText,
   },
   {
+    to: '/dashboard/supervisor/certifications',
+    label: 'Certifications',
+    icon: ScrollText,
+  },
+ 
+  {
     to: '/dashboard/supervisor/social-feed',
     label: 'Social Feed',
     icon: MessageCircle,
-  },
-  {
-    to: '/dashboard/supervisor/group-chat',
-    label: 'Group Chat',
-    icon: MessagesSquare,
   },
   {
     to: '/dashboard/supervisor/profile',

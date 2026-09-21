@@ -164,8 +164,8 @@ function StudentApprovals() {
           <h2>Students</h2>
 
           <p>
-            Manage student accounts, upload students in bulk, and review
-            pending registrations.
+            Manage student accounts, upload students accounts, and review
+            pending accounts.
           </p>
         </div>
       </div>
@@ -191,7 +191,7 @@ function StudentApprovals() {
       <section className={styles.uploadCard}>
         <div className={styles.cardHeader}>
           <div>
-            <h3>Bulk Upload Students</h3>
+            <h3>Upload Students</h3>
             <p>
               Import multiple student accounts using an Excel spreadsheet.
             </p>
@@ -268,9 +268,8 @@ function StudentApprovals() {
       <section className={styles.studentsCard}>
         <div className={styles.studentsHeader}>
           <div>
-            <span className={styles.sectionLabel}>REGISTRATION</span>
+            <span className={styles.sectionLabel}>Student Approvals</span>
 
-            <h3>Student Approvals</h3>
 
             <p>
               Review and approve student accounts waiting for registration.

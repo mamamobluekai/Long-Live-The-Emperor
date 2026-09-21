@@ -1,11 +1,18 @@
 
 /* =========================================================
    TEACHER ATTENDANCE — DEEP MAROON THEME
+   DARKER BORDERS + LESS SIDE MARGIN
+   ========================================================= */
+
+
+/* =========================================================
+   PAGE
    ========================================================= */
 
 .page {
   min-height: 100%;
-  padding: 28px;
+  padding: 20px 14px;
+
   background:
     linear-gradient(
       135deg,
@@ -13,17 +20,20 @@
       #f8f5f5 45%,
       #f1e8ea 100%
     );
+
   color: #281d20;
 }
+
 
 /* =========================================================
    HEADER
    ========================================================= */
 
 .header {
-  max-width: 1250px;
-  margin: 0 auto 22px;
+  max-width: 1400px;
+  margin: 0 auto 20px;
   padding: 22px 24px;
+
   border-radius: 16px;
 
   background:
@@ -34,12 +44,15 @@
       #822d3e 100%
     );
 
-  box-shadow: 0 10px 30px rgba(91, 24, 39, 0.18);
+  box-shadow:
+    0 10px 30px rgba(91, 24, 39, 0.18);
 }
 
 .title {
   margin: 0;
+
   color: #ffffff;
+
   font-size: 1.65rem;
   font-weight: 700;
   letter-spacing: -0.025em;
@@ -47,87 +60,102 @@
 
 .batchTag {
   display: inline-flex;
+
   margin: 9px 0 0;
   padding: 6px 11px;
 
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 999px;
 
   background: rgba(255, 255, 255, 0.11);
+
   color: #f9e9ed;
 
   font-size: 0.74rem;
   font-weight: 600;
 }
 
+
 /* =========================================================
    GENERAL
    ========================================================= */
 
 .info {
-  max-width: 1250px;
-  margin: 18px auto;
+  max-width: 1400px;
+  margin: 16px auto;
+
   color: #75676b;
+
   font-size: 0.88rem;
 }
 
 .error {
-  max-width: 1250px;
-  margin: 18px auto;
+  max-width: 1400px;
+  margin: 16px auto;
+
   padding: 13px 16px;
 
-  border: 1px solid #e8bfc5;
+  border: 1px solid #d09da6;
   border-radius: 10px;
 
   background: #fff0f2;
+
   color: #922f40;
 
   font-size: 0.85rem;
 }
+
 
 /* =========================================================
    NOTICE
    ========================================================= */
 
 .notice {
-  max-width: 1250px;
-  margin: 0 auto 18px;
+  max-width: 1400px;
+  margin: 0 auto 16px;
+
   padding: 13px 16px;
 
   border-radius: 10px;
+
   font-size: 0.84rem;
   font-weight: 550;
 }
 
 .notice_success {
   background: #e7f4ec;
-  border: 1px solid #c8e3d2;
+  border: 1px solid #afd0ba;
+
   color: #21643b;
 }
 
 .notice_error {
   background: #fff0f2;
-  border: 1px solid #e8c1c7;
+  border: 1px solid #d09da6;
+
   color: #922f40;
 }
 
 .notice_info {
   background: #f2e4e7;
-  border: 1px solid #dfc4ca;
+  border: 1px solid #c5a5ad;
+
   color: #681f2d;
 }
+
 
 /* =========================================================
    STATISTICS
    ========================================================= */
 
 .statGrid {
-  max-width: 1250px;
-  margin: 0 auto 22px;
+  max-width: 1400px;
+  margin: 0 auto 20px;
 
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 13px;
+
+  gap: 12px;
 }
 
 .statCard {
@@ -138,7 +166,7 @@
 
   overflow: hidden;
 
-  border: 1px solid #dfcdd1;
+  border: 1px solid #b99ca3;
   border-radius: 14px;
 
   background:
@@ -171,6 +199,7 @@
   content: '';
 
   position: absolute;
+
   left: 0;
   top: 0;
   bottom: 0;
@@ -189,6 +218,7 @@
   content: '';
 
   position: absolute;
+
   right: -35px;
   top: -35px;
 
@@ -205,8 +235,10 @@
   z-index: 1;
 
   color: #681f2d;
+
   font-size: 1.7rem;
   font-weight: 750;
+
   line-height: 1;
 }
 
@@ -217,20 +249,23 @@
   margin-top: 9px;
 
   color: #796b70;
+
   font-size: 0.76rem;
   font-weight: 600;
 }
+
 
 /* =========================================================
    PANELS
    ========================================================= */
 
 .panel {
-  max-width: 1250px;
-  margin: 0 auto 20px;
+  max-width: 1400px;
+  margin: 0 auto 18px;
+
   padding: 22px;
 
-  border: 1px solid #dfcdd1;
+  border: 1px solid #b99ca3;
   border-radius: 15px;
 
   background:
@@ -255,15 +290,16 @@
 
 .panelHeader {
   display: flex;
+
   align-items: center;
   justify-content: space-between;
 
   gap: 15px;
-  margin-bottom: 16px;
 
+  margin-bottom: 16px;
   padding-bottom: 14px;
 
-  border-bottom: 1px solid #eadfe1;
+  border-bottom: 1px solid #b9a0a6;
 }
 
 .scheduleHeading {
@@ -272,7 +308,9 @@
 
 .scheduleSummary {
   margin: 6px 0 0;
+
   color: #817176;
+
   font-size: 0.78rem;
   font-weight: 600;
 }
@@ -286,15 +324,20 @@
   line-height: 1.5;
 }
 
+
 /* =========================================================
    CONFIGURATION
    ========================================================= */
 
 .configForm {
   display: grid;
-  grid-template-columns: repeat(4, 1fr) auto;
+
+  grid-template-columns:
+    repeat(4, 1fr)
+    auto;
 
   gap: 12px;
+
   align-items: end;
 
   margin-top: 18px;
@@ -303,6 +346,7 @@
 .cfgField {
   display: flex;
   flex-direction: column;
+
   gap: 7px;
 
   color: #55474c;
@@ -316,12 +360,14 @@
   box-sizing: border-box;
 
   height: 42px;
+
   padding: 0 12px;
 
-  border: 1px solid #d8c5ca;
+  border: 1px solid #b59aa1;
   border-radius: 9px;
 
   background: #fffafa;
+
   color: #3c2b30;
 
   font-family: inherit;
@@ -337,16 +383,19 @@
 
 .cfgField input:hover {
   background: #fff5f6;
+
+  border-color: #9f7f88;
 }
 
 .cfgField input:focus {
-  border-color: #8b3345;
+  border-color: #7d2b3d;
 
   background: #ffffff;
 
   box-shadow:
     0 0 0 3px rgba(104, 31, 45, 0.1);
 }
+
 
 /* =========================================================
    BUTTONS
@@ -356,6 +405,7 @@
 .openBtn,
 .closeBtn {
   height: 42px;
+
   padding: 0 17px;
 
   border-radius: 9px;
@@ -406,40 +456,59 @@
 
 .editHoursButton {
   flex-shrink: 0;
+
   min-height: 42px;
+
   padding: 0 18px;
-  border: 1px solid #8b3345;
+
+  border: 1px solid #7d2b3d;
   border-radius: 9px;
+
   background: #fff4f5;
+
   color: #7b293b;
+
   cursor: pointer;
+
   font-family: inherit;
   font-size: 0.78rem;
   font-weight: 750;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
 }
 
 .editHoursButton:hover:not(:disabled) {
   background: #7b293b;
+
   color: #ffffff;
+
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(104, 31, 45, 0.2);
+
+  box-shadow:
+    0 6px 16px rgba(104, 31, 45, 0.2);
 }
 
 .editHoursButton:focus-visible {
   outline: 3px solid rgba(139, 51, 69, 0.25);
+
   outline-offset: 2px;
 }
 
 .editHoursButton:disabled {
   opacity: 0.5;
+
   cursor: not-allowed;
 }
 
 .closeBtn {
-  border: 1px solid #d9bfc5;
+  border: 1px solid #b7979f;
 
   background: #f5e8eb;
+
   color: #7c2939;
 }
 
@@ -451,9 +520,12 @@
 .openBtn:disabled,
 .closeBtn:disabled {
   opacity: 0.5;
+
   cursor: not-allowed;
+
   transform: none;
 }
+
 
 /* =========================================================
    SUPERVISOR GROUP
@@ -461,9 +533,10 @@
 
 .supervisorGroup {
   margin-top: 16px;
+
   padding: 19px;
 
-  border: 1px solid #e1cfd3;
+  border: 1px solid #b99da4;
   border-radius: 13px;
 
   background:
@@ -476,10 +549,12 @@
 
 .supervisorHeader {
   display: flex;
+
   align-items: center;
   justify-content: space-between;
 
   gap: 15px;
+
   margin-bottom: 16px;
 }
 
@@ -495,10 +570,11 @@
 .scheduleBadge {
   padding: 6px 10px;
 
-  border: 1px solid #c9e2d2;
+  border: 1px solid #afd0ba;
   border-radius: 999px;
 
   background: #e7f4ec;
+
   color: #21643b;
 
   font-size: 0.68rem;
@@ -507,30 +583,38 @@
 
 .scheduleForm {
   display: grid;
-  grid-template-columns: 160px 200px auto;
+
+  grid-template-columns:
+    160px
+    200px
+    auto;
 
   align-items: end;
+
   gap: 12px;
 }
 
 .dateTimeline {
   display: flex;
+
   gap: 6px;
+
   flex-wrap: wrap;
 
   margin-top: 15px;
   padding-top: 14px;
 
-  border-top: 1px solid #e4d6d9;
+  border-top: 1px solid #b9a0a6;
 }
 
 .dateChip {
   padding: 6px 9px;
 
-  border: 1px solid #ddc8cd;
+  border: 1px solid #b89ba2;
   border-radius: 7px;
 
   background: #f5e9ec;
+
   color: #681f2d;
 
   font-size: 0.68rem;
@@ -539,7 +623,9 @@
 
 .studentChips {
   display: flex;
+
   flex-wrap: wrap;
+
   gap: 6px;
 
   margin-top: 13px;
@@ -548,14 +634,16 @@
 .studentChip {
   padding: 6px 9px;
 
-  border: 1px solid #ded0d3;
+  border: 1px solid #bca6ab;
   border-radius: 7px;
 
   background: #ffffff;
+
   color: #66585d;
 
   font-size: 0.7rem;
 }
+
 
 /* =========================================================
    GROUP STATUS
@@ -563,18 +651,22 @@
 
 .groupActions {
   display: flex;
+
   align-items: center;
+
   flex-wrap: wrap;
+
   gap: 9px;
 
   margin-top: 16px;
   padding-top: 14px;
 
-  border-top: 1px solid #e4d6d9;
+  border-top: 1px solid #b9a0a6;
 }
 
 .statePill {
   display: inline-flex;
+
   align-items: center;
   justify-content: center;
 
@@ -588,23 +680,28 @@
   font-weight: 750;
 
   text-transform: uppercase;
+
   letter-spacing: 0.04em;
 }
 
 .statePill.open {
   background: #e3f3e9;
+
   color: #21643b;
 }
 
 .statePill.closed {
   background: #e8e1e3;
+
   color: #75686d;
 }
 
 .stateMeta {
   color: #7b6e73;
+
   font-size: 0.73rem;
 }
+
 
 /* =========================================================
    TABLE
@@ -612,9 +709,10 @@
 
 .tableWrap {
   width: 100%;
+
   overflow-x: auto;
 
-  border: 1px solid #dfcfd2;
+  border: 1px solid #b79ba2;
   border-radius: 11px;
 
   background: #ffffff;
@@ -622,6 +720,7 @@
 
 .table {
   width: 100%;
+
   min-width: 760px;
 
   border-collapse: collapse;
@@ -647,6 +746,7 @@
   text-align: left;
 
   text-transform: uppercase;
+
   letter-spacing: 0.04em;
 
   white-space: nowrap;
@@ -655,7 +755,7 @@
 .table td {
   padding: 14px;
 
-  border-bottom: 1px solid #eee5e7;
+  border-bottom: 1px solid #ddd0d4;
 
   color: #55474c;
 
@@ -691,6 +791,7 @@
   font-weight: 650;
 }
 
+
 /* =========================================================
    ATTENDANCE STATUS
    ========================================================= */
@@ -706,6 +807,7 @@
   border-radius: 999px;
 
   background: #ece7e9;
+
   color: #74676c;
 
   font-size: 0.65rem;
@@ -717,22 +819,26 @@
 .badge_present,
 .badge_completed {
   background: #e4f3e9;
+
   color: #21643b;
 }
 
 .badge_absent {
   background: #fdebed;
+
   color: #a23b49;
 }
 
 .badge_checked_in,
 .badge_in_progress {
   background: #f2e3e7;
+
   color: #681f2d;
 }
 
 .badge_pending {
   background: #fff3d9;
+
   color: #986719;
 }
 
@@ -740,16 +846,19 @@
   display: inline-flex;
 
   margin-left: 6px;
+
   padding: 4px 7px;
 
   border-radius: 6px;
 
   background: #f2e3e7;
+
   color: #7b293b;
 
   font-size: 0.61rem;
   font-weight: 700;
 }
+
 
 /* =========================================================
    DATE INPUT
@@ -760,10 +869,11 @@
 
   padding: 0 11px;
 
-  border: 1px solid #d8c5ca;
+  border: 1px solid #b59aa1;
   border-radius: 9px;
 
   background: #fffafa;
+
   color: #3c2b30;
 
   font-family: inherit;
@@ -772,12 +882,17 @@
   outline: none;
 }
 
+.dateInput:hover {
+  border-color: #9f7f88;
+}
+
 .dateInput:focus {
-  border-color: #8b3345;
+  border-color: #7d2b3d;
 
   box-shadow:
     0 0 0 3px rgba(104, 31, 45, 0.09);
 }
+
 
 /* =========================================================
    LOCATION MODAL
@@ -785,11 +900,13 @@
 
 .locationModalOverlay {
   position: fixed;
+
   inset: 0;
 
   z-index: 1000;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 
@@ -802,11 +919,12 @@
 
 .locationModal {
   width: 100%;
+
   max-width: 430px;
 
   padding: 24px;
 
-  border: 1px solid #dfcdd1;
+  border: 1px solid #b99ca3;
   border-radius: 16px;
 
   background:
@@ -836,7 +954,7 @@
 .locationModal a {
   color: #681f2d !important;
 
-  border-color: #cfaeb6 !important;
+  border-color: #b89ba2 !important;
 
   background: #f5e9ec !important;
 
@@ -860,11 +978,17 @@
   background: #541725 !important;
 }
 
+
 /* =========================================================
-   RESPONSIVE
+   RESPONSIVE — TABLET
    ========================================================= */
 
 @media (max-width: 1050px) {
+
+  .page {
+    padding: 18px 12px;
+  }
+
   .statGrid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -874,9 +998,15 @@
   }
 }
 
+
+/* =========================================================
+   RESPONSIVE — SMALL TABLET
+   ========================================================= */
+
 @media (max-width: 800px) {
+
   .page {
-    padding: 17px;
+    padding: 14px 10px;
   }
 
   .header {
@@ -893,6 +1023,7 @@
 
   .panelHeader {
     align-items: flex-start;
+
     flex-direction: column;
   }
 
@@ -901,9 +1032,15 @@
   }
 }
 
+
+/* =========================================================
+   RESPONSIVE — MOBILE
+   ========================================================= */
+
 @media (max-width: 560px) {
+
   .page {
-    padding: 10px;
+    padding: 10px 7px;
   }
 
   .header {
@@ -916,11 +1053,13 @@
 
   .statGrid {
     grid-template-columns: 1fr 1fr;
+
     gap: 8px;
   }
 
   .statCard {
     min-height: 88px;
+
     padding: 15px;
   }
 
@@ -940,11 +1079,13 @@
 
   .supervisorHeader {
     align-items: flex-start;
+
     flex-direction: column;
   }
 
   .groupActions {
     align-items: flex-start;
+
     flex-direction: column;
   }
 
@@ -957,4 +1098,3 @@
     padding: 15px;
   }
 }
-

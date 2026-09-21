@@ -49,6 +49,10 @@ export async function getMyProgress() {
   return apiFetch('/progress');
 }
 
+export async function getMyPlacementInfo() {
+  return apiFetch('/placement/me');
+}
+
 export async function getMyCertificate() {
   const token = getToken();
   const res = await fetch(`${API_BASE}/certificate/me`, {

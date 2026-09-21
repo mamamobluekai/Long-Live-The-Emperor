@@ -11,7 +11,6 @@
   color: #1c1917;
 }
 
-
 /* =========================================================
    HEADER
 ========================================================= */
@@ -59,7 +58,10 @@
   gap: 8px;
   min-height: 40px;
   padding: 0 15px;
-  border: 1px solid #e7e5e4;
+
+  /* DARKER BORDER */
+  border: 1px solid #9f9793;
+
   border-radius: 10px;
   background: #fff;
   color: #44403c;
@@ -74,7 +76,7 @@
 }
 
 .refreshButton:hover {
-  border-color: #d6b3b8;
+  border-color: #a66b75;
   background: #fffafa;
   transform: translateY(-1px);
 }
@@ -83,7 +85,6 @@
   opacity: 0.65;
   cursor: not-allowed;
 }
-
 
 /* =========================================================
    LOADING
@@ -107,7 +108,10 @@
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid #e7e5e4;
+
+  /* DARKER BORDER */
+  border: 3px solid #b8b0ac;
+
   border-top-color: #8f1d2c;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -116,7 +120,6 @@
 .spin {
   animation: spin 0.8s linear infinite;
 }
-
 
 /* =========================================================
    ERROR
@@ -128,7 +131,10 @@
   gap: 12px;
   margin-bottom: 20px;
   padding: 13px 15px;
-  border: 1px solid #fecaca;
+
+  /* DARKER BORDER */
+  border: 1px solid #d99ca4;
+
   border-radius: 11px;
   background: #fff7f7;
   color: #7f1d1d;
@@ -151,7 +157,6 @@
   cursor: pointer;
 }
 
-
 /* =========================================================
    STATISTICS
 ========================================================= */
@@ -170,7 +175,10 @@
   align-items: flex-start;
   gap: 14px;
   padding: 19px;
-  border: 1px solid #e7e5e4;
+
+  /* DARKER BORDER */
+  border: 1px solid #9f9793;
+
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.9);
   box-shadow:
@@ -234,7 +242,6 @@
   font-size: 0.68rem;
 }
 
-
 /* =========================================================
    MAIN GRID
 ========================================================= */
@@ -251,7 +258,10 @@
 .panel {
   min-width: 0;
   padding: 21px;
-  border: 1px solid #e7e5e4;
+
+  /* DARKER BORDER */
+  border: 1px solid #9f9793;
+
   border-radius: 15px;
   background: #fff;
   box-shadow:
@@ -297,7 +307,6 @@
   background: #f7e9eb;
   color: #8f1d2c;
 }
-
 
 /* =========================================================
    CHART
@@ -347,7 +356,9 @@
   align-items: flex-end;
   gap: 12px;
   padding: 12px 5px 0;
-  border-bottom: 1px solid #e7e5e4;
+
+  /* DARKER BORDER */
+  border-bottom: 1px solid #9f9793;
 }
 
 .chartColumn {
@@ -407,7 +418,6 @@
   font-size: 0.62rem;
   white-space: nowrap;
 }
-
 
 /* =========================================================
    STATUS
@@ -524,7 +534,6 @@
   font-size: 0.9rem;
 }
 
-
 /* =========================================================
    BATCHES
 ========================================================= */
@@ -556,7 +565,10 @@
 
 .batchCard {
   padding: 17px;
-  border: 1px solid #eceae8;
+
+  /* DARKER BORDER */
+  border: 1px solid #aaa29e;
+
   border-radius: 12px;
   background: #fcfbfa;
   transition:
@@ -566,7 +578,7 @@
 }
 
 .batchCard:hover {
-  border-color: #dcc3c6;
+  border-color: #9c6972;
   transform: translateY(-2px);
   box-shadow:
     0 7px 20px rgba(28, 25, 23, 0.05);
@@ -653,7 +665,6 @@
   transition: width 0.4s ease;
 }
 
-
 /* =========================================================
    QUICK ACTIONS
 ========================================================= */
@@ -679,7 +690,10 @@
   align-items: center;
   gap: 12px;
   padding: 15px;
-  border: 1px solid #e7e5e4;
+
+  /* DARKER BORDER */
+  border: 1px solid #9f9793;
+
   border-radius: 12px;
   background: #fff;
   color: inherit;
@@ -693,7 +707,7 @@
 }
 
 .quickCard:hover {
-  border-color: #d8bdc1;
+  border-color: #9c6972;
   transform: translateY(-2px);
   box-shadow:
     0 8px 22px rgba(28, 25, 23, 0.055);
@@ -731,7 +745,6 @@
   color: #a8a29e;
 }
 
-
 /* =========================================================
    EMPTY STATES
 ========================================================= */
@@ -767,7 +780,6 @@
   font-size: 0.68rem;
   line-height: 1.5;
 }
-
 
 /* =========================================================
    RESPONSIVE

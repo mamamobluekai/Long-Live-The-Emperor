@@ -5,6 +5,7 @@
 const pool = require('../../db/');
 const { getBatchScheduleForDate } = require('./immersionSchedule.controller');
 const { notifyUsers, getBatchStudentUserIds } = require('../../services/notification.service');
+const { assertBatchAccess } = require('../../utils/batchAccess');
 
 const TZ = 'Asia/Manila';
 
@@ -149,12 +150,10 @@ const updateBatchConfig = async (req, res) => {
   const client = await pool.connect();
   try {
     const { batchId } = req.params;
-    const teacherRow = await client.query('SELECT id FROM teachers WHERE user_id = $1', [req.user.id]);
-    const teacherId = teacherRow.rows[0]?.id;
-    if (!teacherId) return res.status(400).json({ error: 'Teacher profile not found.' });
-
-    const own = await client.query('SELECT id FROM teacher_batches WHERE id = $1 AND teacher_id = $2', [batchId, teacherId]);
-    if (own.rows.length === 0) return res.status(403).json({ error: 'Access denied.' });
+    // Attendance scheduling is owned by the SUPERVISOR, but the assigned
+    // teacher and the batch coordinator may also manage it.
+    const gate = await assertBatchAccess(req.user, batchId);
+    if (!gate.ok) return res.status(gate.denied.status).json({ error: gate.denied.error });
 
     const { time_in_open, time_in_close, time_out_open, time_out_close, timezone } = req.body;
 
@@ -205,10 +204,8 @@ const updateBatchConfig = async (req, res) => {
 const openBatchAttendance = async (req, res) => {
   try {
     const { batchId } = req.params;
-    const teacherId = (await pool.query('SELECT id FROM teachers WHERE user_id = $1', [req.user.id])).rows[0]?.id;
-    if (!teacherId) return res.status(400).json({ error: 'Teacher profile not found.' });
-    const own = await pool.query('SELECT id FROM teacher_batches WHERE id = $1 AND teacher_id = $2', [batchId, teacherId]);
-    if (own.rows.length === 0) return res.status(403).json({ error: 'Access denied.' });
+    const gate = await assertBatchAccess(req.user, batchId);
+    if (!gate.ok) return res.status(gate.denied.status).json({ error: gate.denied.error });
 
     // Manual override is intentionally allowed even when a date is not in the
     // immersion schedule, so the teacher can open attendance on demand.
@@ -242,10 +239,8 @@ const openBatchAttendance = async (req, res) => {
 const closeBatchAttendance = async (req, res) => {
   try {
     const { batchId } = req.params;
-    const teacherId = (await pool.query('SELECT id FROM teachers WHERE user_id = $1', [req.user.id])).rows[0]?.id;
-    if (!teacherId) return res.status(400).json({ error: 'Teacher profile not found.' });
-    const own = await pool.query('SELECT id FROM teacher_batches WHERE id = $1 AND teacher_id = $2', [batchId, teacherId]);
-    if (own.rows.length === 0) return res.status(403).json({ error: 'Access denied.' });
+    const gate = await assertBatchAccess(req.user, batchId);
+    if (!gate.ok) return res.status(gate.denied.status).json({ error: gate.denied.error });
 
     const r = await pool.query(
       `INSERT INTO attendance_config (teacher_batch_id, manual_open)

@@ -8,6 +8,7 @@ import {
 } from '../api/notificationApi';
 import { useAuth } from './AuthContext';
 import { NotificationContext } from './notificationContext';
+import { isGroupChatNotification } from '../utils/notificationFilters';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
@@ -31,8 +32,9 @@ export function NotificationProvider({ children }) {
         setLoading(true);
         const data = await getNotifications();
         if (mounted) {
-          setNotifications(data.notifications || []);
-          setUnreadCount(Number(data.unreadCount) || 0);
+          const filtered = (data.notifications || []).filter(n => !isGroupChatNotification(n));
+          setNotifications(filtered);
+          setUnreadCount(filtered.filter(n => !n.is_read).length);
         }
       } catch (err) {
         console.error('Failed to load notifications:', err.message);
@@ -47,6 +49,7 @@ export function NotificationProvider({ children }) {
     socketRef.current = socket;
     socket.on('notification:new', (notification) => {
       if (!mounted) return;
+      if (isGroupChatNotification(notification)) return;
       setNotifications((current) => [
         notification,
         ...current.filter((item) => item.id !== notification.id),
