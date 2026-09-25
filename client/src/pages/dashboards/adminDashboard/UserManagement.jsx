@@ -11,7 +11,7 @@ import LoadingSkeleton from '../../../components/admin/LoadingSkeleton';
 import Pagination from '../../../components/admin/Pagination';
 import UserProfileModal from '../../../components/admin/UserProfileModal';
 import styles from './UserManagement.module.css';
-import { useToast } from '../../../components/admin/ToastContainer';
+import { useToast } from '../../../components/admin/toastContext';
 
 const ROLE_OPTIONS = [
   { value: '', label: 'All Roles' },

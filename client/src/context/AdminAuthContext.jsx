@@ -1,8 +1,6 @@
-import { createContext, useContext } from 'react';
 import { useAuth } from './AuthContext';
+import { AdminAuthContext } from './adminAuthContextValue';
 import { loginAdmin, logoutAdmin } from '../api/adminApi';
-
-const AdminAuthContext = createContext(null);
 
 export function AdminAuthProvider({ children }) {
   const auth = useAuth();
@@ -35,6 +33,3 @@ export function AdminAuthProvider({ children }) {
   return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;
 }
 
-export function useAdminAuth() {
-  return useContext(AdminAuthContext);
-}

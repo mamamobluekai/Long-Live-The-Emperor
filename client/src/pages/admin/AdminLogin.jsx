@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAdminAuth } from '../../context/AdminAuthContext';
+import { useAdminAuth } from '../../context/useAdminAuth';
 import { getErrorMessage } from '../../utils/errors';
 import styles from './AdminLogin.module.css';
 

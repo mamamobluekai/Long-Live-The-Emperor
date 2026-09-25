@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useAdminAuth } from '../context/AdminAuthContext';
+import { useAdminAuth } from '../context/useAdminAuth';
 import LoginAndFRegister from '../pages/LoginAndRegister/LoginAndFRegister';
 import AdminLogin from '../pages/admin/AdminLogin';
 import AdminDashboard from '../pages/dashboards/adminDashboard/AdminDashboard';

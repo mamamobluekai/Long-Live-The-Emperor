@@ -4,7 +4,7 @@ import { getAccessLogs, getAccessLogsExportUrl } from '../../../api/adminApi';
 import DataTable from '../../../components/admin/DataTable';
 import LoadingSkeleton from '../../../components/admin/LoadingSkeleton';
 import Pagination from '../../../components/admin/Pagination';
-import { useToast } from '../../../components/admin/ToastContainer';
+import { useToast } from '../../../components/admin/toastContext';
 import styles from './AccessLogs.module.css';
 
 const ACTION_OPTIONS = [

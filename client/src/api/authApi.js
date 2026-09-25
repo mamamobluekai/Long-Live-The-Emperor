@@ -14,7 +14,7 @@ async function fetchJsonOrThrow(url, options) {
     return data;
   } catch (err) {
     const { message } = mapErrorResponse({ error: err.message });
-    throw new Error(message);
+    throw new Error(message, { cause: err });
   }
 }
 

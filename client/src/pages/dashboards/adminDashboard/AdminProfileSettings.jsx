@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { Edit, Save, X } from 'lucide-react';
 import {
   getAdminProfile,
@@ -6,7 +6,7 @@ import {
   changeAdminPassword,
   uploadAdminProfilePicture,
 } from '../../../api/adminApi';
-import { useToast } from '../../../components/admin/ToastContainer';
+import { useToast } from '../../../components/admin/toastContext';
 import { useAuth } from '../../../context/AuthContext';
 import styles from './AdminProfileSettings.module.css';
 
@@ -44,7 +44,7 @@ export default function AdminProfileSettings() {
 
   const fileInputRef = useRef(null);
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getAdminProfile();
@@ -63,9 +63,9 @@ export default function AdminProfileSettings() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
-  useEffect(() => { loadProfile(); }, []);
+  useEffect(() => { loadProfile(); }, [loadProfile]);
 
   const handleFieldChange = (e) => {
     const { name, value } = e.target;

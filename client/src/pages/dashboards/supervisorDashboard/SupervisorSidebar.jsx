@@ -8,8 +8,8 @@ import {
   ClipboardPenLine,
   ClipboardList,
   ScrollText,
-  MessageCircle,
   User,
+  Megaphone,
   FileText,
 } from 'lucide-react';
 
@@ -67,13 +67,13 @@ const links = [
   },
  
   {
-    to: '/dashboard/supervisor/social-feed',
-    label: 'Social Feed',
-    icon: MessageCircle,
+    to: '/dashboard/supervisor/announcements',
+    label: 'Announcements',
+    icon: Megaphone,
   },
   {
     to: '/dashboard/supervisor/profile',
-    label: 'Profile Settings',
+    label: 'Settings',
     icon: User,
   },
 ];

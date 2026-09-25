@@ -23,7 +23,7 @@ import {
   uploadUserProfilePicture,
 } from '../../api/userApi';
 
-import { useToast } from '../../components/admin/ToastContainer';
+import { useToast } from '../../components/admin/toastContext';
 import { useAuth } from '../../context/AuthContext';
 import styles from './UserProfileSettings.module.css';
 
@@ -647,7 +647,7 @@ export default function UserProfileSettings() {
             <User size={18} />
           </div>
 
-          <div>
+          <div className={styles.accountItemText}>
             <span>Account Type</span>
             <strong>
               {roleLabels[user?.role] || user?.role}
@@ -662,7 +662,7 @@ export default function UserProfileSettings() {
             <ShieldCheck size={18} />
           </div>
 
-          <div>
+          <div className={styles.accountItemText}>
             <span>Account Status</span>
             <strong className={styles.activeStatus}>
               Active
@@ -677,7 +677,7 @@ export default function UserProfileSettings() {
             <Mail size={18} />
           </div>
 
-          <div>
+          <div className={styles.accountItemText}>
             <span>Email</span>
             <strong>{profile?.email || 'Not provided'}</strong>
           </div>

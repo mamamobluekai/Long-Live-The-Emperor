@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getUserProfile, updateUserStatus, resetUserPassword } from '../../../src/api/adminApi';
-import { useToast } from './ToastContainer';
+import { useToast } from './toastContext';
 import styles from './UserProfileModal.module.css';
 
 export default function UserProfileModal({ user, onClose, onUpdated }) {

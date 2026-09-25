@@ -109,6 +109,14 @@ export async function createPostComment(id, content, parentCommentId = null) {
   });
 }
 
+export async function updatePostComment(postId, commentId, content) {
+  return fetchJsonOrThrow(`${API_BASE}/feed/posts/${postId}/comments/${commentId}`, {
+    method: 'PUT',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ content }),
+  });
+}
+
 export async function deletePostComment(postId, commentId) {
   return fetchJsonOrThrow(`${API_BASE}/feed/posts/${postId}/comments/${commentId}`, {
     method: 'DELETE',

@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import {
   getMyRequirements,
   updateMyRequirements,
   submitMyRequirements,
   uploadMyDocument,
   deleteMyDocument,
+  getActiveRequirements,
 } from '../../../api/studentApi';
 import styles from './Requirements.module.css';
 
@@ -27,7 +28,7 @@ const SECTION_META = {
   },
 };
 
-const ALL_DOCS = [
+const FALLBACK_DOCS = [
   { code: 'guardian_consent', section: 'guardian', name: 'Guardian Consent' },
   { code: 'medical_certificate', section: 'medical', name: 'Medical Certificate' },
   { code: 'accident_insurance', section: 'medical', name: 'Accident Insurance' },
@@ -40,8 +41,9 @@ const ALL_DOCS = [
   { code: 'student_profile_form', section: 'academic', name: 'Student Profile Form' },
 ];
 
-function Requirements({ user }) {
+function Requirements() {
   const [data, setData] = useState(null);
+  const [docTypes, setDocTypes] = useState(FALLBACK_DOCS);
   const [activeTab, setActiveTab] = useState('personal');
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -57,8 +59,21 @@ function Requirements({ user }) {
       setError('');
       setMessage('');
       try {
-        const result = await getMyRequirements();
-        if (!cancelled) setData(result);
+        const [reqResult, typesResult] = await Promise.all([
+          getMyRequirements(),
+          getActiveRequirements().catch(() => null),
+        ]);
+        if (!cancelled) {
+          setData(reqResult);
+          if (typesResult?.documentTypes && typesResult.documentTypes.length > 0) {
+            setDocTypes(typesResult.documentTypes.map((dt) => ({
+              code: dt.code,
+              name: dt.name,
+              section: dt.section || 'academic',
+              description: dt.description || '',
+            })));
+          }
+        }
       } catch (err) {
         if (!cancelled) setError(err.message);
       }
@@ -73,7 +88,7 @@ function Requirements({ user }) {
   const progress = data?.progress ?? 0;
   const sections = data?.sections || {};
 
-  const uploadCount = ALL_DOCS.filter((d) =>
+  const uploadCount = docTypes.filter((d) =>
     documents.some((sd) => sd.code === d.code)
   ).length;
 
@@ -128,7 +143,7 @@ function Requirements({ user }) {
         ...prev,
         documents: [...prev.documents, result.document],
         progress: result.progress,
-        missingDocuments: ALL_DOCS.map((d) => d.code),
+        missingDocuments: docTypes.map((d) => d.code),
       }));
       setMessage(`${file.name} uploaded successfully.`);
       setUploadFile((p) => ({ ...p, [docCode]: null }));
@@ -169,7 +184,7 @@ function Requirements({ user }) {
   };
 
   const docsBySection = (section) => {
-    return ALL_DOCS.filter((d) => d.section === section).map((type) => ({
+    return docTypes.filter((d) => d.section === section).map((type) => ({
       ...type,
       doc: documents.find((sd) => sd.code === type.code) || null,
     }));
@@ -562,7 +577,7 @@ function Requirements({ user }) {
       <div className={styles.section}>
         <div className={styles.progressLabel}>
           <span><strong>Progress</strong> &mdash; {progress}% complete</span>
-          <span>{uploadCount}/{ALL_DOCS.length} documents uploaded</span>
+          <span>{uploadCount}/{docTypes.length} documents uploaded</span>
         </div>
         <div className={styles.progressBar}>
           <div className={styles.progressFill} style={{ width: `${progress}%`, background: progressColor }} />
@@ -586,11 +601,11 @@ function Requirements({ user }) {
             if (key === 'medical' || key === 'academic') {
               const sectionDone = sections[`${key}Complete`];
               const tabClass = `${styles.tab} ${activeTab === key ? styles.active : ''}`;
-              const totalSectionDocs = ALL_DOCS.filter((d) => d.section === key).length;
+              const totalSectionDocs = docTypes.filter((d) => d.section === key).length;
               const uploadedSectionCodes = new Set(documents.map((d) => d.code));
-              const uploadedSectionDocs = ALL_DOCS.filter((d) => d.section === key && uploadedSectionCodes.has(d.code)).length;
+              const uploadedSectionDocs = docTypes.filter((d) => d.section === key && uploadedSectionCodes.has(d.code)).length;
               const indicator = sectionDone
-                ? ' ✓'
+                ? ' âœ“'
                 : ` (${totalSectionDocs - uploadedSectionDocs} missing)`;
               return (
                 <button

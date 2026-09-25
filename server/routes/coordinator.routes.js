@@ -1,13 +1,17 @@
-const express = require('express');
+﻿const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
 const {
   getPendingStudents,
+  getStudentStrands,
   approveStudent,
   disapproveStudent,
   deleteStudent,
+  bulkApproveStudents,
+  bulkDisapproveStudents,
+  bulkDeleteStudents,
   upsertRequirements,
   submitRequirements,
   getRequirements,
@@ -16,6 +20,10 @@ const {
   listSubmissions,
   reviewSubmission,
   verifyDocument,
+  listDocumentTypes,
+  createDocumentType,
+  updateDocumentType,
+  deleteDocumentType,
   createTeacherBatch,
   updateTeacherBatch,
   deleteTeacherBatch,
@@ -55,10 +63,14 @@ router.use(authenticate);
 router.get('/dashboard', authorize('coordinator', 'admin'), getCoordinatorDashboard);
 
 router.get('/students/pending', authorize('coordinator', 'admin'), getPendingStudents);
+router.get('/students/strands', authorize('coordinator', 'admin'), getStudentStrands);
 router.post('/students/upload', authorize('coordinator', 'admin'), uploadExcel.single('file'), uploadStudentsExcel);
 router.put('/students/:id/approve', authorize('coordinator', 'admin'), approveStudent);
 router.put('/students/:id/disapprove', authorize('coordinator', 'admin'), disapproveStudent);
 router.delete('/students/:id', authorize('coordinator', 'admin'), deleteStudent);
+router.put('/students/bulk/approve', authorize('coordinator', 'admin'), bulkApproveStudents);
+router.put('/students/bulk/disapprove', authorize('coordinator', 'admin'), bulkDisapproveStudents);
+router.delete('/students/bulk', authorize('coordinator', 'admin'), bulkDeleteStudents);
 
 router.put('/requirements', authorize('student', 'coordinator', 'admin'), upsertRequirements);
 router.post('/requirements/submit', authorize('student', 'coordinator', 'admin'), submitRequirements);
@@ -69,6 +81,11 @@ router.delete('/documents/:id', authorize('student', 'coordinator', 'admin'), de
 router.get('/submissions', authorize('coordinator', 'admin'), listSubmissions);
 router.post('/submissions/:id/review', authorize('coordinator', 'admin'), reviewSubmission);
 router.put('/documents/:id/verify', authorize('coordinator', 'admin'), verifyDocument);
+
+router.get('/document-types', authorize('student', 'coordinator', 'admin', 'teacher', 'supervisor'), listDocumentTypes);
+router.post('/document-types', authorize('coordinator', 'admin'), createDocumentType);
+router.put('/document-types/:id', authorize('coordinator', 'admin'), updateDocumentType);
+router.delete('/document-types/:id', authorize('coordinator', 'admin'), deleteDocumentType);
 
 router.post('/teacher-batches', authorize('coordinator', 'admin'), createTeacherBatch);
 router.put('/teacher-batches/:batchId', authorize('coordinator', 'admin'), updateTeacherBatch);

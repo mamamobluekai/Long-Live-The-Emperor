@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useToast } from '../../components/admin/ToastContainer';
+import { useToast } from '../admin/toastContext';
 import { createFeedPost } from '../../api/feedApi';
 import styles from './PostComposer.module.css';
 

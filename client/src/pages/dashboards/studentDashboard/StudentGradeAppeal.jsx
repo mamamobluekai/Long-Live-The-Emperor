@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FileText, AlertCircle, Clock, CheckCircle, XCircle, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
+import { FileText, AlertCircle, MessageSquare } from 'lucide-react';
 import { getMyEvaluation, getEvaluationCriteria } from '../../../api/evaluationApi';
 import { submitAppeal, getMyAppeals } from '../../../api/appealApi';
 import styles from './StudentGradeAppeal.module.css';

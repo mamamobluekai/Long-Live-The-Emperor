@@ -3,16 +3,24 @@ const { sendStudentApprovalEmail } = require('./regexes/email');
 
 const getPendingStudents = async (req, res) => {
   try {
-    const { status } = req.query;
-    
+    const { status, strand } = req.query;
+
     let whereClause = `WHERE u.role = 'student'`;
     const params = [];
-    
+    let paramIdx = 1;
+
     if (status && status !== 'all') {
-      whereClause += ` AND u.status = $1`;
+      whereClause += ` AND u.status = $${paramIdx}`;
       params.push(status);
+      paramIdx++;
     }
-    
+
+    if (strand && strand !== 'all') {
+      whereClause += ` AND s.track_strand = $${paramIdx}`;
+      params.push(strand);
+      paramIdx++;
+    }
+
     const result = await pool.query(
       `SELECT u.id, u.email, u.role, u.status, u.created_at, s.first_name, s.last_name, s.student_number,
               s.grade_level, s.section, s.track_strand, s.school, s.preferred_company
@@ -25,6 +33,22 @@ const getPendingStudents = async (req, res) => {
     res.json({ students: result.rows });
   } catch (err) {
     console.error('Get pending students error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+const getStudentStrands = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT DISTINCT s.track_strand
+       FROM users u
+       JOIN students s ON u.id = s.user_id
+       WHERE u.role = 'student' AND s.track_strand IS NOT NULL
+       ORDER BY s.track_strand`,
+    );
+    res.json({ strands: result.rows.map((r) => r.track_strand) });
+  } catch (err) {
+    console.error('Get student strands error:', err);
     res.status(500).json({ error: 'Server error.' });
   }
 };
@@ -149,9 +173,149 @@ const deleteStudent = async (req, res) => {
   }
 };
 
+const bulkApproveStudents = async (req, res) => {
+  const { student_ids } = req.body;
+  if (!Array.isArray(student_ids) || student_ids.length === 0) {
+    return res.status(400).json({ error: 'No student IDs provided.' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const result = await client.query(
+      `UPDATE users
+       SET status = 'approved', updated_at = CURRENT_TIMESTAMP
+       WHERE id = ANY($1) AND role = 'student'
+       RETURNING id`,
+      [student_ids],
+    );
+
+    await client.query(
+      `INSERT INTO submission_logs (submission_id, actor_id, action, remarks)
+       SELECT srs.id, $2, 'Approved', 'Bulk approval by coordinator.'
+       FROM student_requirement_submissions srs
+       JOIN students s ON s.user_id = srs.student_id
+       WHERE s.user_id = ANY($1)`,
+      [result.rows.map((r) => r.id), req.user.id],
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      message: `${result.rows.length} student(s) approved.`,
+      count: result.rows.length,
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Bulk approve students error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  } finally {
+    client.release();
+  }
+};
+
+const bulkDisapproveStudents = async (req, res) => {
+  const { student_ids } = req.body;
+  if (!Array.isArray(student_ids) || student_ids.length === 0) {
+    return res.status(400).json({ error: 'No student IDs provided.' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const result = await client.query(
+      `UPDATE users
+       SET status = 'disapproved', updated_at = CURRENT_TIMESTAMP
+       WHERE id = ANY($1) AND role = 'student'
+       RETURNING id`,
+      [student_ids],
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      message: `${result.rows.length} student(s) disapproved.`,
+      count: result.rows.length,
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Bulk disapprove students error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  } finally {
+    client.release();
+  }
+};
+
+const bulkDeleteStudents = async (req, res) => {
+  const { student_ids } = req.body;
+  if (!Array.isArray(student_ids) || student_ids.length === 0) {
+    return res.status(400).json({ error: 'No student IDs provided.' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    await client.query(
+      `DELETE FROM student_documents WHERE student_id IN (SELECT id FROM students WHERE user_id = ANY($1))`,
+      [student_ids],
+    );
+
+    await client.query(
+      `DELETE FROM student_daily_documentation WHERE student_id IN (SELECT id FROM students WHERE user_id = ANY($1))`,
+      [student_ids],
+    );
+
+    await client.query(
+      `DELETE FROM student_attendance WHERE student_id IN (SELECT id FROM students WHERE user_id = ANY($1))`,
+      [student_ids],
+    );
+
+    await client.query(
+      `DELETE FROM student_requirement_submissions WHERE student_id IN (SELECT id FROM students WHERE user_id = ANY($1))`,
+      [student_ids],
+    );
+
+    await client.query(
+      `DELETE FROM teacher_batch_students WHERE student_id IN (SELECT id FROM students WHERE user_id = ANY($1))`,
+      [student_ids],
+    );
+
+    await client.query(
+      `DELETE FROM students WHERE user_id = ANY($1)`,
+      [student_ids],
+    );
+
+    const result = await client.query(
+      `DELETE FROM users WHERE id = ANY($1) AND role = 'student'
+       RETURNING id`,
+      [student_ids],
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      message: `${result.rows.length} student(s) deleted.`,
+      count: result.rows.length,
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Bulk delete students error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   getPendingStudents,
+  getStudentStrands,
   approveStudent,
   disapproveStudent,
   deleteStudent,
+  bulkApproveStudents,
+  bulkDisapproveStudents,
+  bulkDeleteStudents,
 };

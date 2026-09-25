@@ -28,8 +28,8 @@ import SupervisorEvaluateStudent from './SupervisorEvaluateStudent';
 import SupervisorEvaluation from './SupervisorEvaluation';
 import SupervisorCertifications from './SupervisorCertifications';
 import SupervisorGradeAppeals from './SupervisorGradeAppeals';
-import SocialFeed from '../studentDashboard/SocialFeed';
 import BatchChat from '../../../components/social/BatchChat';
+import Announcements from '../Announcements/Announcements';
 import UserProfileSettings from '../UserProfileSettings';
 
 import {
@@ -86,7 +86,7 @@ function SupervisorDashboard({ user, onLogout }) {
           element={<SupervisorGradeAppeals />}
         />
 
-        <Route path="social-feed" element={<SocialFeed />} />
+        <Route path="announcements" element={<Announcements user={user} />} />
 
         <Route
           path="group-chat"

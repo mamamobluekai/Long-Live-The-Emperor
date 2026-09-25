@@ -1,10 +1,11 @@
-const pool = require('../../db/');
+﻿const pool = require('../../db/');
 const cloudinary = require('../../db/cloudinary');
 const { normalize, validateStudentPayload } = require('./regexes/validation');
 const {
   getOrCreateStudent,
   getOrCreateSubmission,
   calculateProgress,
+  recalculateAllProgress,
   serializeRequirements,
 } = require('./regexes/requirementsHelpers');
 const streamifier = require('streamifier');
@@ -199,14 +200,16 @@ const listSubmissions = async (req, res) => {
     const { status = null, search = null } = req.query;
     const result = await pool.query(
       `SELECT s.*, st.student_number, st.first_name, st.last_name, st.email, st.grade_level, st.track_strand,
-        COUNT(sd.id) AS uploaded_documents
-       FROM student_requirement_submissions s
-       JOIN students st ON st.id = s.student_id
-       LEFT JOIN student_documents sd ON sd.submission_id = s.id
-       WHERE ($1::text IS NULL OR s.status = $1)
-         AND ($2::text IS NULL OR LOWER(st.student_number || ' ' || st.first_name || ' ' || st.last_name || ' ' || COALESCE(st.email,'')) LIKE LOWER('%' || $2 || '%'))
-       GROUP BY s.id, st.id
-       ORDER BY s.updated_at DESC`,
+         COUNT(sd.id) AS uploaded_documents,
+         COALESCE(json_agg(dt.code ORDER BY dt.code) FILTER (WHERE dt.code IS NOT NULL), '[]'::json) AS document_codes
+        FROM student_requirement_submissions s
+        JOIN students st ON st.id = s.student_id
+        LEFT JOIN student_documents sd ON sd.submission_id = s.id
+        LEFT JOIN document_types dt ON dt.id = sd.document_type_id
+        WHERE ($1::text IS NULL OR s.status = $1)
+          AND ($2::text IS NULL OR LOWER(st.student_number || ' ' || st.first_name || ' ' || st.last_name || ' ' || COALESCE(st.email,'')) LIKE LOWER('%' || $2 || '%'))
+        GROUP BY s.id, st.id
+        ORDER BY s.updated_at DESC`,
       [status === 'all' ? null : status, search || null]
     );
     res.json({ submissions: result.rows });
@@ -266,6 +269,175 @@ const verifyDocument = async (req, res) => {
   }
 };
 
+
+/* ---------------- Document Types (Editable Requirements) ---------------- */
+
+async function ensureDocumentTypesSchema() {
+  await pool.query(`
+    ALTER TABLE document_types
+      ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS description TEXT;
+    CREATE INDEX IF NOT EXISTS idx_document_types_active
+      ON document_types (is_active, sort_order);
+  `);
+}
+
+const listDocumentTypes = async (req, res) => {
+  try {
+    await ensureDocumentTypesSchema();
+    const { all } = req.query;
+    const isCoordOrAdmin = ['coordinator', 'admin'].includes(req.user?.role);
+    const showAll = isCoordOrAdmin && (all === 'true' || all === '1');
+    const query = showAll
+      ? `SELECT id, code, name, section, is_active, sort_order, description
+         FROM document_types
+         ORDER BY sort_order, id`
+      : `SELECT id, code, name, section, is_active, sort_order, description
+         FROM document_types
+         WHERE is_active = TRUE
+         ORDER BY sort_order, id`;
+    const result = await pool.query(query);
+    res.json({ documentTypes: result.rows });
+  } catch (err) {
+    console.error('listDocumentTypes error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+const createDocumentType = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    await ensureDocumentTypesSchema();
+    const { name, section = 'academic', description = '' } = req.body || {};
+    const cleanName = (name || '').trim();
+    if (!cleanName) return res.status(400).json({ error: 'Requirement name is required.' });
+
+    const allowedSections = ['personal', 'guardian', 'medical', 'academic'];
+    const cleanSection = allowedSections.includes(section) ? section : 'academic';
+
+    let baseCode = cleanName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '') || 'requirement';
+
+    let code = baseCode;
+    let counter = 1;
+    while (true) {
+      const existing = await client.query('SELECT id FROM document_types WHERE code = $1', [code]);
+      if (!existing.rows.length) break;
+      counter += 1;
+      code = `${baseCode}_${counter}`;
+    }
+
+    const orderRes = await client.query('SELECT COALESCE(MAX(sort_order), 0) + 10 AS next_order FROM document_types');
+    const nextOrder = orderRes.rows[0].next_order;
+
+    await client.query('BEGIN');
+    const inserted = await client.query(
+      `INSERT INTO document_types (code, name, section, is_active, sort_order, description)
+       VALUES ($1, $2, $3, TRUE, $4, $5)
+       RETURNING id, code, name, section, is_active, sort_order, description`,
+      [code, cleanName, cleanSection, nextOrder, description || null]
+    );
+
+    await recalculateAllProgress(client);
+    await client.query('COMMIT');
+
+    res.status(201).json({ message: 'Requirement created.', documentType: inserted.rows[0] });
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch (_) {}
+    console.error('createDocumentType error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  } finally {
+    client.release();
+  }
+};
+
+const updateDocumentType = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    await ensureDocumentTypesSchema();
+    const { id } = req.params;
+    const { name, section, description, sort_order, is_active } = req.body || {};
+
+    const cleanName = typeof name === 'string' ? name.trim() : null;
+    if (cleanName === '') return res.status(400).json({ error: 'Requirement name cannot be empty.' });
+
+    const allowedSections = ['personal', 'guardian', 'medical', 'academic'];
+    const cleanSection = section && allowedSections.includes(section) ? section : null;
+
+    await client.query('BEGIN');
+    const existing = await client.query('SELECT * FROM document_types WHERE id = $1', [id]);
+    if (!existing.rows.length) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Requirement not found.' });
+    }
+
+    const updated = await client.query(
+      `UPDATE document_types
+       SET name = COALESCE($1, name),
+           section = COALESCE($2, section),
+           description = CASE WHEN $3::text IS NOT NULL THEN $3 ELSE description END,
+           sort_order = COALESCE($4, sort_order),
+           is_active = COALESCE($5, is_active)
+       WHERE id = $6
+       RETURNING id, code, name, section, is_active, sort_order, description`,
+      [
+        cleanName,
+        cleanSection,
+        description !== undefined ? description : null,
+        typeof sort_order === 'number' ? sort_order : null,
+        typeof is_active === 'boolean' ? is_active : null,
+        id,
+      ]
+    );
+
+    await recalculateAllProgress(client);
+    await client.query('COMMIT');
+
+    res.json({ message: 'Requirement updated.', documentType: updated.rows[0] });
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch (_) {}
+    console.error('updateDocumentType error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  } finally {
+    client.release();
+  }
+};
+
+const deleteDocumentType = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    await ensureDocumentTypesSchema();
+    const { id } = req.params;
+
+    await client.query('BEGIN');
+    const result = await client.query(
+      `UPDATE document_types
+       SET is_active = FALSE
+       WHERE id = $1
+       RETURNING id, code, name, section, is_active, sort_order`,
+      [id]
+    );
+    if (!result.rows.length) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Requirement not found.' });
+    }
+
+    await recalculateAllProgress(client);
+    await client.query('COMMIT');
+
+    res.json({ message: 'Requirement removed.', documentType: result.rows[0] });
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch (_) {}
+    console.error('deleteDocumentType error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   upsertRequirements,
   submitRequirements,
@@ -275,4 +447,8 @@ module.exports = {
   listSubmissions,
   reviewSubmission,
   verifyDocument,
+  listDocumentTypes,
+  createDocumentType,
+  updateDocumentType,
+  deleteDocumentType,
 };

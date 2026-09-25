@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getSurveyOptions, respondToSurvey, getSurveyResults } from '../../api/feedApi';
-import { useToast } from '../../components/admin/ToastContainer';
+import { useToast } from '../admin/toastContext';
 import styles from './SurveyBlock.module.css';
 
 export default function SurveyBlock({ postId, currentUser, authorId }) {

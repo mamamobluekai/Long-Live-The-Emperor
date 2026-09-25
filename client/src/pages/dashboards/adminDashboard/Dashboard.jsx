@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useAdminAuth } from '../../../context/AdminAuthContext';
+import { useAdminAuth } from '../../../context/useAdminAuth';
 import { getAdminDashboard } from '../../../api/adminApi';
 import { LineChart, AreaChart, BarChart, DonutChart, FunnelChart } from '../../../components/charts';
 import styles from './Dashboard.module.css';

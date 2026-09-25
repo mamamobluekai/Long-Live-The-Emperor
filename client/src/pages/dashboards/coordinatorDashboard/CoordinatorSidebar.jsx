@@ -5,7 +5,7 @@ import {
   ClipboardList,
   Library,
   BriefcaseBusiness,
-  MessageCircle,
+  Megaphone,
   User,
   LayoutDashboard,
 } from 'lucide-react';
@@ -37,13 +37,13 @@ const links = [
     icon: BriefcaseBusiness,
   },
   {
-    to: '/dashboard/coordinator/social-feed',
-    label: 'Social Feed',
-    icon: MessageCircle,
+    to: '/dashboard/coordinator/announcements',
+    label: 'Announcements',
+    icon: Megaphone,
   },
   {
     to: '/dashboard/coordinator/profile',
-    label: 'Profile Settings',
+    label: 'Settings',
     icon: User,
   },
 ];

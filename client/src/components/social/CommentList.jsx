@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { createPostComment, deletePostComment } from '../../api/feedApi';
+import { createPostComment, deletePostComment, updatePostComment } from '../../api/feedApi';
 import { useAuth } from '../../context/AuthContext';
-import { useToast } from '../../components/admin/ToastContainer';
+import { useToast } from '../admin/toastContext';
 import styles from './CommentList.module.css';
 
 function timeAgo(date) {
@@ -19,13 +19,31 @@ function timeAgo(date) {
   return then.toLocaleDateString();
 }
 
-export default function CommentList({ postId, comments, currentUser, onCommentAdded, onCommentDeleted }) {
+export default function CommentList({ postId, comments, currentUser, onCommentAdded, onCommentDeleted, onCommentUpdated }) {
   const { user } = useAuth();
   const { showToast } = useToast();
   const [newComment, setNewComment] = useState('');
   const [replyTo, setReplyTo] = useState(null);
   const [replyContent, setReplyContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editContent, setEditContent] = useState('');
+
+  const handleEditSubmit = async (event, commentId) => {
+    event.preventDefault();
+    if (!editContent.trim() || submitting) return;
+    setSubmitting(true);
+    try {
+      const data = await updatePostComment(postId, commentId, editContent.trim());
+      onCommentUpdated?.(data.comment);
+      setEditingId(null);
+      setEditContent('');
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -80,9 +98,10 @@ export default function CommentList({ postId, comments, currentUser, onCommentAd
   const renderComment = (comment, isReply = false) => {
     const name = `${comment.user_first_name || ''} ${comment.user_last_name || ''}`.trim() || comment.user_role || 'User';
     const canDelete = currentUser?.id === comment.user_id;
+    const isOwn = String(currentUser?.id) === String(comment.user_id);
 
     return (
-      <div key={comment.id} className={`${styles.comment} ${isReply ? styles.reply : ''}`}>
+      <div key={comment.id} className={`${styles.comment} ${isReply ? styles.reply : ''} ${isOwn ? styles.ownComment : ''}`}>
         <div className={styles.commentAvatar}>
           {(name || 'U').charAt(0).toUpperCase()}
         </div>
@@ -90,13 +109,40 @@ export default function CommentList({ postId, comments, currentUser, onCommentAd
           <div className={styles.commentHeader}>
             <strong className={styles.commentAuthor}>{name}</strong>
             <span className={styles.commentRole}>{comment.user_role ? comment.user_role.charAt(0).toUpperCase() + comment.user_role.slice(1) : 'Student'}</span>
+            {isOwn && <span className={styles.youBadge}>You</span>}
             <span className={styles.commentTime}>{timeAgo(comment.created_at)}</span>
           </div>
-          <p className={styles.commentText}>{comment.content}</p>
+          {editingId === comment.id ? (
+            <form className={styles.replyForm} onSubmit={(event) => handleEditSubmit(event, comment.id)}>
+              <input
+                type="text"
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                placeholder="Update your comment..."
+                className={styles.replyInput}
+                autoFocus
+              />
+              <div className={styles.replyActions}>
+                <button type="button" className={styles.cancelReplyBtn} onClick={() => { setEditingId(null); setEditContent(''); }}>
+                  Cancel
+                </button>
+                <button type="submit" className={styles.submitReplyBtn} disabled={!editContent.trim() || submitting}>
+                  {submitting ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <p className={styles.commentText}>{comment.content}</p>
+          )}
           <div className={styles.commentActions}>
             <button type="button" className={styles.commentAction} onClick={() => setReplyTo(comment.id)}>
               Reply
             </button>
+            {canDelete && editingId !== comment.id && (
+              <button type="button" className={styles.commentAction} onClick={() => { setEditingId(comment.id); setEditContent(comment.content); }}>
+                Edit
+              </button>
+            )}
             {canDelete && (
               <button type="button" className={`${styles.commentAction} ${styles.commentActionDanger}`} onClick={() => handleDelete(comment.id)}>
                 Delete

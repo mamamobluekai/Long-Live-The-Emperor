@@ -4,7 +4,7 @@ import {
   getArchivePeriod,
 } from '../../../api/adminApi';
 import LoadingSkeleton from '../../../components/admin/LoadingSkeleton';
-import { useToast } from '../../../components/admin/ToastContainer';
+import { useToast } from '../../../components/admin/toastContext';
 import styles from './ArchivedPeriods.module.css';
 
 function formatDate(value) {

@@ -12,8 +12,8 @@ import TeacherStudentEvaluations from './TeacherStudentEvaluations';
 import TeacherStudentDocumentation from './TeacherStudentDocumentation';
 import TeacherReportsConcerns from './TeacherReportsConcerns';
 import TeacherSettings from './TeacherSettings';
-import SocialFeed from '../studentDashboard/SocialFeed';
 import BatchChat from '../../../components/social/BatchChat';
+import Announcements from '../Announcements/Announcements';
 import UserProfileSettings from '../UserProfileSettings';
 
 function TeacherDashboard({ user, onLogout }) {
@@ -31,10 +31,11 @@ function TeacherDashboard({ user, onLogout }) {
          <Route path="attendance" element={<TeacherAttendance />} />
           <Route path="student-documentation" element={<TeacherStudentDocumentation />} />
          <Route path="reports-concerns" element={<TeacherReportsConcerns />} />
+         <Route path="announcements" element={<Announcements user={user} />} />
          <Route path="live-map" element={<LiveMap />} />
         <Route path="appeals" element={<Navigate to="/dashboard/teacher/attendance-reports" replace />} />
          <Route path="settings" element={<TeacherSettings />} />
-         <Route path="social-feed" element={<SocialFeed />} />
+
          <Route path="group-chat" element={<BatchChat user={user} />} />
          <Route path="profile" element={<UserProfileSettings />} />
          <Route path="documents" element={<TeacherDocuments user={user} />} />

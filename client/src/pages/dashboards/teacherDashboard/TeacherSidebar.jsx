@@ -7,7 +7,7 @@ import {
   CalendarDays,
   Map,
   FileText,
-  MessageCircle,
+  Megaphone,
   User,
   FolderOpen,
 } from 'lucide-react';
@@ -63,14 +63,14 @@ const links = [
   },
 
   {
-    to: '/dashboard/teacher/social-feed',
-    label: 'Social Feed',
-    icon: MessageCircle,
+    to: '/dashboard/teacher/announcements',
+    label: 'Announcements',
+    icon: Megaphone,
   },
 
   {
     to: '/dashboard/teacher/profile',
-    label: 'Profile Settings',
+    label: 'Settings',
     icon: User,
   },
 ];

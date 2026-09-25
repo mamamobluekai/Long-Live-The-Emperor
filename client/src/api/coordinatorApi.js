@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+﻿const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 function getToken() {
   return localStorage.getItem('wim-token') || '';
@@ -33,11 +33,16 @@ export async function getCoordinatorDashboard() {
 }
 
 /* ---------------- Student approvals ---------------- */
-export async function getPendingStudents(status = 'pending') {
+export async function getPendingStudents(status = 'pending', strand = 'all') {
   const params = new URLSearchParams();
   if (status && status !== 'all') params.set('status', status);
+  if (strand && strand !== 'all') params.set('strand', strand);
   const qs = params.toString();
   return apiFetch(`/students/pending${qs ? `?${qs}` : ''}`);
+}
+
+export async function getStudentStrands() {
+  return apiFetch('/students/strands');
 }
 
 export async function approveStudent(id) {
@@ -50,6 +55,21 @@ export async function disapproveStudent(id) {
 
 export async function deleteStudent(id) {
   return apiFetch(`/students/${id}`, { method: 'DELETE' });
+}
+
+export async function bulkApproveStudents(studentIds) {
+  return apiFetch('/students/bulk/approve', jsonBody({ student_ids: studentIds }));
+}
+
+export async function bulkDisapproveStudents(studentIds) {
+  return apiFetch('/students/bulk/disapprove', jsonBody({ student_ids: studentIds }));
+}
+
+export async function bulkDeleteStudents(studentIds) {
+  return apiFetch('/students/bulk', {
+    method: 'DELETE',
+    ...jsonBody({ student_ids: studentIds }),
+  });
 }
 
 export async function uploadStudentsExcel(file) {
@@ -88,6 +108,28 @@ export async function getRequirements(studentId) {
 
 export async function verifyDocument(id, { status, remarks }) {
   return apiFetch(`/documents/${id}/verify`, jsonBody({ status, remarks }));
+}
+
+/* ---------------- Document types (Requirements management) ---------------- */
+export async function getDocumentTypes({ all = true } = {}) {
+  const qs = all ? '?all=true' : '';
+  return apiFetch(`/document-types${qs}`);
+}
+
+export async function createDocumentType({ name, section, description }) {
+  return apiFetch('/document-types', jsonBody({ name, section, description }));
+}
+
+export async function updateDocumentType(id, { name, section, description, sort_order, is_active }) {
+  return apiFetch(`/document-types/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, section, description, sort_order, is_active }),
+  });
+}
+
+export async function deleteDocumentType(id) {
+  return apiFetch(`/document-types/${id}`, { method: 'DELETE' });
 }
 
 /* ---------------- Teachers / Supervisors ---------------- */

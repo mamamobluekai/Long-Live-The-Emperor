@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import { getSupervisorBatches, getSupervisorBatchAttendance } from '../../../api/supervisorApi';
 import Feedback from '../../../components/Feedback';
 import styles from './SupervisorAttendance.module.css';
@@ -45,7 +45,7 @@ function SupervisorAttendance() {
     loadBatches();
   }, []);
 
-  const loadAttendance = async () => {
+  const loadAttendance = useCallback(async () => {
     if (!selectedId) return;
     setLoadingAtt(true);
     setError('');
@@ -57,14 +57,14 @@ function SupervisorAttendance() {
     } finally {
       setLoadingAtt(false);
     }
-  };
+  }, [selectedId]);
 
   useEffect(() => {
     if (selectedId) loadAttendance();
-  }, [selectedId]);
+  }, [selectedId, loadAttendance]);
 
-  const students = attendance.students || [];
-  const days = attendance.days || [];
+  const students = useMemo(() => attendance.students || [], [attendance]);
+  const days = useMemo(() => attendance.days || [], [attendance]);
 
   const summary = useMemo(() => {
     const total = students.length;

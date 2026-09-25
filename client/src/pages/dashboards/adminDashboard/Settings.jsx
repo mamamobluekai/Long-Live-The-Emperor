@@ -10,7 +10,7 @@ import {
   previewPeriodArchive,
   archiveImmersionPeriod,
 } from '../../../api/adminApi';
-import { useToast } from '../../../components/admin/ToastContainer';
+import { useToast } from '../../../components/admin/toastContext';
 import ConfirmModal from '../../../components/admin/ConfirmModal';
 import styles from './Settings.module.css';
 

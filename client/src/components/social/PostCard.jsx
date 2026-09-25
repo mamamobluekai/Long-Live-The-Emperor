@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPostComments, likeFeedPost, pinFeedPost, deleteFeedPost } from '../../api/feedApi';
-import { useToast } from '../../components/admin/ToastContainer';
+import { useToast } from '../admin/toastContext';
 import CommentList from './CommentList';
 import SurveyBlock from './SurveyBlock';
 import styles from './PostCard.module.css';

@@ -8,7 +8,7 @@ import DataTable from '../../../components/admin/DataTable';
 import ConfirmModal from '../../../components/admin/ConfirmModal';
 import LoadingSkeleton from '../../../components/admin/LoadingSkeleton';
 import styles from './Coordinators.module.css';
-import { useToast } from '../../../components/admin/ToastContainer';
+import { useToast } from '../../../components/admin/toastContext';
 
 export default function CoordinatorsPage() {
   const { showToast } = useToast();

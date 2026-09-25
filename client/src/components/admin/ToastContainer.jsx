@@ -1,8 +1,7 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import Feedback from '../../components/Feedback';
+import { ToastContext } from './toastContext';
 import styles from './ToastContainer.module.css';
-
-const ToastContext = createContext(null);
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
@@ -42,6 +41,4 @@ export function ToastProvider({ children }) {
   );
 }
 
-export function useToast() {
-  return useContext(ToastContext);
-}
+

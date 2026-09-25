@@ -10,6 +10,7 @@ const {
   toggleLike,
   getComments,
   createComment,
+  updateComment,
   deleteComment,
   createSurveyOption,
   getSurveyOptions,
@@ -23,6 +24,17 @@ const authorize = require('../middleware/authorizeRole');
 const uploadMemory = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 const router = express.Router();
+const allowedAudiences = new Set(['all', 'student', 'teacher', 'supervisor', 'coordinator']);
+
+function validateAnnouncement(body) {
+  const postType = body.postType || 'announcement';
+  const audience = body.audience || 'all';
+  const content = typeof body.content === 'string' ? body.content.trim() : '';
+  if (postType !== 'announcement') return { error: 'Only announcement posts are supported here.' };
+  if (!content) return { error: 'Announcement content is required.' };
+  if (!allowedAudiences.has(audience)) return { error: 'Select a valid announcement audience.' };
+  return { postType, audience, content };
+}
 
 router.use(authenticate);
 
@@ -36,7 +48,13 @@ router.post('/posts', authorize('teacher', 'supervisor', 'coordinator'), uploadM
       const upload = await uploadImageToCloudinary(req.file.buffer, req.file.originalname);
       imageUrl = upload.secure_url;
     }
-    const postData = { ...req.body, imageUrl };
+    const validation = validateAnnouncement(req.body);
+    if (validation.error) return res.status(400).json({ error: validation.error });
+    const postData = {
+      ...req.body,
+      ...validation,
+      imageUrl,
+    };
     if (postData.linkUrl && (!postData.linkTitle || !postData.linkDomain)) {
       const preview = extractLinkPreview(postData.linkUrl);
       postData.linkTitle = postData.linkTitle || preview.linkTitle;
@@ -65,7 +83,13 @@ router.put('/posts/:id', authorize('teacher', 'supervisor', 'coordinator'), uplo
       const upload = await uploadImageToCloudinary(req.file.buffer, req.file.originalname);
       imageUrl = upload.secure_url;
     }
-    const postData = { ...req.body, imageUrl };
+    const validation = validateAnnouncement(req.body);
+    if (validation.error) return res.status(400).json({ error: validation.error });
+    const postData = {
+      ...req.body,
+      ...validation,
+      imageUrl,
+    };
     if (postData.linkUrl && (!postData.linkTitle || !postData.linkDomain)) {
       const preview = extractLinkPreview(postData.linkUrl);
       postData.linkTitle = postData.linkTitle || preview.linkTitle;
@@ -134,6 +158,21 @@ router.post('/posts/:id/comments', async (req, res) => {
     res.status(201).json({ comment });
   } catch (err) {
     console.error('Create comment error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+router.put('/posts/:id/comments/:commentId', async (req, res) => {
+  try {
+    const { content } = req.body;
+    if (!content || !content.trim()) {
+      return res.status(400).json({ error: 'Comment content is required.' });
+    }
+    const comment = await updateComment(req.params.commentId, req.user.id, content.trim());
+    if (!comment) return res.status(404).json({ error: 'Comment not found or not authorized.' });
+    res.json({ comment });
+  } catch (err) {
+    console.error('Update comment error:', err);
     res.status(500).json({ error: 'Server error.' });
   }
 });

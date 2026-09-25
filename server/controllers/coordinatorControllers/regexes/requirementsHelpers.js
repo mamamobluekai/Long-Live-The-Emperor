@@ -1,5 +1,20 @@
-const { requiredInfoFields, requiredDocumentCodes } = require('../helpers/constant');
+const { requiredInfoFields } = require('../helpers/constant');
 const { normalize } = require('./validation');
+
+/**
+ * Load the active requirement definitions.
+ * These live in the `document_types` table so coordinators can add, edit, or
+ * remove requirements without a code change.
+ */
+const getActiveDocumentTypes = async (client) => {
+  const result = await client.query(
+    `SELECT id, code, name, section, sort_order
+     FROM document_types
+     WHERE is_active = TRUE
+     ORDER BY sort_order, id`
+  );
+  return result.rows;
+};
 
 const getOrCreateStudent = async (client, userId, body = {}) => {
   const userResult = await client.query(
@@ -57,22 +72,29 @@ const calculateProgress = async (client, studentId) => {
     `SELECT dt.code
      FROM student_documents sd
      JOIN document_types dt ON dt.id = sd.document_type_id
-     WHERE sd.student_id = $1`,
+     WHERE sd.student_id = $1 AND dt.is_active = TRUE`,
     [studentId]
   );
   const uploadedCodes = new Set(docs.rows.map((row) => row.code));
 
+  // Active requirements drive completeness, so adding/removing a requirement
+  // immediately re-evaluates every student's progress.
+  const activeTypes = await getActiveDocumentTypes(client);
+  const codesForSection = (section) =>
+    activeTypes.filter((type) => type.section === section).map((type) => type.code);
+
   const personalComplete = requiredInfoFields
     .filter((field) => !field.startsWith('guardian_') && !field.startsWith('emergency_'))
     .every((field) => normalize(student[field]));
+
   const guardianComplete = [
     'guardian_name', 'guardian_relationship', 'guardian_contact', 'guardian_email',
     'guardian_address', 'emergency_contact', 'emergency_contact_number',
-  ].every((field) => normalize(student[field])) && uploadedCodes.has('guardian_consent');
-  const medicalComplete = ['medical_certificate', 'accident_insurance', 'vaccination_record', 'emergency_contact_form']
-    .every((code) => uploadedCodes.has(code));
-  const academicComplete = ['form_138', 'good_moral', 'psa_birth_certificate', 'id_picture', 'student_profile_form']
-    .every((code) => uploadedCodes.has(code));
+  ].every((field) => normalize(student[field]))
+    && codesForSection('guardian').every((code) => uploadedCodes.has(code));
+
+  const medicalComplete = codesForSection('medical').every((code) => uploadedCodes.has(code));
+  const academicComplete = codesForSection('academic').every((code) => uploadedCodes.has(code));
 
   const sections = { personalComplete, guardianComplete, medicalComplete, academicComplete };
   const progress = Object.values(sections).filter(Boolean).length * 25;
@@ -81,7 +103,23 @@ const calculateProgress = async (client, studentId) => {
     [progress, studentId]
   );
 
-  return { progress, sections, missingDocuments: requiredDocumentCodes.filter((code) => !uploadedCodes.has(code)) };
+  const missingDocuments = activeTypes
+    .map((type) => type.code)
+    .filter((code) => !uploadedCodes.has(code));
+
+  return { progress, sections, missingDocuments };
+};
+
+/**
+ * Recalculate progress for every student. Called after a coordinator changes
+ * the requirement definitions so all dashboards stay consistent.
+ */
+const recalculateAllProgress = async (client) => {
+  const students = await client.query('SELECT id FROM students');
+  for (const row of students.rows) {
+    await calculateProgress(client, row.id);
+  }
+  return students.rows.length;
 };
 
 const serializeRequirements = async (client, studentId) => {
@@ -141,6 +179,8 @@ const serializeRequirements = async (client, studentId) => {
 module.exports = {
   getOrCreateStudent,
   getOrCreateSubmission,
+  getActiveDocumentTypes,
   calculateProgress,
+  recalculateAllProgress,
   serializeRequirements,
 };

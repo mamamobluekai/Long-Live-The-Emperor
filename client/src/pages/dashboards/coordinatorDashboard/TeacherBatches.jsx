@@ -9,6 +9,7 @@ import {
   deleteTeacherBatch,
   assignStudentsToBatch,
 } from '../../../api/coordinatorApi';
+import { Pencil, Trash2 } from 'lucide-react';
 import styles from './TeacherBatches.module.css';
 
 function TeacherBatches() {
@@ -274,11 +275,11 @@ function TeacherBatches() {
                   <button className={styles.btnGhost} onClick={() => openAssign(b)}>
                     Assign Students
                   </button>
-                  <button className={styles.btnSecondary} onClick={() => openEdit(b)}>
-                    Edit
+                  <button className={styles.btnIcon} onClick={() => openEdit(b)} title="Edit batch">
+                    <Pencil size={16} />
                   </button>
-                  <button className={styles.btnDelete} onClick={() => handleDelete(b.id)}>
-                    Delete
+                  <button className={styles.btnIconDelete} onClick={() => handleDelete(b.id)} title="Delete batch">
+                    <Trash2 size={16} />
                   </button>
                 </div>
               </div>

@@ -6,8 +6,8 @@ import StudentApprovals from './StudentApprovals';
 import RequirementsReview from './RequirementsReview';
 import TeacherBatches from './TeacherBatches';
 import Supervisors from './Supervisors';
-import SocialFeed from '../studentDashboard/SocialFeed';
 import UserProfileSettings from '../UserProfileSettings';
+import Announcements from '../Announcements/Announcements';
 import CoordinatorOverview from './CoordinatorOverview';
 
 function CoordinatorDashboard({ user, onLogout }) {
@@ -20,10 +20,11 @@ function CoordinatorDashboard({ user, onLogout }) {
         <Route index element={<CoordinatorOverview />} />
         <Route path="students" element={<StudentApprovals />} />
         <Route path="upload-students" element={<Navigate to="/dashboard/coordinator/students" replace />} />
-        <Route path="requirements" element={<RequirementsReview />} />
+         <Route path="requirements" element={<RequirementsReview />} />
+         <Route path="announcements" element={<Announcements user={user} />} />
          <Route path="batches" element={<TeacherBatches />} />
          <Route path="supervisors" element={<Supervisors />} />
-         <Route path="social-feed" element={<SocialFeed />} />
+
          <Route path="profile" element={<UserProfileSettings />} />
          <Route path="*" element={<Navigate to="students" replace />} />
       </Routes>

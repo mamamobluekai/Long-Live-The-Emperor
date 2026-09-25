@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import {
   Users,
   UserCheck,
@@ -39,13 +39,7 @@ function TeacherDashboard({ user }) {
 
   const token = localStorage.getItem('wim-token');
 
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
-
-
-  async function loadDashboard() {
+  const loadDashboard = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -122,7 +116,11 @@ function TeacherDashboard({ user }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [token]);
+
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
 
   const studentCount = students.length;
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FileText, AlertCircle, CheckCircle, XCircle, MessageSquare, ChevronDown, ChevronUp, Eye, Mail } from 'lucide-react';
+import { FileText, AlertCircle, MessageSquare, ChevronDown } from 'lucide-react';
 import { getSupervisorAppeals, respondToAppeal } from '../../../api/appealApi';
 import styles from './SupervisorGradeAppeals.module.css';
 

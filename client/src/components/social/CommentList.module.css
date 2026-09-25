@@ -34,6 +34,26 @@
   padding: 4px 0;
 }
 
+.ownComment {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: linear-gradient(140deg, #fdfafb, #fbf4f5);
+  box-shadow: inset 3px 0 0 #8b1e2d;
+}
+
+.youBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border: 1px solid #f0c3cb;
+  border-radius: 999px;
+  background: #fde3e8;
+  color: #8b1e2d;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
 .reply {
   margin-top: 12px;
   margin-left: 50px;

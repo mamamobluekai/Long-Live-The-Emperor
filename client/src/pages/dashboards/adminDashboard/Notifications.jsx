@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getAdminNotifications, markNotificationsRead } from '../../../api/adminApi';
 import LoadingSkeleton from '../../../components/admin/LoadingSkeleton';
 import styles from './Notifications.module.css';
-import { useToast } from '../../../components/admin/ToastContainer';
+import { useToast } from '../../../components/admin/toastContext';
 
 function formatTime(date) {
   const d = new Date(date);

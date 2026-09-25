@@ -47,7 +47,6 @@ export default function ReportsPage() {
 
   useEffect(() => {
     fetchData(selected, format);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected, format]);
 
   const columns = data.length

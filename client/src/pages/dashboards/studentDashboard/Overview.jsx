@@ -34,7 +34,6 @@ const ROUTES = {
   documentation: '/dashboard/student/daily-documentation',
   placement: '/dashboard/student/placement-status',
   announcements: '/dashboard/student/announcements',
-  feed: '/dashboard/student/social-feed',
   chat: '/dashboard/student/group-chat',
 };
 
@@ -309,15 +308,14 @@ function AttentionItem({ item }) {
 function AnnouncementCard({ post }) {
   const content = post.content || post.title || 'Announcement';
   return (
-    <Link className={styles.announcementItem} to={`${ROUTES.feed}?post=${post.id}`}>
+    <div className={styles.announcementItem}>
       <div className={styles.announcementIcon}><Bell size={16} /></div>
       <div className={styles.announcementCopy}>
         <strong>{post.title || 'Announcement'}</strong>
         <p>{content.length > 130 ? `${content.slice(0, 130).trim()}...` : content}</p>
         <span>{formatRelativeTime(post.created_at || post.updated_at)}</span>
       </div>
-      <ArrowUpRight className={styles.announcementArrow} size={15} />
-    </Link>
+    </div>
   );
 }
 
@@ -489,12 +487,6 @@ export default function Overview({ user }) {
       });
     return () => { mounted = false; };
   }, [schedules, token]);
-
-  const immersionStatus = progress.completed
-    ? 'You have finished all your immersion tasks.'
-    : attentionItems.length > 0
-      ? `${attentionItems.length} item${attentionItems.length === 1 ? '' : 's'} need your attention.`
-      : 'You are on track. Keep going!';
 
   return (
     <div className={styles.dashboard}>

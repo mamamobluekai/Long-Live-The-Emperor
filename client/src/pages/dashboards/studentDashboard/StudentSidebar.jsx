@@ -70,12 +70,6 @@ const links = [
   },
 
   {
-    to: '/dashboard/student/social-feed',
-    label: 'Community News Feed',
-    icon: MessageCircle,
-  },
-
-  {
     to: '/dashboard/student/group-chat',
     label: 'Group Chat',
     icon: MessageCircle,

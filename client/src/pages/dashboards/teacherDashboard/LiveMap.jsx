@@ -344,7 +344,7 @@ function LiveMap() {
     });
 
     return () => socketRef.current?.disconnect();
-  }, [token]);
+  }, [selectedBatchId, token]);
 
   // Join batch room when selected
   useEffect(() => {

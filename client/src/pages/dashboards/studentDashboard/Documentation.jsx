@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { uploadMyFile, getMyFiles, deleteMyFile } from '../../../api/fileApi';
 import styles from './Documentation.module.css';
 
-function Documentation({ user }) {
+function Documentation() {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);

@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+﻿const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 const FORM_BASE = API_BASE.replace(/\/api$/, '');
 
 function getToken() {
@@ -110,4 +110,15 @@ export async function deleteMyDocument(docId) {
 export function documentFileUrl(filePath) {
   if (!filePath) return '';
   return `${FORM_BASE}/${filePath}`;
+}
+
+export async function getActiveRequirements() {
+  const token = getToken();
+  const res = await fetch(`${API_BASE}/coordinator/document-types?all=false`, {
+    credentials: 'include',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || 'Failed to load requirements.');
+  return data;
 }

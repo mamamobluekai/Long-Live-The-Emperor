@@ -1,6 +1,7 @@
 const pool = require('../../db');
 const cloudinary = require('../../db/cloudinary');
 const streamifier = require('streamifier');
+const { createNotification } = require('../../services/notification.service');
 
 async function ensureFeedTables() {
   const ddl = `
@@ -16,7 +17,7 @@ async function ensureFeedTables() {
       link_description TEXT,
       link_domain VARCHAR(255),
       link_thumbnail TEXT,
-      audience VARCHAR(50) NOT NULL DEFAULT 'all',
+      audience VARCHAR(50) NOT NULL DEFAULT 'all' CHECK (audience IN ('all', 'student', 'teacher', 'supervisor', 'coordinator')),
       is_pinned BOOLEAN NOT NULL DEFAULT false,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -87,16 +88,14 @@ async function getPosts(req, res) {
     }
     if (search) {
       const like = `%${search}%`;
-      filters.push(
-        `(p.title ILIKE $${i} OR p.content ILIKE $${i} OR COALESCE(s.first_name, '') ILIKE $${i} OR COALESCE(t.first_name, '') ILIKE $${i} OR COALESCE(a.first_name, '') ILIKE $${i} OR COALESCE(sup.first_name, '') ILIKE $${i} OR COALESCE(c.first_name, '') ILIKE $${i} OR COALESCE(s.last_name, '') ILIKE $${i} OR COALESCE(t.last_name, '') ILIKE $${i} OR COALESCE(a.last_name, '') ILIKE $${i} OR COALESCE(sup.last_name, '') ILIKE $${i} OR COALESCE(c.last_name, '') ILIKE $${i})`
-      );
+      filters.push(`(p.title ILIKE $${i} OR p.content ILIKE $${i})`);
       values.push(like);
       i += 1;
     }
 
-    if (!['admin'].includes(String(req.user.role || '').toLowerCase())) {
-      filters.push(`(p.audience = $${i} OR p.author_id = $${i + 1})`);
-      values.push('all', req.user.id);
+    if (String(req.user.role || '').toLowerCase() !== 'admin') {
+      filters.push(`(p.audience = 'all' OR p.audience = $${i} OR p.author_id = $${i + 1})`);
+      values.push(String(req.user.role || '').toLowerCase(), req.user.id);
       i += 2;
     }
 
@@ -113,7 +112,8 @@ async function getPosts(req, res) {
            COALESCE(s.last_name, t.last_name, a.last_name, sup.last_name, c.last_name, '') AS author_last_name,
            u_a.role AS author_role,
            COUNT(DISTINCT l.id) AS likes_count,
-           COUNT(DISTINCT c_fc.id) AS comments_count
+           COUNT(DISTINCT c_fc.id) AS comments_count,
+           EXISTS(SELECT 1 FROM feed_likes viewer_likes WHERE viewer_likes.post_id = p.id AND viewer_likes.user_id = $${i}) AS viewer_liked
     FROM feed_posts p
     JOIN users u_a ON p.author_id = u_a.id
     LEFT JOIN students s ON u_a.id = s.user_id AND u_a.role = 'student'
@@ -126,13 +126,13 @@ async function getPosts(req, res) {
     ${whereClause}
     GROUP BY p.id, u_a.role, s.first_name, s.last_name, t.first_name, t.last_name, a.first_name, a.last_name, sup.first_name, sup.last_name, c.first_name, c.last_name
     ORDER BY ${pinnedFirst}p.created_at DESC
-    LIMIT $${i} OFFSET $${i + 1}
+    LIMIT $${i + 1} OFFSET $${i + 2}
   `;
 
     const countQuery = `SELECT COUNT(*)::int AS total FROM feed_posts p JOIN users u ON p.author_id = u.id ${whereClause}`;
 
     const [dataResult, countResult] = await Promise.all([
-      pool.query(dataQuery, [...values, limit, offset]),
+      pool.query(dataQuery, [...values, req.user.id, limit, offset]),
       pool.query(countQuery, values),
     ]);
 
@@ -173,8 +173,8 @@ async function getPostById(req, res) {
     `;
     const params = [id];
     if (viewerRole !== 'admin') {
-      query += ` AND (p.audience = $2 OR p.author_id = $3)`;
-      params.push('all', req.user.id);
+      query += ` AND (p.audience = 'all' OR p.audience = $2 OR p.author_id = $3)`;
+      params.push(viewerRole, req.user.id);
     }
     const result = await pool.query(query, params);
     const post = result.rows[0] || null;
@@ -195,7 +195,27 @@ async function createPost(authorId, postData) {
      RETURNING *`,
     [authorId, postType || 'announcement', title || null, content, imageUrl || null, linkUrl || null, linkTitle || null, linkDescription || null, linkDomain || null, linkThumbnail || null, audience || 'all']
   );
-  return result.rows[0];
+  const post = result.rows[0];
+  const recipients = await pool.query(
+    `SELECT id, LOWER(role) AS role FROM users
+     WHERE status = 'approved'
+       AND ($1 = 'all' OR LOWER(role) = $1)
+       AND id <> $2`,
+    [post.audience, authorId]
+  );
+  await Promise.all(recipients.rows.map((recipient) => createNotification({
+    userId: recipient.id,
+    title: post.title || 'New announcement',
+    message: post.content,
+    type: 'announcement',
+    category: 'announcement',
+    actionUrl: recipient.role === 'admin' ? '/dashboard/admin' : `/dashboard/${recipient.role}/announcements`,
+    relatedUserId: authorId,
+    entityType: 'feed_post',
+    entityId: post.id,
+    eventKey: `feed-post:${post.id}:created`,
+  })));
+  return post;
 }
 
 async function updatePost(id, authorId, postData) {
@@ -219,7 +239,29 @@ async function updatePost(id, authorId, postData) {
      RETURNING *`,
     [postType, title, content, imageUrl, linkUrl, linkTitle, linkDescription, linkDomain, linkThumbnail, audience, isPinned, id, authorId]
   );
-  return result.rows[0] || null;
+  const post = result.rows[0] || null;
+  if (post) {
+    const recipients = await pool.query(
+      `SELECT id, LOWER(role) AS role FROM users
+       WHERE status = 'approved'
+         AND ($1 = 'all' OR LOWER(role) = $1)
+         AND id <> $2`,
+      [post.audience, authorId]
+    );
+    await Promise.all(recipients.rows.map((recipient) => createNotification({
+      userId: recipient.id,
+      title: post.title || 'Announcement updated',
+      message: post.content,
+      type: 'announcement',
+      category: 'announcement',
+      actionUrl: recipient.role === 'admin' ? '/dashboard/admin' : `/dashboard/${recipient.role}/announcements`,
+      relatedUserId: authorId,
+      entityType: 'feed_post',
+      entityId: post.id,
+      eventKey: `feed-post:${post.id}:updated:${new Date(post.updated_at).getTime()}`,
+    })));
+  }
+  return post;
 }
 
 async function deletePost(id, authorId) {
@@ -287,6 +329,18 @@ async function createComment(postId, userId, content, parentCommentId = null) {
     [postId, userId, content, parentCommentId]
   );
   return result.rows[0];
+}
+
+async function updateComment(id, userId, content) {
+  await ensureFeedTables();
+  const result = await pool.query(
+    `UPDATE feed_comments
+     SET content = $1, updated_at = CURRENT_TIMESTAMP
+     WHERE id = $2 AND user_id = $3
+     RETURNING id, post_id, user_id, parent_comment_id, content, created_at, updated_at`,
+    [content, id, userId]
+  );
+  return result.rows[0] || null;
 }
 
 async function deleteComment(id, userId) {
@@ -383,6 +437,7 @@ module.exports = {
   toggleLike,
   getComments,
   createComment,
+  updateComment,
   deleteComment,
   createSurveyOption,
   getSurveyOptions,
