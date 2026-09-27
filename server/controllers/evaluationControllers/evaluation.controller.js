@@ -389,6 +389,12 @@ async function getTeacherBatchEvaluations(req, res) {
     }
     const teacherId = teacherResult.rows[0].id;
 
+    // Evaluation criteria (category names + their indicators) so the teacher
+    // dashboard can show a per-criterion breakdown for each student.
+    const criteriaResult = await pool.query(
+      'SELECT id, category_name, indicators, sort_order FROM evaluation_criteria ORDER BY sort_order ASC, id ASC'
+    );
+
     const batchesResult = await pool.query(
       `SELECT tb.id AS batch_id, tb.batch_label, tb.supervisor_id,
               sv.first_name AS supervisor_first_name, sv.last_name AS supervisor_last_name
@@ -415,7 +421,7 @@ async function getTeacherBatchEvaluations(req, res) {
         studentsResult.rows.map(async (s) => {
           const evResult = await pool.query(
             `SELECT se.id, se.overall_score, se.overall_percentage, se.created_at, se.comments,
-                    u.email AS evaluator_email
+                    se.category_scores, u.email AS evaluator_email
              FROM student_evaluations se
              JOIN users u ON u.id = se.evaluator_id
              WHERE se.student_id = $1 AND (se.batch_id = $2 OR se.batch_id IS NULL)
@@ -439,7 +445,7 @@ async function getTeacherBatchEvaluations(req, res) {
       });
     }
 
-    res.json({ groups: grouped });
+    res.json({ groups: grouped, criteria: criteriaResult.rows });
   } catch (err) {
     console.error('getTeacherBatchEvaluations error:', err);
     res.status(500).json({ error: 'Server error.' });

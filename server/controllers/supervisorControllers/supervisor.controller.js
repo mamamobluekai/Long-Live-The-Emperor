@@ -352,6 +352,7 @@ const getTeacherReportsConcerns = async (req, res) => {
     const result = await pool.query(
       `SELECT r.*, s.first_name, s.last_name, s.student_number, s.grade_level, s.track_strand,
               COALESCE(tb.batch_label, dr.batch_label, 'Deployment Batch') AS batch_label,
+              tb.id AS teacher_batch_id,
               sup.first_name AS supervisor_first_name, sup.last_name AS supervisor_last_name,
               sup.employee_id AS supervisor_employee_id, sup.company_name AS supervisor_company
        FROM supervisor_reports r

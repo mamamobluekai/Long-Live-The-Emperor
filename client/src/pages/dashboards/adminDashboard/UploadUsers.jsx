@@ -2,6 +2,12 @@ import { useState } from 'react';
 import { uploadTeachersExcel, uploadSupervisorsExcel, uploadCoordinatorsExcel } from '../../../api/adminApi';
 import styles from './UploadUsers.module.css';
 
+const REQUIRED_COLUMNS = {
+  teachers: 'Employee ID, First Name, Last Name, Email, Department, Position',
+  supervisors: 'Employee ID, Company Name, First Name, Last Name, Position, Email',
+  coordinators: 'Coordinator ID, First Name, Last Name, Email, Department, Position',
+};
+
 function UploadUsers() {
   const [teachersFile, setTeachersFile] = useState(null);
   const [supervisorsFile, setSupervisorsFile] = useState(null);
@@ -26,6 +32,15 @@ function UploadUsers() {
     try {
       const data = await uploadFn(file);
       setMessage(data.message || `${type.charAt(0).toUpperCase() + type.slice(1)} uploaded successfully.`);
+      const failedRows = data?.results?.errors || [];
+      if (failedRows.length) {
+        setError(
+          failedRows
+            .slice(0, 10)
+            .map((e) => `Row ${e.row}: ${e.error}`)
+            .join(' | ')
+        );
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -42,6 +57,7 @@ function UploadUsers() {
 
       <div className={styles.uploadSection}>
         <h3>Teachers</h3>
+        <p className={styles.hint}>Required columns: {REQUIRED_COLUMNS.teachers}</p>
         <input type="file" accept=".xlsx,.xls" onChange={(e) => setTeachersFile(e.target.files[0])} />
         <button onClick={() => handleUpload('teachers')} disabled={loading.teachers}>
           {loading.teachers ? 'Uploading...' : 'Upload Teachers'}
@@ -50,6 +66,7 @@ function UploadUsers() {
 
       <div className={styles.uploadSection}>
         <h3>Supervisors</h3>
+        <p className={styles.hint}>Required columns: {REQUIRED_COLUMNS.supervisors}</p>
         <input type="file" accept=".xlsx,.xls" onChange={(e) => setSupervisorsFile(e.target.files[0])} />
         <button onClick={() => handleUpload('supervisors')} disabled={loading.supervisors}>
           {loading.supervisors ? 'Uploading...' : 'Upload Supervisors'}
@@ -58,6 +75,7 @@ function UploadUsers() {
 
       <div className={styles.uploadSection}>
         <h3>Coordinators</h3>
+        <p className={styles.hint}>Required columns: {REQUIRED_COLUMNS.coordinators}</p>
         <input type="file" accept=".xlsx,.xls" onChange={(e) => setCoordinatorsFile(e.target.files[0])} />
         <button onClick={() => handleUpload('coordinators')} disabled={loading.coordinators}>
           {loading.coordinators ? 'Uploading...' : 'Upload Coordinators'}

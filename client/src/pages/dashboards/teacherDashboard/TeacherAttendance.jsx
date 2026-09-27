@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
+import { CalendarDays, ClipboardList, X } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { useTeacherBatch } from '../../../hooks/useTeacherBatch';
-import TeacherBatchPicker from './TeacherBatchPicker';
+import ImmersionScheduleCalendar from './ImmersionScheduleCalendar';
+import TeacherAttendanceRecords from './TeacherAttendanceRecords';
+import AttendanceInsights from './AttendanceInsights';
+import { useTeacherAttendanceReport } from '../../../hooks/useTeacherAttendanceReport';
 import {
   getTeacherBatchStatus,
   getBatchConfig,
-  getBatchStats,
   getBatchSchedules,
 } from '../../../api/teacherApi';
 import styles from './TeacherAttendance.module.css';
@@ -67,46 +70,80 @@ function TeacherAttendance() {
 
   const [status, setStatus] = useState(null);
   const [config, setConfig] = useState(null);
-  const [stats, setStats] = useState(null);
   const [groups, setGroups] = useState([]);
-
-  const [date] = useState(
-    toLocalDateString(new Date())
-  );
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [calendarGroup, setCalendarGroup] = useState(null);
+  const [recordsOpen, setRecordsOpen] = useState(false);
+
+  // One report per batch, shared by the records modal and the insights charts.
+  const report = useTeacherAttendanceReport();
 
   const loadAll = useCallback(async () => {
-    if (!selectedBatchId) return;
+    if (!selectedBatchId) {
+      setStatus(null);
+      setConfig(null);
+      setGroups([]);
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
-    try {
-      const [s, c, st, g] = await Promise.all([
-        getTeacherBatchStatus(selectedBatchId, token),
-        getBatchConfig(selectedBatchId, token),
-        getBatchStats(selectedBatchId, date, token),
-        getBatchSchedules(selectedBatchId, token),
-      ]);
+    // Settle each request on its own: one failing endpoint must not blank out
+    // the whole monitor, and the failure must say WHICH call broke.
+    const calls = [
+      ['status', () => getTeacherBatchStatus(selectedBatchId, token)],
+      ['config', () => getBatchConfig(selectedBatchId, token)],
+      ['schedules', () => getBatchSchedules(selectedBatchId, token)],
+    ];
 
-      setStatus(s);
-      setConfig({
-        ...c,
-        time_in_open: normalizeTimeInput(c.time_in_open),
-        time_in_close: normalizeTimeInput(c.time_in_close),
-        time_out_open: normalizeTimeInput(c.time_out_open),
-        time_out_close: normalizeTimeInput(c.time_out_close),
-      });
-      setStats(st);
-      setGroups(g.groups || []);
-    } catch {
-      setError('Failed to load attendance data.');
-    } finally {
-      setLoading(false);
+    const results = await Promise.allSettled(calls.map(([, run]) => run()));
+
+    const failed = [];
+    results.forEach((result, index) => {
+      const name = calls[index][0];
+      if (result.status === 'rejected') {
+        const reason = result.reason;
+        const status = reason?.response?.status;
+        console.error(`Attendance Monitor: ${name} request failed`, reason);
+        failed.push(`${name}${status ? ` (HTTP ${status})` : ''}`);
+        return;
+      }
+
+      const value = result.value;
+      if (name === 'status') {
+        setStatus(value);
+      } else if (name === 'config') {
+        setConfig({
+          ...value,
+          time_in_open: normalizeTimeInput(value.time_in_open),
+          time_in_close: normalizeTimeInput(value.time_in_close),
+          time_out_open: normalizeTimeInput(value.time_out_open),
+          time_out_close: normalizeTimeInput(value.time_out_close),
+        });
+      } else if (name === 'schedules') {
+        setGroups(value?.groups || []);
+      }
+    });
+
+    if (failed.length) {
+      const unauthorized = results.some(
+        (r) => r.status === 'rejected' && r.reason?.response?.status === 401
+      );
+      setError(
+        unauthorized
+          ? 'Your session has expired. Please sign in again to load attendance data.'
+          : failed.length === calls.length
+            ? 'Failed to load attendance data.'
+            : `Could not load: ${failed.join(', ')}.`
+      );
     }
-  }, [selectedBatchId, date, token]);
+
+    setLoading(false);
+  }, [selectedBatchId, token]);
 
   useEffect(() => {
     loadAll();
@@ -129,7 +166,22 @@ function TeacherAttendance() {
     }, 15000);
 
     return () => clearInterval(id);
-  }, [selectedBatchId, date, token]);
+  }, [selectedBatchId, token]);
+
+  // The attendance records modal has its own dismiss/scroll-lock behaviour.
+  useEffect(() => {
+    if (!recordsOpen) return undefined;
+    const onKey = (event) => {
+      if (event.key === 'Escape') setRecordsOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [recordsOpen]);
 
   // Read-only monitor: the supervisor owns attendance scheduling, so the
   // teacher cannot edit windows or immersion durations here.
@@ -158,20 +210,18 @@ function TeacherAttendance() {
 
       <div className={styles.header}>
         <div>
+          <span className={styles.eyebrow}>Daily Monitoring</span>
           <h2 className={styles.title}>
             Attendance Monitor
           </h2>
 
-          {batchLabel && (
-            <p className={styles.batchTag}>
-              Batch: {batchLabel}
-            </p>
-          )}
           <p className={styles.pageDescription}>
             View-only. Attendance windows and immersion schedules are set by the supervisor.
           </p>
         </div>
-        <TeacherBatchPicker />
+        <div className={styles.headerIcon} aria-hidden="true">
+          <CalendarDays size={24} strokeWidth={2} />
+        </div>
       </div>
 
       {loading && (
@@ -186,91 +236,60 @@ function TeacherAttendance() {
         </p>
       )}
 
+      {/* Live attendance status */}
+      {!loading && status && (
+        <div
+          className={`${styles.liveStatus} ${
+            status.attendance_open ? styles.liveStatusOpen : styles.liveStatusClosed
+          }`}
+        >
+          <span className={styles.liveStatusPill}>
+            {status.attendance_open ? 'Open' : 'Closed'}
+          </span>
+          <span className={styles.liveStatusText}>
+            {status.manual_open
+              ? 'Manually opened'
+              : status.active_type === 'time_in'
+                ? 'Time-In is now open'
+                : status.active_type === 'time_out'
+                  ? 'Time-Out is now open'
+                  : 'No attendance yet'}
+          </span>
+        </div>
+      )}
+
       {!loading && selectedBatchId && (
         <>
-          {stats && (
-            <div className={styles.statGrid}>
-
-              <div className={styles.statCard}>
-                <span className={styles.statValue}>
-                  {stats.total_students}
-                </span>
-
-                <span className={styles.statLabel}>
-                  Students
-                </span>
-              </div>
-
-              <div className={styles.statCard}>
-                <span className={styles.statValue}>
-                  {stats.timed_in}
-                </span>
-
-                <span className={styles.statLabel}>
-                  Timed In ({stats.timed_in_rate}%)
-                </span>
-              </div>
-
-              <div className={styles.statCard}>
-                <span className={styles.statValue}>
-                  {stats.timed_out}
-                </span>
-
-                <span className={styles.statLabel}>
-                  Timed Out ({stats.timed_out_rate}%)
-                </span>
-              </div>
-
-              <div className={styles.statCard}>
-                <span className={styles.statValue}>
-                  {stats.pending_appeals}
-                </span>
-
-                <span className={styles.statLabel}>
-                  Pending Appeals
-                </span>
-              </div>
-
-            </div>
-          )}
-
-          {/* Schedule config */}
-          {config && (
-            <div className={styles.panel}>
-
-              <div className={styles.panelHeader}>
-                <div className={styles.scheduleHeading}>
-                  <h3 className={styles.panelTitle}>
-                    Attendance Schedule
-                  </h3>
-                  <p className={styles.scheduleSummary}>
-                    Time In: {normalizeTimeInput(config.time_in_open)} - {normalizeTimeInput(config.time_in_close)}
-                    {' | '}
-                    Time Out: {normalizeTimeInput(config.time_out_open)} - {normalizeTimeInput(config.time_out_close)}
-                  </p>
-                  <p className={styles.muted}>
-                    Set by the supervisor. Contact the supervisor to change these windows.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Work Immersion Duration Settings */}
+          {/* Work Immersion Duration + supervisor-set attendance windows */}
           <div className={styles.panel}>
 
-            <h3 className={styles.panelTitle}>
-              Work Immersion Duration
-            </h3>
+            <div className={styles.panelHeader}>
+              <div className={styles.scheduleHeading}>
+                <h3 className={styles.panelTitle}>
+                  Work Immersion Duration
+                </h3>
+                <p className={styles.muted}>
+                  Set the immersion duration per supervisor.
+                  Weekends (Saturday/Sunday) are excluded from
+                  attendance days.
+                </p>
+              </div>
 
-            <p
-              className={styles.muted}
-              style={{ marginBottom: 14 }}
-            >
-              Set the immersion duration per supervisor.
-              Weekends (Saturday/Sunday) are excluded from
-              attendance days.
-            </p>
+              {config && (
+                <div className={styles.windowSummary}>
+                  <span className={styles.windowLabel}>Attendance Windows</span>
+                  <span className={styles.windowValue}>
+                    <span className={styles.windowTag}>Time In</span>
+                    {normalizeTimeInput(config.time_in_open)} - {normalizeTimeInput(config.time_in_close)}
+                  </span>
+                  <span className={styles.windowValue}>
+                    <span className={styles.windowTag}>Time Out</span>
+                    {normalizeTimeInput(config.time_out_open)} - {normalizeTimeInput(config.time_out_close)}
+                  </span>
+                  <span className={styles.windowNote}>Set by the supervisor</span>
+                </div>
+              )}
+            </div>
 
             {groups.map((group) => {
 
@@ -293,9 +312,6 @@ function TeacherAttendance() {
               const computedDates =
                 computeDates(form.start_date);
 
-              const hasSchedule =
-                Boolean(schedule.id);
-
               return (
                 <div
                   key={
@@ -304,128 +320,37 @@ function TeacherAttendance() {
                   className={styles.supervisorGroup}
                 >
 
-                  <div
-                    className={
-                      styles.supervisorHeader
-                    }
-                  >
+                  <div className={styles.groupButtons}>
 
-                    <div>
-                      <h4
-                        className={
-                          styles.supervisorName
-                        }
-                      >
-                        {group.supervisor_name ||
-                          'Batch Students'}
-                      </h4>
-
-                      <p className={styles.muted}>
-                        {group.students.length} student
-                        {group.students.length !== 1
-                          ? 's'
-                          : ''}
-                      </p>
-                    </div>
-
-                    {hasSchedule && (
-                      <span
-                        className={
-                          styles.scheduleBadge
-                        }
-                      >
-                        Schedule active
-                      </span>
-                    )}
-
-                  </div>
-
-                  <div
-                    className={styles.scheduleForm}
-                  >
-
-                    <div className={styles.cfgField}>
-                      <span className={styles.muted}>Total Days</span>
-                      <strong>{form.duration_value || 10} days</strong>
-                    </div>
-
-                    <div className={styles.cfgField}>
-                      <span className={styles.muted}>Start Date</span>
-                      <strong>{form.start_date || '—'}</strong>
-                    </div>
-
-                    <div className={styles.cfgField}>
-                      <span className={styles.muted}>Set by</span>
-                      <strong>Supervisor</strong>
-                    </div>
-
-                  </div>
-
-                  <div
-                    className={
-                      styles.dateTimeline
-                    }
-                  >
-                    {computedDates.map((d) => (
-                      <span
-                        key={d}
-                        className={styles.dateChip}
-                      >
-                        {d}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div
-                    className={
-                      styles.studentChips
-                    }
-                  >
-                    {group.students.map((s) => (
-                      <span
-                        key={s.student_id}
-                        className={
-                          styles.studentChip
-                        }
-                      >
-                        {s.first_name} {s.last_name}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div
-                    className={
-                      styles.groupActions
-                    }
-                  >
-
-                    <span
-                      className={`${styles.statePill} ${
-                        status?.attendance_open
-                          ? styles.open
-                          : styles.closed
-                      }`}
+                    <button
+                      type="button"
+                      className={styles.scheduleButton}
+                      onClick={() => setCalendarGroup({
+                        title: group.supervisor_name || 'Batch Students',
+                        dates: computedDates,
+                      })}
                     >
-                      {status?.attendance_open
-                        ? 'Open'
-                        : 'Closed'}
-                    </span>
+                      <CalendarDays size={18} strokeWidth={2} aria-hidden="true" />
+                      <span className={styles.scheduleButtonText}>
+                        <strong>View Immersion Schedule</strong>
+                        <span>
+                          {computedDates.length} day{computedDates.length === 1 ? '' : 's'}
+                          {form.start_date ? ` · starts ${form.start_date}` : ''}
+                        </span>
+                      </span>
+                    </button>
 
-                    <span
-                      className={
-                        styles.stateMeta
-                      }
+                    <button
+                      type="button"
+                      className={styles.scheduleButton}
+                      onClick={() => setRecordsOpen(true)}
                     >
-                      {status?.manual_open
-                        ? 'Manually opened'
-                        : status?.active_type ===
-                          'time_in'
-                        ? 'Time In window active'
-                        : status?.active_type ===
-                          'time_out'
-                        ? 'Time Out window active'
-                        : 'No active window'}
-                    </span>
+                      <ClipboardList size={18} strokeWidth={2} aria-hidden="true" />
+                      <span className={styles.scheduleButtonText}>
+                        <strong>View Attendance Records</strong>
+                        <span>Every student against each scheduled immersion date</span>
+                      </span>
+                    </button>
 
                   </div>
 
@@ -434,6 +359,7 @@ function TeacherAttendance() {
             })}
           </div>
 
+          <AttendanceInsights report={report} />
         </>
       )}
 
@@ -441,6 +367,60 @@ function TeacherAttendance() {
         <p className={styles.info}>
           You are not assigned to a batch yet.
         </p>
+      )}
+
+      {calendarGroup && (
+        <ImmersionScheduleCalendar
+          dates={calendarGroup.dates}
+          title={calendarGroup.title}
+          batchLabel={batchLabel}
+          onClose={() => setCalendarGroup(null)}
+        />
+      )}
+
+      {recordsOpen && (
+        <div
+          className={styles.calOverlay}
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setRecordsOpen(false);
+          }}
+        >
+          <section
+            className={`${styles.calModal} ${styles.calModalWide}`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="attendance-records-title"
+          >
+            <div className={styles.calHeader}>
+              <div className={styles.calIdentity}>
+                <span className={styles.calHeaderIcon} aria-hidden="true">
+                  <ClipboardList size={20} strokeWidth={2} />
+                </span>
+                <div>
+                  <span className={styles.calEyebrow}>Attendance Records</span>
+                  <h2 id="attendance-records-title">Scheduled Immersion Attendance</h2>
+                  <p>
+                    {batchLabel ? `${batchLabel} · ` : ''}
+                    Every enrolled student against each scheduled work immersion date.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className={styles.calClose}
+                onClick={() => setRecordsOpen(false)}
+                aria-label="Close attendance records"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className={styles.calBody}>
+              <TeacherAttendanceRecords variant="body" report={report} />
+            </div>
+          </section>
+        </div>
       )}
 
     </div>

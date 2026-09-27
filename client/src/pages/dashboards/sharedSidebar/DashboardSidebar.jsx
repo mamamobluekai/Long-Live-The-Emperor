@@ -7,6 +7,7 @@ function DashboardSidebar({
   links,
   isOpen = false,
   onClose = () => {},
+  aboveNav = null,
 }) {
   return (
     <>
@@ -52,6 +53,11 @@ function DashboardSidebar({
 
         </div>
 
+
+        {/* =========================================
+            OPTIONAL CONTENT ABOVE NAVIGATION
+        ========================================= */}
+        {aboveNav}
 
         {/* =========================================
             NAVIGATION

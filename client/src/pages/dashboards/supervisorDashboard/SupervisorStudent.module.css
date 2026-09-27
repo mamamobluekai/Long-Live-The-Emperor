@@ -658,3 +658,217 @@
     font-size: 0.65rem;
   }
 }
+
+/* =========================================================
+   CLICKABLE STUDENT ROW
+   ========================================================= */
+
+.studentRow {
+  cursor: pointer;
+}
+
+.studentRow:focus-visible {
+  outline: 2px solid #822d3e;
+  outline-offset: -2px;
+}
+
+
+/* =========================================================
+   MODAL ACTIONS + REPORT CONCERN FORM
+   (rendered inside the shared StudentDetailModal)
+   ========================================================= */
+
+.modalActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  padding-top: 6px;
+}
+
+.reportButton,
+.closeAction,
+.cancelReportButton,
+.submitReportButton {
+  min-height: 40px;
+
+  padding: 0 15px;
+
+  border-radius: 9px;
+
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 150ms ease;
+}
+
+.reportButton {
+  border: 1px solid #dfc6cd;
+  background: #fff8fa;
+  color: #6d1e30;
+}
+
+.reportButton:hover {
+  background: #f8ecef;
+  border-color: #cfa8b2;
+  transform: translateY(-1px);
+}
+
+.closeAction {
+  border: 1px solid #e6dfe2;
+  background: #ffffff;
+  color: #6b5b61;
+}
+
+.closeAction:hover {
+  background: #f7f3f4;
+  transform: translateY(-1px);
+}
+
+.reportNotice {
+  margin-bottom: 16px;
+
+  padding: 11px 14px;
+
+  border: 1px solid transparent;
+  border-radius: 10px;
+
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.reportNotice_success {
+  background: #eaf8ef;
+  border-color: #ccebd8;
+  color: #15803d;
+}
+
+.reportNotice_error {
+  background: #fff3f5;
+  border-color: #f2cbd2;
+  color: #b4233b;
+}
+
+.reportForm {
+  margin-top: 18px;
+
+  padding: 16px;
+
+  border: 1px solid #eadcdf;
+  border-radius: 13px;
+
+  background: #fdfafb;
+}
+
+.reportFormHeader h3 {
+  margin: 0;
+
+  color: #1f2937;
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.reportFormHeader p {
+  margin: 3px 0 0;
+
+  color: #7b6a70;
+  font-size: 0.76rem;
+}
+
+.reportFields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+
+  gap: 10px;
+
+  margin: 14px 0 10px;
+}
+
+.reportFields label,
+.reportMessage {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+
+  color: #6b5b61;
+
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.reportFields select,
+.reportMessage textarea {
+  padding: 9px 11px;
+
+  border: 1px solid #e3d7db;
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: #403338;
+
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+
+  outline: none;
+}
+
+.reportFields select:focus,
+.reportMessage textarea:focus {
+  border-color: #6d1e30;
+  box-shadow: 0 0 0 3px rgba(109, 30, 48, 0.1);
+}
+
+.reportMessage textarea {
+  resize: vertical;
+}
+
+.reportActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 9px;
+
+  margin-top: 12px;
+}
+
+.cancelReportButton {
+  border: 1px solid #e6dfe2;
+  background: #ffffff;
+  color: #6b5b61;
+}
+
+.cancelReportButton:hover {
+  background: #f7f3f4;
+  transform: translateY(-1px);
+}
+
+.submitReportButton {
+  border: 1px solid #6d1e30;
+  background: linear-gradient(140deg, #6d1e30, #822d3e);
+  color: #ffffff;
+}
+
+.submitReportButton:hover:not(:disabled) {
+  background: linear-gradient(140deg, #581725, #6d1e30);
+  transform: translateY(-1px);
+}
+
+.submitReportButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}

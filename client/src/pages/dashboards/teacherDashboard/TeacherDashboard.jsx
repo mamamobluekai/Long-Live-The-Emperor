@@ -5,7 +5,6 @@ import TeacherSidebar from './TeacherSidebar';
 import TeacherOverview from './TeacherOverview';
 import TeacherDocuments from './TeacherDocuments';
 import LiveMap from './LiveMap';
-import AttendanceReportsRecords from './AttendanceReportsRecords';
 import TeacherAttendance from './TeacherAttendance';
 import TeacherStudents from './TeacherStudents';
 import TeacherStudentEvaluations from './TeacherStudentEvaluations';
@@ -15,9 +14,11 @@ import TeacherSettings from './TeacherSettings';
 import BatchChat from '../../../components/social/BatchChat';
 import Announcements from '../Announcements/Announcements';
 import UserProfileSettings from '../UserProfileSettings';
+import { TeacherBatchProvider } from '../../../context/TeacherBatchProvider';
 
 function TeacherDashboard({ user, onLogout }) {
   return (
+    <TeacherBatchProvider>
     <DashboardLayout
       topNav={<DashboardTopNav user={user} onLogout={onLogout} title="Teacher Dashboard" />}
       sidebar={<TeacherSidebar />}
@@ -27,21 +28,21 @@ function TeacherDashboard({ user, onLogout }) {
         <Route path="overview" element={<TeacherOverview user={user} />} />
          <Route path="students" element={<TeacherStudents />} />
          <Route path="evaluations" element={<TeacherStudentEvaluations />} />
-         <Route path="attendance-reports" element={<AttendanceReportsRecords />} />
          <Route path="attendance" element={<TeacherAttendance />} />
           <Route path="student-documentation" element={<TeacherStudentDocumentation />} />
          <Route path="reports-concerns" element={<TeacherReportsConcerns />} />
          <Route path="announcements" element={<Announcements user={user} />} />
          <Route path="live-map" element={<LiveMap />} />
-        <Route path="appeals" element={<Navigate to="/dashboard/teacher/attendance-reports" replace />} />
+         <Route path="appeals" element={<Navigate to="/dashboard/teacher/attendance" replace />} />
          <Route path="settings" element={<TeacherSettings />} />
 
          <Route path="group-chat" element={<BatchChat user={user} />} />
          <Route path="profile" element={<UserProfileSettings />} />
          <Route path="documents" element={<TeacherDocuments user={user} />} />
          <Route path="*" element={<Navigate to="overview" replace />} />
-      </Routes>
+       </Routes>
     </DashboardLayout>
+    </TeacherBatchProvider>
   );
 }
 

@@ -943,6 +943,311 @@
 
 
 /* =========================================================
+   ASSIGN STUDENTS MODAL
+   ========================================================= */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(23, 32, 51, 0.55);
+
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+
+  animation: modalFade 160ms ease;
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+  max-width: 940px;
+
+  max-height: calc(100vh - 48px);
+
+  border: 1px solid #e6dfe2;
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  box-shadow: 0 32px 70px -30px rgba(23, 32, 51, 0.55);
+
+  overflow: hidden;
+
+  animation: modalRise 180ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  padding: 20px 22px 16px;
+
+  border-bottom: 1px solid var(--border-soft);
+
+  background:
+    linear-gradient(
+      130deg,
+      #fff8fa 0%,
+      #fdf2f4 60%,
+      #fbe9ec 100%
+    );
+}
+
+.modalTitle {
+  margin: 0;
+
+  color: var(--text-dark);
+
+  font-size: 1.05rem;
+  font-weight: 750;
+
+  letter-spacing: -0.02em;
+}
+
+.modalSubtitle {
+  margin: 4px 0 0;
+
+  color: var(--text-secondary);
+
+  font-size: 0.8rem;
+}
+
+.modalClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+
+  flex-shrink: 0;
+
+  border: 1px solid var(--border);
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: var(--text-secondary);
+
+  cursor: pointer;
+
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    transform 150ms ease;
+}
+
+.modalClose:hover {
+  background: var(--danger-soft);
+  border-color: #e6aaa5;
+  color: var(--danger);
+  transform: translateY(-1px);
+}
+
+.modalMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  flex-wrap: wrap;
+
+  padding: 12px 22px;
+
+  border-bottom: 1px solid var(--border-soft);
+
+  background: #fdfcfd;
+}
+
+.modalCount {
+  color: var(--text-dark);
+
+  font-size: 0.82rem;
+
+  white-space: nowrap;
+}
+
+.modalCount strong {
+  color: var(--maroon-700);
+  font-weight: 800;
+}
+
+.modalHint {
+  color: var(--muted);
+
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.modalError {
+  margin: 14px 22px 0;
+
+  padding: 10px 13px;
+
+  border: 1px solid #f2cbd2;
+  border-radius: 10px;
+
+  background: var(--danger-soft);
+
+  color: var(--danger);
+
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.modalBody {
+  flex: 1;
+
+  min-height: 0;
+
+  padding: 0 22px 4px;
+
+  overflow-y: auto;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+.modalBody .tableWrap {
+  margin-top: 16px;
+}
+
+.modalNarrow {
+  max-width: 480px;
+}
+
+.modalForm {
+  display: flex;
+  flex-direction: column;
+
+  gap: 14px;
+
+  padding: 18px 22px 0;
+
+  overflow-y: auto;
+}
+
+.modalForm .modalError {
+  margin: 0;
+}
+
+.modalForm .modalFooter {
+  margin: 4px -22px 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+
+  gap: 6px;
+}
+
+.fieldLabel {
+  color: var(--text-secondary);
+
+  font-size: 0.74rem;
+  font-weight: 700;
+
+  letter-spacing: 0.02em;
+}
+
+.field .input,
+.field .select {
+  width: 100%;
+}
+
+.modalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  padding: 16px 22px;
+
+  border-top: 1px solid var(--border-soft);
+
+  background: #fdfcfd;
+}
+
+@keyframes modalFade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalRise {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 700px) {
+  .modalOverlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modal {
+    max-width: none;
+    max-height: 92vh;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .modalHeader,
+  .modalMeta,
+  .modalFooter,
+  .modalForm {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .modalForm .modalFooter {
+    margin-left: -16px;
+    margin-right: -16px;
+  }
+
+  .modalBody {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .modalFooter {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .modalFooter button {
+    width: 100%;
+  }
+}
+
+
+/* =========================================================
    RESPONSIVE — TABLET
    ========================================================= */
 
@@ -1072,6 +1377,14 @@
   }
 
   .loading::before {
+    animation: none;
+  }
+
+  .modalOverlay {
+    animation: none;
+  }
+
+  .modal {
     animation: none;
   }
 }

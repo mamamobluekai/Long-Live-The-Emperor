@@ -12,7 +12,11 @@ function TeacherReports() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!selectedBatchId) return;
+    if (!selectedBatchId) {
+      setStats(null);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     getBatchStats(selectedBatchId, date, token)
       .then(setStats)

@@ -143,10 +143,13 @@ const getBatchAttendanceReport = async (req, res) => {
       [batchId, dates]
     );
 
-    res.json({ dates, records: result.rows.map((row) => ({
-      ...row,
-      status: row.status || 'absent',
-    })) });
+    // A date/student pair with no attendance row is NOT an absence — it means the
+    // date has not happened yet. Keep the status null so the client can tell an
+    // upcoming immersion day apart from a real absence.
+    res.json({
+      dates,
+      records: result.rows.map((row) => ({ ...row, status: row.status || null })),
+    });
   } catch (err) {
     console.error('getBatchAttendanceReport error:', err);
     res.status(500).json({ error: 'Server error.' });

@@ -1,0 +1,1010 @@
+/* =========================================================
+   STUDENT GRADES — TEACHER DASHBOARD
+   Lexend + maroon design system (matches RequirementsReview)
+   ========================================================= */
+
+.page {
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #26313f;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =========================
+   PAGE HEADER
+   ========================= */
+
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+
+  margin-bottom: 20px;
+
+  padding: 22px 24px;
+
+  border: 1px solid #e8d2d8;
+  border-radius: 18px;
+
+  background:
+    radial-gradient(130% 160% at 0% 0%, rgba(139, 30, 45, 0.1) 0%, rgba(139, 30, 45, 0) 58%),
+    radial-gradient(120% 150% at 100% 120%, rgba(190, 140, 63, 0.16) 0%, rgba(190, 140, 63, 0) 55%),
+    linear-gradient(120deg, #ffffff 0%, #fdf3f5 58%, #f9e8ec 100%);
+
+  box-shadow: 0 14px 32px -28px rgba(80, 20, 32, 0.55);
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 6px;
+
+  color: #8b1e2d;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.pageHeader h2 {
+  margin: 0;
+
+  color: #172033;
+  font-size: 1.85rem;
+  font-weight: 780;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+}
+
+.pageHeader p {
+  max-width: 620px;
+  margin: 8px 0 0;
+
+  color: #596579;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* =========================
+   CARD
+   ========================= */
+
+.section {
+  position: relative;
+
+  margin-bottom: 18px;
+
+  padding: 21px 22px;
+
+  overflow: hidden;
+
+  background: linear-gradient(180deg, #fffdfd 0%, #ffffff 40%);
+
+  border: 1px solid #e6dfe2;
+  border-radius: 18px;
+
+  box-shadow: 0 12px 32px -28px rgba(80, 20, 32, 0.4);
+
+  transition:
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.section::before {
+  content: '';
+
+  position: absolute;
+  top: 0;
+  right: 22px;
+  left: 22px;
+
+  height: 3px;
+
+  border-radius: 0 0 3px 3px;
+
+  background: linear-gradient(90deg, rgba(139, 30, 45, 0.75), rgba(184, 57, 79, 0.35), rgba(190, 140, 63, 0.55));
+}
+
+.section:hover {
+  border-color: #dcc9cf;
+  box-shadow: 0 18px 40px -30px rgba(80, 20, 32, 0.5);
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  margin: 0;
+
+  color: #172033;
+  font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+}
+
+.sectionTitle::before {
+  content: '';
+
+  width: 4px;
+  height: 19px;
+
+  border-radius: 20px;
+
+  background: linear-gradient(180deg, #8b1e2d, #b8394f);
+}
+
+.muted {
+  margin: 7px 0 0;
+
+  color: #8490a1;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* =========================
+   TABLE
+   ========================= */
+
+.tableWrap {
+  width: 100%;
+  margin-top: 16px;
+
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 820px;
+
+  border-collapse: collapse;
+}
+
+.table th {
+  height: 44px;
+  padding: 0 18px;
+
+  color: #8b1e2d;
+  background: #fff7f8;
+
+  border-bottom: 1px solid #ecdfe2;
+
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 13px 18px;
+
+  color: #475d6e;
+  border-bottom: 1px solid #ecdfe2;
+
+  font-size: 0.82rem;
+  vertical-align: middle;
+
+  white-space: nowrap;
+}
+
+.table td:first-child {
+  color: #8b1e2d;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.table td:nth-child(3) {
+  color: #172033;
+  font-weight: 700;
+}
+
+.table td:nth-child(5) {
+  font-weight: 780;
+  font-variant-numeric: tabular-nums;
+}
+
+.table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.table tbody tr:hover {
+  background: #fffafb;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.clickableRow {
+  cursor: pointer;
+}
+
+.clickableRow:focus-visible {
+  outline: 2px solid #b8394f;
+  outline-offset: -2px;
+}
+
+/* =========================
+   BUTTON
+   ========================= */
+
+/* =========================
+   HEADER ACTIONS
+   ========================= */
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rankBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  min-height: 40px;
+
+  padding: 0 16px;
+
+  border: 1px solid #dcc9cf;
+  border-radius: 999px;
+
+  background: #fff;
+
+  color: #581725;
+
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.15s ease;
+}
+
+.rankBtn:hover {
+  background: #fffafb;
+  border-color: #b8394f;
+  transform: translateY(-1px);
+}
+
+.rankBtnCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 20px;
+  height: 20px;
+
+  padding: 0 6px;
+
+  border-radius: 999px;
+
+  background: #fdf0f2;
+  border: 1px solid #f6cfd6;
+
+  color: #8b1e2d;
+
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+
+/* =========================
+   SIDE DRAWER
+   ========================= */
+
+.drawerOverlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 1000;
+
+  display: flex;
+  justify-content: flex-end;
+
+  background: rgba(23, 32, 51, 0.45);
+
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+
+  animation: fadeIn 0.18s ease;
+}
+
+.drawer {
+  display: flex;
+  flex-direction: column;
+
+  width: min(560px, 100%);
+  height: 100%;
+
+  border-left: 1px solid #e6dfe2;
+
+  background: #fff;
+
+  box-shadow: -28px 0 60px -34px rgba(80, 20, 32, 0.5);
+
+  overflow: hidden;
+
+  animation: slideIn 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drawerHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  flex-shrink: 0;
+
+  padding: 20px 22px;
+
+  border-bottom: 1px solid #ecdfe2;
+
+  background: linear-gradient(130deg, #ffffff 0%, #fdf3f5 60%, #fbe9ec 100%);
+}
+
+.drawerHeader h3 {
+  margin: 3px 0 0;
+
+  color: #172033;
+  font-size: 1.1rem;
+  font-weight: 780;
+  letter-spacing: -0.02em;
+}
+
+.drawerHeader p {
+  margin: 4px 0 0;
+
+  color: #8490a1;
+  font-size: 0.78rem;
+}
+
+.drawerBody {
+  flex: 1;
+  min-height: 0;
+
+  padding: 18px 22px 24px;
+
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.drawerBody .empty {
+  min-height: 180px;
+}
+
+/* Drawer ranking rows (2-line layout) */
+.drawerRow {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) 52px;
+  grid-template-areas:
+    'rank name  score'
+    'bar  bar   grade';
+  align-items: center;
+  gap: 6px 12px;
+
+  padding: 11px 0;
+}
+
+.drawerRow + .drawerRow {
+  border-top: 1px solid #f2e9ec;
+}
+
+.drawerRowTop {
+  background: linear-gradient(140deg, #fffaf0 0%, #fdf6e3 100%);
+  border-radius: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.drawerRow .rankModalRank { grid-area: rank; }
+.drawerName { grid-area: name; min-width: 0; overflow: hidden; color: #172033; font-size: 0.84rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.drawerScore { grid-area: score; color: #172033; font-size: 0.8rem; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
+.drawerBar { grid-area: bar; display: block; height: 8px; overflow: hidden; border-radius: 999px; background: #f1e7ea; }
+.drawerGrade { grid-area: grade; color: #6b5b61; font-size: 0.7rem; font-weight: 700; text-align: right; }
+
+@keyframes slideIn {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Keep the in-modal ranking rows readable inside the narrow drawer */
+.drawerBody .rankModalRow {
+  grid-template-columns: 46px minmax(0, 1fr) 52px;
+  grid-template-areas:
+    'rank name  score'
+    'batch batch batch'
+    'bar   bar   grade';
+  row-gap: 6px;
+}
+
+.drawerBody .rankModalRow > .rankModalRank { grid-area: rank; }
+.drawerBody .rankModalRow > .rankModalName { grid-area: name; }
+.drawerBody .rankModalRow > .rankModalBatch { grid-area: batch; }
+.drawerBody .rankModalRow > .rankModalBar { grid-area: bar; }
+.drawerBody .rankModalRow > .rankModalScore { grid-area: score; }
+.drawerBody .rankModalRow > .rankModalGrade { grid-area: grade; }
+
+
+/* =========================
+   STATES
+   ========================= */
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 220px;
+
+  color: #8490a1;
+  font-size: 0.85rem;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 140px;
+
+  padding: 26px;
+
+  color: #8490a1;
+  font-size: 0.85rem;
+  text-align: center;
+
+  border: 1px dashed #ddcfd3;
+  border-radius: 16px;
+
+  background: linear-gradient(140deg, #fdfafb 0%, #fbf4f5 100%);
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 12px 15px;
+  margin-bottom: 16px;
+
+  border: 1px solid #f0b7c2;
+  border-radius: 12px;
+
+  background: #fde3e8;
+
+  color: #b4233b;
+
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+/* =========================
+   BATCH RANKING
+   ========================= */
+
+
+.rankingRow + .rankingRow {
+  border-top: 1px solid #f2e9ec;
+}
+
+
+
+
+
+
+
+/* =========================
+   MODALS
+   ========================= */
+
+
+
+.rankModalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  padding: 20px 22px;
+
+  border-bottom: 1px solid #ecdfe2;
+
+  background: linear-gradient(130deg, #ffffff 0%, #fdf3f5 60%, #fbe9ec 100%);
+}
+
+.rankModalEyebrow {
+  display: block;
+
+  color: #9c8189;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+.rankModalHeader h3 {
+  margin: 3px 0 0;
+
+  color: #172033;
+  font-size: 1.1rem;
+  font-weight: 780;
+  letter-spacing: -0.02em;
+}
+
+.rankModalHeader p {
+  margin: 4px 0 0;
+
+  color: #8490a1;
+  font-size: 0.78rem;
+}
+
+.rankModalClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+
+  flex-shrink: 0;
+
+  border: 1px solid #dcc9cf;
+  border-radius: 9px;
+
+  background: #fff;
+
+  color: #596579;
+
+  cursor: pointer;
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.rankModalClose:hover {
+  background: #fde3e8;
+  border-color: #f0b7c2;
+  color: #b4233b;
+}
+
+.rankModalBody {
+  flex: 1;
+  min-height: 0;
+
+  padding: 18px 22px 22px;
+
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.rankModalBody .empty {
+  min-height: 180px;
+}
+
+/* ---------- Top ranking (all batches) ---------- */
+
+.rankModalList {
+  list-style: none;
+
+  margin: 0;
+  padding: 0;
+}
+
+.rankModalRow {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) 150px 26% 56px 130px;
+
+  align-items: center;
+  gap: 12px;
+
+  padding: 11px 0;
+}
+
+.rankModalRow + .rankModalRow {
+  border-top: 1px solid #f2e9ec;
+}
+
+.rankModalRank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 26px;
+
+  padding: 0 8px;
+
+  border-radius: 8px;
+
+  background: #f1e7ea;
+
+  color: #6b5b61;
+
+  font-size: 0.74rem;
+  font-weight: 800;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.rankFirst {
+  background: linear-gradient(140deg, #b8860b, #d9a441);
+  color: #ffffff;
+}
+
+.rankSecond {
+  background: linear-gradient(140deg, #8b93a1, #aeb6c2);
+  color: #ffffff;
+}
+
+.rankThird {
+  background: linear-gradient(140deg, #a1632c, #c98a4b);
+  color: #ffffff;
+}
+
+.rankModalName {
+  min-width: 0;
+  overflow: hidden;
+
+  color: #172033;
+  font-size: 0.84rem;
+  font-weight: 700;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rankModalBatch {
+  min-width: 0;
+  overflow: hidden;
+
+  color: #8490a1;
+  font-size: 0.72rem;
+  font-weight: 600;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rankModalBar {
+  display: block;
+
+  height: 8px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: #f1e7ea;
+}
+
+.rankModalFill {
+  display: block;
+  height: 100%;
+
+  border-radius: 999px;
+
+  background: linear-gradient(90deg, #581725, #822d3e);
+
+  transition: width 0.25s ease;
+}
+
+.rankModalScore {
+  color: #172033;
+  font-size: 0.8rem;
+  font-weight: 780;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.rankModalGrade {
+  color: #6b5b61;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+/* ---------- Criteria grades ---------- */
+
+.skillSummary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+
+  margin-bottom: 18px;
+}
+
+.skillCard {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  padding: 14px 16px;
+
+  border: 1px solid #bfe6cc;
+  border-radius: 13px;
+
+  background: linear-gradient(140deg, #f4fbf7 0%, #eaf8ef 100%);
+}
+
+.skillCard::before {
+  content: '';
+
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: 4px;
+  height: 100%;
+
+  border-radius: 13px 0 0 13px;
+
+  background: linear-gradient(180deg, #15803d, #27a35a);
+}
+
+.skillCardWeak {
+  border-color: #f0d7dc;
+  background: linear-gradient(140deg, #fff8fa 0%, #fdeff2 100%);
+}
+
+.skillCardWeak::before {
+  background: linear-gradient(180deg, #b4233b, #dc2626);
+}
+
+.skillLabel {
+  color: #6b5b61;
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.skillName {
+  color: #172033;
+  font-size: 0.88rem;
+  font-weight: 780;
+  letter-spacing: -0.01em;
+}
+
+.skillScore {
+  color: #15803d;
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.skillCardWeak .skillScore {
+  color: #b4233b;
+}
+
+.criteriaBlock {
+  margin-bottom: 14px;
+
+  padding: 15px 16px;
+
+  border: 1px solid #e6dfe2;
+  border-radius: 13px;
+
+  background: linear-gradient(150deg, #fdfafb 0%, #fff7f8 100%);
+}
+
+.criteriaBlockHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.criteriaBlockName {
+  color: #172033;
+  font-size: 0.86rem;
+  font-weight: 750;
+}
+
+.criteriaBlockPct {
+  color: #8b1e2d;
+  font-size: 0.85rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.criteriaBlockBar {
+  display: block;
+
+  height: 8px;
+
+  margin: 9px 0 12px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: #f1e7ea;
+}
+
+.criteriaBlockFill {
+  display: block;
+  height: 100%;
+
+  border-radius: 999px;
+
+  background: linear-gradient(90deg, #581725, #822d3e);
+
+  transition: width 0.25s ease;
+}
+
+.criteriaBlockList {
+  list-style: none;
+
+  margin: 0;
+  padding: 0;
+}
+
+.criteriaItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  padding: 6px 0;
+
+  color: #596579;
+  font-size: 0.79rem;
+}
+
+.criteriaItem + .criteriaItem {
+  border-top: 1px solid #f2e9ec;
+}
+
+.criteriaItemLabel {
+  min-width: 0;
+}
+
+.criteriaItemRating {
+  flex-shrink: 0;
+
+  color: #403338;
+  font-size: 0.78rem;
+  font-weight: 780;
+
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================
+   ANIMATION
+   ========================= */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 1100px) {
+  .rankModalRow {
+    grid-template-columns: 46px minmax(0, 1fr) 120px 24% 54px 120px;
+  }
+}
+
+@media (max-width: 860px) {
+  .pageHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .pageHeader h2 {
+    font-size: 1.5rem;
+  }
+
+  .section {
+    padding: 17px 15px;
+  }
+
+  .rankModalOverlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .rankModal {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .rankModalHeader,
+  .rankModalBody {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .rankingRow {
+    grid-template-columns: 38px minmax(0, 1fr) 48px;
+    grid-template-areas:
+      'rank name score'
+      'bar  bar  bar';
+  }
+
+  .rankingRank { grid-area: rank; }
+  .rankingName { grid-area: name; }
+  .rankingBar { grid-area: bar; }
+  .rankingScore { grid-area: score; }
+  .rankingGrade { display: none; }
+
+  .rankModalRow {
+    grid-template-columns: 42px minmax(0, 1fr) 52px;
+    grid-template-areas:
+      'rank name  score'
+      'batch batch batch'
+      'bar   bar   bar';
+    row-gap: 6px;
+  }
+
+  .rankModalRank { grid-area: rank; }
+  .rankModalName { grid-area: name; }
+  .rankModalScore { grid-area: score; }
+  .rankModalBatch { grid-area: batch; }
+  .rankModalBar { grid-area: bar; }
+  .rankModalGrade { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawerOverlay,
+  .drawer {
+    animation: none;
+  }
+
+  .section,
+  .rankBtn,
+  .rankModalFill,
+  .criteriaBlockFill,
+  .rankModalClose {
+    transition: none;
+  }
+}

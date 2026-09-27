@@ -1,37 +1,61 @@
 import { useCallback, useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Users,
   UserCheck,
   UserX,
   ClipboardCheck,
   MapPin,
-  CalendarDays,
   AlertCircle,
   ArrowRight,
   Clock,
-  CheckCircle2,
-  XCircle,
+  FolderOpen,
   Activity,
 } from 'lucide-react';
 
 import {
-  getMyTeacherBatch,
   getTeacherBatchStudents,
-  getTeacherBatchStatus,
   getBatchRecords,
   getBatchAppeals,
   getTeacherBatchEvaluations,
+  getBatchDailyDocSummary,
 } from '../../../api/teacherApi';
 
-import styles from './TeacherDashboard.module.css';
+import { useTeacherBatch } from '../../../hooks/useTeacherBatch';
+import styles from './TeacherOverview.module.css';
+
+// Teacher routes the overview metric cards link to.
+const ROUTES = {
+  students: '/dashboard/teacher/students',
+  attendance: '/dashboard/teacher/attendance',
+  attendanceReports: '/dashboard/teacher/attendance-reports',
+  evaluations: '/dashboard/teacher/evaluations',
+  liveMap: '/dashboard/teacher/live-map',
+  appeals: '/dashboard/teacher/attendance-reports',
+  documentation: '/dashboard/teacher/student-documentation',
+};
 
 function TeacherDashboard({ user }) {
-  const [batch, setBatch] = useState(null);
+  // A teacher can be assigned to MULTIPLE batches (a batch may also be
+  // shared with other supervisors/teachers). `useTeacherBatch` loads every
+  // batch assigned to this teacher from the backend and keeps the selected
+  // batch persisted, shared with the other teacher pages.
+  const {
+    batches,
+    batch: selectedBatch,
+    batchId: selectedBatchId,
+    batchLabel,
+    selectBatch,
+    loading: batchesLoading,
+    error: batchesError,
+    reload: reloadBatches,
+  } = useTeacherBatch();
+
   const [students, setStudents] = useState([]);
-  const [attendance, setAttendance] = useState(null);
   const [records, setRecords] = useState([]);
   const [appeals, setAppeals] = useState([]);
   const [evaluations, setEvaluations] = useState([]);
+  const [docSummary, setDocSummary] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -39,88 +63,122 @@ function TeacherDashboard({ user }) {
 
   const token = localStorage.getItem('wim-token');
 
-  const loadDashboard = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError('');
+  const loadDashboard = useCallback(
+    async ({ silent = false } = {}) => {
+      // Wait for the batch list before deciding there is no batch.
+      if (batchesLoading) return;
 
-      const teacherBatch = await getMyTeacherBatch(token);
-      const batches = teacherBatch?.batches;
-      const batchData = Array.isArray(batches)
-        ? batches[0]
-        : teacherBatch?.batch ||
-          teacherBatch?.data ||
-          teacherBatch;
-
-      setBatch(batchData);
-
-      const batchId =
-        batchData?.id ||
-        batchData?.batch_id ||
-        batchData?.teacher_batch_id;
-
-      if (!batchId) {
+      if (!selectedBatchId) {
         setNoBatch(true);
+        setStudents([]);
+        setRecords([]);
+        setAppeals([]);
+        setDocSummary([]);
+        setLoading(false);
         return;
       }
 
-      const today = new Date().toISOString().split('T')[0];
+      try {
+        if (!silent) {
+          setLoading(true);
+        }
 
-      const [
-        studentsData,
-        attendanceData,
-        recordsData,
-        appealsData,
-        evaluationsData,
-      ] = await Promise.all([
-        getTeacherBatchStudents(batchId, token),
-        getTeacherBatchStatus(batchId, token),
-        getBatchRecords(batchId, today, token),
-        getBatchAppeals(batchId, 'pending', token),
-        getTeacherBatchEvaluations(),
-      ]);
+        setError('');
+        setNoBatch(false);
 
-      setStudents(
-        Array.isArray(studentsData)
-          ? studentsData
-          : studentsData?.students || []
-      );
+        const today = new Date().toISOString().split('T')[0];
 
-      setAttendance(attendanceData);
+        const [
+          studentsData,
+          recordsData,
+          appealsData,
+          evaluationsData,
+          docSummaryData,
+        ] = await Promise.all([
+          getTeacherBatchStudents(selectedBatchId, token),
+          getBatchRecords(selectedBatchId, today, token),
+          getBatchAppeals(selectedBatchId, 'pending', token),
+          getTeacherBatchEvaluations(),
+          getBatchDailyDocSummary(selectedBatchId, token).catch(() => null),
+        ]);
 
-      setRecords(
-        Array.isArray(recordsData)
-          ? recordsData
-          : recordsData?.records || []
-      );
+        setStudents(
+          Array.isArray(studentsData)
+            ? studentsData
+            : studentsData?.students || []
+        );
 
-      setAppeals(
-        Array.isArray(appealsData)
-          ? appealsData
-          : appealsData?.appeals || []
-      );
+        setRecords(
+          Array.isArray(recordsData)
+            ? recordsData
+            : recordsData?.records || []
+        );
 
-      setEvaluations(
-        Array.isArray(evaluationsData)
-          ? evaluationsData
-          : evaluationsData?.evaluations || []
-      );
-    } catch (err) {
-      console.error('Teacher dashboard error:', err);
+        setAppeals(
+          Array.isArray(appealsData)
+            ? appealsData
+            : appealsData?.appeals || []
+        );
 
-      setError(
-        err?.response?.data?.message ||
-          err?.message ||
-          'Unable to load dashboard.'
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
+        setEvaluations(
+          Array.isArray(evaluationsData)
+            ? evaluationsData
+            : evaluationsData?.evaluations || []
+        );
+
+        setDocSummary(
+          Array.isArray(docSummaryData)
+            ? docSummaryData
+            : docSummaryData?.students || []
+        );
+      } catch (err) {
+        console.error('Teacher dashboard error:', err);
+
+        setError(
+          err?.response?.data?.message ||
+            err?.message ||
+            'Unable to load dashboard.'
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [token, selectedBatchId, batchesLoading]
+  );
+
+  // Reload whenever the selected batch changes (switching the batch button
+  // re-computes the attendance pie/percentages for that batch).
+  useEffect(() => {
+    // Clear the previous batch's numbers so a switch never flashes stale data.
+    setStudents([]);
+    setRecords([]);
+    setAppeals([]);
+    setDocSummary([]);
+  }, [selectedBatchId]);
 
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard]);
+
+  // Refresh automatically when the page is opened, and whenever the
+  // browser tab becomes visible again (so returning to this page
+  // always shows up-to-date data without a refresh button).
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'visible') {
+        reloadBatches();
+        loadDashboard({ silent: true });
+      }
+    };
+
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+
+    return () => {
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [loadDashboard, reloadBatches]);
 
   const studentCount = students.length;
 
@@ -147,6 +205,43 @@ function TeacherDashboard({ user }) {
       ? Math.round((evaluationCompleted / evaluationCount) * 100)
       : 0;
 
+  /* ---------------- Documentation (batch-scoped) ---------------- */
+
+  const docTotal = docSummary.reduce(
+    (sum, row) => sum + Number(row.total_docs || 0),
+    0
+  );
+
+  const docGraded = docSummary.reduce(
+    (sum, row) => sum + Number(row.graded_count || 0),
+    0
+  );
+
+  const docPending = docSummary.reduce(
+    (sum, row) => sum + Number(row.pending_count || 0),
+    0
+  );
+
+  // Students who have submitted at least one documentation entry.
+  const docSubmitters = docSummary.filter(
+    (row) => Number(row.total_docs || 0) > 0
+  ).length;
+
+  // A student counts as "graded" once they have at least one graded doc.
+  const docGradedStudents = docSummary.filter(
+    (row) => Number(row.graded_count || 0) > 0
+  ).length;
+
+  const docNotGradedStudents = Math.max(
+    docSummary.length - docGradedStudents,
+    0
+  );
+
+  const docGradedPercentage =
+    docSummary.length > 0
+      ? Math.round((docGradedStudents / docSummary.length) * 100)
+      : 0;
+
   const teacherName =
     user?.first_name ||
     user?.firstName ||
@@ -155,13 +250,13 @@ function TeacherDashboard({ user }) {
     'Teacher';
 
   const batchName =
-    batch?.name ||
-    batch?.batch_name ||
-    batch?.section_name ||
-    batch?.section ||
+    batchLabel ||
+    selectedBatch?.batch_label ||
+    selectedBatch?.name ||
+    selectedBatch?.batch_name ||
     'My Work Immersion Batch';
 
-  if (loading) {
+  if (loading || batchesLoading) {
     return (
       <div className={styles.loadingPage}>
         <div className={styles.spinner} />
@@ -172,8 +267,8 @@ function TeacherDashboard({ user }) {
 
   if (noBatch) {
     return (
-      <div className={styles.dashboard}>
-        <section className={styles.header}>
+      <div className={styles.page}>
+        <section className={styles.pageHeader}>
           <div>
             <div className={styles.eyebrow}>
               <Activity size={15} />
@@ -188,9 +283,9 @@ function TeacherDashboard({ user }) {
             </p>
           </div>
 
-          <button className={styles.refreshButton} onClick={loadDashboard}>
-            Refresh
-          </button>
+          <div className={styles.headerIcon}>
+            <Activity size={22} />
+          </div>
         </section>
 
         <div className={styles.emptyState}>
@@ -202,9 +297,9 @@ function TeacherDashboard({ user }) {
   }
 
   return (
-    <div className={styles.dashboard}>
+    <div className={styles.page}>
       {/* Header */}
-      <section className={styles.header}>
+      <section className={styles.pageHeader}>
         <div>
           <div className={styles.eyebrow}>
             <Activity size={15} />
@@ -219,42 +314,17 @@ function TeacherDashboard({ user }) {
           </p>
         </div>
 
-        <button
-          className={styles.refreshButton}
-          onClick={loadDashboard}
-        >
-          Refresh
-        </button>
+        <div className={styles.headerIcon}>
+          <Activity size={22} />
+        </div>
       </section>
 
-      {error && (
-        <div className={styles.errorBox}>
+      {(error || batchesError) && (
+        <div className={styles.errorAlert}>
           <AlertCircle size={18} />
-          <span>{error}</span>
+          <span>{error || batchesError}</span>
         </div>
       )}
-
-      {/* Batch */}
-      <section className={styles.batchCard}>
-        <div className={styles.batchIcon}>
-          <Users size={22} />
-        </div>
-
-        <div className={styles.batchInfo}>
-          <span>Assigned Batch</span>
-          <strong>{batchName}</strong>
-
-          <small>
-            {studentCount} student
-            {studentCount !== 1 ? 's' : ''} assigned
-          </small>
-        </div>
-
-        <div className={styles.batchStatus}>
-          <span className={styles.statusDot} />
-          Active
-        </div>
-      </section>
 
       {/* Overview */}
       <section className={styles.statsGrid}>
@@ -263,6 +333,8 @@ function TeacherDashboard({ user }) {
           label="Total Students"
           value={studentCount}
           description="Students assigned"
+          tone="blue"
+          to={ROUTES.students}
         />
 
         <StatCard
@@ -270,7 +342,8 @@ function TeacherDashboard({ user }) {
           label="Present Today"
           value={presentCount}
           description="Attendance recorded"
-          positive
+          tone="green"
+          to={ROUTES.attendance}
         />
 
         <StatCard
@@ -278,6 +351,8 @@ function TeacherDashboard({ user }) {
           label="Not Recorded"
           value={absentCount}
           description="Needs attention"
+          tone="orange"
+          to={ROUTES.attendanceReports}
         />
 
         <StatCard
@@ -285,6 +360,8 @@ function TeacherDashboard({ user }) {
           label="Evaluations"
           value={`${evaluationPercentage}%`}
           description={`${evaluationCompleted}/${evaluationCount} completed`}
+          tone="red"
+          to={ROUTES.evaluations}
         />
       </section>
 
@@ -302,6 +379,39 @@ function TeacherDashboard({ user }) {
               <Clock size={18} />
             </div>
           </div>
+
+          {/* Batch switcher — a batch can be shared with other
+              supervisors, so switching here re-fetches the selected
+              batch and recomputes the attendance pie below. */}
+          {batches.length > 0 && (
+            <div className={styles.batchSwitcher}>
+              {batches.map((b, index) => {
+                const isActive =
+                  Number(b.id) === Number(selectedBatchId);
+
+                return (
+                  <button
+                    key={b.id}
+                    type="button"
+                    className={`${styles.batchChip} ${
+                      isActive ? styles.batchChipActive : ''
+                    }`}
+                    onClick={() => selectBatch(b.id)}
+                    aria-pressed={isActive}
+                    title={b.batch_label}
+                  >
+                    Batch {index + 1}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {selectedBatch && (
+            <p className={styles.batchSwitcherLabel}>
+              Showing: {batchName}
+            </p>
+          )}
 
           <div className={styles.attendanceOverview}>
             <div className={styles.attendanceCircle}>
@@ -333,225 +443,147 @@ function TeacherDashboard({ user }) {
               </div>
             </div>
           </div>
-
-          <button className={styles.linkButton}>
-            Open Attendance
-            <ArrowRight size={16} />
-          </button>
         </section>
 
-        {/* Attendance Status */}
+        {/* Documentation progress */}
         <section className={styles.card}>
           <div className={styles.cardHeader}>
             <div>
-              <h2>Attendance Window</h2>
-              <p>Current attendance session.</p>
+              <h2>Student Documentation</h2>
+              <p>
+                Documentation graded
+                {batchName ? ` · ${batchName}` : ''}
+              </p>
             </div>
 
-            <CalendarDays size={19} />
-          </div>
-
-          <div className={styles.sessionList}>
-            <Session
-              title="Morning"
-              time="8:00 AM – 8:30 AM"
-              active={
-                attendance?.morning_open === true ||
-                attendance?.am_open === true
-              }
-            />
-
-            <Session
-              title="Afternoon"
-              time="5:00 PM – 5:30 PM"
-              active={
-                attendance?.afternoon_open === true ||
-                attendance?.pm_open === true
-              }
-            />
-          </div>
-
-          <button className={styles.linkButton}>
-            Manage Attendance
-            <ArrowRight size={16} />
-          </button>
-        </section>
-      </div>
-
-      {/* Students + Quick Actions */}
-      <div className={styles.contentGrid}>
-        <section className={styles.card}>
-          <div className={styles.cardHeader}>
-            <div>
-              <h2>My Students</h2>
-              <p>Students under your supervision.</p>
-            </div>
-
-            <button className={styles.smallAction}>
-              View all
+            <Link
+              className={styles.smallAction}
+              to={ROUTES.documentation}
+            >
+              Open
               <ArrowRight size={14} />
-            </button>
+            </Link>
           </div>
 
-          {students.length === 0 ? (
+          {docSummary.length === 0 ? (
             <div className={styles.emptyState}>
-              <Users size={28} />
-              <p>No students assigned.</p>
+              <FolderOpen size={28} />
+              <p>No documentation records yet.</p>
             </div>
           ) : (
-            <div className={styles.studentList}>
-              {students.slice(0, 5).map((student, index) => {
-                const name =
-                  student.full_name ||
-                  student.name ||
-                  `${student.first_name || ''} ${
-                    student.last_name || ''
-                  }`.trim() ||
-                  'Unnamed Student';
+            <div className={styles.docOverview}>
+              <div className={styles.docPie}>
+                <svg
+                  viewBox="0 0 42 42"
+                  role="img"
+                  aria-label={`${docGradedPercentage}% of students have graded documentation`}
+                >
+                  <circle
+                    className={styles.docPieTrack}
+                    cx="21"
+                    cy="21"
+                    r="15.9155"
+                  />
 
-                const studentId =
-                  student.student_id ||
-                  student.student_number ||
-                  student.id ||
-                  '—';
+                  <circle
+                    className={styles.docPieValue}
+                    cx="21"
+                    cy="21"
+                    r="15.9155"
+                    strokeDasharray={`${docGradedPercentage} ${100 - docGradedPercentage}`}
+                    strokeDashoffset="25"
+                  />
+                </svg>
 
-                const record = records.find(
-                  (item) =>
-                    item.student_id === student.id ||
-                    item.student_id === student.student_id
-                );
+                <div className={styles.docPieInner}>
+                  <strong>{docGradedPercentage}%</strong>
+                  <span>Graded</span>
+                </div>
+              </div>
 
-                const isPresent =
-                  record &&
-                  (record.status === 'present' ||
-                    record.attendance_status === 'present' ||
-                    record.time_in);
-
-                return (
-                  <div
-                    className={styles.studentRow}
-                    key={student.id || student.student_id || index}
-                  >
-                    <div className={styles.avatar}>
-                      {name.charAt(0).toUpperCase()}
-                    </div>
-
-                    <div className={styles.studentDetails}>
-                      <strong>{name}</strong>
-                      <span>{studentId}</span>
-                    </div>
-
-                    <div
-                      className={
-                        isPresent
-                          ? styles.presentBadge
-                          : styles.pendingBadge
-                      }
-                    >
-                      {isPresent ? (
-                        <>
-                          <CheckCircle2 size={13} />
-                          Present
-                        </>
-                      ) : (
-                        <>
-                          <XCircle size={13} />
-                          No record
-                        </>
-                      )}
-                    </div>
+              <div className={styles.docLegend}>
+                <div>
+                  <span className={styles.docDotGraded} />
+                  <div>
+                    <strong>{docGradedStudents}</strong>
+                    <small>Students graded</small>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
-
-        <section className={styles.card}>
-          <div className={styles.cardHeader}>
-            <div>
-              <h2>Quick Actions</h2>
-              <p>Common teacher functions.</p>
-            </div>
-          </div>
-
-          <div className={styles.quickActions}>
-            <QuickAction
-              icon={<UserCheck />}
-              title="Attendance"
-              description="Monitor attendance"
-            />
-
-            <QuickAction
-              icon={<MapPin />}
-              title="Live Map"
-              description="Track students"
-            />
-
-            <QuickAction
-              icon={<ClipboardCheck />}
-              title="Evaluations"
-              description="Evaluate students"
-            />
-
-            <QuickAction
-              icon={<AlertCircle />}
-              title="Appeals"
-              description={`${appeals.length} pending`}
-              alert={appeals.length > 0}
-            />
-          </div>
-        </section>
-      </div>
-
-      {/* Recent activity */}
-      <section className={styles.card}>
-        <div className={styles.cardHeader}>
-          <div>
-            <h2>Recent Attendance Activity</h2>
-            <p>Latest attendance records from your students.</p>
-          </div>
-
-          <Clock size={18} />
-        </div>
-
-        {records.length === 0 ? (
-          <div className={styles.emptyState}>
-            <Clock size={28} />
-            <p>No attendance activity today.</p>
-          </div>
-        ) : (
-          <div className={styles.activityList}>
-            {records.slice(0, 6).map((record, index) => (
-              <div
-                className={styles.activityRow}
-                key={record.id || index}
-              >
-                <div className={styles.activityIcon}>
-                  <CheckCircle2 size={17} />
                 </div>
 
                 <div>
-                  <strong>
-                    {record.student_name ||
-                      record.full_name ||
-                      `Student ${record.student_id || ''}`}
-                  </strong>
+                  <span className={styles.docDotPending} />
+                  <div>
+                    <strong>{docNotGradedStudents}</strong>
+                    <small>Not yet graded</small>
+                  </div>
+                </div>
+              </div>
 
-                  <span>
-                    {record.time_in
-                      ? `Time in: ${formatTime(record.time_in)}`
-                      : 'Attendance recorded'}
-                  </span>
+              <div className={styles.docStats}>
+                <div className={styles.docStat}>
+                  <strong>{docGraded}</strong>
+                  <small>Docs graded</small>
                 </div>
 
-                <small>
-                  {record.date || 'Today'}
-                </small>
+                <div className={styles.docStat}>
+                  <strong>{docPending}</strong>
+                  <small>To review</small>
+                </div>
+
+                <div className={styles.docStat}>
+                  <strong>{docSubmitters}</strong>
+                  <small>Submitted</small>
+                </div>
+
+                <div className={styles.docStat}>
+                  <strong>{docTotal}</strong>
+                  <small>Total docs</small>
+                </div>
               </div>
-            ))}
+            </div>
+          )}
+        </section>
+      </div>
+
+      {/* Quick Actions */}
+      <section className={styles.card}>
+        <div className={styles.cardHeader}>
+          <div>
+            <h2>Quick Actions</h2>
+            <p>Common teacher functions.</p>
           </div>
-        )}
+        </div>
+
+        <div className={styles.quickActions}>
+          <QuickAction
+            icon={<UserCheck />}
+            title="Attendance"
+            description="Monitor attendance"
+            to={ROUTES.attendance}
+          />
+
+          <QuickAction
+            icon={<MapPin />}
+            title="Live Map"
+            description="Track students"
+            to={ROUTES.liveMap}
+          />
+
+          <QuickAction
+            icon={<ClipboardCheck />}
+            title="Evaluations"
+            description="Evaluate students"
+            to={ROUTES.evaluations}
+          />
+
+          <QuickAction
+            icon={<AlertCircle />}
+            title="Appeals"
+            description={`${appeals.length} pending`}
+            alert={appeals.length > 0}
+            to={ROUTES.appeals}
+          />
+        </div>
       </section>
     </div>
   );
@@ -562,56 +594,46 @@ function StatCard({
   label,
   value,
   description,
-  positive = false,
+  tone = 'blue',
+  to,
 }) {
-  return (
-    <div className={styles.statCard}>
-      <div
-        className={`${styles.statIcon} ${
-          positive ? styles.statIconPositive : ''
-        }`}
-      >
+  const toneClass = {
+    blue: styles.statBlue,
+    orange: styles.statOrange,
+    green: styles.statGreen,
+    red: styles.statRed,
+  }[tone];
+
+  const content = (
+    <>
+      <div className={`${styles.statIcon} ${toneClass}`}>
         {icon}
       </div>
 
-      <div className={styles.statContent}>
-        <span>{label}</span>
+      <div className={styles.statCopy}>
+        <span className={styles.statLabel}>{label}</span>
         <strong>{value}</strong>
         <small>{description}</small>
       </div>
-    </div>
+
+      {to && (
+        <span className={styles.statAction}>
+          <ArrowRight size={15} />
+        </span>
+      )}
+    </>
   );
-}
 
-function Session({ title, time, active }) {
-  return (
-    <div className={styles.session}>
-      <div className={styles.sessionLeft}>
-        <div
-          className={`${styles.sessionIcon} ${
-            active ? styles.sessionActive : ''
-          }`}
-        >
-          <Clock size={16} />
-        </div>
+  // Clickable cards navigate to the matching teacher page.
+  if (to) {
+    return (
+      <Link className={styles.statCard} to={to}>
+        {content}
+      </Link>
+    );
+  }
 
-        <div>
-          <strong>{title}</strong>
-          <span>{time}</span>
-        </div>
-      </div>
-
-      <span
-        className={
-          active
-            ? styles.sessionOpen
-            : styles.sessionClosed
-        }
-      >
-        {active ? 'Open' : 'Closed'}
-      </span>
-    </div>
-  );
+  return <div className={styles.statCard}>{content}</div>;
 }
 
 function QuickAction({
@@ -619,9 +641,10 @@ function QuickAction({
   title,
   description,
   alert = false,
+  to,
 }) {
-  return (
-    <button className={styles.quickAction}>
+  const content = (
+    <>
       <div className={styles.quickIcon}>{icon}</div>
 
       <div>
@@ -629,31 +652,27 @@ function QuickAction({
         <span>{description}</span>
       </div>
 
-      {alert && (
-        <span className={styles.alertCount}>
-          !
-        </span>
-      )}
+      {alert && <span className={styles.alertCount}>!</span>}
 
-      <ArrowRight
-        size={16}
-        className={styles.quickArrow}
-      />
+      <ArrowRight size={16} className={styles.quickArrow} />
+    </>
+  );
+
+  // Quick actions navigate to the matching teacher page when a route
+  // is provided, otherwise they stay as inert buttons.
+  if (to) {
+    return (
+      <Link className={styles.quickAction} to={to}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button className={styles.quickAction} type="button">
+      {content}
     </button>
   );
-}
-
-function formatTime(value) {
-  if (!value) return '';
-
-  try {
-    return new Date(value).toLocaleTimeString('en-PH', {
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-  } catch {
-    return value;
-  }
 }
 
 export default TeacherDashboard;

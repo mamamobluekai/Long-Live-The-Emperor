@@ -595,3 +595,569 @@
   color: #64748b;
   line-height: 1.3;
 }
+
+/* =========================================================
+   BATCH RANKING (teacher student grades)
+   ========================================================= */
+
+.rankingCard {
+  margin-top: 20px;
+  padding: 18px 20px;
+  border: 1px solid #eadcdf;
+  border-radius: 14px;
+  background: linear-gradient(150deg, #fdfafb 0%, #fff7f8 100%);
+}
+
+.rankingTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  color: #581725;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.rankingList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rankingRow {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 34% 54px 132px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.rankingRow + .rankingRow {
+  border-top: 1px solid #f2e9ec;
+}
+
+.rankingRank {
+  color: #8b1e2d;
+  font-size: 0.8rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.rankingName {
+  min-width: 0;
+  overflow: hidden;
+  color: #403338;
+  font-size: 0.82rem;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rankingBar {
+  display: block;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #f1e7ea;
+}
+
+.rankingFill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #581725, #822d3e);
+  transition: width 0.25s ease;
+}
+
+.rankingScore {
+  color: #403338;
+  font-size: 0.8rem;
+  font-weight: 780;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.rankingGrade {
+  color: #6b5b61;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+@media (max-width: 760px) {
+  .rankingRow {
+    grid-template-columns: 38px minmax(0, 1fr) 48px;
+    grid-template-areas:
+      'rank name score'
+      'bar  bar  bar';
+  }
+
+  .rankingRank { grid-area: rank; }
+  .rankingName { grid-area: name; }
+  .rankingBar { grid-area: bar; }
+  .rankingScore { grid-area: score; }
+  .rankingGrade { display: none; }
+}
+
+
+/* =========================================================
+   TOP RANKING (all batches) — button + modal
+   ========================================================= */
+
+.overallRankBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  min-height: 38px;
+
+  padding: 0 15px;
+
+  border: 1px solid #dcc9cf;
+  border-radius: 999px;
+
+  background: #fff;
+
+  color: #581725;
+
+  font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.15s ease;
+}
+
+.overallRankBtn:hover {
+  background: #fffafb;
+  border-color: #b8394f;
+  transform: translateY(-1px);
+}
+
+.overallRankCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 20px;
+  height: 20px;
+
+  padding: 0 6px;
+
+  border-radius: 999px;
+
+  background: #fdf0f2;
+  border: 1px solid #f6cfd6;
+
+  color: #8b1e2d;
+
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.rankModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(23, 32, 51, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.rankModal {
+  display: flex;
+  flex-direction: column;
+
+  width: min(860px, 94vw);
+  max-height: 88vh;
+
+  border: 1px solid #e6dfe2;
+  border-radius: 18px;
+
+  background: #fff;
+
+  box-shadow: 0 32px 70px -30px rgba(80, 20, 32, 0.45);
+
+  overflow: hidden;
+}
+
+.rankModalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+
+  padding: 20px 22px;
+
+  border-bottom: 1px solid #ecdfe2;
+
+  background: linear-gradient(130deg, #ffffff 0%, #fdf3f5 60%, #fbe9ec 100%);
+}
+
+.rankModalEyebrow {
+  display: block;
+  color: #9c8189;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+.rankModalHeader h3 {
+  margin: 3px 0 0;
+  color: #172033;
+  font-size: 1.1rem;
+  font-weight: 780;
+  letter-spacing: -0.02em;
+}
+
+.rankModalHeader p {
+  margin: 4px 0 0;
+  color: #8490a1;
+  font-size: 0.78rem;
+}
+
+.rankModalClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: 1px solid #dcc9cf;
+  border-radius: 9px;
+  background: #fff;
+  color: #596579;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.rankModalClose:hover {
+  background: #fde3e8;
+  border-color: #f0b7c2;
+  color: #b4233b;
+}
+
+.rankModalBody {
+  flex: 1;
+  min-height: 0;
+  padding: 18px 22px 22px;
+  overflow-y: auto;
+}
+
+.rankModalList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rankModalRow {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) 150px 26% 56px 130px;
+  align-items: center;
+  gap: 12px;
+
+  padding: 11px 0;
+}
+
+.rankModalRow + .rankModalRow {
+  border-top: 1px solid #f2e9ec;
+}
+
+.rankModalRank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 26px;
+
+  padding: 0 8px;
+
+  border-radius: 8px;
+
+  background: #f1e7ea;
+
+  color: #6b5b61;
+
+  font-size: 0.74rem;
+  font-weight: 800;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.rankFirst {
+  background: linear-gradient(140deg, #b8860b, #d9a441);
+  color: #fff;
+}
+
+.rankSecond {
+  background: linear-gradient(140deg, #8b93a1, #aeb6c2);
+  color: #fff;
+}
+
+.rankThird {
+  background: linear-gradient(140deg, #a1632c, #c98a4b);
+  color: #fff;
+}
+
+.rankModalName {
+  min-width: 0;
+  overflow: hidden;
+  color: #172033;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rankModalBatch {
+  min-width: 0;
+  overflow: hidden;
+  color: #8490a1;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rankModalBar {
+  display: block;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #f1e7ea;
+}
+
+.rankModalFill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #581725, #822d3e);
+  transition: width 0.25s ease;
+}
+
+.rankModalScore {
+  color: #172033;
+  font-size: 0.8rem;
+  font-weight: 780;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.rankModalGrade {
+  color: #6b5b61;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+@media (max-width: 860px) {
+  .rankModalOverlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .rankModal {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .rankModalHeader,
+  .rankModalBody {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .rankModalRow {
+    grid-template-columns: 42px minmax(0, 1fr) 52px;
+    grid-template-areas:
+      'rank name  score'
+      'batch batch batch'
+      'bar   bar   bar';
+    row-gap: 6px;
+  }
+
+  .rankModalRank { grid-area: rank; }
+  .rankModalName { grid-area: name; }
+  .rankModalScore { grid-area: score; }
+  .rankModalBatch { grid-area: batch; }
+  .rankModalBar { grid-area: bar; }
+  .rankModalGrade { display: none; }
+}
+
+
+/* =========================================================
+   STUDENT CRITERIA GRADES (teacher student grades)
+   ========================================================= */
+
+.clickableRow {
+  cursor: pointer;
+}
+
+.clickableRow:focus-visible {
+  outline: 2px solid #b8394f;
+  outline-offset: -2px;
+}
+
+.skillSummary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.skillCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  padding: 14px 16px;
+
+  border: 1px solid #bfe6cc;
+  border-radius: 13px;
+
+  background: linear-gradient(140deg, #f4fbf7 0%, #eaf8ef 100%);
+}
+
+.skillCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: 4px;
+  height: 100%;
+
+  border-radius: 13px 0 0 13px;
+
+  background: linear-gradient(180deg, #15803d, #27a35a);
+}
+
+.skillCardWeak {
+  border-color: #f0d7dc;
+  background: linear-gradient(140deg, #fff8fa 0%, #fdeff2 100%);
+}
+
+.skillCardWeak::before {
+  background: linear-gradient(180deg, #b4233b, #dc2626);
+}
+
+.skillLabel {
+  color: #6b5b61;
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.skillName {
+  color: #172033;
+  font-size: 0.88rem;
+  font-weight: 780;
+  letter-spacing: -0.01em;
+}
+
+.skillScore {
+  color: #15803d;
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.skillCardWeak .skillScore {
+  color: #b4233b;
+}
+
+.criteriaBlock {
+  margin-bottom: 14px;
+  padding: 15px 16px;
+  border: 1px solid #e6dfe2;
+  border-radius: 13px;
+  background: linear-gradient(150deg, #fdfafb 0%, #fff7f8 100%);
+}
+
+.criteriaBlockHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.criteriaBlockName {
+  color: #172033;
+  font-size: 0.86rem;
+  font-weight: 750;
+}
+
+.criteriaBlockPct {
+  color: #8b1e2d;
+  font-size: 0.85rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.criteriaBlockBar {
+  display: block;
+  height: 8px;
+  margin: 9px 0 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #f1e7ea;
+}
+
+.criteriaBlockFill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #581725, #822d3e);
+  transition: width 0.25s ease;
+}
+
+.criteriaBlockList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.criteriaItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 6px 0;
+  color: #596579;
+  font-size: 0.79rem;
+}
+
+.criteriaItem + .criteriaItem {
+  border-top: 1px solid #f2e9ec;
+}
+
+.criteriaItemLabel {
+  min-width: 0;
+}
+
+.criteriaItemRating {
+  flex-shrink: 0;
+  color: #403338;
+  font-size: 0.78rem;
+  font-weight: 780;
+  font-variant-numeric: tabular-nums;
+}

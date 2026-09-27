@@ -158,19 +158,27 @@ function DailyDocumentation() {
     if (!activeDay) return;
     setModalError('');
 
-    if (!docFile && !reasoning.trim()) {
-      setModalError('Please attach a file or enter a description.');
+    if (!docFile) {
+      setModalError('Please attach a file (photo, PDF or document) as evidence.');
+      return;
+    }
+
+    if (!reasoning.trim()) {
+      setModalError('Please describe your activities and what you learned.');
       return;
     }
 
     setSubmitting(true);
     try {
-      let fileId = null;
-      if (docFile) {
-        setUploading(true);
-        const uploadRes = await uploadMyFile(docFile);
+      setUploading(true);
+      const uploadRes = await uploadMyFile(docFile);
+      setUploading(false);
+      const fileId = uploadRes?.id || uploadRes?.file?.id || null;
+      if (!fileId) {
+        setModalError('Could not attach the file. Please try again.');
         setUploading(false);
-        fileId = uploadRes?.id || uploadRes?.file?.id || null;
+        setSubmitting(false);
+        return;
       }
       await submitDailyDoc({
         date: normalizeDateKey(activeDay.date),
@@ -376,11 +384,15 @@ function DailyDocumentation() {
               </label>
 
               <label className={styles.label}>
-                Attach File (optional)
+                Attach File (required)
                 <input
                   type="file"
+                  accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
                   onChange={(e) => setDocFile(e.target.files?.[0] || null)}
                 />
+                <span className={styles.labelHint}>
+                  Upload a photo, PDF, Word or Excel file as evidence for the day.
+                </span>
               </label>
 
               <div className={styles.modalActions}>

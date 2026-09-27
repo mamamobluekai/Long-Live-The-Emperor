@@ -1,6 +1,7 @@
-import { useEffect, useState, useCallback } from 'react';
-import { CheckCircle, ChevronDown, ChevronUp, Filter } from 'lucide-react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { CheckCircle, ChevronDown, ChevronUp, Filter, X } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
+import { useTeacherBatch } from '../../../hooks/useTeacherBatch';
 import { getTeacherReportsConcerns, confirmReportConcern } from '../../../api/teacherApi';
 import styles from './TeacherReportsConcerns.module.css';
 
@@ -81,14 +82,14 @@ function sortByPriority(reports) {
 
 function TeacherReportsConcerns() {
   const { token } = useAuth();
+  const { batchId, batchLabel } = useTeacherBatch();
   const [reports, setReports] = useState([]);
   const [priorityFilter, setPriorityFilter] = useState('all');
-  const [batchFilter, setBatchFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState(null);
   const [confirmingId, setConfirmingId] = useState(null);
   const [collapsedGroups, setCollapsedGroups] = useState([]);
-  const [expandedId, setExpandedId] = useState(null);
+  const [detailReport, setDetailReport] = useState(null);
 
   const loadReports = useCallback(async () => {
     setLoading(true);
@@ -121,22 +122,29 @@ function TeacherReportsConcerns() {
     }
   };
 
+  // The batch is chosen in the sidebar; switching it refilters this page.
+  useEffect(() => {
+    setCollapsedGroups([]);
+    setDetailReport(null);
+  }, [batchId]);
+
   const priorityOptions = ['urgent', 'high', 'normal', 'low'];
-  const batchOptions = Array.from(
-    new Set(reports.map(getBatchLabel))
-  ).sort((a, b) => a.localeCompare(b));
+
+  const batchReports = useMemo(
+    () =>
+      reports.filter(
+        (report) => !batchId || Number(report.teacher_batch_id) === Number(batchId)
+      ),
+    [reports, batchId]
+  );
 
   const filteredReports = sortByPriority(
     priorityFilter === 'all'
-      ? reports
-      : reports.filter((report) => getPriorityLevel(report.priority) === priorityFilter)
+      ? batchReports
+      : batchReports.filter((report) => getPriorityLevel(report.priority) === priorityFilter)
   );
 
-  const batchFilteredReports = batchFilter === 'all'
-    ? filteredReports
-    : filteredReports.filter((report) => getBatchLabel(report) === batchFilter);
-
-  const groupedReports = groupByBatch(batchFilteredReports);
+  const groupedReports = groupByBatch(filteredReports);
 
   const toggleGroup = (label) => {
     setCollapsedGroups((prev) => (
@@ -144,9 +152,20 @@ function TeacherReportsConcerns() {
     ));
   };
 
-  const toggleExpand = (reportId) => {
-    setExpandedId((prev) => (prev === reportId ? null : reportId));
-  };
+  // Escape closes the concern drawer.
+  useEffect(() => {
+    if (!detailReport) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setDetailReport(null);
+    };
+    document.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [detailReport]);
 
   return (
     <div className={styles.page}>
@@ -154,7 +173,7 @@ function TeacherReportsConcerns() {
         <div>
           <span className={styles.eyebrow}>SUPERVISOR REPORTS</span>
           <h1>Reports and Concerns</h1>
-          <p>Reports and concerns submitted by supervisors for students in your batches.</p>
+          <p>Reports and concerns submitted by supervisors for students in your batches{batchLabel ? ` (${batchLabel})` : ''}.</p>
         </div>
       </header>
 
@@ -176,58 +195,39 @@ function TeacherReportsConcerns() {
             </button>
           ))}
         </div>
-
-        <div className={styles.filterGroup}>
-          <span className={styles.filterLabel}>Batch</span>
-          <button
-            type="button"
-            aria-pressed={batchFilter === 'all'}
-            className={batchFilter === 'all' ? `${styles.filterBtn} ${styles.filterActive}` : styles.filterBtn}
-            onClick={() => setBatchFilter('all')}
-          >
-            All Batches
-          </button>
-          {batchOptions.map((batch) => (
-            <button
-              key={batch}
-              type="button"
-              aria-pressed={batchFilter === batch}
-              className={batchFilter === batch ? `${styles.filterBtn} ${styles.filterActive}` : styles.filterBtn}
-              onClick={() => setBatchFilter(batch)}
-            >
-              {batch}
-            </button>
-          ))}
-        </div>
       </div>
+
+      {!batchId && !loading && (
+        <p className={styles.empty}>Select a batch in the sidebar to view its concerns.</p>
+      )}
 
       {loading && <p className={styles.info}>Loading reports and concerns…</p>}
 
-      {!loading && Object.keys(groupedReports).length === 0 && (
+      {!loading && batchId && Object.keys(groupedReports).length === 0 && (
         <p className={styles.empty}>No reports or concerns match these filters.</p>
       )}
 
-      {!loading && Object.entries(groupedReports).map(([batchLabel, batchReports]) => {
-        const isCollapsed = collapsedGroups.includes(batchLabel);
+      {!loading && batchId && Object.entries(groupedReports).map(([batchLabelKey, batchGroupReports]) => {
+        const isCollapsed = collapsedGroups.includes(batchLabelKey);
 
         return (
-          <div key={batchLabel} className={styles.batchGroup}>
+          <div key={batchLabelKey} className={styles.batchGroup}>
             <div
               className={styles.batchHeader}
-              onClick={() => toggleGroup(batchLabel)}
+              onClick={() => toggleGroup(batchLabelKey)}
               role="button"
               tabIndex={0}
               aria-expanded={!isCollapsed}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
-                  toggleGroup(batchLabel);
+                  toggleGroup(batchLabelKey);
                 }
               }}
             >
-              <span className={styles.batchLabel}>{batchLabel}</span>
+              <span className={styles.batchLabel}>{batchLabelKey}</span>
               <span className={styles.batchCount}>
-                {batchReports.length} concern{batchReports.length !== 1 ? 's' : ''}
+                {batchGroupReports.length} concern{batchGroupReports.length !== 1 ? 's' : ''}
               </span>
               {isCollapsed ? (
                 <ChevronDown size={16} className={styles.batchToggle} />
@@ -238,27 +238,25 @@ function TeacherReportsConcerns() {
 
             {!isCollapsed && (
               <div className={styles.batchContent}>
-                {batchReports.map((report) => {
+                {batchGroupReports.map((report) => {
                   const priorityLevel = getPriorityLevel(report.priority);
                   const itemClass = priorityLevel === 'urgent'
                     ? styles.itemUrgent
                     : priorityLevel === 'high'
                       ? styles.itemHigh
                       : '';
-                  const isExpanded = expandedId === report.id;
 
                   return (
                     <div key={report.id} className={`${styles.card} ${itemClass}`}>
                       <div
                         className={styles.cardSummary}
-                        onClick={() => toggleExpand(report.id)}
+                        onClick={() => setDetailReport(report)}
                         role="button"
                         tabIndex={0}
-                        aria-expanded={isExpanded}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
-                            toggleExpand(report.id);
+                            setDetailReport(report);
                           }
                         }}
                       >
@@ -276,66 +274,17 @@ function TeacherReportsConcerns() {
                             <span className={`${styles.badge} ${styles[getBadgeClass(report.status)]}`}>
                               {report.status}
                             </span>
-                            {isExpanded ? (
-                              <ChevronUp size={14} className={styles.expandIcon} />
-                            ) : (
-                              <ChevronDown size={14} className={styles.expandIcon} />
-                            )}
+                            <ChevronDown size={14} className={styles.expandIcon} />
                           </div>
                         </div>
 
-                        {!isExpanded && (
-                          <div className={styles.summaryLine}>
-                            <span className={styles.supervisorSummary}>
-                              <span className={styles.fromLabel}>From:</span> {getSupervisorName(report)}
-                              {report.supervisor_company && <span className={styles.companyTag}>{report.supervisor_company}</span>}
-                            </span>
-                          </div>
-                        )}
+                        <div className={styles.summaryLine}>
+                          <span className={styles.supervisorSummary}>
+                            <span className={styles.fromLabel}>From:</span> {getSupervisorName(report)}
+                            {report.supervisor_company && <span className={styles.companyTag}>{report.supervisor_company}</span>}
+                          </span>
+                        </div>
                       </div>
-
-                      {isExpanded && (
-                        <div className={styles.cardDetails}>
-                          <div className={styles.detailsRow}>
-                            <span className={styles.detailItem}>
-                              <span className={styles.detailLabel}>Batch</span>
-                              {getBatchLabel(report)}
-                            </span>
-                            <span className={styles.detailItem}>
-                              <span className={styles.detailLabel}>From</span>
-                              {getSupervisorName(report)}
-                              {report.supervisor_company && <span className={styles.companyTag}>{report.supervisor_company}</span>}
-                            </span>
-                            <span className={styles.detailItem}>
-                              <span className={styles.detailLabel}>Concern</span>
-                              {getConcernType(report)}
-                            </span>
-                            <span className={styles.detailItem}>
-                              <span className={styles.detailLabel}>Student</span>
-                              {[report.grade_level, report.track_strand].filter(Boolean).join(' / ') || 'No academic details'}
-                            </span>
-                          </div>
-
-                          <div className={styles.messageBox}>
-                            <span className={styles.detailLabel}>Concern details</span>
-                            <p className={styles.message}>
-                              {report.message || 'No message was included with this concern.'}
-                            </p>
-                          </div>
-
-                          {report.status === 'open' && (
-                            <button
-                              type="button"
-                              className={styles.confirmBtn}
-                              onClick={() => handleConfirm(report.id)}
-                              disabled={confirmingId === report.id}
-                            >
-                              <CheckCircle size={14} />
-                              {confirmingId === report.id ? 'Confirming...' : 'Confirm'}
-                            </button>
-                          )}
-                        </div>
-                      )}
                     </div>
                   );
                 })}
@@ -344,6 +293,109 @@ function TeacherReportsConcerns() {
           </div>
         );
       })}
+
+      {/* Concern detail drawer */}
+      {detailReport && (
+        <div
+          className={styles.drawerOverlay}
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setDetailReport(null);
+          }}
+        >
+          <aside
+            className={styles.drawer}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="concern-drawer-title"
+          >
+            <div className={styles.drawerHeader}>
+              <div>
+                <span className={styles.drawerEyebrow}>{getConcernType(detailReport)}</span>
+                <h3 id="concern-drawer-title">
+                  {detailReport.first_name} {detailReport.last_name}
+                </h3>
+                <p>
+                  {detailReport.student_number || 'No ID'} · {formatDate(detailReport.created_at)}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.drawerClose}
+                onClick={() => setDetailReport(null)}
+                aria-label="Close concern details"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className={styles.drawerBody}>
+              <div className={styles.drawerTags}>
+                <span className={`${styles.priority} ${styles[getPriorityBadgeClass(detailReport.priority)]}`}>
+                  {getPriorityLabel(detailReport)}
+                </span>
+                <span className={`${styles.badge} ${styles[getBadgeClass(detailReport.status)]}`}>
+                  {detailReport.status}
+                </span>
+              </div>
+
+              <div className={styles.drawerGrid}>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Batch</span>
+                  {getBatchLabel(detailReport)}
+                </div>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Concern type</span>
+                  {getConcernType(detailReport)}
+                </div>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Reported by</span>
+                  {getSupervisorName(detailReport)}
+                </div>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Company</span>
+                  {detailReport.supervisor_company || '—'}
+                </div>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Student ID</span>
+                  {detailReport.student_number || 'No ID'}
+                </div>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Grade / Strand</span>
+                  {[detailReport.grade_level, detailReport.track_strand].filter(Boolean).join(' / ') || 'No academic details'}
+                </div>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Date reported</span>
+                  {formatDate(detailReport.created_at)}
+                </div>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Status</span>
+                  {detailReport.status}
+                </div>
+              </div>
+
+              <div className={styles.messageBox}>
+                <span className={styles.detailLabel}>Concern details</span>
+                <p className={styles.message}>
+                  {detailReport.message || 'No message was included with this concern.'}
+                </p>
+              </div>
+
+              {detailReport.status === 'open' && (
+                <button
+                  type="button"
+                  className={styles.confirmBtn}
+                  onClick={() => handleConfirm(detailReport.id)}
+                  disabled={confirmingId === detailReport.id}
+                >
+                  <CheckCircle size={14} />
+                  {confirmingId === detailReport.id ? 'Confirming...' : 'Confirm'}
+                </button>
+              )}
+            </div>
+          </aside>
+        </div>
+      )}
     </div>
   );
 }

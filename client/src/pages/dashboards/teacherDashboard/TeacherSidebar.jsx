@@ -1,4 +1,5 @@
 import DashboardSidebar from '../sharedSidebar/DashboardSidebar';
+import TeacherSidebarBatchSwitcher from './TeacherSidebarBatchSwitcher';
 
 import {
   ChartNoAxesColumn,
@@ -33,12 +34,6 @@ const links = [
   },
 
   {
-    to: '/dashboard/teacher/attendance-reports',
-    label: 'Attendance Reports & Records',
-    icon: CalendarDays,
-  },
-
-  {
     to: '/dashboard/teacher/live-map',
     label: 'Live Map',
     icon: Map,
@@ -52,7 +47,7 @@ const links = [
 
   {
     to: '/dashboard/teacher/evaluations',
-    label: 'Evaluations',
+    label: 'Student Grades',
     icon: ClipboardPenLine,
   },
 
@@ -81,6 +76,7 @@ function TeacherSidebar() {
       title="Teacher"
       subtitle="Work Immersion"
       links={links}
+      aboveNav={<TeacherSidebarBatchSwitcher />}
     />
   );
 }

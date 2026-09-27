@@ -373,6 +373,19 @@
   color: #2a3a4a;
 }
 
+/* Immersion day has not arrived yet — neutral, never an absence */
+.upcoming {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px dashed #cbd5e1;
+}
+
+/* Day has arrived but nothing was recorded */
+.unrecorded {
+  background: #f4f1f2;
+  color: #6b5b61;
+}
+
 /* ================================
    APPEAL MARK
 ================================ */
@@ -421,7 +434,14 @@
     flex-direction: column;
   }
 
-  .legend {
+.headerTools {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.legend {
     flex-wrap: wrap;
     white-space: normal;
   }

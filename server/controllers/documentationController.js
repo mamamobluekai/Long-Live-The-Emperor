@@ -1,5 +1,6 @@
 const pool = require('../db');
 const { nowInManilaDateOnly, isValidManilaDate } = require('../utils/manilaDate');
+const { computeGradeFromRatings, ratingForScore, validateRatings } = require('../utils/criteriaGrading');
 const { createNotification, getStudentUserId, getBatchTeacherUserId } = require('../services/notification.service');
 
 async function ensureDocumentationTables() {
@@ -19,9 +20,23 @@ async function ensureDocumentationTables() {
       graded_at TIMESTAMP,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      criteria_ratings JSONB,
+      final_stars SMALLINT CHECK (final_stars BETWEEN 1 AND 4),
+      final_label VARCHAR(50),
+      submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       UNIQUE (student_id, teacher_batch_id, date)
     );
+  `);
 
+  // Older installs predate the star-rating columns.
+  await pool.query(`
+    ALTER TABLE student_daily_documentation ADD COLUMN IF NOT EXISTS submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+    ALTER TABLE student_daily_documentation ADD COLUMN IF NOT EXISTS criteria_ratings JSONB;
+    ALTER TABLE student_daily_documentation ADD COLUMN IF NOT EXISTS final_stars SMALLINT;
+    ALTER TABLE student_daily_documentation ADD COLUMN IF NOT EXISTS final_label VARCHAR(50);
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS documentation_criteria (
       id SERIAL PRIMARY KEY,
       criterion_name VARCHAR(255) NOT NULL,
@@ -108,6 +123,11 @@ async function submitDailyDoc(req, res) {
     if (!isValidManilaDate(date)) {
       return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD.' });
     }
+    // Evidence is mandatory: a daily documentation entry without an attached
+    // file is not acceptable work-immersion evidence.
+    if (!fileId) {
+      return res.status(400).json({ error: 'An evidence file is required. Please attach a photo or document.' });
+    }
 
     const today = nowInManilaDateOnly();
     if (date > today) {
@@ -155,8 +175,8 @@ async function submitDailyDoc(req, res) {
     }
 
     const result = await pool.query(
-      `INSERT INTO student_daily_documentation (student_id, teacher_batch_id, date, day_number, file_id, reasoning, status)
-       VALUES ($1, $2, $3, $4, $5, $6, 'submitted')
+      `INSERT INTO student_daily_documentation (student_id, teacher_batch_id, date, day_number, file_id, reasoning, status, submitted_at)
+       VALUES ($1, $2, $3, $4, $5, $6, 'submitted', CURRENT_TIMESTAMP)
        ON CONFLICT (student_id, teacher_batch_id, date) DO UPDATE SET
          file_id = EXCLUDED.file_id,
          reasoning = EXCLUDED.reasoning,
@@ -189,28 +209,44 @@ async function gradeDailyDoc(req, res) {
   try {
     await ensureDocumentationTables();
     const { docId } = req.params;
-    const { teacherScore, teacherFeedback } = req.body || {};
-    if (teacherScore === undefined || teacherScore === null) {
-      return res.status(400).json({ error: 'Teacher score is required.' });
-    }
-    const score = parseInt(teacherScore, 10);
-    if (isNaN(score) || score < 0 || score > 100) {
-      return res.status(400).json({ error: 'Score must be between 0 and 100.' });
-    }
+    const { teacherFeedback, criteriaRatings } = req.body || {};
+
+    // The teacher rates every criterion 1-5 stars; the grade follows from those
+    // ratings, weighted by each criterion's points.
+    const criteriaResult = await pool.query(
+      'SELECT id, criterion_name, points, description, sort_order FROM documentation_criteria ORDER BY sort_order ASC, id ASC'
+    );
+    const criteria = criteriaResult.rows;
+
+    const invalid = validateRatings(criteriaRatings, criteria);
+    if (invalid) return res.status(400).json({ error: invalid });
+
+    const grade = computeGradeFromRatings(criteria, criteriaRatings);
 
     const result = await pool.query(
       `UPDATE student_daily_documentation
-       SET teacher_score = $1, teacher_feedback = $2, status = 'graded', graded_by = $3, graded_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $4
+       SET teacher_score = $1, teacher_feedback = $2, criteria_ratings = $3,
+           final_stars = $4, final_label = $5,
+           status = 'graded', graded_by = $6, graded_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $7
        RETURNING *`,
-      [score, teacherFeedback || '', req.user.id, docId]
+      [
+        grade.total,
+        teacherFeedback || '',
+        JSON.stringify(criteriaRatings),
+        grade.stars,
+        grade.label,
+        req.user.id,
+        docId,
+      ]
     );
     if (!result.rows.length) return res.status(404).json({ error: 'Documentation not found.' });
+
     const studentUserId = await getStudentUserId(result.rows[0].student_id);
     void createNotification({
       userId: studentUserId,
       title: 'Daily documentation graded',
-      message: `Your daily documentation received a score of ${score}/100.`,
+      message: `Your daily documentation received ${grade.stars} star${grade.stars === 1 ? '' : 's'} (${grade.label}).`,
       type: 'documentation',
       category: 'documentation',
       actionUrl: '/dashboard/student/daily-documentation',
@@ -219,7 +255,8 @@ async function gradeDailyDoc(req, res) {
       entityId: result.rows[0].id,
       eventKey: `documentation-graded:${result.rows[0].id}:${result.rows[0].updated_at}`,
     }).catch((err) => console.error('Documentation grading notification failed:', err.message));
-    res.json({ doc: result.rows[0] });
+
+    res.json({ doc: result.rows[0], grade });
   } catch (err) {
     console.error('gradeDailyDoc error:', err);
     res.status(500).json({ error: 'Server error.' });

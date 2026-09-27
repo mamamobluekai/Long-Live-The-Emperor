@@ -6,7 +6,7 @@ import { io } from 'socket.io-client';
 import { useAuth } from '../../../context/AuthContext';
 import { useTeacherBatch } from '../../../hooks/useTeacherBatch';
 import { getBatchCurrentLocations } from '../../../api/teacherApi';
-import TeacherBatchPicker from './TeacherBatchPicker';
+import { buildBatchColorMap } from '../../../utils/batchColors';
 import styles from './LiveMap.module.css';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
@@ -48,15 +48,15 @@ const SOCKET_CONFIG = {
   reconnectionAttempts: 5,
 };
 
-function FitBounds({ batchId }) {
+function FitBounds({ viewKey }) {
   const map = useMap();
   const framedBatchRef = useRef(null);
 
   useEffect(() => {
-    if (framedBatchRef.current === batchId) return;
+    if (framedBatchRef.current === viewKey) return;
     map.setView(MAP_CONFIG.center, MAP_CONFIG.initialZoom);
-    framedBatchRef.current = batchId;
-  }, [map, batchId]);
+    framedBatchRef.current = viewKey;
+  }, [map, viewKey]);
 
   return null;
 }
@@ -112,26 +112,34 @@ function MapLayerControl({ layer, onLayerChange }) {
 }
 
 // Avatar marker showing the student's initials + name + ID directly on the map.
+// The avatar fill encodes the student's BATCH (so a teacher handling several
+// batches can tell them apart); check-in status stays readable through the
+// status dot and a dashed ring on the avatar.
 function getInitials(student) {
   const f = (student.first_name || '').trim().charAt(0);
   const l = (student.last_name || '').trim().charAt(0);
   return (f + l).toUpperCase() || '?';
 }
 
-function makeAvatarIcon(student) {
+function makeAvatarIcon(student, color) {
   const isCheckedIn = student.status === 'checked_in';
-  const color = isCheckedIn ? '#22c55e' : '#9ca3af';
+  const fill = color || '#64748b';
   const initials = getInitials(student);
   const name = `${student.first_name || ''} ${student.last_name || ''}`.trim();
   const sid = student.student_number || student.student_id || '';
+  const ring = isCheckedIn ? '3px solid #ffffff' : '3px dashed rgba(255,255,255,0.85)';
+  const opacity = isCheckedIn ? '1' : '0.75';
+  const batchTag = student.batch_label
+    ? `<div style="margin-top:2px;display:inline-block;background:${fill};color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;white-space:nowrap;font-family:inherit;max-width:120px;overflow:hidden;text-overflow:ellipsis;">${student.batch_label}</div>`
+    : '';
 
   const html = `
     <div style="display:flex;flex-direction:column;align-items:center;transform:translateY(-6px);">
       <div style="position:relative;width:40px;height:40px;">
-        <div style="width:40px;height:40px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;font-family:inherit;">
+        <div style="width:40px;height:40px;border-radius:50%;background:${fill};border:${ring};box-shadow:0 2px 6px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;font-family:inherit;opacity:${opacity};">
           ${initials}
         </div>
-        ${isCheckedIn ? `<div style="position:absolute;right:-2px;bottom:-2px;width:14px;height:14px;border-radius:50%;background:#16a34a;border:2px solid #fff;"></div>` : ''}
+        <div style="position:absolute;right:-2px;bottom:-2px;width:14px;height:14px;border-radius:50%;background:${isCheckedIn ? '#16a34a' : '#9ca3af'};border:2px solid #fff;"></div>
       </div>
       <div style="margin-top:3px;background:#0f172a;color:#fff;font-size:10px;font-weight:600;padding:1px 6px;border-radius:6px;white-space:nowrap;font-family:inherit;max-width:120px;overflow:hidden;text-overflow:ellipsis;">
         ${name}
@@ -139,21 +147,22 @@ function makeAvatarIcon(student) {
       <div style="font-size:9px;color:#334155;background:#fff;border:1px solid #e2e8f0;padding:0 5px;border-radius:5px;white-space:nowrap;font-family:inherit;">
         #${sid}
       </div>
+      ${batchTag}
     </div>
   `;
 
   return L.divIcon({
     html,
     className: 'student-avatar-marker',
-    iconSize: [40, 76],
+    iconSize: [40, 92],
     iconAnchor: [20, 20],
     popupAnchor: [0, -20],
   });
 }
 
-function StudentMarker({ student }) {
+function StudentMarker({ student, color }) {
   const isCheckedIn = student.status === 'checked_in';
-  const icon = makeAvatarIcon(student);
+  const icon = makeAvatarIcon(student, color);
   const lat = Number(student.latitude);
   const lng = Number(student.longitude);
 
@@ -186,6 +195,21 @@ function StudentMarker({ student }) {
               {isCheckedIn ? 'Checked in' : 'Not checked in'}
             </span>
           </div>
+          {student.batch_label && (
+            <div className={styles.popupMeta}>
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  background: color,
+                  marginRight: '6px',
+                }}
+              />
+              Batch: {student.batch_label}
+            </div>
+          )}
           {(student.grade_level || student.track_strand) && (
             <div className={styles.popupMeta}>
               {[student.grade_level, student.track_strand].filter(Boolean).join(' · ')}
@@ -215,7 +239,7 @@ function StudentMarker({ student }) {
 
 function LiveMap() {
   const { token } = useAuth();
-  const { batchId: selectedBatchId, batchLabel } = useTeacherBatch();
+  const { batches, loading: batchesLoading } = useTeacherBatch();
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -228,40 +252,71 @@ function LiveMap() {
   const abortControllerRef = useRef(null);
   const locationUpdateTimeoutRef = useRef(null);
 
-  // Fetch student locations for selected batch
+  // The map is NOT scoped to the selected batch: it shows the students of
+  // every batch the teacher handles, colored by batch.
+  const batchKey = useMemo(() => batches.map((b) => Number(b.id)).join(','), [batches]);
+  const batchIds = useMemo(() => batchKey ? batchKey.split(',').map(Number) : [], [batchKey]);
+  const colorMap = useMemo(() => buildBatchColorMap(batches), [batches]);
+  const hasBatches = batches.length > 0;
+
+  // Fetch student locations for every assigned batch
   useEffect(() => {
-    if (!selectedBatchId || !token) return;
+    if (!token || !hasBatches) {
+      setStudents([]);
+      setLoading(!batchesLoading);
+      return undefined;
+    }
+    let cancelled = false;
     const fetchLocations = async () => {
       setLoading(true);
       setError(null);
       abortControllerRef.current?.abort();
       abortControllerRef.current = new AbortController();
       try {
-        const res = await getBatchCurrentLocations(selectedBatchId, token, {
-          signal: abortControllerRef.current.signal,
+        const results = await Promise.all(
+          batchIds.map((id) =>
+            getBatchCurrentLocations(id, token, { signal: abortControllerRef.current.signal })
+          )
+        );
+        if (cancelled) return;
+        const merged = [];
+        const seen = new Set();
+        let message = null;
+        results.forEach((res, index) => {
+          const id = batchIds[index];
+          const label = batches.find((b) => Number(b.id) === id)?.batch_label || '';
+          if (res?.message && !message) message = res.message;
+          (res?.students || []).forEach((s) => {
+            if (seen.has(s.student_id)) return;
+            seen.add(s.student_id);
+            merged.push({ ...s, batch_id: id, batch_label: label });
+          });
         });
-        setStudents(res.students || []);
-        setScheduleMessage(res.message || null);
+        setStudents(merged);
+        setScheduleMessage(message);
         setLastUpdate(new Date());
       } catch (err) {
-        if (err.name !== 'CanceledError') {
+        if (!cancelled && err.name !== 'CanceledError') {
           console.error('Failed to fetch locations:', err);
           setError('Could not load student locations. Retrying...');
           const timeout = setTimeout(fetchLocations, 3000);
           locationUpdateTimeoutRef.current = timeout;
         }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     fetchLocations();
     const pollInterval = setInterval(fetchLocations, 30000);
     return () => {
+      cancelled = true;
       clearInterval(pollInterval);
       abortControllerRef.current?.abort();
       if (locationUpdateTimeoutRef.current) clearTimeout(locationUpdateTimeoutRef.current);
     };
-  }, [selectedBatchId, token]);
+    // `batches` is stable state from the shared provider; it only changes when
+    // the batch list is (re)loaded, so this effect keys off the batch set.
+  }, [batchIds, batches, batchesLoading, hasBatches, token]);
 
   // Socket connection management
   useEffect(() => {
@@ -270,7 +325,7 @@ function LiveMap() {
 
     socketRef.current.on('connect', () => {
       setSocketStatus('connected');
-      if (selectedBatchId) socketRef.current?.emit('student:join_batch', selectedBatchId);
+      batchIds.forEach((id) => socketRef.current?.emit('student:join_batch', id));
     });
     socketRef.current.on('disconnect', () => setSocketStatus('disconnected'));
     socketRef.current.on('connect_error', () => setSocketStatus('error'));
@@ -344,18 +399,30 @@ function LiveMap() {
     });
 
     return () => socketRef.current?.disconnect();
-  }, [selectedBatchId, token]);
+  }, [batchIds, token]);
 
-  // Join batch room when selected
+  // (Re)join every assigned batch room whenever the batch set changes
   useEffect(() => {
-    if (!selectedBatchId || socketRef.current?.disconnected) return;
-    socketRef.current?.emit('student:join_batch', selectedBatchId, (ack) => {
-      if (ack?.success) console.log('Joined batch room:', selectedBatchId);
+    if (!batchIds.length || socketRef.current?.disconnected) return;
+    batchIds.forEach((id) => {
+      socketRef.current?.emit('student:join_batch', id, (ack) => {
+        if (ack?.success) console.log('Joined batch room:', id);
+      });
     });
-  }, [selectedBatchId]);
+  }, [batchIds]);
 
   const activeStudents = useMemo(() => students.filter((s) => s.status === 'checked_in'), [students]);
   const inactiveStudents = useMemo(() => students.filter((s) => s.status !== 'checked_in'), [students]);
+
+  const batchSummary = useMemo(
+    () =>
+      batches.map((b) => ({
+        ...b,
+        color: colorMap[b.id],
+        total: students.filter((s) => Number(s.batch_id) === Number(b.id)).length,
+      })),
+    [batches, colorMap, students]
+  );
 
   const statusIndicatorClass =
     {
@@ -369,7 +436,6 @@ function LiveMap() {
       <div className={styles.card}>
         <div className={styles.header}>
           <h2 className={styles.title}>Live Student Map — Marinduque, Philippines</h2>
-          <TeacherBatchPicker />
           <div className={styles.statusBar}>
             <div className={`${styles.statusIndicator} ${statusIndicatorClass}`} />
             <span className={styles.statusText}>
@@ -379,10 +445,12 @@ function LiveMap() {
           </div>
         </div>
 
-        {!selectedBatchId && !loading && <p className={styles.info}>You have not been assigned to a batch yet.</p>}
+        {!batchesLoading && !hasBatches && <p className={styles.info}>You have not been assigned to a batch yet.</p>}
 
-        {batchLabel && (
-          <p className={styles.batchTag}>Batch: {batchLabel}</p>
+        {hasBatches && (
+          <p className={styles.batchTag}>
+            Showing all {batches.length} batch{batches.length !== 1 ? 'es' : ''} — marker color identifies the batch
+          </p>
         )}
 
         {error && (
@@ -391,14 +459,14 @@ function LiveMap() {
           </div>
         )}
 
-        {loading && selectedBatchId && <p className={styles.info}>Loading map data...</p>}
+        {loading && hasBatches && <p className={styles.info}>Loading map data...</p>}
 
-        {!loading && selectedBatchId && (
+        {!loading && hasBatches && (
           <div className={styles.mapWrapper}>
             {scheduleMessage && students.length === 0 && <p className={styles.info}>{scheduleMessage}</p>}
-            {!scheduleMessage && students.length === 0 && <p className={styles.info}>No student data available for this batch.</p>}
+            {!scheduleMessage && students.length === 0 && <p className={styles.info}>No student data available for your batches.</p>}
             {students.length > 0 && activeStudents.length === 0 && (
-              <p className={styles.info}>No students are currently checked in for this batch.</p>
+              <p className={styles.info}>No students are currently checked in.</p>
             )}
             {students.length > 0 && (
               <MapContainer
@@ -412,12 +480,24 @@ function LiveMap() {
               >
                 <TileLayer key={mapLayer} attribution={TILE_LAYERS[mapLayer].attribution} url={TILE_LAYERS[mapLayer].url} />
                 <MapLayerControl layer={mapLayer} onLayerChange={setMapLayer} />
-                <FitBounds batchId={selectedBatchId} />
+                <FitBounds viewKey={batchKey} />
                 {students.map((s) => (
-                  <StudentMarker key={s.student_id} student={s} />
+                  <StudentMarker key={s.student_id} student={s} color={colorMap[s.batch_id]} />
                 ))}
               </MapContainer>
             )}
+          </div>
+        )}
+
+        {hasBatches && batchSummary.length > 0 && (
+          <div className={styles.batchLegend}>
+            {batchSummary.map((b) => (
+              <span key={b.id} className={styles.batchLegendItem}>
+                <span className={styles.batchSwatch} style={{ background: b.color }} />
+                <span className={styles.batchLegendLabel}>{b.batch_label}</span>
+                <span className={styles.batchLegendCount}>{b.total}</span>
+              </span>
+            ))}
           </div>
         )}
 

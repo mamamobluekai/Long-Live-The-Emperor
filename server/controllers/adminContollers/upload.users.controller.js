@@ -1,8 +1,8 @@
 const multer = require('multer');
-const xlsx = require('xlsx');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const pool = require('../../db');
+const { parseSheetRows, EMAIL_REGEX } = require('../../utils/excelUpload');
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -22,24 +22,11 @@ transporter.verify((err) => {
 
 const uploadTeachersExcel = async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded.' });
+    const parsed = parseSheetRows(req.file?.buffer, 'teachers');
+    if (!parsed.ok) {
+      return res.status(400).json({ error: parsed.error });
     }
-
-    const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = xlsx.utils.sheet_to_json(sheet, { defval: '' });
-
-    if (rows.length === 0) {
-      return res.status(400).json({ error: 'Excel file is empty.' });
-    }
-
-    const requiredColumns = ['Employee ID', 'First Name', 'Last Name', 'Email', 'Department', 'Position'];
-    const headers = Object.keys(rows[0]);
-    const missing = requiredColumns.filter((c) => !headers.includes(c));
-    if (missing.length > 0) {
-      return res.status(400).json({ error: `Missing columns: ${missing.join(', ')}` });
-    }
+    const rows = parsed.rows;
 
     const results = { success: 0, failed: 0, errors: [] };
     const client = await pool.connect();
@@ -49,13 +36,13 @@ const uploadTeachersExcel = async (req, res) => {
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
-        const employeeId = String(row['Employee ID']).trim();
-        const firstName = String(row['First Name']).trim();
-        const lastName = String(row['Last Name']).trim();
-        const email = String(row['Email']).trim();
-        const department = String(row['Department']).trim();
-        const position = String(row['Position']).trim();
-        const phone = String(row['Phone Number'] || '').trim();
+        const employeeId = row.employeeId;
+        const firstName = row.firstName;
+        const lastName = row.lastName;
+        const email = row.email;
+        const department = row.department;
+        const position = row.position;
+        const phone = row.phone || '';
 
         if (!employeeId || !firstName || !lastName || !email || !department || !position) {
           results.failed++;
@@ -63,8 +50,7 @@ const uploadTeachersExcel = async (req, res) => {
           continue;
         }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
+        if (!EMAIL_REGEX.test(email)) {
           results.failed++;
           results.errors.push({ row: i + 2, error: `Invalid email: ${email}` });
           continue;
@@ -126,30 +112,17 @@ const uploadTeachersExcel = async (req, res) => {
     });
   } catch (err) {
     console.error('Excel upload error:', err);
-    res.status(500).json({ error: 'Server error during upload.' });
+    res.status(500).json({ error: 'Upload failed: ' + err.message });
   }
 };
 
 const uploadSupervisorsExcel = async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded.' });
+    const parsed = parseSheetRows(req.file?.buffer, 'supervisors');
+    if (!parsed.ok) {
+      return res.status(400).json({ error: parsed.error });
     }
-
-    const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = xlsx.utils.sheet_to_json(sheet, { defval: '' });
-
-    if (rows.length === 0) {
-      return res.status(400).json({ error: 'Excel file is empty.' });
-    }
-
-    const requiredColumns = ['Employee ID', 'Company Name', 'Supervisor First Name', 'Supervisor Last Name', 'Position', 'Email'];
-    const headers = Object.keys(rows[0]);
-    const missing = requiredColumns.filter((c) => !headers.includes(c));
-    if (missing.length > 0) {
-      return res.status(400).json({ error: `Missing columns: ${missing.join(', ')}` });
-    }
+    const rows = parsed.rows;
 
     const results = { success: 0, failed: 0, errors: [] };
     const client = await pool.connect();
@@ -159,14 +132,14 @@ const uploadSupervisorsExcel = async (req, res) => {
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
-        const employeeId = String(row['Employee ID']).trim();
-        const companyName = String(row['Company Name']).trim();
-        const firstName = String(row['Supervisor First Name']).trim();
-        const lastName = String(row['Supervisor Last Name']).trim();
-        const position = String(row['Position']).trim();
-        const email = String(row['Email']).trim();
-        const department = String(row['Department'] || '').trim();
-        const phone = String(row['Phone Number'] || '').trim();
+        const employeeId = row.employeeId;
+        const companyName = row.companyName;
+        const firstName = row.firstName;
+        const lastName = row.lastName;
+        const position = row.position;
+        const email = row.email;
+        const department = row.department || '';
+        const phone = row.phone || '';
 
         if (!employeeId || !companyName || !firstName || !lastName || !position || !email) {
           results.failed++;
@@ -174,8 +147,7 @@ const uploadSupervisorsExcel = async (req, res) => {
           continue;
         }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
+        if (!EMAIL_REGEX.test(email)) {
           results.failed++;
           results.errors.push({ row: i + 2, error: `Invalid email: ${email}` });
           continue;
@@ -237,40 +209,19 @@ const uploadSupervisorsExcel = async (req, res) => {
     });
   } catch (err) {
     console.error('Excel upload error:', err);
-    res.status(500).json({ error: 'Server error during upload.' });
+    res.status(500).json({ error: 'Upload failed: ' + err.message });
   }
 };
 
 const uploadCoordinatorsExcel = async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded.' });
+    const parsed = parseSheetRows(req.file?.buffer, 'coordinators');
+    if (!parsed.ok) {
+      return res.status(400).json({ error: parsed.error });
     }
+    const rows = parsed.rows;
 
-    const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = xlsx.utils.sheet_to_json(sheet, { defval: '' });
-
-    if (rows.length === 0) {
-      return res.status(400).json({ error: 'Excel file is empty.' });
-    }
-
-    const requiredColumns = ['Coordinator ID', 'First Name', 'Last Name', 'Email', 'Department', 'Position'];
-    const headers = Object.keys(rows[0]);
-    const missing = requiredColumns.filter((c) => !headers.includes(c));
-
-    if (missing.length > 0) {
-      return res.status(400).json({
-        error: `Missing columns: ${missing.join(', ')}`,
-      });
-    }
-
-    const results = {
-      success: 0,
-      failed: 0,
-      errors: [],
-    };
-
+    const results = { success: 0, failed: 0, errors: [] };
     const client = await pool.connect();
 
     try {
@@ -279,40 +230,25 @@ const uploadCoordinatorsExcel = async (req, res) => {
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
 
-        const coordinatorId = String(row['Coordinator ID']).trim();
-        const firstName = String(row['First Name']).trim();
-        const lastName = String(row['Last Name']).trim();
-        const email = String(row['Email']).trim();
-        const department = String(row['Department']).trim();
-        const position = String(row['Position']).trim();
-        const phone = String(row['Phone Number'] || '').trim();
+        const coordinatorId = row.coordinatorId || row.employeeId;
+        const firstName = row.firstName;
+        const lastName = row.lastName;
+        const email = row.email;
+        const department = row.department;
+        const position = row.position;
+        const phone = row.phone || '';
 
         // Validate required fields
-        if (
-          !coordinatorId ||
-          !firstName ||
-          !lastName ||
-          !email ||
-          !department ||
-          !position
-        ) {
+        if (!coordinatorId || !firstName || !lastName || !email || !department || !position) {
           results.failed++;
-          results.errors.push({
-            row: i + 2,
-            error: 'Missing required fields',
-          });
+          results.errors.push({ row: i + 2, error: 'Missing required fields' });
           continue;
         }
 
         // Validate email
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-        if (!emailRegex.test(email)) {
+        if (!EMAIL_REGEX.test(email)) {
           results.failed++;
-          results.errors.push({
-            row: i + 2,
-            error: `Invalid email: ${email}`,
-          });
+          results.errors.push({ row: i + 2, error: `Invalid email: ${email}` });
           continue;
         }
 
@@ -383,7 +319,7 @@ const uploadCoordinatorsExcel = async (req, res) => {
   } catch (err) {
     console.error('Coordinator upload error:', err);
     return res.status(500).json({
-      error: 'Server error during upload.',
+      error: 'Upload failed: ' + err.message,
     });
   }
 };
