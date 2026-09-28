@@ -14,6 +14,7 @@ function DashboardTopNav({
   user,
   onLogout,
   onMenuClick,
+  hideProfileOnMobile = false,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -107,12 +108,17 @@ function DashboardTopNav({
          <NotificationBell />
 
          {/* GROUP CHAT */}
-         <GroupChatButton user={user} />
+         <div className={hideProfileOnMobile ? styles.hideOnMobile : undefined}>
+           <GroupChatButton user={user} />
+         </div>
         <div className={styles.verticalDivider} />
 
 
         {/* PROFILE */}
-        <div className={styles.profileWrap} ref={profileRef}>
+        <div
+          className={`${styles.profileWrap} ${hideProfileOnMobile ? styles.hideOnMobile : ''}`}
+          ref={profileRef}
+        >
           <button
             type="button"
             onClick={() => setProfileOpen((value) => !value)}

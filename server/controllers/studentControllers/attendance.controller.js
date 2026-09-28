@@ -10,15 +10,32 @@ const {
 } = require('../../services/notification.service');
 
 // Find the student's currently assigned batch (teacher_batch_students stores user id).
+//
+// A student can be linked to more than one teacher batch. This previously picked
+// whichever row was inserted most recently (`ORDER BY assigned_at DESC LIMIT 1`),
+// which is arbitrary: the student's Day 1 / Day 2 list comes from the batch that
+// has a work immersion schedule covering today, but the attendance window was read
+// from a different batch that was merely linked more recently. The result was a
+// day card showing the supervisor's schedule alongside another batch's default
+// 8:00 AM / 5:00 PM window, so the supervisor's saved hours never appeared.
+//
+// Prefer the batch whose immersion schedule actually covers today, and only fall
+// back to the most recent assignment when no schedule is active.
 async function getActiveBatch(userId) {
   const r = await pool.query(
-    `SELECT tbs.teacher_batch_id, tb.teacher_id
+    `SELECT tbs.teacher_batch_id, tb.teacher_id,
+            EXISTS (
+              SELECT 1 FROM work_immersion_schedules wis
+              WHERE wis.teacher_batch_id = tbs.teacher_batch_id
+                AND $2::date BETWEEN wis.start_date AND wis.end_date
+            ) AS has_active_schedule
      FROM teacher_batch_students tbs
      LEFT JOIN students s ON s.id = tbs.student_id OR s.user_id = tbs.student_id
      JOIN teacher_batches tb ON tb.id = tbs.teacher_batch_id
      WHERE (s.user_id = $1 OR tbs.student_id = $1)
-     ORDER BY tbs.assigned_at DESC LIMIT 1`,
-    [userId]
+     ORDER BY has_active_schedule DESC, tbs.assigned_at DESC
+     LIMIT 1`,
+    [userId, todayInTimezone('Asia/Manila')]
   );
   return r.rows[0] || null;
 }
@@ -56,23 +73,43 @@ async function logGps({ student, teacherBatchId, attendanceId, eventType, latitu
   );
 }
 
-// Verify the window for a given type is open right now (or teacher override).
+// Render one window boundary as 12-hour time, e.g. '19:30:00' -> '7:30 PM'.
+function formatWindowTime(value) {
+  const [h, m] = String(value || '').split(':').map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+}
+
+// Build the "The Time In window is 7:30 PM - 8:00 PM." sentence from the batch's
+// REAL saved config. These messages used to hardcode 8:00 AM / 5:00 PM, so any
+// supervisor who set different hours was told the wrong window on every
+// rejected time in / time out.
+function windowSentence(state, type) {
+  const w = type === 'time_in' ? state?.schedule?.time_in : state?.schedule?.time_out;
+  const open = formatWindowTime(w?.open);
+  const close = formatWindowTime(w?.close);
+  if (!open || !close) return '';
+  const label = type === 'time_in' ? 'Time In' : 'Time Out';
+  return ` The ${label} window is ${open} \u2013 ${close}.`;
+}
+
+// Verify the window for a given type is open right now.
+// The schedule is authoritative: it opens and closes automatically from the
+// window times the supervisor saved for this batch.
 async function assertTypeOpen(teacherBatchId, type) {
   const state = await resolveAttendanceState(teacherBatchId);
   if (!state || !state.attendance_open) {
     const err = new Error(
-      type === 'time_in'
-        ? 'Time In is closed right now. Wait for the 8:00 AM window or your teacher to open it.'
-        : 'Time Out is closed right now. Wait for the 5:00 PM window or your teacher to open it.'
+      `${type === 'time_in' ? 'Time In' : 'Time Out'} is closed right now.${windowSentence(state, type)} Attendance opens and closes automatically on the schedule set for your batch.`
     );
     err.status = 403;
     throw err;
   }
   if (!state.manual_open && state.active_type && state.active_type !== type) {
     const err = new Error(
-      type === 'time_in'
-        ? 'Time In is not open yet. The Time In window is 8:00 AM – 8:30 AM.'
-        : 'Time Out is not open yet. The Time Out window is 5:00 PM – 5:30 PM.'
+      `${type === 'time_in' ? 'Time In' : 'Time Out'} is not open yet.${windowSentence(state, type)}`
     );
     err.status = 403;
     throw err;

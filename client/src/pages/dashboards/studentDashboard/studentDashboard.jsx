@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import DashboardLayout from '../sharedSidebar/DashboardLayout';
 import DashboardTopNav from '../sharedSidebar/DashboardTopNav';
 import StudentSidebar from './StudentSidebar';
+import StudentMobileNav from './StudentMobileNav';
 import Overview from './Overview';
 import Requirements from './Requirements';
 import PlacementStatus from './PlacementStatus';
@@ -17,7 +18,14 @@ import UserProfileSettings from '../UserProfileSettings';
 function StudentDashboard({ user, onLogout }) {
   return (
     <DashboardLayout
-      topNav={<DashboardTopNav user={user} onLogout={onLogout} title="Student Dashboard" />}
+      topNav={
+        <DashboardTopNav
+          user={user}
+          onLogout={onLogout}
+          title="Student Dashboard"
+          hideProfileOnMobile
+        />
+      }
       sidebar={<StudentSidebar />}
     >
       <Routes>
@@ -35,6 +43,7 @@ function StudentDashboard({ user, onLogout }) {
         <Route path="profile" element={<UserProfileSettings />} />
         <Route path="*" element={<Navigate to="overview" replace />} />
       </Routes>
+      <StudentMobileNav />
     </DashboardLayout>
   );
 }

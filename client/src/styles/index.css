@@ -63,3 +63,90 @@ a {
     scroll-behavior: auto !important;
   }
 }
+
+/* Dark vector style for the weather layer: the light OSM raster is inverted
+   and desaturated into a charcoal map with light grey roads and labels, so the
+   wind streaks, clouds and rain read clearly on top. */
+.wim-dark-tiles {
+  filter: invert(1) hue-rotate(180deg) saturate(0.55) brightness(0.78) contrast(0.92);
+}
+
+/* Borderless weather icons on the teacher live map (Leaflet divIcon) */
+.wim-weather-icon {
+  background: transparent;
+  border: none;
+}
+
+.wmi {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.wmi-icon {
+  position: relative;
+  z-index: 2;
+  line-height: 1;
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.85)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+}
+
+.wmi-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--wmi-size);
+  height: var(--wmi-size);
+  margin-left: calc(var(--wmi-size) / -2);
+  margin-top: calc(var(--wmi-size) / -2);
+  border-radius: 50%;
+  border: 2px solid var(--wmi-ring);
+  box-shadow: 0 0 8px var(--wmi-ring);
+  animation: wmi-pulse 2.2s ease-out infinite;
+}
+
+.wmi-gust {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  z-index: 3;
+  min-width: 20px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  color: #e2e8f0;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 15px;
+  text-align: center;
+  white-space: nowrap;
+  border: 1px solid var(--wmi-ring);
+}
+
+@keyframes wmi-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(var(--wmi-scale));
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wmi-pulse {
+    animation: none;
+    opacity: 0.8;
+  }
+}
+
+.wim-air-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 450;
+}

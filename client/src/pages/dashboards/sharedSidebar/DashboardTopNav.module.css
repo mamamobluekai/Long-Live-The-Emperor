@@ -538,7 +538,17 @@
     height: 36px;
   }
 
-  .verticalDivider {
+.hideOnMobile {
+  display: contents;
+}
+
+@media (max-width: 768px) {
+  .hideOnMobile {
+    display: none;
+  }
+}
+
+.verticalDivider {
     display: none;
   }
 

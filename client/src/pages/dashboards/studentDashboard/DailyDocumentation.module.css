@@ -1,99 +1,123 @@
+/* =========================================================
+   DAILY DOCUMENTATION - maroon design system
+   Matches RequirementsReview: Lexend, #8b1e2d / #b8394f, gold accents.
+   ========================================================= */
+
 .container {
   width: 100%;
-  max-width: 1250px;
+  max-width: 1500px;
   margin: 0 auto;
-  padding: 24px 8px 40px;
+  font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #26313f;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
+
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 22px 24px;
+  border: 1px solid #e8d2d8;
+  border-radius: 18px;
+  background:
+    radial-gradient(130% 160% at 0% 0%, rgba(139, 30, 45, 0.1) 0%, rgba(139, 30, 45, 0) 58%),
+    radial-gradient(120% 150% at 100% 120%, rgba(190, 140, 63, 0.16) 0%, rgba(190, 140, 63, 0) 55%),
+    linear-gradient(120deg, #ffffff 0%, #fdf3f5 58%, #f9e8ec 100%);
+  box-shadow: 0 14px 32px -28px rgba(80, 20, 32, 0.55);
+}
+
+.eyebrow {
+  margin-bottom: 6px;
+  color: #8b1e2d;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
 }
 
 .title {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0 0 4px;
+  margin: 0;
+  color: #172033;
+  font-size: 1.85rem;
+  font-weight: 780;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
 }
 
 .subtitle {
-  color: #475569;
-  font-size: 0.9375rem;
-  margin: 0 0 22px;
+  margin: 8px 0 0;
+  max-width: 700px;
+  color: #596579;
+  font-size: 0.95rem;
+  line-height: 1.6;
 }
 
-/* =========================
-   PROGRESS OVERVIEW
-========================= */
+/* =========================================================
+   PROGRESS
+   ========================================================= */
 
 .progressOverview {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 22px;
-  background: linear-gradient(135deg, #f8fafc, #eef4ff);
-  border: 1px solid #aeb6c2;
-  border-radius: 20px;
-  padding: 20px 22px;
-  margin-bottom: 22px;
-  box-shadow: 0 10px 28px -18px rgba(30, 41, 59, 0.35);
+  gap: 26px;
   flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 24px 26px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #fffdfd 0%, #ffffff 40%);
+  border: 1px solid #e6dfe2;
+  border-radius: 18px;
+  box-shadow: 0 12px 32px -28px rgba(80, 20, 32, 0.4);
 }
 
-/* =========================
-   PROGRESS RING
-========================= */
+.progressOverview::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 22px;
+  left: 22px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, rgba(139, 30, 45, 0.75), rgba(184, 57, 79, 0.35), rgba(190, 140, 63, 0.55));
+}
 
 .progressRing {
   position: relative;
-  width: 110px;
-  height: 110px;
-  flex: 0 0 110px;
-}
-
-.progressRing svg {
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg);
-}
-
-.progressRingBg {
-  fill: none;
-  stroke: #c4cbd4;
-  stroke-width: 10;
-}
-
-.progressRingValue {
-  fill: none;
-  stroke: #3b82f6;
-  stroke-width: 10;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 0.4s ease;
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  min-width: 96px;
+  border-radius: 50%;
+  box-shadow: 0 8px 20px -12px rgba(139, 30, 45, 0.6);
 }
 
 .progressRingInner {
-  position: absolute;
-  inset: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex-direction: column;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background: #fff;
+  color: #172033;
+  font-size: 1.25rem;
+  font-weight: 780;
+  letter-spacing: -0.02em;
 }
-
-.progressRingInner strong {
-  font-size: 1.5rem;
-  line-height: 1;
-  color: #0f172a;
-}
-
-.progressRingInner span {
-  margin-top: 4px;
-  font-size: 0.75rem;
-  color: #475569;
-}
-
-/* =========================
-   PROGRESS SUMMARY
-========================= */
 
 .progressSummary {
   flex: 1;
-  min-width: 260px;
+  min-width: 220px;
 }
 
 .progressHeaderRow {
@@ -101,36 +125,39 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
 }
 
 .progressHeaderRow h2 {
   margin: 0;
   color: #172033;
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: -0.015em;
 }
 
 .progressState {
   display: inline-flex;
   align-items: center;
-  padding: 5px 10px;
+  min-height: 25px;
+  padding: 3px 11px;
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  border: 1px solid #aeb6c2;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
 }
 
 .progressStateDone {
-  background: #dcfce7;
-  color: #166534;
-  border-color: #86b895;
+  color: #15803d;
+  background: #eaf8ef;
+  border: 1px solid #bfe6cc;
 }
 
 .progressStateInProgress {
-  background: #dbeafe;
-  color: #1e40af;
-  border-color: #8faed6;
+  color: #8b1e2d;
+  background: #fff7f8;
+  border: 1px solid #f0d7dc;
 }
 
 .progressStats {
@@ -140,478 +167,793 @@
 }
 
 .progressStat {
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid #b8c0cb;
-  border-radius: 12px;
   padding: 12px 14px;
+  background: #fff;
+  border: 1px solid #ecdfe2;
+  border-left: 4px solid #8b1e2d;
+  border-radius: 12px;
 }
 
 .progressStatLabel {
   display: block;
-  color: #4b5563;
-  font-size: 0.75rem;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
+  color: #8490a1;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .progressStat strong {
-  display: block;
-  color: #0f172a;
-  font-size: 1rem;
+  color: #172033;
+  font-size: 1.3rem;
+  font-weight: 780;
+  letter-spacing: -0.02em;
+  line-height: 1;
 }
 
-/* =========================
-   ERROR
-========================= */
+/* =========================================================
+   ALERTS / EMPTY
+   ========================================================= */
 
 .error {
-  background: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #e5a8a8;
+  padding: 12px 15px;
+  margin-bottom: 16px;
+  color: #b4233b;
+  background: #fde3e8;
+  border: 1px solid #f0b7c2;
   border-radius: 12px;
-  padding: 12px 14px;
-  margin-bottom: 18px;
-}
-
-/* =========================
-   EMPTY
-========================= */
-
-.empty {
-  background: #fff;
-  border: 1px dashed #9da7b3;
-  border-radius: 14px;
-  padding: 40px 20px;
-  text-align: center;
-  color: #4b5563;
-}
-
-.empty p {
-  margin: 0;
-}
-
-/* =========================
-   LIST
-========================= */
-
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-/* =========================
-   ITEM
-========================= */
-
-.item {
-  background: #fff;
-  border: 1px solid #aeb6c2;
-  border-radius: 16px;
-  padding: 18px 20px;
-  box-shadow: 0 8px 24px -20px rgba(15, 23, 42, 0.4);
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
-}
-
-.item:hover {
-  border-color: #929ca8;
-  box-shadow: 0 12px 28px -18px rgba(15, 23, 42, 0.35);
-}
-
-.itemToday {
-  border-color: #3b82f6;
-  box-shadow:
-    0 0 0 3px rgba(59, 130, 246, 0.12),
-    0 8px 24px -20px rgba(15, 23, 42, 0.4);
-}
-
-/* =========================
-   ITEM HEADER
-========================= */
-
-.itemHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.itemTitle {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-
-.itemIcon {
-  width: 42px;
-  height: 42px;
-  flex: 0 0 42px;
-  border-radius: 11px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #eef2f7;
-  color: #334155;
-  border: 1px solid #b8c0ca;
-}
-
-.itemTitle h3 {
-  margin: 0;
-  color: #172033;
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.itemTitle p {
-  margin: 3px 0 0;
-  color: #4b5563;
-  font-size: 0.82rem;
-}
-
-/* =========================
-   ITEM STATUS
-========================= */
-
-.itemStatus {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  white-space: nowrap;
-  border: 1px solid #b0b8c2;
-}
-
-.statusCompleted {
-  background: #dcfce7;
-  color: #166534;
-  border-color: #86b895;
-}
-
-.statusPending {
-  background: #fef3c7;
-  color: #92400e;
-  border-color: #d8b66d;
-}
-
-.statusMissed {
-  background: #fee2e2;
-  color: #991b1b;
-  border-color: #d99b9b;
-}
-
-/* =========================
-   ITEM DETAILS
-========================= */
-
-.itemDetails {
-  margin-top: 16px;
-  padding-top: 15px;
-  border-top: 1px solid #b8c0ca;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.detail {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.detailLabel {
-  color: #4b5563;
-  font-size: 0.74rem;
-}
-
-.detailValue {
-  color: #172033;
-  font-size: 0.875rem;
+  font-size: 0.86rem;
   font-weight: 600;
 }
 
-/* =========================
-   BUTTONS
-========================= */
+.empty {
+  padding: 34px 20px;
+  text-align: center;
+  color: #8490a1;
+  font-size: 0.9rem;
+  border: 1px dashed #ddcfd3;
+  border-radius: 16px;
+  background: linear-gradient(140deg, #fdfafb 0%, #fbf4f5 100%);
+}
 
-.actions {
+/* =========================================================
+   DAY LIST
+   ========================================================= */
+
+.list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  background: #fff;
+  border: 1px solid #ecdfe2;
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.item:hover {
+  border-color: #d8b8c0;
+  box-shadow: 0 8px 20px -16px rgba(139, 30, 45, 0.5);
+  transform: translateY(-1px);
+}
+
+.itemToday {
+  background: linear-gradient(180deg, #fffafb 0%, #ffffff 60%);
+  border-color: #e2c9cf;
+  box-shadow: inset 3px 0 0 #8b1e2d;
+}
+
+.itemOpen {
+  border-color: #cf9aa8;
+  box-shadow: 0 10px 24px -16px rgba(139, 30, 45, 0.55);
+}
+
+/* Collapsed card is the toggle */
+.itemToggle {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  padding: 16px 18px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+
+.itemToggle:hover {
+  background: #fff7f8;
+}
+
+.itemToggleTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.chevron {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #fff7f8;
+  border: 1px solid #f0d7dc;
+  color: #8b1e2d;
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+}
+
+/* Expanded panel spans the full card width */
+.itemPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 18px 16px;
+  border-top: 1px solid #ecdfe2;
+  background: #fffafb;
+  animation: itemOpen 0.2s ease-out;
+}
+
+@keyframes itemOpen {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.itemMain {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+
+.itemHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dayNumber {
+  color: #172033;
+  font-size: 0.95rem;
+  font-weight: 780;
+  letter-spacing: -0.01em;
+}
+
+.itemDate {
+  color: #8490a1;
+  font-size: 0.78rem;
+}
+
+.itemMeta {
+  color: #475d6e;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.itemAttendance {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+}
+
+.attDone {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.attPending {
+  color: #9aa4b2;
+  font-weight: 600;
+}
+
+.itemDoc {
+  color: #8490a1;
+  font-size: 0.78rem;
+}
+
+.itemDoc strong {
+  color: #8b1e2d;
+  font-weight: 750;
+}
+
+.itemActions {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 16px;
+  flex-shrink: 0;
 }
+
+.locked {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.lockedBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 25px;
+  padding: 3px 11px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+.lockedReason {
+  color: #9aa4b2;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
 
 .primaryBtn,
 .secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 38px;
-  padding: 8px 14px;
+  padding: 0 16px;
   border-radius: 9px;
-  font-size: 0.82rem;
+  font-family: inherit;
+  font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
+  white-space: nowrap;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease, transform 0.15s ease;
 }
 
 .primaryBtn {
-  background: linear-gradient(135deg, #3b82f6, #2a5298);
+  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
+  border: 1px solid #8b1e2d;
   color: #fff;
-  border: 1px solid #23477f;
+  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
 }
 
-.primaryBtn:hover {
+.primaryBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7a1725 0%, #932034 100%);
+  box-shadow: 0 10px 22px -10px rgba(139, 30, 45, 0.85);
   transform: translateY(-1px);
 }
 
 .secondaryBtn {
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #aeb7c2;
+  background: #fff;
+  border: 1px solid #dcc9cf;
+  color: #475d6e;
 }
 
-.secondaryBtn:hover {
-  background: #e2e8f0;
-  border-color: #8f99a5;
+.secondaryBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
+  border-color: #8b1e2d;
+  color: #fff;
 }
 
-/* =========================
-   MODAL
-========================= */
+.primaryBtn:disabled,
+.secondaryBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
 
-.modalOverlay {
+/* =========================================================
+   UPLOAD MODAL
+   ========================================================= */
+
+.modalBackdrop {
   position: fixed;
   inset: 0;
-  z-index: 1000;
-  background: rgba(15, 23, 42, 0.55);
+  z-index: 1200;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
+  background: rgba(23, 32, 51, 0.45);
+  backdrop-filter: blur(3px);
 }
 
 .modal {
-  width: 100%;
-  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 100%);
   max-height: 90vh;
-  overflow-y: auto;
+  overflow: hidden;
   background: #fff;
-  border: 1px solid #9fa8b4;
-  border-radius: 18px;
-  box-shadow: 0 25px 60px -20px rgba(15, 23, 42, 0.45);
+  border: 1px solid #e6dfe2;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px -18px rgba(80, 20, 32, 0.4);
+  animation: modalIn 0.22s ease-out;
 }
 
-/* =========================
-   MODAL HEADER
-========================= */
+@keyframes modalIn {
+  from {
+    transform: translateY(14px) scale(0.98);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
 
 .modalHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  padding: 18px 20px;
-  border-bottom: 1px solid #b8c0ca;
+  padding: 20px 24px;
+  border-bottom: 1px solid #ecdfe2;
+  background: linear-gradient(120deg, #ffffff 0%, #fdf3f5 100%);
 }
 
 .modalHeader h2 {
   margin: 0;
   color: #172033;
   font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+}
+
+.modalEyebrow {
+  margin-bottom: 4px;
+  color: #8b1e2d;
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .modalClose {
-  width: 34px;
-  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  border: 1px solid #b8c0ca;
-  border-radius: 8px;
-  color: #475569;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border: 1px solid #dcc9cf;
+  border-radius: 9px;
+  background: #fff;
+  color: #596579;
+  font-family: inherit;
+  font-size: 1.2rem;
+  line-height: 1;
   cursor: pointer;
+  transition: 0.18s ease;
 }
 
-.modalClose:hover {
-  background: #f1f5f9;
-  border-color: #8f99a5;
+.modalClose:hover:not(:disabled) {
+  color: #172033;
+  border-color: #b8394f;
+  background: #fff7f8;
 }
-
-/* =========================
-   MODAL BODY
-========================= */
 
 .modalBody {
-  padding: 20px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 22px 24px;
+  font-family: inherit;
 }
 
 .modalInfo {
-  background: #f8fafc;
-  color: #475569;
-  border: 1px solid #c1c8d1;
-  border-radius: 10px;
-  padding: 12px 14px;
-  margin-bottom: 18px;
-  font-size: 0.85rem;
-  line-height: 1.5;
-}
-
-/* =========================
-   FORM LABEL
-========================= */
-
-.label {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  color: #26303d;
-  font-size: 0.82rem;
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: #fff7f8;
+  border: 1px solid #f0d7dc;
+  color: #8b1e2d;
+  font-size: 0.78rem;
   font-weight: 700;
 }
 
-.label textarea {
+.label {
+  display: block;
+  margin-bottom: 16px;
+  color: #475d6e;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.label textarea,
+.label input[type='file'] {
+  display: block;
   width: 100%;
-  min-height: 120px;
-  resize: vertical;
   box-sizing: border-box;
+  margin-top: 7px;
   padding: 11px 12px;
-  border: 1px solid #aeb7c2;
-  border-radius: 10px;
+  border: 1px solid #dcc9cf;
+  border-radius: 9px;
   background: #fff;
   color: #172033;
   font-family: inherit;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
-.label textarea:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+.label textarea {
+  min-height: 110px;
+  line-height: 1.5;
+  resize: vertical;
 }
 
-/* =========================
-   MODAL ACTIONS
-========================= */
+.label textarea::placeholder {
+  color: #a9b0bd;
+}
+
+.label textarea:focus,
+.label input[type='file']:focus {
+  border-color: #b8394f;
+  box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.1);
+}
+
+.label input[type='file']::file-selector-button {
+  margin-right: 10px;
+  padding: 8px 14px;
+  border: 1px solid #dcc9cf;
+  border-radius: 8px;
+  background: #fff;
+  color: #8b1e2d;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.label input[type='file']::file-selector-button:hover {
+  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
+  border-color: #8b1e2d;
+  color: #fff;
+}
+
+.labelHint {
+  display: block;
+  margin-top: 7px;
+  color: #8490a1;
+  font-size: 0.74rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
 
 .modalActions {
   display: flex;
-  justify-content: flex-end;
   gap: 10px;
-  margin-top: 18px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #ecdfe2;
 }
 
-/* =========================
+/* =========================================================
    RESPONSIVE
-========================= */
+   ========================================================= */
 
 @media (max-width: 900px) {
-  .container {
-    max-width: 100%;
-    padding: 22px 10px 36px;
+  .list {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .progressOverview {
-    gap: 18px;
+  .itemActions {
+    width: 100%;
   }
 
-  .progressStats {
-    grid-template-columns: repeat(3, 1fr);
+  .itemActions > * {
+    width: 100%;
   }
 
-  .itemDetails {
-    grid-template-columns: repeat(2, 1fr);
+  .locked {
+    align-items: flex-start;
+  }
+
+  .lockedReason {
+    text-align: left;
   }
 }
 
-@media (max-width: 700px) {
-  .container {
-    padding: 20px 8px 32px;
-  }
-
-  .title {
-    font-size: 1.4rem;
-  }
-
-  .progressOverview {
-    padding: 18px;
+@media (max-width: 640px) {
+  .pageHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 18px 16px;
+    margin-bottom: 18px;
     border-radius: 16px;
   }
 
-  .progressSummary {
-    min-width: 100%;
+  .title {
+    font-size: 1.5rem;
   }
 
-  .progressHeaderRow {
-    align-items: flex-start;
-    flex-direction: column;
+  .subtitle {
+    font-size: 0.9rem;
+  }
+
+  .progressOverview {
+    padding: 20px 16px;
+    gap: 18px;
+  }
+
+  .progressRing {
+    width: 84px;
+    height: 84px;
+    min-width: 84px;
+  }
+
+  .progressRingInner {
+    width: 64px;
+    height: 64px;
+    font-size: 1.05rem;
   }
 
   .progressStats {
     grid-template-columns: 1fr;
+    gap: 8px;
   }
 
-  .item {
-    padding: 16px;
-    border-radius: 14px;
-  }
-
-  .itemHeader {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .itemStatus {
-    align-self: flex-start;
-  }
-
-  .itemDetails {
-    grid-template-columns: 1fr;
-  }
-
-  .actions {
-    flex-direction: column;
-    align-items: stretch;
+  .itemToggle,
+  .itemPanel {
+    padding-left: 15px;
+    padding-right: 15px;
   }
 
   .primaryBtn,
   .secondaryBtn {
     width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .container {
-    padding-left: 6px;
-    padding-right: 6px;
+    min-height: 44px;
   }
 
-  .progressOverview {
-    padding: 16px;
+  .modalBackdrop {
+    padding: 12px;
+    align-items: flex-end;
   }
 
-  .progressRing {
-    width: 90px;
-    height: 90px;
-    flex-basis: 90px;
-  }
-
-  .progressRingInner strong {
-    font-size: 1.25rem;
-  }
-
-  .modalOverlay {
-    padding: 10px;
+  .modal {
+    width: 100%;
+    max-height: 90vh;
+    border-radius: 18px 18px 0 0;
   }
 
   .modalHeader,
   .modalBody {
-    padding: 16px;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .modalActions {
+    flex-direction: column;
+  }
+
+  .modalActions button {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+/* =========================================================
+   EXTRA PHONE / NARROW-SCREEN GUARDS
+   ========================================================= */
+
+@media (max-width: 1024px) {
+  .progressStats {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 760px) {
+  .progressStats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .progressStat {
+    padding: 10px 11px;
+  }
+
+  .progressStatLabel {
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+  }
+
+  .progressStat strong {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .progressOverview {
+    padding: 18px 14px;
+  }
+
+  .progressStats {
+    grid-template-columns: 1fr;
+  }
+
+  .itemHeader {
+    gap: 6px;
+  }
+
+  /* Long batch names and emails must wrap, not force a sideways scroll */
+  .itemMeta,
+  .itemDoc,
+  .itemDate {
+    overflow-wrap: anywhere;
+  }
+
+  .itemAttendance {
+    gap: 8px 14px;
+    flex-direction: column;
+  }
+
+  .list {
+    gap: 10px;
+  }
+
+  .modalInfo {
+    white-space: normal;
+  }
+}
+
+/* Keep long unbroken values (file names, batch labels) inside the viewport */
+.container {
+  overflow-wrap: break-word;
+}
+
+/* =========================================================
+   PHONE: compact card
+   Collapsed cards show only "Day N" and the status word, so the
+   status (Submitted / Not Submitted) is readable at a glance.
+   ========================================================= */
+
+.itemDocLabel {
+  color: #8490a1;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .itemToggle {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 14px 15px;
+  }
+
+  .itemToggleTop {
+    display: block;
+    flex: 0 0 auto;
+  }
+
+  .itemDate,
+  .itemMeta,
+  .itemDocLabel {
+    display: none;
+  }
+
+  .itemDoc {
+    flex: 1;
+    text-align: right;
+    min-width: 0;
+  }
+
+  .itemDoc strong {
+    font-size: 0.82rem;
+  }
+
+  .chevron {
+    margin-top: 0;
+    flex-shrink: 0;
+  }
+}
+
+/* =========================================================
+   STATUS COLOURS
+   Not submitted stays maroon; submitted/reviewed/graded turns green.
+   ========================================================= */
+
+/* Specificity must beat `.itemDoc strong`, which sets the maroon default. */
+.itemDoc strong.docDone {
+  color: #15803d;
+  font-weight: 750;
+}
+
+.itemDoc strong.docPending {
+  color: #8b1e2d;
+  font-weight: 750;
+}
+
+.progressStatDone {
+  border-left-color: #15803d;
+}
+
+.progressStatDone strong {
+  color: #15803d;
+}
+
+.progressStatGraded {
+  border-left-color: #37568c;
+}
+
+.progressStatGraded strong {
+  color: #37568c;
+}
+
+/* =========================================================
+   PHONE: progress block
+   ========================================================= */
+
+@media (max-width: 640px) {
+  .progressOverview {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 18px 15px;
+  }
+
+  .progressSummary {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .progressHeaderRow {
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .progressHeaderRow h2 {
+    font-size: 0.95rem;
+  }
+
+  .progressStats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .progressStat {
+    padding: 10px 8px;
+    text-align: center;
+  }
+
+  .progressStatLabel {
+    font-size: 0.6rem;
+    letter-spacing: 0.03em;
+    line-height: 1.3;
+  }
+
+  .progressStat strong {
+    font-size: 1.15rem;
   }
 }

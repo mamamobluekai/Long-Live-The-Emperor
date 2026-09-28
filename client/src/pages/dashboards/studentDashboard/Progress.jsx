@@ -3,13 +3,15 @@ import { downloadMyCertificate, getMyProgress } from '../../../api/studentApi';
 import Feedback from '../../../components/Feedback';
 import styles from './Progress.module.css';
 
-// ---- Shared token system (mirrors the certificate design: navy + gold) ----
-const INK = '#8B1E2D';
+// ---- Shared token system (maroon design system; certificate block keeps its
+// own navy + gold colours and is intentionally not themed) ----
+const INK = '#8b1e2d';
 const GOLD = '#b3872c';
 const GOLD_LIGHT = '#d4af6a';
 const CREAM = '#fdf8ef';
-const SLATE = '#64748b';
-const LINE = '#e2e0d5';
+const SLATE = '#758195';
+const LINE = '#e2e0d5'; // certificate block only
+const MAROON_LINE = '#ecdfe2';
 
 function CheckIcon({ color = '#fff', size = 14 }) {
   return (
@@ -36,13 +38,13 @@ function RibbonIcon({ color = GOLD, size = 30 }) {
 
 function Step({ label, detail, done, icon, isLast }) {
   return (
-    <div style={rowStyles.stepRow}>
+    <div className={styles.stepRow} style={rowStyles.stepRow}>
       <div style={rowStyles.stepIconCol}>
         <div
           style={{
             ...rowStyles.stepIcon,
             background: done ? INK : '#fff',
-            borderColor: done ? INK : LINE,
+            borderColor: done ? INK : MAROON_LINE,
             color: done ? '#fff' : SLATE,
           }}
         >
@@ -52,20 +54,20 @@ function Step({ label, detail, done, icon, isLast }) {
           <div
             style={{
               ...rowStyles.connector,
-              background: done ? INK : LINE,
+              background: done ? INK : MAROON_LINE,
             }}
           />
         )}
       </div>
       <div style={rowStyles.stepBody}>
-        <div style={rowStyles.stepTopRow}>
+        <div style={rowStyles.stepTopRow} className={styles.stepTopRow}>
           <span style={rowStyles.stepLabel}>{label}</span>
           <span
             style={{
               ...rowStyles.badge,
-              background: done ? '#eef2ff' : '#f8fafc',
+              background: done ? '#fdf1f3' : '#f8fafc',
               color: done ? INK : SLATE,
-              border: `1px solid ${done ? '#c7d2fe' : LINE}`,
+              border: `1px solid ${done ? '#f0d7dc' : MAROON_LINE}`,
             }}
           >
             {done ? 'Completed' : 'Pending'}
@@ -78,7 +80,7 @@ function Step({ label, detail, done, icon, isLast }) {
 }
 
 const rowStyles = {
-  stepRow: { display: 'flex', gap: 16 },
+  stepRow: { display: 'flex' },
   stepIconCol: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
   stepIcon: {
     width: 34,
@@ -96,7 +98,7 @@ const rowStyles = {
   connector: { width: 2, flex: 1, minHeight: 22, margin: '2px 0' },
   stepBody: { flex: 1, paddingBottom: 22 },
   stepTopRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  stepLabel: { fontWeight: 600, fontSize: 15, color: '#0f172a' },
+  stepLabel: { fontWeight: 700, fontSize: 15, color: '#172033' },
   stepDetail: { marginTop: 3, fontSize: 13, color: SLATE, lineHeight: 1.45 },
   badge: {
     fontSize: 11,
@@ -224,12 +226,84 @@ function Progress() {
   const canDownload = !!(certificate || completed);
 
   return (
-    <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
-      <div className={styles.pageHeader}>
-        <h2 style={{ margin: 0, color: '#0f172a' }}>My Progress</h2>
-        <p style={{ margin: '6px 0 0', color: SLATE }}>
-          Track your requirements, documentation, and attendance toward immersion completion.
-        </p>
+    <div
+      style={{
+        width: '100%',
+        maxWidth: 1500,
+        margin: '0 auto',
+        fontFamily: "'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        color: '#26313f',
+        WebkitFontSmoothing: 'antialiased',
+      }}
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Lexend:wght@400;500;600;700;800&display=swap');
+      `}</style>
+
+      <div
+        className={`${styles.pageHeader} ${styles.pageHeaderWrap}`}
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: 16,
+          padding: '22px 24px',
+          border: '1px solid #e8d2d8',
+          borderRadius: 18,
+          background:
+            'radial-gradient(130% 160% at 0% 0%, rgba(139, 30, 45, 0.1) 0%, rgba(139, 30, 45, 0) 58%),' +
+            'radial-gradient(120% 150% at 100% 120%, rgba(190, 140, 63, 0.16) 0%, rgba(190, 140, 63, 0) 55%),' +
+            'linear-gradient(120deg, #ffffff 0%, #fdf3f5 58%, #f9e8ec 100%)',
+          boxShadow: '0 14px 32px -28px rgba(80, 20, 32, 0.55)',
+        }}
+      >
+        <div>
+          <div
+            style={{
+              marginBottom: 6,
+              color: '#8b1e2d',
+              fontSize: '0.72rem',
+              fontWeight: 800,
+              letterSpacing: '0.11em',
+              textTransform: 'uppercase',
+            }}
+          >
+            Immersion Tracker
+          </div>
+          <h2
+            style={{
+              margin: 0,
+              color: '#172033',
+              fontSize: '1.85rem',
+              fontWeight: 780,
+              letterSpacing: '-0.035em',
+              lineHeight: 1.15,
+            }}
+          >
+            My Progress
+          </h2>
+          <p style={{ margin: '8px 0 0', maxWidth: 650, color: '#596579', fontSize: '0.95rem', lineHeight: 1.6 }}>
+            Track your requirements, documentation, and attendance toward immersion completion.
+          </p>
+        </div>
+        <div
+          className={styles.headerIcon}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 48,
+            height: 48,
+            flexShrink: 0,
+            borderRadius: 14,
+            background: 'linear-gradient(140deg, #8b1e2d, #b8394f)',
+            color: '#fff',
+            boxShadow: '0 8px 16px -10px rgba(139, 30, 45, 0.75)',
+            fontSize: '1.25rem',
+          }}
+        >
+          ✓
+        </div>
       </div>
 
       {notice && <Feedback type="warning" message={notice} />}
@@ -237,82 +311,114 @@ function Progress() {
       {/* Overall progress card */}
       <div
         style={{
+          position: 'relative',
+          overflow: 'hidden',
           marginTop: 20,
-          background: '#fff',
-          border: `1px solid ${LINE}`,
-          borderRadius: 14,
-          padding: '22px 24px',
-          boxShadow: '0 1px 2px rgba(78, 7, 13, 0.04)',
+          marginBottom: 20,
+          background: 'linear-gradient(180deg, #fffdfd 0%, #ffffff 40%)',
+          border: '1px solid #e2c9cf',
+          borderRadius: 18,
+          padding: '24px 26px',
+          boxShadow: '0 12px 32px -28px rgba(80, 20, 32, 0.4)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+        <div className={styles.overallBody}>
           <div
+            className={styles.ring}
             style={{
-              position: 'relative',
-              width: 74,
-              height: 74,
-              flexShrink: 0,
-              borderRadius: '50%',
-              background: `conic-gradient(${INK} ${percent * 3.6}deg, ${LINE} 0deg)`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              background: `conic-gradient(#8b1e2d ${percent * 3.6}deg, #f1e3e6 0deg)`,
             }}
           >
-            <div
-              style={{
-                width: 58,
-                height: 58,
-                borderRadius: '50%',
-                background: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 700,
-                fontSize: 16,
-                color: '#0f172a',
-              }}
-            >
-              {percent}%
-            </div>
+            <div className={styles.ringInner}>{percent}%</div>
           </div>
 
-          <div style={{ flex: 1, minWidth: 200 }}>
-            <h3 style={{ margin: 0, fontSize: 17, color: '#2a0f0f' }}>
+          <div className={styles.overallText}>
+            <div
+              style={{
+                marginBottom: 8,
+                color: '#8b1e2d',
+                fontSize: '0.7rem',
+                fontWeight: 800,
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+              }}
+            >
+              Overall Progress
+            </div>
+            <h3 style={{ margin: 0, color: '#172033', fontSize: '1.25rem', fontWeight: 750, letterSpacing: '-0.015em' }}>
               {completed ? 'All requirements met!' : 'In progress'}
             </h3>
-            <p style={{ margin: '4px 0 0', fontSize: 13.5, color: SLATE }}>
+            <p style={{ margin: '5px 0 0', fontSize: '0.9rem', color: '#758195', lineHeight: 1.55 }}>
               {doneCount} of {steps.length} milestones completed.
             </p>
+            <div className={styles.barTrack}>
+              <div className={styles.barFill} style={{ width: `${percent}%` }} />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Timeline */}
       <div
+        className={styles.milestonesCard}
         style={{
-          marginTop: 18,
-          background: '#fff',
-          border: `1px solid ${LINE}`,
-          borderRadius: 14,
+          position: 'relative',
+          overflow: 'hidden',
+          background: 'linear-gradient(180deg, #fffdfd 0%, #ffffff 40%)',
+          border: '1px solid #e6dfe2',
+          borderRadius: 18,
           padding: '22px 24px 4px',
-          boxShadow: '0 1px 2px rgba(90, 10, 14, 0.04)',
+          boxShadow: '0 12px 32px -28px rgba(80, 20, 32, 0.4)',
         }}
       >
-        {steps.map((s, i) => (
-          <Step
-            key={s.key}
-            label={s.label}
-            detail={s.detail}
-            done={s.done}
-            icon={s.icon}
-            isLast={i === steps.length - 1}
-          />
-        ))}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            marginBottom: 18,
+          }}
+        >
+          <h3 style={{ margin: 0, color: '#172033', fontSize: '1.05rem', fontWeight: 750, letterSpacing: '-0.015em' }}>
+            Milestones
+          </h3>
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minWidth: 28,
+              height: 28,
+              padding: '0 8px',
+              color: '#8b1e2d',
+              background: '#fff7f8',
+              border: '1px solid #f0d7dc',
+              borderRadius: 999,
+              fontSize: '0.74rem',
+              fontWeight: 750,
+            }}
+          >
+            {doneCount}/{steps.length}
+          </span>
+        </div>
+        <div className={styles.stepList}>
+          {steps.map((s, i) => (
+            <Step
+              key={s.key}
+              label={s.label}
+              detail={s.detail}
+              done={s.done}
+              icon={s.icon}
+              isLast={i === steps.length - 1}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Certificate CTA */}
       <div
+        className={styles.certWrap}
         style={{
           marginTop: 18,
           background: canDownload
@@ -327,9 +433,11 @@ function Progress() {
           flexWrap: 'wrap',
         }}
       >
-        <RibbonIcon color={canDownload ? GOLD_LIGHT : GOLD} />
+        <div className={styles.certRibbon}>
+          <RibbonIcon color={canDownload ? GOLD_LIGHT : GOLD} />
+        </div>
 
-        <div style={{ flex: 1, minWidth: 220 }}>
+        <div className={styles.certBody}>
           <h3
             style={{
               margin: 0,
@@ -359,6 +467,7 @@ function Progress() {
         </div>
 
         <button
+          className={styles.certBtn}
           onClick={handleDownload}
           disabled={!canDownload || certLoading}
           title="Download your certificate"
@@ -385,10 +494,6 @@ function Progress() {
           {certLoading ? 'Preparing…' : 'Download Certificate'}
         </button>
       </div>
-
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&display=swap');
-      `}</style>
     </div>
   );
 }

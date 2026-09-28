@@ -201,6 +201,43 @@ const upsertBatchSchedule = async (req, res) => {
     }
     const end_date = addWeekdays(effectiveStart, Math.max(1, weekdays));
 
+    // Keep the existing schedule's dates so documentation tied to dates that no
+    // longer belong to the schedule can be reset when the teacher edits dates.
+    const previous = await client.query(
+      `SELECT start_date, duration_type, duration_value
+       FROM work_immersion_schedules
+       WHERE teacher_batch_id = $1 AND supervisor_id IS NOT DISTINCT FROM $2
+       LIMIT 1`,
+      [batchId, supId]
+    );
+    const expandDates = (row) => {
+      const dates = new Set();
+      if (!row) return dates;
+      const start = parseLocalDate(row.start_date);
+      if (!start) return dates;
+      const total =
+        row.duration_type === 'hours'
+          ? Math.ceil(Number(row.duration_value) / 8)
+          : Number(row.duration_value);
+      let added = 0;
+      while (added < total) {
+        const day = start.getDay();
+        if (day !== 0 && day !== 6) {
+          dates.add(toLocalDateString(start));
+          added += 1;
+        }
+        start.setDate(start.getDate() + 1);
+      }
+      return dates;
+    };
+    const previousDates = expandDates(previous.rows[0]);
+    const nextDates = expandDates({
+      start_date: effectiveStart,
+      duration_type,
+      duration_value: durVal,
+    });
+    const removedDates = [...previousDates].filter((d) => !nextDates.has(d));
+
     // PostgreSQL unique constraints treat NULL as distinct, so ON CONFLICT
     // (teacher_batch_id, supervisor_id) does NOT match an existing row when
     // supervisor_id is NULL (the batch-level schedule). Use an explicit
@@ -240,7 +277,17 @@ const upsertBatchSchedule = async (req, res) => {
       }
     }
 
-    res.json({ schedule: result.rows[0] });
+    if (removedDates.length > 0) {
+      // Documentation is bound to a specific immersion date, so a schedule edit
+      // that drops a date must clear the uploaded documentation for that date.
+      await client.query(
+        `DELETE FROM student_daily_documentation
+         WHERE teacher_batch_id = $1 AND date = ANY($2::date[])`,
+        [batchId, removedDates]
+      );
+    }
+
+    res.json({ schedule: result.rows[0], resetDates: removedDates });
   } catch (err) {
     console.error('upsertBatchSchedule error:', err);
     res.status(500).json({ error: 'Server error.' });

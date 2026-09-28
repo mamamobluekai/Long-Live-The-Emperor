@@ -274,6 +274,28 @@ function getCurrentPosition() {
 }
 
 
+function TrashIcon({ size = 14 }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 6h18" />
+      <path d="M8 6V4h8v2" />
+      <path d="M19 6l-1 14H6L5 6" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+    </svg>
+  );
+}
+
 function Attendance() {
   const { token } = useAuth();
 
@@ -296,6 +318,11 @@ function Attendance() {
   const [appeals, setAppeals] = useState([]);
   const [showAppealForm, setShowAppealForm] =
     useState(false);
+  const [showAppealHistory, setShowAppealHistory] = useState(false);
+  const [expandedDay, setExpandedDay] = useState(null);
+  const [clearingAppeals, setClearingAppeals] = useState(false);
+  // Styled confirmation, replacing the browser confirm() dialog.
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const [appealType, setAppealType] =
     useState('time_in');
@@ -885,13 +912,9 @@ function Attendance() {
         );
       }
     };
-
   const handleDeleteAppeal =
     async (appealId) => {
       if (!appealId) return;
-      if (!window.confirm('Delete this appeal? This cannot be undone.')) {
-        return;
-      }
       setDeletingAppealId(appealId);
       try {
         await deleteMyAppeal(appealId, token);
@@ -909,6 +932,46 @@ function Attendance() {
         setDeletingAppealId(null);
       }
     };
+
+  // Removes every appeal at once, oldest-and-newest alike, so the history
+  // drawer can be cleared in a single action.
+  const handleDeleteAllAppeals = async () => {
+    if (!appeals.length || clearingAppeals) return;
+
+    setClearingAppeals(true);
+    const targets = appeals.map((a) => a.id);
+    const failed = [];
+    for (const id of targets) {
+      try {
+        await deleteMyAppeal(id, token);
+      } catch {
+        failed.push(id);
+      }
+    }
+    setAppeals((current) => current.filter((a) => !failed.includes(a.id)));
+    setClearingAppeals(false);
+
+    if (failed.length) {
+      flash(
+        'error',
+        `Could not delete ${failed.length} appeal${failed.length !== 1 ? 's' : ''}. Please try again.`
+      );
+    } else {
+      flash('success', 'All appeals deleted.');
+    }
+  };
+
+  const closeDeleteConfirm = () => {
+    if (deletingAppealId || clearingAppeals) return;
+    setDeleteConfirm(null);
+  };
+
+  const confirmDelete = () => {
+    if (!deleteConfirm) return;
+    if (deleteConfirm.type === 'all') handleDeleteAllAppeals();
+    else handleDeleteAppeal(deleteConfirm.id);
+    setDeleteConfirm(null);
+  };
 
   const phaseMessage = () => {
     if (!assigned) {
@@ -963,11 +1026,41 @@ const openAppeal = (
 
   return (
     <div className={styles.page}>
-      <div className={styles.card}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap');
+      `}</style>
 
-        <h2 className={styles.title}>
-          Daily Attendance
-        </h2>
+      <div className={styles.pageHeader}>
+        <div className={styles.headerMain}>
+          <div className={styles.eyebrow}>Student Portal</div>
+          <h2 className={styles.title}>Daily Attendance</h2>
+          <p className={styles.subtitle}>
+            Time in and out for your scheduled immersion days.
+          </p>
+        </div>
+
+        {inSchedule && (
+          <div className={styles.headerStatus}>
+            <span
+              className={`${styles.phasePill} ${
+                open ? styles.phaseOpen : styles.phaseClosed
+              }`}
+            >
+              {open ? 'Open' : 'Closed'}
+            </span>
+            <span className={styles.headerStatusText}>{phaseMessage()}</span>
+          </div>
+        )}
+
+        {inSchedule && countdownLabel && countdownTarget !== null && (
+          <div className={styles.headerCountdown} key={nowSec}>
+            <span className={styles.headerCountdownLabel}>{countdownLabel}</span>
+            <span className={styles.headerCountdownValue}>{fmtCountdown(countdownTarget)}</span>
+          </div>
+        )}
+      </div>
+
+      <div className={styles.card}>
 
         {notice && (
           <div
@@ -991,62 +1084,6 @@ const openAppeal = (
 
         {!loading && assigned && (
           <>
-            {inSchedule && (
-              <div className={styles.statusRow}>
-
-                <span
-                  className={`${styles.phasePill} ${
-                    open
-                      ? styles.phaseOpen
-                      : styles.phaseClosed
-                  }`}
-                >
-                  {open
-                    ? 'Open'
-                    : 'Closed'}
-                </span>
-
-                <span
-                  className={
-                    styles.phaseText
-                  }
-                >
-                  {phaseMessage()}
-                </span>
-
-              </div>
-            )}
-
-            {inSchedule &&
-              countdownLabel &&
-              countdownTarget !==
-                null && (
-                <div
-                  className={
-                    styles.countdown
-                  }
-                  key={nowSec}
-                >
-                  <span
-                    className={
-                      styles.countdownLabel
-                    }
-                  >
-                    {countdownLabel}
-                  </span>
-
-                  <span
-                    className={
-                      styles.countdownValue
-                    }
-                  >
-                    {fmtCountdown(
-                      countdownTarget
-                    )}
-                  </span>
-                </div>
-              )}
-
             {inSchedule &&
               countdownLabel &&
               countdownTarget ===
@@ -1255,9 +1292,25 @@ const openAppeal = (
             {!scheduleLoading &&
               scheduleDays.length > 0 && (
                 <div className={styles.section}>
-                  <h3 className={styles.sectionTitle}>
-                    My Schedule ({scheduleDays.length} day{scheduleDays.length !== 1 ? 's' : ''})
-                  </h3>
+                  <div className={styles.sectionHeaderRow}>
+                    <div>
+                      <h3 className={styles.sectionTitle}>
+                        My Schedule ({scheduleDays.length} day{scheduleDays.length !== 1 ? 's' : ''})
+                      </h3>
+                      <p className={styles.sectionSubtitle}>
+                        Your immersion days, windows and recorded times.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className={styles.dayListHeader} aria-hidden="true">
+                    <span>Day</span>
+                    <span>Batch / Supervisor</span>
+                    <span>Attendance Time</span>
+                    <span>Recorded</span>
+                    <span>Status</span>
+                    <span />
+                  </div>
 
                   <div className={styles.dayList}>
                     {scheduleDays.map((day) => {
@@ -1274,6 +1327,14 @@ const openAppeal = (
                         canTimeOut
                       );
                       const isToday = day.date === todayDate;
+                      // A record exists when the student actually clocked in or
+                      // was explicitly marked absent. Only then is there
+                      // something an appeal can dispute.
+                      const hasRecord = !!(
+                        rec &&
+                        (rec.check_in_time || rec.status === 'absent')
+                      );
+                      const isExpanded = expandedDay === day.date;
                       const inWindow = schedule
                         ? `${formatTime12(schedule.time_in.open)} – ${formatTime12(schedule.time_in.close)}`
                         : '';
@@ -1313,42 +1374,23 @@ const openAppeal = (
                       return (
                         <div
                           key={day.key}
-                          className={`${styles.dayCard} ${isToday ? styles.dayToday : ''}`}
+                          className={`${styles.dayCard} ${isToday ? styles.dayToday : ''} ${isExpanded ? styles.dayCardOpen : ''}`}
                         >
-                          <div className={styles.dayMain}>
-                            <span className={styles.dayNumber}>
-                              Day {day.dayNumber}
+                          <button
+                            type="button"
+                            className={styles.dayToggle}
+                            onClick={() => setExpandedDay(isExpanded ? null : day.date)}
+                            aria-expanded={isExpanded}
+                          >
+                            <span className={styles.dayChevron} aria-hidden="true">
+                              {isExpanded ? '▾' : '▸'}
                             </span>
-                            <span className={styles.dayDate}>
-                              {formatDateLabel(day.date)}
+                            <span className={styles.dayDayCol}>
+                              <span className={styles.dayNumber}>Day {day.dayNumber}</span>
+                              <span className={styles.dayDate}>
+                                {formatDateLabel(day.date)}
+                              </span>
                             </span>
-                            <span className={styles.dayMeta}>
-                              {day.batchLabel} · {day.supervisorName}
-                            </span>
-
-                            {inWindow && (
-                              <span className={styles.dayTime}>
-                                Time In: {inWindow}
-                              </span>
-                            )}
-                            {outWindow && (
-                              <span className={styles.dayTime}>
-                                Time Out: {outWindow}
-                              </span>
-                            )}
-                            {inTime && (
-                              <span className={styles.dayTimeActual}>
-                                In: {inTime}
-                              </span>
-                            )}
-                            {outTime && (
-                              <span className={styles.dayTimeActual}>
-                                Out: {outTime}
-                              </span>
-                            )}
-                          </div>
-
-                          <div className={styles.dayActions}>
                             <span
                               className={`${styles.dayStatus} ${
                                 dayStatus === 'present' || dayStatus === 'checked_in'
@@ -1360,46 +1402,165 @@ const openAppeal = (
                             >
                               {statusLabel}
                             </span>
+                          </button>
 
-                            {isToday && dayStatus === 'can_time_in' && (
-                              <button
-                                className={styles.smallPrimaryBtn}
-                                onClick={doCheckIn}
-                                disabled={busy}
-                              >
-                                Time In
-                              </button>
-                            )}
+                          {isExpanded && (
+                            <div className={styles.dayPanel}>
+                              <div className={styles.dayPanelGrid}>
+                                <div className={styles.dayDetailCell}>
+                                  <span className={styles.dayDetailLabel}>Batch / Supervisor</span>
+                                  <span className={styles.dayMeta}>
+                                    {day.batchLabel} · {day.supervisorName}
+                                  </span>
+                                </div>
 
-                            {isToday && dayStatus === 'can_time_out' && (
-                              <button
-                                className={styles.smallSecondaryBtn}
-                                onClick={doCheckOut}
-                                disabled={busy}
-                              >
-                                Time Out
-                              </button>
-                            )}
+                                <div className={styles.dayDetailCell}>
+                                  <span className={styles.dayDetailLabel}>Windows</span>
+                                  {inWindow && (
+                                    <span className={styles.dayTime}>
+                                      <b>Time In:</b> {inWindow}
+                                    </span>
+                                  )}
+                                  {outWindow && (
+                                    <span className={styles.dayTime}>
+                                      <b>Time Out:</b> {outWindow}
+                                    </span>
+                                  )}
+                                </div>
 
-                            {(dayStatus === 'absent' || (dayStatus === 'closed' && isToday)) && (
-                              <button
-                                className={styles.appealLink}
-                                onClick={() => openAppeal('time_in', day.date)}
-                              >
-                                Appeal
-                              </button>
-                            )}
+                                <div className={styles.dayDetailCell}>
+                                  <span className={styles.dayDetailLabel}>Recorded</span>
+                                  {inTime ? (
+                                    <span className={styles.dayTimeActual}>
+                                      <b>In:</b> {inTime}
+                                    </span>
+                                  ) : (
+                                    <span className={styles.dayTimeActual}>Not yet started</span>
+                                  )}
+                                  {outTime && (
+                                    <span className={styles.dayTimeActual}>
+                                      <b>Out:</b> {outTime}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
 
-                            {dayStatus === 'present' && !isToday && (
-                              <span className={styles.dayTimeActual}>✓ Completed</span>
-                            )}
-                          </div>
+                              <div className={styles.dayPanelActions}>
+                                {isToday && dayStatus === 'can_time_in' && (
+                                  <button
+                                    className={styles.smallPrimaryBtn}
+                                    onClick={doCheckIn}
+                                    disabled={busy}
+                                  >
+                                    Time In
+                                  </button>
+                                )}
+
+                                {isToday && dayStatus === 'can_time_out' && (
+                                  <button
+                                    className={styles.smallSecondaryBtn}
+                                    onClick={doCheckOut}
+                                    disabled={busy}
+                                  >
+                                    Time Out
+                                  </button>
+                                )}
+
+                                {/* Appeals only apply to a day that actually has a
+                                    record to dispute. A day that closed with no
+                                    time-in and no time-out has nothing to appeal,
+                                    so no button is shown. */}
+                                {hasRecord && (dayStatus === 'absent' || dayStatus === 'closed') && (
+                                  <button
+                                    className={styles.appealLink}
+                                    onClick={() => openAppeal('time_in', day.date)}
+                                  >
+                                    Appeal
+                                  </button>
+                                )}
+
+                                {dayStatus === 'present' && !isToday && (
+                                  <span className={styles.dayTimeActual}>✓ Completed</span>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
                   </div>
+
+                  <div className={styles.scheduleFooter}>
+                    <button
+                      type="button"
+                      className={styles.historyBtn}
+                      onClick={() => setShowAppealHistory(true)}
+                    >
+                      History of Appeal
+                      {appeals.length > 0 && (
+                        <span className={styles.historyCount}>{appeals.length}</span>
+                      )}
+                    </button>
+                  </div>
                 </div>
               )}
+
+            {/* DELETE CONFIRMATION */}
+
+            {deleteConfirm && (
+              <div
+                className={`${styles.modalBackdrop} ${styles.confirmBackdrop}`}
+                onClick={closeDeleteConfirm}
+              >
+                <div
+                  className={styles.confirmModal}
+                  role="dialog"
+                  aria-modal="true"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className={styles.confirmIcon}>
+                    <TrashIcon size={26} />
+                  </div>
+                  <h3 className={styles.confirmTitle}>
+                    {deleteConfirm.type === 'all'
+                      ? 'Delete all appeals?'
+                      : 'Delete this appeal?'}
+                  </h3>
+                  <p className={styles.confirmText}>
+                    {deleteConfirm.type === 'all'
+                      ? `This will permanently remove all ${deleteConfirm.count} appeal${
+                          deleteConfirm.count !== 1 ? 's' : ''
+                        } from your history.`
+                      : 'This appeal will be permanently removed from your history.'}
+                  </p>
+                  <p className={styles.confirmNote}>This action cannot be undone.</p>
+                  <div className={styles.confirmActions}>
+                    <button
+                      type="button"
+                      className={styles.confirmCancel}
+                      onClick={closeDeleteConfirm}
+                      disabled={deletingAppealId || clearingAppeals}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.confirmDelete}
+                      onClick={confirmDelete}
+                      disabled={deletingAppealId || clearingAppeals}
+                    >
+                      <TrashIcon size={14} />
+                      {clearingAppeals || deletingAppealId
+                        ? 'Deleting…'
+                        : deleteConfirm.type === 'all'
+                          ? 'Delete All'
+                          : 'Delete'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
 
             {/* APPEAL MODAL */}
 
@@ -1411,7 +1572,7 @@ const openAppeal = (
                 }}
               >
                 <div
-                  className={styles.modalContent}
+                  className={`${styles.modalContent} ${styles.modalDrawer}`}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className={styles.modalHeader}>
@@ -1489,133 +1650,108 @@ const openAppeal = (
             )}
 
 
-            {/* EXISTING APPEALS */}
+            {/* APPEAL HISTORY — side drawer on desktop, centered sheet on phones */}
 
-            {appeals.length >
-              0 && (
+            {showAppealHistory && (
               <div
-                className={
-                  styles.appealSection
-                }
+                className={styles.modalBackdrop}
+                onClick={() => setShowAppealHistory(false)}
               >
-
-                <h3
-                  className={
-                    styles.sectionTitle
-                  }
+                <div
+                  className={`${styles.modalContent} ${styles.modalDrawer}`}
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  My Appeals
-                </h3>
-
-                <ul
-                  className={
-                    styles.appealList
-                  }
-                >
-
-                  {appeals.map(
-                    (a) => (
-                      <li
-                        key={a.id}
-                        className={
-                          styles.appealItem
-                        }
+                  <div className={styles.modalHeader}>
+                    <h3>History of Appeal</h3>
+                    <div className={styles.modalHeaderActions}>
+                      {appeals.length > 0 && (
+                        <button
+                          type="button"
+                          className={styles.clearAllBtn}
+                          onClick={() =>
+                            setDeleteConfirm({ type: 'all', count: appeals.length })
+                          }
+                          disabled={clearingAppeals}
+                        >
+                          <TrashIcon size={13} />
+                          {clearingAppeals ? 'Deleting…' : 'Delete All'}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className={styles.modalClose}
+                        onClick={() => setShowAppealHistory(false)}
+                        aria-label="Close appeal history"
                       >
+                        ×
+                      </button>
+                    </div>
+                  </div>
 
-                        <div
-                          className={
-                            styles.appealTop
-                          }
-                        >
+                  <div className={styles.modalBody}>
+                    {appeals.length === 0 ? (
+                      <p className={styles.info}>
+                        You have not submitted any appeals yet.
+                      </p>
+                    ) : (
+                      <ul className={styles.appealList}>
+                        {appeals.map((a) => (
+                          <li key={a.id} className={styles.appealItem}>
+                            <div className={styles.appealTop}>
+                              <strong>
+                                {a.attendance_type === 'time_in' ? 'Time In' : 'Time Out'}
+                              </strong>
+                              <div className={styles.appealTopRight}>
+                                <span className={`${styles.badge} ${styles['badge_' + a.status]}`}>
+                                  {a.status}
+                                </span>
+                                <button
+                                  type="button"
+                                  className={styles.appealDeleteBtn}
+                                  onClick={() => setDeleteConfirm({ type: 'one', id: a.id })}
+                                  disabled={deletingAppealId === a.id}
+                                  title="Delete this appeal"
+                                  aria-label="Delete this appeal"
+                                >
+                                  <TrashIcon />
+                                </button>
+                              </div>
+                            </div>
 
-                          <strong>
-                            {a.attendance_type ===
-                            'time_in'
-                              ? 'Time In'
-                              : 'Time Out'}
-                          </strong>
-
-                          <span
-                            className={`${styles.badge} ${styles['badge_' + a.status]}`}
-                          >
-                            {
-                              a.status
-                            }
-                          </span>
-
-                        </div>
-
-                        {a.appeal_date && (
-                          <p
-                            className={
-                              styles.appealExcuse
-                            }
-                          >
-                            For{' '}
-                            {formatDateLabel(
-                              normalizeDateKey(a.appeal_date)
+                            {a.appeal_date && (
+                              <p className={styles.appealExcuse}>
+                                For {formatDateLabel(normalizeDateKey(a.appeal_date))}
+                              </p>
                             )}
-                          </p>
-                        )}
 
-                        <p
-                          className={
-                            styles.appealExcuse
-                          }
-                        >
-                          {a.excuse}
-                        </p>
+                            <p className={styles.appealExcuse}>{a.excuse}</p>
 
-                        {a.file_url && (
-                          <a
-                            className={
-                              styles.fileLink
-                            }
-                            href={
-                              a.file_url
-                            }
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            View attachment
-                          </a>
-                        )}
+                            {a.file_url && (
+                              <a
+                                className={styles.fileLink}
+                                href={a.file_url}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                View attachment
+                              </a>
+                            )}
 
-                        {a.teacher_comment && (
-                          <p
-                            className={
-                              styles.comment
-                            }
-                          >
-                            Teacher:{' '}
-                            {
-                              a.teacher_comment
-                            }
-                          </p>
-                        )}
-
-                        {a.status === 'pending' && (
-                          <button
-                            type="button"
-                            className={styles.appealLink}
-                            style={{ color: '#dc2626' }}
-                            onClick={() => handleDeleteAppeal(a.id)}
-                            disabled={deletingAppealId === a.id}
-                          >
-                            {deletingAppealId === a.id
-                              ? 'Deleting…'
-                              : 'Delete Appeal'}
-                          </button>
-                        )}
-
-                      </li>
-                    )
-                  )}
-
-                </ul>
-
+                            {a.teacher_comment && (
+                              <p className={styles.comment}>
+                                Teacher: {a.teacher_comment}
+                              </p>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
+
+
           </>
         )}
 

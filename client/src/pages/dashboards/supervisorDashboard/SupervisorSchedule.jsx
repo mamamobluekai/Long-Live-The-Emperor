@@ -4,8 +4,6 @@ import {
   getSupervisorBatchStatus,
   getSupervisorBatchConfig,
   updateSupervisorBatchConfig,
-  openSupervisorBatchAttendance,
-  closeSupervisorBatchAttendance,
   getSupervisorBatchSchedules,
   upsertSupervisorBatchSchedule,
 } from '../../../api/supervisorApi';
@@ -15,6 +13,37 @@ import styles from './SupervisorAttendance.module.css';
 function normalizeTime(value) {
   if (!value) return '';
   return String(value).slice(0, 5);
+}
+
+function timeToMinutes(value) {
+  const [h, m] = String(value).split(':').map(Number);
+  return h * 60 + m;
+}
+
+// Mirrors validateWindows() on the server so the supervisor gets the reason
+// immediately instead of a generic failure after the round trip. The previous
+// form stored whatever was typed, and a partial edit (e.g. Time In 19:30 left
+// with the 08:30 default as its close) saved fine but resolved to a day where
+// students could only time out -- the hours looked like they were never set.
+function validateWindows(cfg) {
+  const inOpen = timeToMinutes(cfg.time_in_open);
+  const inClose = timeToMinutes(cfg.time_in_close);
+  const outOpen = timeToMinutes(cfg.time_out_open);
+  const outClose = timeToMinutes(cfg.time_out_close);
+
+  if (![inOpen, inClose, outOpen, outClose].every(Number.isFinite)) {
+    return 'Fill in all four attendance times.';
+  }
+  if (inOpen === inClose) {
+    return 'Time In Open and Time In Close cannot be the same. Give students a window, e.g. 19:30 to 20:00.';
+  }
+  if (outOpen === outClose) {
+    return 'Time Out Open and Time Out Close cannot be the same. Give students a window, e.g. 23:00 to 23:30.';
+  }
+  if (inClose > outOpen) {
+    return 'The Time In window must close before the Time Out window opens.';
+  }
+  return null;
 }
 
 function normalizeDate(value) {
@@ -108,6 +137,14 @@ function SupervisorSchedule() {
   const saveWindows = async (e) => {
     e.preventDefault();
     if (!selectedId || !config) return;
+
+    const problem = validateWindows(config);
+    if (problem) {
+      setError(problem);
+      setNotice('');
+      return;
+    }
+
     setSaving(true);
     setError('');
     try {
@@ -127,27 +164,6 @@ function SupervisorSchedule() {
       const s = await getSupervisorBatchStatus(selectedId);
       setStatus(s);
       flash('Attendance windows saved.');
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const toggleOpen = async () => {
-    if (!selectedId) return;
-    setSaving(true);
-    setError('');
-    try {
-      if (status?.manual_open) {
-        await closeSupervisorBatchAttendance(selectedId);
-        flash('Attendance closed.');
-      } else {
-        await openSupervisorBatchAttendance(selectedId);
-        flash('Attendance opened.');
-      }
-      const s = await getSupervisorBatchStatus(selectedId);
-      setStatus(s);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -257,18 +273,18 @@ function SupervisorSchedule() {
                     <button type="submit" className={styles.primaryButton} disabled={saving}>
                       {saving ? 'Saving...' : 'Save Windows'}
                     </button>
-                    <button
-                      type="button"
-                      className={styles.secondaryButton}
-                      disabled={saving}
-                      onClick={toggleOpen}
-                    >
-                      {status?.manual_open ? 'Close Attendance' : 'Open Attendance'}
-                    </button>
                   </form>
                   <p className={styles.muted}>
-                    Status: {status?.attendance_open ? 'Open' : 'Closed'}
-                    {status?.manual_open ? ' (manually opened)' : ''}
+                    All four times are required and must be in order. For a
+                    7:30 PM - 11:30 PM shift enter 19:30 (Time In open), 20:00
+                    (Time In close), 23:00 (Time Out open), 23:30 (Time Out close).
+                    Changing only the first and last fields leaves the others on
+                    their old defaults, which silently breaks the window.
+                  </p>
+                  <p className={styles.muted}>
+                    Status: {status?.attendance_open ? 'Open' : 'Closed'} &middot;
+                    {' '}automatic &mdash; opens and closes by itself at the
+                    times above.
                   </p>
                 </section>
               )}

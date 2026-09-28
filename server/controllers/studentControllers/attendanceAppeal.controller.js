@@ -226,7 +226,9 @@ const getMyAppeals = async (req, res) => {
 };
 
 // DELETE /api/attendance/appeals/:appealId
-// Students may delete only their own appeals that are still pending.
+// Students may delete any of their own appeals, including reviewed ones, so a
+// finished appeal does not linger in their history. The ownership check below
+// is what prevents touching anyone else's appeal.
 const deleteMyAppeal = async (req, res) => {
   const { appealId } = req.params;
   try {
@@ -242,9 +244,6 @@ const deleteMyAppeal = async (req, res) => {
     );
     if (existing.rows.length === 0) {
       return res.status(404).json({ message: 'Appeal not found.' });
-    }
-    if (existing.rows[0].status !== 'pending') {
-      return res.status(400).json({ message: 'Only pending appeals can be deleted.' });
     }
 
     await pool.query(`DELETE FROM attendance_appeals WHERE id = $1`, [appealId]);

@@ -242,6 +242,20 @@ const getProgress = async (req, res) => {
     const submission = await getOrCreateSubmission(client, student, req.user.id);
     const requirementsApproved = submission.status === 'Approved';
 
+    // Requirements checklist is driven by the coordinator's ACTIVE document
+    // types only, so deactivating a type immediately updates the student total.
+    const requirementsCounts = await client.query(
+      `SELECT
+         (SELECT COUNT(*)::int FROM document_types WHERE is_active = TRUE) AS required,
+         (SELECT COUNT(*)::int
+            FROM student_documents sd
+            JOIN document_types dt ON dt.id = sd.document_type_id
+           WHERE sd.student_id = $1 AND dt.is_active = TRUE) AS uploaded`,
+      [studentId]
+    );
+    const requiredRequirementCount = requirementsCounts.rows[0]?.required || 0;
+    const uploadedRequirementCount = requirementsCounts.rows[0]?.uploaded || 0;
+
     // --- Scheduled days: expand work_immersion_schedules into weekdays (Mon–Fri),
     // mirroring the Daily Documentation page's schedule computation. ---
     const scheduleResult = await client.query(
@@ -282,10 +296,13 @@ const getProgress = async (req, res) => {
       [studentId]
     );
     const attendedDates = new Set(
-      attRecords.rows.map((r) => String(r.date).slice(0, 10))
+      attRecords.rows
+        .map((r) => String(r.date).slice(0, 10))
+        .filter((d) => scheduledDates.size === 0 || scheduledDates.has(d))
     );
     const attendanceDays = attendedDates.size;
-    const attendanceComplete = attendanceDays >= REQUIRED_ATTENDANCE_DAYS;
+    const requiredDays = scheduledDays > 0 ? scheduledDays : REQUIRED_ATTENDANCE_DAYS;
+    const attendanceComplete = attendanceDays >= requiredDays;
 
     // --- Daily Documentation: sourced from student_daily_documentation (the same
     // table the Daily Documentation page reads), not student_documents. ---
@@ -298,6 +315,7 @@ const getProgress = async (req, res) => {
     const gradedDates = new Set();
     docRecords.rows.forEach((r) => {
       const d = String(r.date).slice(0, 10);
+      if (scheduledDates.size > 0 && !scheduledDates.has(d)) return;
       if (r.status === 'submitted' || r.status === 'reviewed' || r.status === 'graded') {
         submittedDates.add(d);
       }
@@ -327,7 +345,12 @@ const getProgress = async (req, res) => {
     const certificate = certificateResult.rows[0] || null;
 
     res.json({
-      requirements: { approved: requirementsApproved, status: submission.status },
+      requirements: {
+        approved: requirementsApproved,
+        status: submission.status,
+        required: requiredRequirementCount,
+        uploaded: uploadedRequirementCount,
+      },
       documentation: {
         graded: documentationGraded,
         total: scheduledDays,
@@ -338,7 +361,7 @@ const getProgress = async (req, res) => {
         complete: attendanceComplete,
         days: attendanceDays,
         scheduled: scheduledDays,
-        required: REQUIRED_ATTENDANCE_DAYS,
+        required: requiredDays,
       },
       completed,
       certificate: certificate

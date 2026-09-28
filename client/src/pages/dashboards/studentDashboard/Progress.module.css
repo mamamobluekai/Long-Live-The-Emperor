@@ -1,6 +1,206 @@
 /* =========================================
+   RESPONSIVE LAYOUT
+   (layout lives here; colours stay inline)
+   ========================================= */
+
+.ring {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px -12px rgba(139, 30, 45, 0.6);
+}
+
+.ringInner {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 780;
+  font-size: 18px;
+  color: #172033;
+  letter-spacing: -0.02em;
+}
+
+.overallBody {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.overallText {
+  flex: 1;
+  min-width: 220px;
+}
+
+.barTrack {
+  width: 100%;
+  height: 10px;
+  margin-top: 16px;
+  background: #f4e7ea;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: linear-gradient(90deg, #8b1e2d 0%, #b8394f 100%);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+/* Certificate CTA — layout only, the navy + gold colours stay inline */
+.certWrap {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.certRibbon {
+  flex-shrink: 0;
+}
+
+.certBody {
+  flex: 1;
+}
+
+.certBtn {
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .certWrap {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 14px;
+    padding: 24px 18px;
+  }
+
+  .certRibbon {
+    align-self: center;
+  }
+
+  .certBody {
+    width: 100%;
+  }
+
+  .certBody p {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .certBtn {
+    width: 100%;
+    padding: 12px 18px;
+  }
+}
+
+.stepList {
+  display: flex;
+  flex-direction: column;
+}
+
+.stepRow {
+  display: flex;
+  gap: 16px;
+}
+
+.stepTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.milestonesCard {
+  margin-top: 18px;
+}
+
+@media (max-width: 640px) {
+  .pageHeaderWrap {
+    padding: 18px 16px;
+    margin-bottom: 20px;
+  }
+
+  .pageHeaderWrap h2 {
+    font-size: 1.5rem;
+  }
+
+  .pageHeaderWrap p {
+    font-size: 0.9rem;
+  }
+
+  .headerIcon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.05rem;
+    border-radius: 12px;
+  }
+
+  .ring {
+    width: 78px;
+    height: 78px;
+  }
+
+  .ringInner {
+    width: 62px;
+    height: 62px;
+    font-size: 1.1rem;
+  }
+
+  .overallBody {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+    padding: 20px 18px;
+  }
+
+  .overallText {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .stepList {
+    gap: 4px;
+  }
+
+  .milestonesCard {
+    padding: 18px 16px 4px;
+  }
+
+  .stepRow {
+    gap: 12px;
+  }
+
+  .stepTopRow {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .stepLabel {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 420px) {
+  .barTrack {
+    height: 8px;
+  }
+}
+
+/* =========================================
    PAGE HEADER
-========================================= */
+   ========================================= */
 
 .pageHeader {
   margin-bottom: 30px;

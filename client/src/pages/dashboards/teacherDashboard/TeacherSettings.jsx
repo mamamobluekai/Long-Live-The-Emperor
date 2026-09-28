@@ -15,8 +15,10 @@ function TeacherSettings() {
       <div className={styles.card}>
         <h3 className={styles.section}>Attendance Windows</h3>
         <p className={styles.hint}>
-          Time In: 8:00 AM – 8:30 AM · Time Out: 5:00 PM – 5:30 PM (Asia/Manila).
-          Adjust per-batch schedules from the Attendance page.
+          Attendance opens and closes automatically using the window times your
+          supervisor saved for each batch (default: Time In 8:00 AM &ndash; 8:30 AM,
+          Time Out 5:00 PM &ndash; 5:30 PM, Asia/Manila). Students see the exact
+          window for their own batch on the Attendance page.
         </p>
       </div>
     </div>

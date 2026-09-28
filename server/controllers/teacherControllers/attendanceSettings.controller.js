@@ -65,8 +65,49 @@ async function resolveAttendanceState(teacherBatchId) {
   return computeState(res.rows[0]);
 }
 
+const MINUTES_PER_DAY = 24 * 60;
+
+// Positive modulo, so a negative offset (a window that wraps past midnight)
+// still lands in the 0..1439 range.
+function withinDay(v) {
+  return ((v % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
+}
+
+/**
+ * Validate a set of four window times.
+ * Returns null when the schedule is coherent, otherwise a human-readable reason.
+ *
+ * The old resolver compared the four raw times as plain ascending minutes, so a
+ * late shift (e.g. Time In 19:30 left with the 08:30 default as its close) made
+ * the whole day collapse into the wrong phase and the new hours silently stopped
+ * working. Rejecting non-coherent input up front is what stops that.
+ */
+function validateWindows(cfg) {
+  const inOpen = timeToMinutes(String(cfg.time_in_open));
+  const inClose = timeToMinutes(String(cfg.time_in_close));
+  const outOpen = timeToMinutes(String(cfg.time_out_open));
+  const outClose = timeToMinutes(String(cfg.time_out_close));
+
+  if (![inOpen, inClose, outOpen, outClose].every(Number.isFinite)) {
+    return 'Attendance windows must be valid 24-hour times.';
+  }
+  if (inOpen === inClose) {
+    return 'Time In Open and Time In Close cannot be the same. Give students a window, e.g. 19:30 to 20:00.';
+  }
+  if (outOpen === outClose) {
+    return 'Time Out Open and Time Out Close cannot be the same. Give students a window, e.g. 23:00 to 23:30.';
+  }
+  if (inClose > outOpen) {
+    return 'The Time In window must close before the Time Out window opens.';
+  }
+  if (withinDay(outClose - inOpen) < withinDay(inClose - inOpen) + withinDay(outClose - outOpen)) {
+    return 'The Time In and Time Out windows overlap.';
+  }
+  return null;
+}
+
 function computeState(cfg) {
-  const { now, hour, minute } = nowInTz(cfg.timezone);
+  const { hour, minute } = nowInTz(cfg.timezone);
   const nowMin = hour * 60 + minute;
 
   const inOpen = timeToMinutes(String(cfg.time_in_open));
@@ -76,24 +117,33 @@ function computeState(cfg) {
 
   const manualOpen = cfg.manual_open;
 
+  // Measure the day relative to Time In Open instead of comparing raw clock
+  // values. Each span is a forward offset that may wrap past midnight, so the
+  // resolver no longer depends on the four times happening to be in ascending
+  // order, and overnight shifts keep working.
+  const durIn = withinDay(inClose - inOpen);
+  const gap = withinDay(outOpen - inClose);
+  const durOut = withinDay(outClose - outOpen);
+  const rel = withinDay(nowMin - inOpen);
+
   let phase;
   let type = null;
   let open = false;
 
-  if (nowMin < inOpen) {
-    phase = 'before_in';
-  } else if (nowMin < inClose) {
+  if (durIn > 0 && rel < durIn) {
     phase = 'in_open';
     type = 'time_in';
     open = true;
-  } else if (nowMin < outOpen) {
+  } else if (rel < durIn + gap) {
     phase = 'in_closed';
-  } else if (nowMin < outClose) {
+  } else if (durOut > 0 && rel < durIn + gap + durOut) {
     phase = 'out_open';
     type = 'time_out';
     open = true;
   } else {
-    phase = 'out_closed';
+    // Closed, waiting on the next cycle. Keep the original wording split so the
+    // student's countdown still says "opens later" vs "closed for today".
+    phase = nowMin < inOpen ? 'before_in' : 'out_closed';
   }
 
   // Manual override always wins and spans both types.
@@ -156,6 +206,21 @@ const updateBatchConfig = async (req, res) => {
     if (!gate.ok) return res.status(gate.denied.status).json({ error: gate.denied.error });
 
     const { time_in_open, time_in_close, time_out_open, time_out_close, timezone } = req.body;
+
+    // When every window is supplied, reject a non-coherent schedule up front.
+    // Previously these were stored unchecked, and a late shift such as
+    // 19:30 -> 23:30 combined with the leftover 08:30/17:00 defaults saved
+    // fine but resolved to a permanently closed (or time-out only) day.
+    const provided = [time_in_open, time_in_close, time_out_open, time_out_close];
+    if (provided.every((v) => v !== undefined && v !== null && v !== '')) {
+      const problem = validateWindows({
+        time_in_open: String(time_in_open).slice(0, 5),
+        time_in_close: String(time_in_close).slice(0, 5),
+        time_out_open: String(time_out_open).slice(0, 5),
+        time_out_close: String(time_out_close).slice(0, 5),
+      });
+      if (problem) return res.status(400).json({ error: problem });
+    }
 
     const fields = [];
     const values = [];
@@ -270,6 +335,7 @@ const closeBatchAttendance = async (req, res) => {
 module.exports = {
   TZ,
   nowInTz,
+  validateWindows,
   resolveAttendanceState,
   getBatchAttendanceStatus,
   getBatchConfig,

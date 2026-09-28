@@ -41,6 +41,52 @@ const FALLBACK_DOCS = [
   { code: 'student_profile_form', section: 'academic', name: 'Student Profile Form' },
 ];
 
+// Philippine mobile numbers: 09XXXXXXXXX, optionally +63 or 63 prefix, with
+// spaces/dashes/parentheses allowed. Anything else is rejected.
+const PHONE_PATTERN = /^(?:\+?63|0)?9\d{9}$/;
+
+function normalizePhone(value) {
+  return String(value || '').replace(/[\s\-().]/g, '');
+}
+
+function isValidPhone(value) {
+  const digits = normalizePhone(value);
+  return PHONE_PATTERN.test(digits);
+}
+
+const PHONE_FIELDS = [
+  'contact_number',
+  'guardian_contact',
+  'emergency_contact_number',
+];
+
+const PHONE_LABELS = {
+  contact_number: 'Contact Number',
+  guardian_contact: 'Guardian Contact',
+  emergency_contact_number: 'Emergency Contact Number',
+};
+
+// Whole-number fields: digits only, so letters/decimals can never be entered.
+const INT_FIELDS = {
+  age: { label: 'Age', min: 1, max: 120, placeholder: '18' },
+  student_number: { label: 'Student Number', min: null, max: null, placeholder: 'e.g., 2024-001' },
+};
+
+const isValidInt = (value, { min, max }) => {
+  const trimmed = String(value ?? '').trim();
+  if (!/^\d+$/.test(trimmed)) return false;
+  const n = Number(trimmed);
+  if (min != null && n < min) return false;
+  if (max != null && n > max) return false;
+  return true;
+};
+
+const isValidStudentNumber = (value) => {
+  const trimmed = String(value ?? '').trim();
+  // Allows "2024-00123" style ids; digits and separators only.
+  return /^[\d]+([-/]\d+)*$/.test(trimmed);
+};
+
 function Requirements() {
   const [data, setData] = useState(null);
   const [docTypes, setDocTypes] = useState(FALLBACK_DOCS);
@@ -52,6 +98,31 @@ function Requirements() {
   const [uploading, setUploading] = useState(null);
   const [uploadFile, setUploadFile] = useState({});
   const [deleting, setDeleting] = useState(null);
+  const [phoneErrors, setPhoneErrors] = useState({});
+  const [intErrors, setIntErrors] = useState({});
+
+  // Live-check every phone field so the student sees the problem while typing.
+  const validatePhone = (field, value) => {
+    if (!String(value || '').trim()) {
+      setPhoneErrors((prev) => {
+        if (!(field in prev)) return prev;
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+      return true;
+    }
+    const valid = isValidPhone(value);
+    setPhoneErrors((prev) => {
+      if (valid && !(field in prev)) return prev;
+      if (valid && prev[field] === PHONE_LABELS[field]) return prev;
+      const next = { ...prev };
+      if (valid) delete next[field];
+      else next[field] = PHONE_LABELS[field];
+      return next;
+    });
+    return valid;
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -92,16 +163,126 @@ function Requirements() {
     documents.some((sd) => sd.code === d.code)
   ).length;
 
-  const progressColor = progress >= 100 ? '#22c55e' : progress >= 50 ? '#3b82f6' : '#f59e0b';
+  // Maroon progress, turning gold then green as the uploads complete.
+  const progressColor =
+    progress >= 100
+      ? 'linear-gradient(90deg, #15803d 0%, #27a35a 100%)'
+      : progress >= 50
+        ? 'linear-gradient(90deg, #8b1e2d 0%, #b8394f 100%)'
+        : 'linear-gradient(90deg, #b3872c 0%, #d4af6a 100%)';
+
+  // Age and Student Number accept digits only; anything else is flagged.
+  const validateInt = (field, value) => {
+    const raw = String(value ?? '');
+    // Drop invalid characters as they are typed so the box stays clean.
+    const cleaned = field === 'student_number' ? raw.replace(/[^\d\-/]/g, '') : raw.replace(/\D/g, '');
+    if (cleaned !== raw) {
+      setData((prev) => ({ ...prev, student: { ...prev.student, [field]: cleaned } }));
+    }
+    if (!cleaned) {
+      setIntErrors((prev) => {
+        if (!(field in prev)) return prev;
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+      return true;
+    }
+    const config = INT_FIELDS[field];
+    const valid =
+      field === 'student_number' ? isValidStudentNumber(cleaned) : isValidInt(cleaned, config);
+    setIntErrors((prev) => {
+      if (valid && !(field in prev)) return prev;
+      const next = { ...prev };
+      if (valid) delete next[field];
+      else next[field] = config.label;
+      return next;
+    });
+    return valid;
+  };
+
+  const intFieldProps = (field) => {
+    const config = INT_FIELDS[field];
+    const error = intErrors[field];
+    return {
+      value: student[field] ?? '',
+      onChange: (e) => validateInt(field, e.target.value),
+      placeholder: config.placeholder,
+      inputMode: 'numeric',
+      min: config.min ?? undefined,
+      max: config.max ?? undefined,
+      'aria-invalid': !!error,
+      'aria-describedby': error ? `${field}-error` : undefined,
+      className: error ? `${styles.input} ${styles.inputError}` : styles.input,
+    };
+  };
+
+  const intErrorText = (field) => {
+    const error = intErrors[field];
+    if (!error) return null;
+    const config = INT_FIELDS[field];
+    const hint =
+      field === 'age'
+        ? `${config.label}: whole number between ${config.min} and ${config.max}`
+        : `${config.label}: digits only (e.g. 2024-00123)`;
+    return (
+      <div className={styles.fieldError} id={`${field}-error`}>
+        {hint}
+      </div>
+    );
+  };
 
   const handleFieldChange = (field, value) => {
     setData((prev) => ({
       ...prev,
       student: { ...prev.student, [field]: value },
     }));
+    if (PHONE_FIELDS.includes(field)) validatePhone(field, value);
+  };
+
+  // Shared props for the three phone inputs: numeric keypad, live error text.
+  const phoneFieldProps = (field) => {
+    const error = phoneErrors[field];
+    return {
+      value: student[field] || '',
+      onChange: (e) => handleFieldChange(field, e.target.value),
+      placeholder: '09XXXXXXXXX',
+      inputMode: 'tel',
+      pattern: '[0-9+()\\- ]*',
+      'aria-invalid': !!error,
+      'aria-describedby': error ? `${field}-error` : undefined,
+      className: error ? `${styles.input} ${styles.inputError}` : styles.input,
+    };
+  };
+
+  const phoneErrorText = (field) =>
+    phoneErrors[field] ? (
+      <div className={styles.fieldError} id={`${field}-error`}>
+        {phoneErrors[field]}: numbers only (e.g. 09171234567)
+      </div>
+    ) : null;
+
+  // Any phone or whole-number field still holding an invalid value blocks
+  // saving and submitting, so bad data never reaches the server.
+  const invalidPhoneField = PHONE_FIELDS.find((f) => phoneErrors[f]);
+  const invalidIntField = Object.keys(INT_FIELDS).find((f) => intErrors[f]);
+
+  const guardFields = () => {
+    if (invalidPhoneField) {
+      return `${PHONE_LABELS[invalidPhoneField]} must be numbers only (e.g. 09171234567).`;
+    }
+    if (invalidIntField) {
+      return `${INT_FIELDS[invalidIntField].label} must be a valid whole number.`;
+    }
+    return null;
   };
 
   const handleSave = async () => {
+    const blocked = guardFields();
+    if (blocked) {
+      setError(blocked);
+      return;
+    }
     setSaving(true);
     setError('');
     setMessage('');
@@ -117,6 +298,11 @@ function Requirements() {
   };
 
   const handleSubmit = async () => {
+    const blocked = guardFields();
+    if (blocked) {
+      setError(blocked);
+      return;
+    }
     setSubmitting(true);
     setError('');
     setMessage('');
@@ -263,12 +449,10 @@ function Requirements() {
       <div className={styles.field}>
         <label>Student Number <span className={styles.requiredDiamond}>*</span></label>
         <input
-          className={styles.input}
-          value={student.student_number || ''}
-          onChange={(e) => handleFieldChange('student_number', e.target.value)}
-          placeholder="e.g., 2024-001"
+          {...intFieldProps('student_number')}
           readOnly={!!submission?.submitted_at}
         />
+        {intErrorText('student_number')}
       </div>
       <div className={styles.field}>
         <label>First Name <span className={styles.requiredDiamond}>*</span></label>
@@ -337,24 +521,18 @@ function Requirements() {
       <div className={styles.field}>
         <label>Age <span className={styles.requiredDiamond}>*</span></label>
         <input
-          className={styles.input}
-          type="number"
-          min="0"
-          value={student.age ?? ''}
-          onChange={(e) => handleFieldChange('age', e.target.value)}
-          placeholder="18"
+          {...intFieldProps('age')}
           readOnly={!!submission?.submitted_at}
         />
+        {intErrorText('age')}
       </div>
       <div className={styles.field}>
         <label>Contact Number <span className={styles.requiredDiamond}>*</span></label>
         <input
-          className={styles.input}
-          value={student.contact_number || ''}
-          onChange={(e) => handleFieldChange('contact_number', e.target.value)}
-          placeholder="09xxxxxxxxx"
+          {...phoneFieldProps('contact_number')}
           readOnly={!!submission?.submitted_at}
         />
+        {phoneErrorText('contact_number')}
       </div>
       <div className={styles.field}>
         <label>Email <span className={styles.requiredDiamond}>*</span></label>
@@ -490,12 +668,10 @@ function Requirements() {
       <div className={styles.field}>
         <label>Guardian Contact <span className={styles.requiredDiamond}>*</span></label>
         <input
-          className={styles.input}
-          value={student.guardian_contact || ''}
-          onChange={(e) => handleFieldChange('guardian_contact', e.target.value)}
-          placeholder="09xxxxxxxxx"
+          {...phoneFieldProps('guardian_contact')}
           readOnly={!!submission?.submitted_at}
         />
+        {phoneErrorText('guardian_contact')}
       </div>
       <div className={styles.field}>
         <label>Guardian Email <span className={styles.requiredDiamond}>*</span></label>
@@ -531,12 +707,10 @@ function Requirements() {
       <div className={styles.field}>
         <label>Emergency Contact Number <span className={styles.requiredDiamond}>*</span></label>
         <input
-          className={styles.input}
-          value={student.emergency_contact_number || ''}
-          onChange={(e) => handleFieldChange('emergency_contact_number', e.target.value)}
-          placeholder="09xxxxxxxxx"
+          {...phoneFieldProps('emergency_contact_number')}
           readOnly={!!submission?.submitted_at}
         />
+        {phoneErrorText('emergency_contact_number')}
       </div>
     </div>
   );
@@ -565,10 +739,17 @@ function Requirements() {
     !!submission?.submitted_at;
 
   return (
-    <div>
+    <div className={styles.page}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap');
+      `}</style>
+
       <div className={styles.pageHeader}>
-        <h2>Requirements</h2>
-        <p>Fill in your information and upload the required documents.</p>
+        <div className={styles.headerMain}>
+          <div className={styles.eyebrow}>Student Portal</div>
+          <h2>Requirements</h2>
+          <p>Fill in your information and upload the required documents.</p>
+        </div>
       </div>
 
       {message && <div className={styles.message}>{message}</div>}
@@ -597,26 +778,34 @@ function Requirements() {
 
       <div className={styles.section}>
         <div className={styles.tabs}>
-          {Object.entries(SECTION_META).map(([key, { label }]) => {
+          {Object.entries(SECTION_META).map(([key, { label, shortLabel }]) => {
             if (key === 'medical' || key === 'academic') {
               const sectionDone = sections[`${key}Complete`];
               const tabClass = `${styles.tab} ${activeTab === key ? styles.active : ''}`;
               const totalSectionDocs = docTypes.filter((d) => d.section === key).length;
               const uploadedSectionCodes = new Set(documents.map((d) => d.code));
               const uploadedSectionDocs = docTypes.filter((d) => d.section === key && uploadedSectionCodes.has(d.code)).length;
+              const missing = totalSectionDocs - uploadedSectionDocs;
               const indicator = sectionDone
-                ? ' âœ“'
-                : ` (${totalSectionDocs - uploadedSectionDocs} missing)`;
+                ? '✓'
+                : missing > 0
+                  ? `${missing} missing`
+                  : '';
               return (
                 <button
                   key={key}
                   className={tabClass}
                   onClick={() => setActiveTab(key)}
                 >
-                  {label}
-                  <span style={{ color: !sectionDone ? '#ef4444' : '#22c55e', marginLeft: 4, fontSize: '0.75rem' }}>
-                    {indicator}
-                  </span>
+                  <span className={styles.tabLabelFull}>{label}</span>
+                  <span className={styles.tabLabelShort}>{shortLabel}</span>
+                  {indicator && (
+                    <span
+                      className={`${styles.tabFlag} ${sectionDone ? styles.tabFlagDone : styles.tabFlagMissing}`}
+                    >
+                      {indicator}
+                    </span>
+                  )}
                 </button>
               );
             }
@@ -626,7 +815,8 @@ function Requirements() {
                 className={`${styles.tab} ${activeTab === key ? styles.active : ''}`}
                 onClick={() => setActiveTab(key)}
               >
-                {label}
+                <span className={styles.tabLabelFull}>{label}</span>
+                <span className={styles.tabLabelShort}>{shortLabel}</span>
               </button>
             );
           })}
@@ -638,16 +828,18 @@ function Requirements() {
         {activeTab === 'academic' && renderAcademicDocs()}
 
         <div className={styles.saveBar}>
-          <button className={styles.submitBtn} disabled={submitting || isSubmitted} onClick={handleSubmit}>
-            {isSubmitted ? 'Already Submitted' : submitting ? 'Submitting...' : 'Submit Requirements'}
-          </button>
-          <button className={styles.btn} disabled={saving || isSubmitted} onClick={handleSave}>
-            {saving ? 'Saving...' : 'Save Progress'}
-          </button>
+          <div className={styles.saveBarActions}>
+            <button className={styles.submitBtn} disabled={submitting || isSubmitted} onClick={handleSubmit}>
+              {isSubmitted ? 'Already Submitted' : submitting ? 'Submitting...' : 'Submit Requirements'}
+            </button>
+            <button className={styles.btn} disabled={saving || isSubmitted} onClick={handleSave}>
+              {saving ? 'Saving...' : 'Save Progress'}
+            </button>
+          </div>
           {isSubmitted && (
-            <span className={styles.muted}>
+            <p className={styles.muted}>
               Your requirements have been submitted for review. Contact your coordinator for changes.
-            </span>
+            </p>
           )}
         </div>
       </div>

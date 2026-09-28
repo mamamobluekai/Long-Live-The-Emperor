@@ -443,3 +443,532 @@
     font-size: 0.95rem;
   }
 }
+/* =========================================================
+   CLICKABLE CARDS
+   ========================================================= */
+
+.clickable {
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.clickable:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -14px rgba(80, 20, 32, 0.5);
+}
+
+.clickable:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.personCard.clickable:hover:not(:disabled) {
+  border-color: #cf9aa8;
+}
+
+.classmateItem.clickable:hover:not(:disabled) {
+  border-color: #cf9aa8;
+  background: #fffafb;
+}
+
+.viewHint {
+  margin-top: 6px;
+  color: #8b1e2d;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: #b8bec8;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+/* =========================================================
+   DETAILS MODAL
+   ========================================================= */
+
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(23, 32, 51, 0.45);
+  backdrop-filter: blur(3px);
+}
+
+.infoModal {
+  width: min(440px, 100%);
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #e6dfe2;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px -18px rgba(80, 20, 32, 0.4);
+  animation: infoIn 0.22s ease-out;
+}
+
+@keyframes infoIn {
+  from {
+    transform: translateY(14px) scale(0.98);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.infoModalHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 22px;
+  border-bottom: 1px solid #ecdfe2;
+  background: linear-gradient(120deg, #ffffff 0%, #fdf3f5 100%);
+}
+
+.infoModalAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 13px;
+  background: linear-gradient(140deg, #8b1e2d, #b8394f);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.7);
+}
+
+.infoModalRole {
+  color: #8b1e2d;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.infoModalName {
+  margin: 2px 0 0;
+  color: #172033;
+  font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+}
+
+.infoModalClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin-left: auto;
+  flex-shrink: 0;
+  border: 1px solid #dcc9cf;
+  border-radius: 9px;
+  background: #fff;
+  color: #596579;
+  font-family: inherit;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.infoModalClose:hover {
+  color: #172033;
+  border-color: #b8394f;
+  background: #fff7f8;
+}
+
+.infoModalBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 22px;
+}
+
+.infoModalFooter {
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 22px;
+  border-top: 1px solid #ecdfe2;
+  background: #fffafb;
+}
+
+.infoModalBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 18px;
+  border: 1px solid #8b1e2d;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.15s ease;
+}
+
+.infoModalBtn:hover {
+  background: linear-gradient(135deg, #7a1725 0%, #932034 100%);
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 650px) {
+  .classmateItem {
+    padding: 12px 13px;
+  }
+
+  .classmateAvatar {
+    width: 36px;
+    height: 36px;
+    font-size: 0.78rem;
+  }
+
+  .classmateInfo {
+    min-width: 0;
+  }
+
+  .classmateMeta {
+    /* long ids/emails must wrap instead of pushing the row wider */
+    overflow-wrap: anywhere;
+  }
+
+  .personCard {
+    padding: 14px;
+  }
+
+  .infoRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .infoValue {
+    overflow-wrap: anywhere;
+  }
+
+  .modalBackdrop {
+    padding: 14px;
+    align-items: flex-end;
+  }
+
+  .infoModal {
+    width: 100%;
+    max-height: 88vh;
+  }
+
+  .infoModalHeader,
+  .infoModalBody,
+  .infoModalFooter {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .infoModalBtn {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+/* =========================================================
+   MAROON DESIGN SYSTEM
+   Lexend type scale - #8b1e2d / #b8394f / gold accents.
+   Matches RequirementsReview.
+   ========================================================= */
+
+.page {
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #26313f;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.eyebrow {
+  margin-bottom: 6px;
+  color: #8b1e2d;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+/* ---------- HEADER ---------- */
+
+.greeting {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 26px;
+  padding: 22px 24px;
+  border: 1px solid #e8d2d8;
+  border-radius: 18px;
+  background:
+    radial-gradient(130% 160% at 0% 0%, rgba(139, 30, 45, 0.1) 0%, rgba(139, 30, 45, 0) 58%),
+    radial-gradient(120% 150% at 100% 120%, rgba(190, 140, 63, 0.16) 0%, rgba(190, 140, 63, 0) 55%),
+    linear-gradient(120deg, #ffffff 0%, #fdf3f5 58%, #f9e8ec 100%);
+  box-shadow: 0 14px 32px -28px rgba(80, 20, 32, 0.55);
+}
+
+.greeting h2 {
+  color: #172033;
+  font-weight: 780;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+}
+
+.greeting p {
+  margin: 8px 0 0;
+  max-width: 650px;
+  color: #596579;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.batchPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  padding: 8px 15px;
+  border: 1px solid #8b1e2d;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
+}
+
+/* ---------- SECTIONS ---------- */
+
+.section {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #fffdfd 0%, #ffffff 40%);
+  border: 1px solid #e6dfe2;
+  border-radius: 18px;
+  box-shadow: 0 12px 32px -28px rgba(80, 20, 32, 0.4);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 22px;
+  left: 22px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, rgba(139, 30, 45, 0.75), rgba(184, 57, 79, 0.35), rgba(190, 140, 63, 0.55));
+}
+
+.section:hover {
+  border-color: #dcc9cf;
+  box-shadow: 0 18px 40px -30px rgba(80, 20, 32, 0.5);
+}
+
+.sectionTitle {
+  color: #172033;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+}
+
+/* ---------- PEOPLE & CLASSMATES ---------- */
+
+.personCard {
+  background: #fff;
+  border: 1px solid #ecdfe2;
+  border-left: 4px solid #dcc9cf;
+  border-radius: 12px;
+}
+
+.accentTeacher { border-left-color: #8b1e2d; }
+.accentSupervisor { border-left-color: #be8c3f; }
+.accentCoordinator { border-left-color: #37568c; }
+
+.personRole {
+  color: #8b1e2d;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.personName {
+  color: #172033;
+  font-weight: 750;
+}
+
+.personMeta {
+  color: #8490a1;
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.personMeta svg {
+  vertical-align: -2px;
+  color: #b8bec8;
+}
+
+.classmateItem {
+  background: #fff;
+  border: 1px solid #ecdfe2;
+  border-radius: 12px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.classmateInfo strong {
+  color: #172033;
+  font-weight: 700;
+}
+
+.classmateMeta {
+  color: #8490a1;
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.countChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  margin-left: 8px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #fff7f8;
+  border: 1px solid #f0d7dc;
+  color: #8b1e2d;
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+/* ---------- LABELS & BADGES ---------- */
+
+.infoLabel {
+  color: #8490a1;
+  font-weight: 700;
+}
+
+.infoValue {
+  color: #172033;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.badgePending {
+  color: #9a5b10;
+  background: #fff4df;
+  border: 1px solid #f2dfb6;
+}
+
+.badgeReview {
+  color: #37568c;
+  background: #e6eefb;
+  border: 1px solid #c7d7f0;
+}
+
+.badgeApproved,
+.badgeDeployed {
+  color: #15803d;
+  background: #eaf8ef;
+  border: 1px solid #bfe6cc;
+}
+
+.badgeRejected,
+.badgeNeeds {
+  color: #b4233b;
+  background: #fde3e8;
+  border: 1px solid #f0b7c2;
+}
+
+/* ---------- FEEDBACK / EMPTY / NOTE ---------- */
+
+.feedbackText {
+  color: #475d6e;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.empty {
+  color: #8490a1;
+  font-size: 0.85rem;
+}
+
+.error {
+  color: #b4233b;
+  background: #fde3e8;
+  border: 1px solid #f0b7c2;
+  border-radius: 12px;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.pendingNote {
+  background: #fffafb;
+  border: 1px solid #ecdfe2;
+  border-radius: 12px;
+  color: #596579;
+}
+
+.pendingNote strong {
+  color: #8b1e2d;
+  font-weight: 750;
+}
+
+.footerNote {
+  color: #8490a1;
+  font-size: 0.78rem;
+}
+
+@media (max-width: 650px) {
+  .greeting {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 18px 16px;
+    border-radius: 16px;
+    margin-bottom: 18px;
+  }
+
+  .greeting h2 {
+    font-size: 1.3rem;
+  }
+
+  .section {
+    border-radius: 16px;
+  }
+
+  .section::before {
+    right: 16px;
+    left: 16px;
+  }
+}

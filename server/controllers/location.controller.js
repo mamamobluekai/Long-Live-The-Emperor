@@ -87,13 +87,22 @@ exports.getBatchCurrentLocations = async (req, res) => {
 
     const result = await pool.query(
       `SELECT sa.student_id, st.first_name, st.last_name,
+              st.student_number, st.contact_number, st.email,
+              st.grade_level, st.track_strand, st.photo_url,
               COALESCE(sl.latitude, sa.check_in_lat) AS latitude,
               COALESCE(sl.longitude, sa.check_in_lng) AS longitude,
               COALESCE(sl.accuracy, sa.check_in_accuracy) AS accuracy,
               COALESCE(sl.recorded_at, sa.check_in_time) AS recorded_at,
-              sa.status, sa.check_in_time
+              sa.status, sa.check_in_time, sa.check_out_time,
+              COALESCE(sv.company_name, st.preferred_company) AS company_name,
+              su.email AS supervisor_email,
+              su.phone AS supervisor_phone,
+              NULLIF(BTRIM(CONCAT(sv.first_name, ' ', sv.last_name)), '') AS supervisor_name
        FROM student_attendance sa
       JOIN students st ON st.id = sa.student_id
+      JOIN teacher_batches tb ON tb.id = sa.teacher_batch_id
+       LEFT JOIN supervisors sv ON sv.user_id = tb.supervisor_id
+       LEFT JOIN users su ON su.id = tb.supervisor_id
        LEFT JOIN LATERAL (
          SELECT latitude, longitude, accuracy, recorded_at
          FROM student_locations

@@ -1,24 +1,79 @@
 /* =========================================================
-   REQUIREMENTS - MODERN STUDENT PORTAL
+   REQUIREMENTS — maroon design system (matches RequirementsReview)
+   Lexend type scale · #8b1e2d / #b8394f / gold accents
+   ========================================================= */
+
+.page {
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #26313f;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =========================================================
+   PAGE HEADER
    ========================================================= */
 
 .pageHeader {
-  margin-bottom: 28px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 26px;
+  padding: 22px 24px;
+  border: 1px solid #e8d2d8;
+  border-radius: 18px;
+  background:
+    radial-gradient(130% 160% at 0% 0%, rgba(139, 30, 45, 0.1) 0%, rgba(139, 30, 45, 0) 58%),
+    radial-gradient(120% 150% at 100% 120%, rgba(190, 140, 63, 0.16) 0%, rgba(190, 140, 63, 0) 55%),
+    linear-gradient(120deg, #ffffff 0%, #fdf3f5 58%, #f9e8ec 100%);
+  box-shadow: 0 14px 32px -28px rgba(80, 20, 32, 0.55);
+}
+
+.headerMain {
+  min-width: 0;
+}
+
+.eyebrow {
+  margin-bottom: 6px;
+  color: #8b1e2d;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
 }
 
 .pageHeader h2 {
   margin: 0;
-  font-size: 28px;
-  font-weight: 750;
-  letter-spacing: -0.5px;
-  color: #111827;
+  color: #172033;
+  font-size: 1.85rem;
+  font-weight: 780;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
 }
 
 .pageHeader p {
   margin: 8px 0 0;
-  color: #4b5563;
-  font-size: 14px;
-  line-height: 1.5;
+  max-width: 650px;
+  color: #596579;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.headerIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: linear-gradient(140deg, #8b1e2d, #b8394f);
+  color: #fff;
+  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
 }
 
 /* =========================================================
@@ -30,46 +85,56 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 17px;
-  margin-bottom: 20px;
+  padding: 12px 15px;
+  margin-bottom: 18px;
   border-radius: 12px;
-  font-size: 14px;
+  font-size: 0.86rem;
   font-weight: 600;
   border: 1px solid;
 }
 
 .message {
-  color: #166534;
-  background: #f0fdf4;
-  border-color: #a7d8b5;
+  color: #15803d;
+  background: #eaf8ef;
+  border-color: #bfe6cc;
 }
 
 .error {
-  color: #991b1b;
-  background: #fef2f2;
-  border-color: #efb5b5;
+  color: #b4233b;
+  background: #fde3e8;
+  border-color: #f0b7c2;
 }
 
 /* =========================================================
-   MAIN CARDS / SECTIONS
+   CARDS
    ========================================================= */
 
 .section {
-  background: #ffffff;
-  border: 1px solid #bcc3cc;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #fffdfd 0%, #ffffff 40%);
+  border: 1px solid #e6dfe2;
   border-radius: 18px;
-  padding: 26px;
-  margin-bottom: 24px;
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.05),
-    0 8px 30px rgba(15, 23, 42, 0.055);
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 12px 32px -28px rgba(80, 20, 32, 0.4);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 22px;
+  left: 22px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, rgba(139, 30, 45, 0.75), rgba(184, 57, 79, 0.35), rgba(190, 140, 63, 0.55));
 }
 
 .section:hover {
-  border-color: #aeb6c1;
+  border-color: #dcc9cf;
+  box-shadow: 0 18px 40px -30px rgba(80, 20, 32, 0.5);
 }
 
 /* =========================================================
@@ -80,21 +145,25 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
   margin-bottom: 12px;
-  color: #4b5563;
-  font-size: 13px;
+  color: #8490a1;
+  font-size: 0.82rem;
+  font-weight: 600;
 }
 
 .progressLabel strong {
-  color: #1e293b;
-  font-weight: 700;
+  color: #8b1e2d;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.74rem;
 }
 
 .progressBar {
   width: 100%;
   height: 10px;
-  background: #dfe3e8;
+  background: #f4e7ea;
   border-radius: 999px;
   overflow: hidden;
 }
@@ -103,7 +172,7 @@
   height: 100%;
   min-width: 0;
   border-radius: inherit;
-  transition: width 0.5s ease;
+  transition: width 0.5s ease, background 0.3s ease;
 }
 
 .statusRow {
@@ -111,14 +180,14 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 19px;
-  padding-top: 17px;
-  border-top: 1px solid #d0d5dc;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #ecdfe2;
 }
 
 .muted {
-  color: #4b5563;
-  font-size: 13px;
+  color: #8490a1;
+  font-size: 0.8rem;
 }
 
 /* =========================================================
@@ -129,82 +198,113 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 29px;
-  padding: 4px 12px;
+  min-height: 25px;
+  padding: 3px 10px;
   border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 0.72rem;
+  font-weight: 750;
   white-space: nowrap;
 }
 
 .badgeReview {
-  color: #4338ca;
-  background: #eef2ff;
-  border: 1px solid #b8c4f5;
+  color: #8b1e2d;
+  background: #fff7f8;
+  border: 1px solid #f0d7dc;
 }
 
 .badgeVerified {
-  color: #166534;
-  background: #ecfdf5;
-  border: 1px solid #a7d8b5;
+  color: #15803d;
+  background: #eaf8ef;
+  border: 1px solid #bfe6cc;
 }
 
 /* =========================================================
    TABS
    ========================================================= */
 
+/* Pill tabs, matching the municipality buttons on the teacher live map:
+   white pill with a soft border, filling maroon on hover and when active. */
 .tabs {
   display: flex;
   gap: 7px;
-  padding: 5px;
-  margin-bottom: 28px;
-  background: #f3f5f7;
-  border: 1px solid #bcc3cc;
-  border-radius: 13px;
-  overflow-x: auto;
-  scrollbar-width: thin;
+  flex-wrap: wrap;
+  padding: 0;
+  margin-bottom: 24px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
 }
 
 .tab {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   flex: 1;
   min-width: max-content;
-  border: none;
-  background: transparent;
-  color: #4b5563;
-  padding: 12px 17px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 650;
+  border: 1px solid #dcc9cf;
+  background: #ffffff;
+  color: #334155;
+  padding: 9px 16px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
   cursor: pointer;
-  transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    box-shadow 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(80, 20, 32, 0.06);
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .tab:hover {
-  color: #7f102d;
-  background: #ffffff;
+  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
+  border-color: #8b1e2d;
+  color: #ffffff;
+  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
 }
 
 .tab.active {
-  color: #7f102d;
-  background: #ffffff;
-  box-shadow:
-    0 2px 4px rgba(15, 23, 42, 0.10),
-    0 1px 2px rgba(15, 23, 42, 0.05);
+  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
+  border-color: #8b1e2d;
+  color: #ffffff;
+  box-shadow: 0 8px 18px -10px rgba(139, 30, 45, 0.85);
 }
 
-.tab.active::after {
-  content: "";
-  position: absolute;
-  left: 18px;
-  right: 18px;
-  bottom: 0;
-  height: 2px;
+.tab.active .tabFlag {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.55);
+  color: #ffffff;
+}
+
+.tabLabelFull {
+  white-space: nowrap;
+}
+
+/* Short label only appears once the tabs wrap into a grid on phones */
+.tabLabelShort {
+  display: none;
+  white-space: nowrap;
+}
+
+.tabFlag {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 1px 6px;
   border-radius: 999px;
-  background: #8f1235;
+  white-space: nowrap;
+}
+
+.tabFlagDone {
+  color: #15803d;
+  background: #eaf8ef;
+  border: 1px solid #bfe6cc;
+}
+
+.tabFlagMissing {
+  color: #b4233b;
+  background: #fde3e8;
+  border: 1px solid #f0b7c2;
 }
 
 /* =========================================================
@@ -214,7 +314,7 @@
 .grid2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 22px 20px;
+  gap: 18px;
 }
 
 .field {
@@ -223,15 +323,15 @@
 
 .field label {
   display: block;
-  margin-bottom: 8px;
-  color: #252b35;
-  font-size: 13px;
-  font-weight: 650;
+  margin-bottom: 7px;
+  color: #475d6e;
+  font-size: 0.74rem;
+  font-weight: 700;
 }
 
 .requiredDiamond {
-  color: #dc2626;
-  font-size: 13px;
+  color: #8b1e2d;
+  font-size: 0.8rem;
 }
 
 /* =========================================================
@@ -243,54 +343,79 @@
 .textarea {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #b8c0ca;
-  border-radius: 10px;
-  background: #ffffff;
-  color: #0f172a;
+  border: 1px solid #dcc9cf;
+  border-radius: 9px;
+  background: #fff;
+  color: #172033;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 0.85rem;
   outline: none;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 
 .input,
 .select {
-  height: 45px;
-  padding: 0 14px;
+  height: 42px;
+  padding: 0 12px;
 }
 
 .textarea {
-  min-height: 105px;
-  padding: 12px 14px;
+  min-height: 100px;
+  padding: 11px 12px;
   resize: vertical;
   line-height: 1.5;
 }
 
 .input::placeholder,
 .textarea::placeholder {
-  color: #6b7280;
+  color: #a9b0bd;
 }
 
 .input:hover,
 .select:hover,
 .textarea:hover {
-  border-color: #929ba7;
+  border-color: #cf9aa8;
 }
 
 .input:focus,
 .select:focus,
 .textarea:focus {
-  border-color: #8f1235;
-  box-shadow: 0 0 0 3px rgba(143, 18, 53, 0.11);
+  border-color: #b8394f;
+  box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.1);
 }
 
-.input:read-only {
-  background: #f1f3f5;
-  color: #3f4854;
+.input:read-only,
+.select:read-only,
+.textarea:read-only {
+  background: #fdf7f8;
+  color: #596579;
   cursor: default;
+}
+
+/* Invalid input state (phone / whole-number validation) */
+.inputError {
+  border-color: #e09aa8;
+  background: #fffafb;
+}
+
+.inputError:hover {
+  border-color: #d4707f;
+}
+
+.inputError:focus {
+  border-color: #b4233b;
+  box-shadow: 0 0 0 3px rgba(180, 35, 59, 0.12);
+}
+
+.fieldError {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  color: #b4233b;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 /* =========================================================
@@ -301,26 +426,23 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  padding: 19px;
-  margin-bottom: 14px;
-  border: 1px solid #bcc3cc;
-  border-radius: 15px;
-  background: #ffffff;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
-}
-
-.docItem:hover {
-  border-color: #969faa;
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.07);
-  transform: translateY(-1px);
+  gap: 18px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border: 1px solid #ecdfe2;
+  border-radius: 12px;
+  background: #fff;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
 .docItem:last-child {
   margin-bottom: 0;
+}
+
+.docItem:hover {
+  border-color: #d8b8c0;
+  box-shadow: 0 8px 18px -14px rgba(139, 30, 45, 0.4);
+  transform: translateY(-1px);
 }
 
 .docInfo {
@@ -330,14 +452,14 @@
 
 .docName {
   color: #172033;
-  font-size: 14px;
+  font-size: 0.85rem;
   font-weight: 700;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .docMeta {
-  color: #4b5563;
-  font-size: 12px;
+  color: #8490a1;
+  font-size: 0.75rem;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
@@ -346,7 +468,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 9px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -357,33 +479,35 @@
 .fileName {
   display: inline-flex;
   align-items: center;
+  max-width: 100%;
 }
 
 .fileName input[type="file"] {
-  width: 220px;
+  width: 210px;
   max-width: 100%;
-  color: #4b5563;
+  color: #8490a1;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .fileName input[type="file"]::file-selector-button {
   margin-right: 8px;
-  padding: 8px 12px;
-  border: 1px solid #aeb6c1;
+  padding: 8px 14px;
+  border: 1px solid #dcc9cf;
   border-radius: 8px;
-  background: #f1f3f5;
-  color: #374151;
+  background: #fff;
+  color: #8b1e2d;
   font-family: inherit;
-  font-size: 12px;
-  font-weight: 650;
+  font-size: 0.78rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: 0.2s ease;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 
 .fileName input[type="file"]::file-selector-button:hover {
-  background: #e5e7eb;
-  border-color: #8f98a4;
+  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
+  border-color: #8b1e2d;
+  color: #fff;
 }
 
 /* =========================================================
@@ -398,19 +522,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 41px;
-  padding: 0 16px;
+  min-height: 38px;
+  padding: 0 15px;
   border-radius: 9px;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
   text-decoration: none;
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease,
-    border-color 0.2s ease;
+  transition: transform 0.15s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
 }
 
 .btn:hover,
@@ -431,82 +551,60 @@
   transform: none;
 }
 
-/* =========================================================
-   SAVE
-   ========================================================= */
-
-.btn {
-  border: 1px solid #aeb6c1;
-  background: #ffffff;
-  color: #334155;
-}
-
-.btn:hover:not(:disabled) {
-  background: #f3f4f6;
-  border-color: #8f98a4;
-}
-
-/* =========================================================
-   VIEW
-   ========================================================= */
-
+.btn,
 .btnGhost {
-  border: 1px solid #aeb6c1;
-  background: #ffffff;
-  color: #3f4854;
+  background: #fff;
+  border: 1px solid #dcc9cf;
+  color: #475d6e;
 }
 
-.btnGhost:hover {
-  border-color: #858f9b;
-  background: #f3f4f6;
+/* Hover fills the button with maroon for a clear press target */
+.btn:hover:not(:disabled),
+.btnGhost:hover:not(:disabled) {
+  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
+  border-color: #8b1e2d;
+  color: #fff;
+  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
 }
-
-/* =========================================================
-   UPLOAD
-   ========================================================= */
 
 .btnSuccess {
   border: 1px solid #15803d;
-  background: #16a34a;
-  color: #ffffff;
-  box-shadow: 0 3px 10px rgba(22, 163, 74, 0.16);
+  background: linear-gradient(140deg, #15803d, #27a35a);
+  color: #fff;
+  box-shadow: 0 8px 16px -10px rgba(21, 128, 61, 0.7);
 }
 
 .btnSuccess:hover:not(:disabled) {
-  background: #15803d;
+  background: linear-gradient(140deg, #126e34, #1f8f4d);
+  border-color: #126e34;
+  box-shadow: 0 10px 20px -10px rgba(21, 128, 61, 0.8);
 }
 
-/* =========================================================
-   REMOVE
-   ========================================================= */
-
 .btnDanger {
-  border: 1px solid #e7aaaa;
-  background: #ffffff;
-  color: #dc2626;
+  border: 1px solid #f0b7c2;
+  background: #fff;
+  color: #b4233b;
 }
 
 .btnDanger:hover:not(:disabled) {
-  background: #fef2f2;
-  border-color: #dc8f8f;
+  background: linear-gradient(135deg, #b4233b 0%, #d1495f 100%);
+  border-color: #b4233b;
+  color: #fff;
+  box-shadow: 0 8px 16px -10px rgba(180, 35, 59, 0.7);
 }
 
-/* =========================================================
-   SUBMIT
-   ========================================================= */
-
 .submitBtn {
-  border: 1px solid #70102a;
-  background: #8f1235;
-  color: #ffffff;
-  padding-left: 20px;
-  padding-right: 20px;
-  box-shadow: 0 4px 12px rgba(127, 16, 45, 0.20);
+  border: 1px solid #8b1e2d;
+  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
+  color: #fff;
+  padding: 0 20px;
+  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
 }
 
 .submitBtn:hover:not(:disabled) {
-  background: #720d28;
-  box-shadow: 0 6px 16px rgba(127, 16, 45, 0.25);
+  background: linear-gradient(135deg, #7a1725 0%, #932034 100%);
+  border-color: #7a1725;
+  box-shadow: 0 10px 22px -10px rgba(139, 30, 45, 0.85);
 }
 
 /* =========================================================
@@ -514,18 +612,27 @@
    ========================================================= */
 
 .saveBar {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #ecdfe2;
+}
+
+/* The two actions sit in their own grouped row with a visible divider, so
+   Submit and Save never read as one control. */
+.saveBarActions {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 10px;
   flex-wrap: wrap;
-  margin-top: 28px;
-  padding-top: 21px;
-  border-top: 1px solid #cbd1d8;
+  padding: 12px;
+  background: #fffafb;
+  border: 1px solid #ecdfe2;
+  border-radius: 12px;
 }
 
 .saveBar .muted {
-  flex: 1 1 100%;
-  margin-top: 3px;
+  margin: 10px 0 0;
+  line-height: 1.5;
 }
 
 /* =========================================================
@@ -533,39 +640,41 @@
    ========================================================= */
 
 .empty {
-  padding: 38px 20px;
+  padding: 34px 20px;
   text-align: center;
-  color: #5b6470;
-  font-size: 14px;
-  border: 1px dashed #aeb6c1;
-  border-radius: 12px;
-  background: #f3f5f7;
+  color: #8490a1;
+  font-size: 0.85rem;
+  border: 1px dashed #ddcfd3;
+  border-radius: 14px;
+  background: linear-gradient(140deg, #fdfafb 0%, #fbf4f5 100%);
 }
 
 .loading {
-  padding: 42px;
+  padding: 40px;
   text-align: center;
-  color: #4b5563;
-  font-size: 14px;
+  color: #8490a1;
+  font-size: 0.88rem;
 }
 
 /* =========================================================
    RESPONSIVE
    ========================================================= */
 
+@media (max-width: 1024px) {
+  .grid2 {
+    gap: 16px;
+  }
+}
+
 @media (max-width: 900px) {
   .section {
-    padding: 21px;
-  }
-
-  .grid2 {
-    grid-template-columns: 1fr;
+    padding: 20px;
   }
 
   .docItem {
     align-items: flex-start;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
   }
 
   .docActions {
@@ -573,33 +682,51 @@
     justify-content: flex-start;
   }
 
-  .fileName {
-    width: 100%;
-  }
-
+  .fileName,
   .fileName input[type="file"] {
     width: 100%;
   }
 }
 
-@media (max-width: 650px) {
+@media (max-width: 720px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
   .pageHeader {
-    margin-bottom: 22px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 18px 16px;
+    margin-bottom: 18px;
+    border-radius: 16px;
   }
 
   .pageHeader h2 {
-    font-size: 23px;
+    font-size: 1.5rem;
   }
 
   .pageHeader p {
-    font-size: 13px;
-    line-height: 1.5;
+    font-size: 0.9rem;
+  }
+
+  .headerIcon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
   }
 
   .section {
-    padding: 17px;
-    border-radius: 14px;
-    margin-bottom: 18px;
+    padding: 18px 15px;
+    border-radius: 16px;
+    margin-bottom: 16px;
+  }
+
+  .section::before {
+    right: 15px;
+    left: 15px;
   }
 
   .progressLabel {
@@ -609,27 +736,46 @@
   }
 
   .statusRow {
-    margin-top: 16px;
-    padding-top: 15px;
+    margin-top: 15px;
+    padding-top: 14px;
   }
 
+  /* Tabs wrap into a 2×2 grid so all four are visible without side-scrolling */
   .tabs {
-    margin-left: -2px;
-    margin-right: -2px;
-    margin-bottom: 22px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+    margin-bottom: 20px;
   }
 
   .tab {
     flex: 0 0 auto;
-    padding: 10px 13px;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    padding: 9px 8px;
+    text-align: center;
   }
 
-  .grid2 {
-    gap: 17px;
+  .tabLabelFull {
+    display: none;
+  }
+
+  .tabLabelShort {
+    display: block;
+    font-size: 0.82rem;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .tabFlag {
+    font-size: 0.65rem;
+    padding: 1px 7px;
   }
 
   .docItem {
-    padding: 16px;
+    padding: 14px;
   }
 
   .docActions {
@@ -647,9 +793,10 @@
   .btnDanger,
   .submitBtn {
     width: 100%;
+    min-height: 44px;
   }
 
-  .saveBar {
+  .saveBarActions {
     align-items: stretch;
     flex-direction: column;
   }
@@ -658,7 +805,22 @@
     margin-top: 6px;
   }
 
+  .empty {
+    padding: 26px 16px;
+  }
+
   .loading {
-    padding: 32px 20px;
+    padding: 30px 18px;
+  }
+}
+
+@media (max-width: 420px) {
+  .progressBar {
+    height: 8px;
+  }
+
+  .input,
+  .select {
+    height: 44px;
   }
 }

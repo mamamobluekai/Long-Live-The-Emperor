@@ -67,6 +67,8 @@ function DailyDocumentation() {
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [modalError, setModalError] = useState('');
+  // Which day card is expanded (2x2 grid; click a card to open it).
+  const [expandedDay, setExpandedDay] = useState(null);
 
   const loadAll = useCallback(async () => {
     if (!token) return;
@@ -216,8 +218,14 @@ function DailyDocumentation() {
   if (loading) {
     return (
       <div className={styles.container}>
-        <h1 className={styles.title}>Daily Documentation</h1>
-        <p className={styles.subtitle}>Loading your daily documentation…</p>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap');
+        `}</style>
+        <div className={styles.pageHeader}>
+          <div className={styles.eyebrow}>Student Portal</div>
+          <h1 className={styles.title}>Daily Documentation</h1>
+          <p className={styles.subtitle}>Loading your daily documentation…</p>
+        </div>
       </div>
     );
   }
@@ -225,7 +233,13 @@ function DailyDocumentation() {
   if (error) {
     return (
       <div className={styles.container}>
-        <h1 className={styles.title}>Daily Documentation</h1>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap');
+        `}</style>
+        <div className={styles.pageHeader}>
+          <div className={styles.eyebrow}>Student Portal</div>
+          <h1 className={styles.title}>Daily Documentation</h1>
+        </div>
         <p className={styles.error}>{error}</p>
       </div>
     );
@@ -233,16 +247,25 @@ function DailyDocumentation() {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Daily Documentation</h1>
-      <p className={styles.subtitle}>
-        Upload your daily work immersion documentation. You must be present (Time In or Time Out) for the day to upload.
-      </p>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap');
+      `}</style>
+
+      <div className={styles.pageHeader}>
+        <div>
+          <div className={styles.eyebrow}>Student Portal</div>
+          <h1 className={styles.title}>Daily Documentation</h1>
+          <p className={styles.subtitle}>
+            Upload your daily work immersion documentation. You must be present (Time In or Time Out) for the day to upload.
+          </p>
+        </div>
+      </div>
 
       <div className={styles.progressOverview}>
         <div
           className={styles.progressRing}
           style={{
-            background: `conic-gradient(#3b82f6 ${progressPercent * 3.6}deg, #e2e8f0 0deg)`,
+            background: `conic-gradient(#8b1e2d ${progressPercent * 3.6}deg, #f4e7ea 0deg)`,
           }}
         >
           <div className={styles.progressRingInner}>{progressPercent}%</div>
@@ -261,11 +284,11 @@ function DailyDocumentation() {
               <span className={styles.progressStatLabel}>Scheduled Days</span>
               <strong>{scheduledCount}</strong>
             </div>
-            <div className={styles.progressStat}>
+            <div className={`${styles.progressStat} ${styles.progressStatDone}`}>
               <span className={styles.progressStatLabel}>Submitted</span>
               <strong>{submittedCount}</strong>
             </div>
-            <div className={styles.progressStat}>
+            <div className={`${styles.progressStat} ${styles.progressStatGraded}`}>
               <span className={styles.progressStatLabel}>Graded</span>
               <strong>{gradedCount}</strong>
             </div>
@@ -288,6 +311,9 @@ function DailyDocumentation() {
             const isToday = key === today;
             const isFuture = key > today;
             const docLabel = docStatusLabel(doc);
+            const isExpanded = expandedDay === day.key;
+            // A submitted/reviewed/graded doc turns the status text green.
+            const isSubmittedNow = ['submitted', 'reviewed', 'graded'].includes(doc?.status);
             // Upload is allowed for any scheduled (non-future) day where the
             // student was present (at least Time In OR Time Out). Days where
             // the student was absent (neither recorded) or future days are locked.
@@ -301,48 +327,71 @@ function DailyDocumentation() {
                 : '';
 
             return (
-              <div key={day.key} className={`${styles.item} ${isToday ? styles.itemToday : ''}`}>
-                <div className={styles.itemMain}>
-                  <div className={styles.itemHeader}>
+              <div
+                key={day.key}
+                className={`${styles.item} ${isToday ? styles.itemToday : ''} ${isExpanded ? styles.itemOpen : ''}`}
+              >
+                <button
+                  type="button"
+                  className={styles.itemToggle}
+                  onClick={() => setExpandedDay(isExpanded ? null : day.key)}
+                  aria-expanded={isExpanded}
+                >
+                  <span className={styles.itemToggleTop}>
                     <span className={styles.dayNumber}>Day {day.dayNumber}</span>
                     <span className={styles.itemDate}>{formatDateLabel(day.date)}</span>
-                  </div>
-                  <div className={styles.itemMeta}>
+                  </span>
+
+                  <span className={styles.itemMeta}>
                     {day.batchLabel ? `${day.batchLabel}` : 'Batch'}
                     {day.supervisorName ? ` · ${day.supervisorName}` : ''}
-                  </div>
-                  <div className={styles.itemAttendance}>
-                    <span className={inTime ? styles.attDone : styles.attPending}>
-                      Time In: {inTime || '—'}
-                    </span>
-                    <span className={outTime ? styles.attDone : styles.attPending}>
-                      Time Out: {outTime || '—'}
-                    </span>
-                  </div>
-                  <div className={styles.itemDoc}>
-                    Documentation: <strong>{docLabel}</strong>
-                  </div>
-                </div>
-                <div className={styles.itemActions}>
-                  {editable ? (
-                    <button
-                      type="button"
-                      className={styles.primaryBtn}
-                      onClick={() => openModal(day)}
-                    >
-                      {doc ? 'Already Submitted · Edit' : 'Upload Documentation'}
-                    </button>
-                  ) : isFuture || !isPresent ? (
-                    <div className={styles.locked}>
-                      <span className={styles.lockedBadge}>Locked</span>
-                      <span className={styles.lockedReason}>{lockedReason}</span>
-                    </div>
-                  ) : (
-                    <button type="button" className={styles.secondaryBtn} disabled>
+                  </span>
+
+                  <span className={styles.itemDoc}>
+                    <span className={styles.itemDocLabel}>Documentation: </span>
+                    <strong className={isSubmittedNow ? styles.docDone : styles.docPending}>
                       {docLabel}
-                    </button>
-                  )}
-                </div>
+                    </strong>
+                  </span>
+
+                  <span className={styles.chevron} aria-hidden="true">
+                    {isExpanded ? 'Hide' : 'View'}
+                  </span>
+                </button>
+
+                {isExpanded && (
+                  <div className={styles.itemPanel}>
+                    <div className={styles.itemAttendance}>
+                      <span className={inTime ? styles.attDone : styles.attPending}>
+                        Time In: {inTime || '—'}
+                      </span>
+                      <span className={outTime ? styles.attDone : styles.attPending}>
+                        Time Out: {outTime || '—'}
+                      </span>
+                    </div>
+
+                    <div className={styles.itemActions}>
+                      {editable ? (
+                        <button
+                          type="button"
+                          className={styles.primaryBtn}
+                          onClick={() => openModal(day)}
+                        >
+                          {doc ? 'Already Submitted · Edit' : 'Upload Documentation'}
+                        </button>
+                      ) : isFuture || !isPresent ? (
+                        <div className={styles.locked}>
+                          <span className={styles.lockedBadge}>Locked</span>
+                          <span className={styles.lockedReason}>{lockedReason}</span>
+                        </div>
+                      ) : (
+                        <button type="button" className={styles.secondaryBtn} disabled>
+                          {docLabel}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -353,14 +402,18 @@ function DailyDocumentation() {
         <div className={styles.modalBackdrop} onClick={closeModal}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2>
-                Day {activeDay.dayNumber} — {formatDateLabel(activeDay.date)}
-              </h2>
+              <div>
+                <div className={styles.modalEyebrow}>Upload Documentation</div>
+                <h2>
+                  Day {activeDay.dayNumber} — {formatDateLabel(activeDay.date)}
+                </h2>
+              </div>
               <button
                 type="button"
                 className={styles.modalClose}
                 onClick={closeModal}
                 disabled={submitting || uploading}
+                aria-label="Close upload dialog"
               >
                 ×
               </button>
