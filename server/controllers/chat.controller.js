@@ -105,7 +105,7 @@ async function getAccessibleBatches(req, res) {
                 sv.first_name AS supervisor_first_name, sv.last_name AS supervisor_last_name
          FROM teacher_batch_students tbs
          JOIN teacher_batches tb ON tb.id = tbs.teacher_batch_id
-         JOIN students s ON s.id = tbs.student_id OR s.user_id = tbs.student_id
+         JOIN students s ON s.id = tbs.student_id
          JOIN users su ON su.id = s.user_id
          JOIN coordinators c ON c.id = tb.coordinator_id
          JOIN teachers t ON t.id = tb.teacher_id
@@ -189,7 +189,7 @@ async function ensureBatchAccess(batchId, userId, role) {
       const check = await pool.query(
         `SELECT tb.id FROM teacher_batches tb
          JOIN teacher_batch_students tbs ON tbs.teacher_batch_id = tb.id
-         JOIN students s ON s.id = tbs.student_id OR s.user_id = tbs.student_id
+         JOIN students s ON s.id = tbs.student_id
          JOIN users su ON su.id = s.user_id
          WHERE tb.id = $1 AND su.id = $2`,
         [batchId, userId]
@@ -213,6 +213,44 @@ async function ensureBatchAccess(batchId, userId, role) {
     return check.rows.length > 0;
   }
   return false;
+}
+
+async function getBatchMembers(req, res) {
+  await ensureChatTables();
+  try {
+    const { batchId } = req.params;
+    const hasAccess = await ensureBatchAccess(
+      batchId,
+      req.user.id,
+      String(req.user.role || '').toLowerCase()
+    );
+    if (!hasAccess) {
+      return res.status(403).json({ error: 'Access denied to this batch chat.' });
+    }
+
+    const members = await pool.query(
+      `SELECT u.id, u.role, u.status,
+              s.first_name, s.last_name, s.student_number
+       FROM teacher_batch_students tbs
+       JOIN students s ON s.id = tbs.student_id
+       JOIN users u ON u.id = s.user_id
+       WHERE tbs.teacher_batch_id = $1
+       ORDER BY s.last_name, s.first_name`,
+      [batchId]
+    );
+
+    res.json({
+      members: members.rows.map((row) => ({
+        id: row.id,
+        role: row.role,
+        name: `${row.first_name || ''} ${row.last_name || ''}`.trim() || 'Student',
+        studentNumber: row.student_number || null,
+      })),
+    });
+  } catch (err) {
+    console.error('getBatchMembers error:', err);
+    res.status(500).json({ error: 'Server error fetching batch members.' });
+  }
 }
 
 async function getBatchMessages(req, res) {
@@ -379,11 +417,22 @@ async function deleteBatchMessage(req, res) {
       [messageId, batchId]
     );
 
-    if (msg.rows.length === 0) {
-      return res.status(404).json({ error: 'Message not found.' });
+    const isParent = msg.rows.length > 0;
+    let message = msg.rows[0];
+
+    if (!isParent) {
+      const reply = await pool.query(
+        `SELECT id, user_id, is_deleted, deleted_by_user_ids
+         FROM batch_group_message_replies WHERE id = $1 AND teacher_batch_id = $2`,
+        [messageId, batchId]
+      );
+      if (reply.rows.length === 0) {
+        return res.status(404).json({ error: 'Message not found.' });
+      }
+      message = reply.rows[0];
     }
 
-    const message = msg.rows[0];
+    const table = isParent ? 'batch_group_messages' : 'batch_group_message_replies';
 
     if (deleteForEveryone) {
       if (message.user_id !== userId) {
@@ -393,7 +442,7 @@ async function deleteBatchMessage(req, res) {
         return res.status(200).json({ message: 'Message already deleted.' });
       }
       await pool.query(
-        `UPDATE batch_group_messages SET is_deleted = true, content = '' WHERE id = $1`,
+        `UPDATE ${table} SET is_deleted = true, content = '' WHERE id = $1`,
         [messageId]
       );
       const deletePayload = { messageId, is_deleted: true, deleted_for: 'everyone' };
@@ -411,7 +460,7 @@ async function deleteBatchMessage(req, res) {
       }
       const updated = [...current, userId];
       await pool.query(
-        `UPDATE batch_group_messages SET deleted_by_user_ids = $1 WHERE id = $2`,
+        `UPDATE ${table} SET deleted_by_user_ids = $1 WHERE id = $2`,
         [updated, messageId]
       );
       const hidePayload = { messageId, is_deleted: false, deleted_for: 'me', userId };
@@ -455,20 +504,30 @@ async function addReaction(req, res) {
       return res.status(404).json({ error: 'Message not found.' });
     }
 
-    const reactions = msg.rows[0].reactions || {};
-    const users = Array.isArray(reactions[emoji]) ? reactions[emoji] : [];
-    if (!users.includes(userId)) {
-      users.push(userId);
+    const reactions = { ...(msg.rows[0].reactions || {}) };
+
+    // One reaction per user per message: clear any other emoji this user set
+    // before applying the new one, while keeping everyone else's reactions.
+    const next = {};
+    for (const [key, value] of Object.entries(reactions)) {
+      const list = Array.isArray(value) ? value : [];
+      next[key] = list.filter((id) => id !== userId);
     }
-    reactions[emoji] = users;
+    const currentUsers = Array.isArray(next[emoji]) ? next[emoji] : [];
+    currentUsers.push(userId);
+    next[emoji] = currentUsers;
+
+    for (const [key, value] of Object.entries(next)) {
+      if (value.length === 0) delete next[key];
+    }
 
     await pool.query(
       `UPDATE batch_group_messages SET reactions = $1 WHERE id = $2`,
-      [reactions, messageId]
+      [next, messageId]
     );
 
-    const reactionPayload = { messageId, reactions };
-    res.json({ reactions });
+    const reactionPayload = { messageId, reactions: next };
+    res.json({ reactions: next });
     try {
       getIO().to(`chat:batch:${batchId}`).emit('chat:reaction_updated', reactionPayload);
     } catch (socketErr) {
@@ -536,6 +595,7 @@ async function removeReaction(req, res) {
 module.exports = {
   ensureChatTables,
   getAccessibleBatches,
+  getBatchMembers,
   getBatchMessages,
   createBatchMessage,
   deleteBatchMessage,

@@ -1,12 +1,16 @@
 import { useState, cloneElement } from 'react';
+import { useMobileKeyboardFocus } from '../../../hooks/useMobileKeyboardFocus';
 import styles from './DashboardLayout.module.css';
 
 function DashboardLayout({
   topNav,
   sidebar,
   children,
+  enableMobileKeyboardFocus = false,
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useMobileKeyboardFocus(enableMobileKeyboardFocus ? 110 : 24);
 
   const handleOpenSidebar = () => {
     setSidebarOpen(true);

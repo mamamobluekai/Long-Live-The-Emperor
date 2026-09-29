@@ -347,7 +347,9 @@ textarea:focus {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 7px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0e5e7;
   color: #758195;
   font-size: 0.7rem;
   font-weight: 600;
@@ -552,7 +554,7 @@ textarea:focus {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 14px;
-  padding-top: 12px;
+  padding: 10px 0 0;
   border-top: 1px solid #f0e5e7;
 }
 
@@ -563,14 +565,21 @@ textarea:focus {
   line-height: 1;
   gap: 8px;
   padding: 0 15px;
-  border: 1px solid #ecdfe2;
+  border-color: transparent;
   border-radius: 999px;
   background: #fff;
   color: #8b1e2d;
   cursor: pointer;
   font-size: 0.85rem;
   font-weight: 700;
+  line-height: 1;
   transition: 0.15s ease;
+}
+
+.engagementButton svg {
+  display: block;
+  flex: 0 0 auto;
+  align-self: center;
 }
 
 .engagementBar .engagementButton svg {
@@ -648,6 +657,214 @@ textarea:focus {
   }
 }
 
+@media (max-width: 600px) {
+  .page {
+    padding-bottom: 24px;
+  }
+
+  .header {
+    padding: 18px;
+  }
+
+  .header h1 {
+    font-size: 1.5rem;
+  }
+
+  .header p {
+    font-size: 0.86rem;
+  }
+
+  .pageActions {
+    flex-direction: column;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    width: 100%;
+  }
+
+  .listHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .card {
+    flex-wrap: wrap;
+    padding: 14px;
+  }
+
+  .cardMeta {
+    gap: 8px;
+  }
+
+  .card p {
+    font-size: 0.82rem;
+  }
+
+  .engagementBar {
+    width: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .engagementButton {
+    flex: 1;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .cardActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .modalOverlay {
+    padding: 12px;
+  }
+
+  .modal {
+    width: 100%;
+    min-height: auto;
+    max-height: 94vh;
+  }
+
+  .composer form {
+    padding: 20px 18px 18px;
+  }
+
+  .formActions {
+    flex-direction: column-reverse;
+  }
+
+  .formActions button {
+    width: 100%;
+  }
+}
+
+.engagementBar .engagementButton,
+.engagementBar .engagementButton:visited {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  color: #8b1e2d;
+  background: #ffffff;
+  border: 0;
+  box-shadow: none;
+  font-weight: 700;
+  height: auto;
+  min-height: 40px;
+}
+
+.engagementBar .engagementButton span,
+.engagementBar .engagementButton svg {
+  color: #8b1e2d;
+  opacity: 1;
+  visibility: visible;
+  background: transparent;
+  fill: none;
+  stroke: #8b1e2d;
+  align-self: center;
+}
+
+.engagementBar .engagementButton > * + * {
+  margin-left: 8px;
+}
+
+@media (max-width: 600px) {
+  .engagementBar .engagementButton {
+    border: 0;
+  }
+}
+
+.engagementBar .engagementButton:hover {
+  background: #fffafb;
+  border-color: transparent;
+}
+
+.engagementBar .engagementButtonLiked,
+.engagementBar .engagementButtonLiked span,
+.engagementBar .engagementButtonLiked svg {
+  color: #8b1e2d;
+  background: #fdf3f5;
+  border-color: transparent;
+  fill: #8b1e2d;
+  stroke: #8b1e2d;
+}
+
+.engagementBar .engagementButtonLiked:hover {
+  border-color: #ecdfe2;
+}
+
+@media (max-width: 420px) {
+  .header h1 {
+    font-size: 1.35rem;
+  }
+
+  .header p {
+    font-size: 0.82rem;
+  }
+
+  .card {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .cardIcon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .card h3 {
+    font-size: 0.94rem;
+  }
+
+  .engagementBar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  .engagementButton {
+    width: auto;
+    flex: 0 1 auto;
+    min-width: 0;
+    height: 38px;
+    justify-content: flex-start;
+    padding: 0 10px;
+    font-size: 0.76rem;
+  }
+
+  .card {
+    align-items: flex-start;
+  }
+
+  .cardIcon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .list {
+    padding: 14px;
+  }
+
+  .listHeader {
+    padding: 16px;
+  }
+
+  .fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .primaryButton,
+  .cancelButton {
+    font-size: 0.85rem;
+  }
+}
+
 @media (max-width: 480px) {
   .header {
     padding: 18px;
@@ -667,5 +884,13 @@ textarea:focus {
   .list {
     padding-right: 16px;
     padding-left: 16px;
+  }
+
+  .pageActions {
+    gap: 8px;
+  }
+
+  .cardMeta {
+    font-size: 0.66rem;
   }
 }

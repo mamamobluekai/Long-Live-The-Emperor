@@ -237,6 +237,7 @@ async function getStudentEvaluation(req, res) {
               s.first_name, s.last_name, s.student_number, s.grade_level, s.track_strand
        FROM student_evaluations se
        JOIN users u ON u.id = se.evaluator_id
+       LEFT JOIN supervisors sv ON sv.user_id = se.evaluator_id
        JOIN students s ON s.id = se.student_id
        WHERE se.student_id = $1
        ORDER BY se.created_at DESC
@@ -356,9 +357,12 @@ async function getMyEvaluation(req, res) {
 
     const result = await pool.query(
       `SELECT se.*, u.email AS evaluator_email,
+              sv.first_name AS evaluator_first_name,
+              sv.last_name AS evaluator_last_name,
               s.first_name, s.last_name, s.student_number, s.grade_level, s.track_strand
        FROM student_evaluations se
        JOIN users u ON u.id = se.evaluator_id
+       LEFT JOIN supervisors sv ON sv.user_id = se.evaluator_id
        JOIN students s ON s.id = se.student_id
        WHERE se.student_id = $1
        ORDER BY se.created_at DESC

@@ -101,6 +101,22 @@ export default function UserProfileSettings() {
   });
 
   const fileInputRef = useRef(null);
+  const [activeSection, setActiveSection] = useState('profile');
+
+  useEffect(() => {
+    if (!window.visualViewport) return undefined;
+    const viewport = window.visualViewport;
+    const handleResize = () => {
+      if (viewport.height < window.innerHeight * 0.85) {
+        const active = document.activeElement;
+        if (active && typeof active.scrollIntoView === 'function') {
+          active.scrollIntoView({ block: 'center' });
+        }
+      }
+    };
+    viewport.addEventListener('resize', handleResize);
+    return () => viewport.removeEventListener('resize', handleResize);
+  }, []);
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
@@ -370,11 +386,31 @@ export default function UserProfileSettings() {
         </div>
       </section>
 
+      {/* MOBILE SECTION SWITCHER */}
+      <div className={styles.sectionSwitcher}>
+        <button
+          type="button"
+          className={`${styles.switcherButton} ${activeSection === 'profile' ? styles.switcherButtonActive : ''}`}
+          onClick={() => setActiveSection('profile')}
+        >
+          <User size={16} />
+          Profile Info
+        </button>
+        <button
+          type="button"
+          className={`${styles.switcherButton} ${activeSection === 'security' ? styles.switcherButtonActive : ''}`}
+          onClick={() => setActiveSection('security')}
+        >
+          <ShieldCheck size={16} />
+          Account Security
+        </button>
+      </div>
+
       {/* CONTENT GRID */}
       <div className={styles.contentGrid}>
 
         {/* PROFILE INFORMATION */}
-        <section className={styles.card}>
+        <section className={`${styles.card} ${activeSection === 'profile' ? styles.cardActiveMobile : ''}`}>
 
           <div className={styles.cardHeader}>
             <div className={styles.cardIcon}>
@@ -528,7 +564,7 @@ export default function UserProfileSettings() {
         </section>
 
         {/* SECURITY */}
-        <section className={styles.card}>
+        <section className={`${styles.card} ${activeSection === 'security' ? styles.cardActiveMobile : ''}`}>
 
           <div className={styles.cardHeader}>
             <div className={styles.cardIcon}>

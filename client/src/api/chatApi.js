@@ -23,6 +23,10 @@ export async function getChatBatches() {
   return fetchJsonOrThrow(`${API_BASE}/chat/batches`, { headers: authHeaders() });
 }
 
+export async function getBatchMembers(batchId) {
+  return fetchJsonOrThrow(`${API_BASE}/chat/batch/${batchId}/members`, { headers: authHeaders() });
+}
+
 export async function getChatMessages(batchId) {
   return fetchJsonOrThrow(`${API_BASE}/chat/batch/${batchId}/messages`, { headers: authHeaders() });
 }

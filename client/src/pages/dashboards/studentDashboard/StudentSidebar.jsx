@@ -9,7 +9,6 @@ import {
   MessageCircle,
   UserRound,
   NotebookPen,
-  FileText,
 } from 'lucide-react';
 
 import DashboardSidebar from '../sharedSidebar/DashboardSidebar';
@@ -57,11 +56,6 @@ const links = [
     icon: FilePenLine,
   },
 
-  {
-    to: '/dashboard/student/grade-appeal',
-    label: 'Grade Appeal',
-    icon: FileText,
-  },
 
   {
     to: '/dashboard/student/announcements',

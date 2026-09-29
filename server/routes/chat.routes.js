@@ -1,6 +1,7 @@
 const express = require('express');
 const {
   getAccessibleBatches,
+  getBatchMembers,
   getBatchMessages,
   createBatchMessage,
   deleteBatchMessage,
@@ -14,6 +15,7 @@ const router = express.Router();
 router.use(authenticate);
 
 router.get('/batches', getAccessibleBatches);
+router.get('/batch/:batchId/members', getBatchMembers);
 router.get('/batch/:batchId/messages', getBatchMessages);
 router.post('/batch/:batchId/messages', createBatchMessage);
 router.delete('/batch/:batchId/messages/:messageId', deleteBatchMessage);

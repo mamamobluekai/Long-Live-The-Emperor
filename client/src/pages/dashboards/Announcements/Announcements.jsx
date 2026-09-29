@@ -231,15 +231,7 @@ export default function Announcements({ user }) {
       {error && <div className={styles.errorAlert} role="alert">{error}</div>}
 
       <section className={styles.listSection}>
-        <div className={styles.listHeader}>
-          <div>
-            <h2>{canManage && showOwnAnnouncements ? 'Your created announcements' : 'Announcements'}</h2>
-            <p>{visibleAnnouncements.length} visible {visibleAnnouncements.length === 1 ? 'announcement' : 'announcements'}</p>
-          </div>
-          <div className={styles.liveBadge}><span /> Live</div>
-        </div>
-
-        {loading ? (
+      {loading ? (
           <div className={styles.state}>Loading announcements...</div>
         ) : visibleAnnouncements.length === 0 ? (
           <div className={styles.state}>

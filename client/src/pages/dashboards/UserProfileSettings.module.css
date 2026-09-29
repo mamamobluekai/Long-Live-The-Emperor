@@ -294,6 +294,11 @@
   margin-left: 22px;
 }
 
+.card > .form {
+  width: auto;
+  padding-bottom: 4px;
+}
+
 .card > .securityBanner {
   margin-top: 18px;
 }
@@ -450,7 +455,7 @@
   justify-content: space-between;
   gap: 15px;
   margin-top: 25px;
-  padding-top: 20px;
+  padding: 20px 0 22px;
   border-top: 1px solid #ecdfe2;
 }
 
@@ -939,5 +944,160 @@
 
   .securityBanner {
     padding: 12px;
+  }
+}
+
+/* =========================================================
+   MOBILE SECTION SWITCHER
+   ========================================================= */
+
+.sectionSwitcher {
+  display: none;
+}
+
+.cardActiveMobile {
+  display: block;
+}
+
+@media (max-width: 900px) {
+  .sectionSwitcher {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .switcherButton {
+    display: inline-flex;
+    min-height: 46px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 12px;
+    border: 1px solid #dcc9cf;
+    border-radius: 11px;
+    background: #ffffff;
+    color: #475d6e;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    transition: 0.15s ease;
+  }
+
+  .switcherButton svg {
+    background: transparent;
+    color: currentColor;
+  }
+
+  .switcherButtonActive {
+    border-color: #8b1e2d;
+    background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
+    color: #ffffff;
+    box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
+  }
+
+  .contentGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .contentGrid .card {
+    display: none;
+  }
+
+  .contentGrid .cardActiveMobile {
+    display: block;
+  }
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding-bottom: 96px;
+  }
+
+  .formGrid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 14px !important;
+  }
+
+  .field input,
+  .field select {
+    font-size: 16px;
+    height: 48px;
+  }
+
+  .formFooter {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .formFooter button {
+    width: 100%;
+    min-height: 46px;
+  }
+
+  .accountCard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .accountItem:nth-child(1),
+  .accountItem:nth-child(3),
+  .accountItem:nth-child(5) {
+    grid-column: 1;
+    border-left: 0;
+    border-top: 1px solid #ecdfe2;
+  }
+
+  .accountItem:nth-child(1) {
+    border-top: 0;
+  }
+
+  .profileHero {
+    padding: 24px 18px;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    min-height: 46px;
+  }
+}
+
+/* Balanced inner spacing for cards */
+.card > .cardHeader {
+  padding: 21px 22px 18px;
+}
+
+.card > .form {
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.formFooter {
+  margin-right: 0;
+  margin-left: 0;
+  padding-bottom: 4px;
+}
+
+.securityBanner,
+.passwordHint,
+.secondaryButton {
+  margin-bottom: 0;
+}
+
+.card > .secondaryButton {
+  margin-bottom: 22px;
+}
+
+@media (max-width: 600px) {
+  .card > .cardHeader {
+    padding: 18px 16px 14px;
+  }
+
+  .card > .form,
+  .card > .securityBanner,
+  .card > .passwordHint,
+  .card > .secondaryButton {
+    margin-right: 16px;
+    margin-left: 16px;
   }
 }

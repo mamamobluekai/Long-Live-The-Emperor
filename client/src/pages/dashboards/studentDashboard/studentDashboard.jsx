@@ -11,7 +11,6 @@ import Attendance from './Attendance';
 import DailyDocumentation from './DailyDocumentation';
 import Progress from './Progress';
 import StudentEvaluation from './StudentEvaluation';
-import StudentGradeAppeal from './StudentGradeAppeal';
 import BatchChat from '../../../components/social/BatchChat';
 import UserProfileSettings from '../UserProfileSettings';
 
@@ -27,6 +26,7 @@ function StudentDashboard({ user, onLogout }) {
         />
       }
       sidebar={<StudentSidebar />}
+      enableMobileKeyboardFocus
     >
       <Routes>
         <Route index element={<Navigate to="overview" replace />} />
@@ -35,7 +35,6 @@ function StudentDashboard({ user, onLogout }) {
         <Route path="requirements" element={<Requirements user={user} />} />
         <Route path="placement-status" element={<PlacementStatus user={user} />} />
         <Route path="evaluation" element={<StudentEvaluation />} />
-        <Route path="grade-appeal" element={<StudentGradeAppeal />} />
         <Route path="announcements" element={<Announcements user={user} />} />
         <Route path="attendance" element={<Attendance />} />
         <Route path="daily-documentation" element={<DailyDocumentation />} />
@@ -47,5 +46,4 @@ function StudentDashboard({ user, onLogout }) {
     </DashboardLayout>
   );
 }
-
 export default StudentDashboard;

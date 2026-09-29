@@ -209,7 +209,7 @@ function PlacementStatus({ user }) {
 
       <div className={styles.section}>
         <div className={styles.sectionTitle}>
-          Submission Status
+          Requirement Status
         </div>
         {loading ? (
           <p className={styles.empty}>Loading...</p>
