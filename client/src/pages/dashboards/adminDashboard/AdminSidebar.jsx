@@ -3,12 +3,9 @@ import DashboardSidebar from '../sharedSidebar/DashboardSidebar';
 import {
   ChartNoAxesColumn,
   Users,
-  CircleCheck,
-  FileText,
   Settings,
   User,
   Search,
-  Bell,
   Upload,
   Archive,
 } from 'lucide-react';
@@ -26,16 +23,6 @@ const links = [
     icon: Users,
   },
   {
-    to: '/dashboard/admin/coordinators',
-    label: 'Coordinator Approval',
-    icon: CircleCheck,
-  },
-  {
-    to: '/dashboard/admin/reports',
-    label: 'Reports',
-    icon: FileText,
-  },
-  {
     to: '/dashboard/admin/settings',
     label: 'System Settings',
     icon: Settings,
@@ -49,11 +36,6 @@ const links = [
     to: '/dashboard/admin/access-logs',
     label: 'Access Logs',
     icon: Search,
-  },
-  {
-    to: '/dashboard/admin/notifications',
-    label: 'Notifications',
-    icon: Bell,
   },
   {
     to: '/dashboard/admin/upload-users',

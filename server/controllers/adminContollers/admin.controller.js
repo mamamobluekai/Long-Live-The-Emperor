@@ -679,6 +679,45 @@ const updateSettings = async (req, res) => {
   }
 };
 
+const setMaintenanceMode = async (req, res) => {
+  const { enabled } = req.body || {};
+  if (typeof enabled !== 'boolean') {
+    return res.status(400).json({ error: 'enabled must be a boolean.' });
+  }
+  try {
+    await adminService.ensureAdminTables();
+    const message = typeof req.body.message === 'string' ? req.body.message.trim() : null;
+    const estimatedEnd = req.body.estimatedEnd || null;
+
+    await adminService.updateSettings(
+      {
+        maintenance_mode: enabled,
+        maintenance_message: message,
+        maintenance_estimated_end: estimatedEnd,
+      },
+      req.user.id
+    );
+    // Stamp the start time on enable and clear it on disable so the client can
+    // show how long maintenance has been running.
+    if (enabled) {
+      await adminService.updateSettings({ maintenance_started_at: new Date() }, req.user.id);
+    } else {
+      await adminService.updateSettings({ maintenance_started_at: null }, req.user.id);
+    }
+
+    const status = await adminService.getMaintenanceStatus();
+    await writeAuditLog(
+      req,
+      'maintenance_mode',
+      enabled ? 'Maintenance mode enabled' : 'Maintenance mode disabled'
+    );
+    res.json({ maintenance: status });
+  } catch (err) {
+    console.error('Set maintenance mode error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
 const uploadLogo = async (req, res) => {
   try {
     if (!req.file) {
@@ -729,6 +768,66 @@ const getLogs = async (req, res) => {
   }
 };
 
+const deleteLog = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await adminService.deleteLog(id);
+
+    if (result.deleted === 0) {
+      return res.status(404).json({ error: 'Access log not found.' });
+    }
+
+    res.json({ message: 'Access log deleted.', deleted: result.deleted });
+  } catch (err) {
+    console.error('Delete log error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+const deleteLogs = async (req, res) => {
+  try {
+    const { ids, dateFrom, dateTo } = req.body || {};
+
+    const parsedIds = Array.isArray(ids)
+      ? ids.map(Number).filter((id) => Number.isInteger(id) && id > 0)
+      : [];
+
+    if (parsedIds.length === 0 && !dateFrom && !dateTo) {
+      return res
+        .status(400)
+        .json({ error: 'Provide log ids, a date range, or use the clear-all action.' });
+    }
+
+    const result = await adminService.deleteLogs({
+      ids: parsedIds,
+      dateFrom: dateFrom || '',
+      dateTo: dateTo || '',
+    });
+
+    res.json({
+      message: `${result.deleted} access log${result.deleted === 1 ? '' : 's'} deleted.`,
+      deleted: result.deleted,
+    });
+  } catch (err) {
+    console.error('Bulk delete logs error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+const deleteAllLogs = async (req, res) => {
+  try {
+    const result = await adminService.deleteLogs({});
+
+    res.json({
+      message: `All access logs cleared (${result.deleted} removed).`,
+      deleted: result.deleted,
+    });
+  } catch (err) {
+    console.error('Clear logs error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
 const getNotifications = async (req, res) => {
   try {
     await adminService.ensureAdminTables();
@@ -748,6 +847,36 @@ const markNotificationsRead = async (req, res) => {
     res.json({ message: 'Notifications marked as read.' });
   } catch (err) {
     console.error('Mark notifications read error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+const deleteNotification = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await adminService.deleteNotification(req.user.id, id);
+
+    if (result.deleted === 0) {
+      return res.status(404).json({ error: 'Notification not found.' });
+    }
+
+    res.json({ message: 'Notification deleted.', deleted: result.deleted });
+  } catch (err) {
+    console.error('Delete notification error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+const deleteAllNotifications = async (req, res) => {
+  try {
+    const result = await adminService.deleteAllNotifications(req.user.id);
+
+    res.json({
+      message: `All notifications cleared (${result.deleted} removed).`,
+      deleted: result.deleted,
+    });
+  } catch (err) {
+    console.error('Delete all notifications error:', err);
     res.status(500).json({ error: 'Server error.' });
   }
 };
@@ -908,9 +1037,15 @@ module.exports = {
   rejectCoordinator,
   getSettings,
   updateSettings,
+  setMaintenanceMode,
   getLogs,
+  deleteLog,
+  deleteLogs,
+  deleteAllLogs,
   getNotifications,
   markNotificationsRead,
+  deleteNotification,
+  deleteAllNotifications,
   getReport,
   writeAuditLog,
   ensureAdminTables,

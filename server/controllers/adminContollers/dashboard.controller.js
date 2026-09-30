@@ -1,4 +1,4 @@
-const { getDashboardStats } = require('../../services/admin.service');
+const { getDashboardStats, getPeriodAnalytics } = require('../../services/admin.service');
 
 const dashboard = async (req, res) => {
   try {
@@ -10,4 +10,14 @@ const dashboard = async (req, res) => {
   }
 };
 
-module.exports = { dashboard };
+const periodAnalytics = async (req, res) => {
+  try {
+    const analytics = await getPeriodAnalytics();
+    res.json(analytics);
+  } catch (err) {
+    console.error('Admin period analytics error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+module.exports = { dashboard, periodAnalytics };

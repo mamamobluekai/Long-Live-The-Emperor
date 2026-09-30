@@ -9,18 +9,19 @@
 
 .pageBtn {
   background: #ffffff;
-  border: 1px solid rgba(15, 23, 42, 0.12);
+  border: 1px solid #dcc9cf;
   border-radius: 8px;
   padding: 8px 14px;
   font-size: 0.85rem;
-  color: #334155;
+  color: #475d6e;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .pageBtn:hover:not(:disabled) {
-  background: #f1f5f9;
-  color: #2a5298;
+  background: #fffafb;
+  border-color: #b8394f;
+  color: #8b1e2d;
 }
 
 .pageBtn:disabled {
@@ -29,12 +30,12 @@
 }
 
 .pageBtn.active {
-  background: #2a5298;
+  background: #8b1e2d;
   color: #ffffff;
-  border-color: #2a5298;
+  border-color: #8b1e2d;
 }
 
 .ellipsis {
-  color: #94a3b8;
+  color: #8490a1;
   font-weight: 600;
 }

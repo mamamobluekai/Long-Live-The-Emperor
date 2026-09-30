@@ -17,6 +17,7 @@ function AuthForm({ onAuthSuccess }) {
     handleChange,
     loading,
     message,
+    error,
     handleSubmit,
     loginSuccess,
   } = useAuthForm((data) => {
@@ -137,6 +138,16 @@ function AuthForm({ onAuthSuccess }) {
             <div className="alert alert-success" role="alert">
               <AlertCircle className="alert-icon" size={16} />
               <span className="alert-text">{message}</span>
+            </div>
+          ) : null}
+
+          {/* Failed sign-in reason. Without this the form gives no feedback at
+              all when the server refuses the attempt, such as during
+              maintenance mode. */}
+          {error ? (
+            <div className="alert alert-error" role="alert">
+              <AlertCircle className="alert-icon" size={16} />
+              <span className="alert-text">{error}</span>
             </div>
           ) : null}
 

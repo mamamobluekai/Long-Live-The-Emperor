@@ -1,7 +1,21 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, ChevronDown, LogOut, Settings, UserRound } from 'lucide-react';
-import { getAdminNotifications, markNotificationsRead } from '../../api/adminApi';
+import {
+  Bell,
+  ChevronDown,
+  LogOut,
+  Settings,
+  UserRound,
+  CheckCheck,
+  Trash2,
+  X,
+} from 'lucide-react';
+import {
+  getAdminNotifications,
+  markNotificationsRead,
+  deleteAdminNotification,
+  deleteAllAdminNotifications,
+} from '../../api/adminApi';
 import { isGroupChatNotification } from '../../utils/notificationFilters';
 import styles from './AdminTopNav.module.css';
 
@@ -25,6 +39,7 @@ export default function AdminTopNav({ user, onLogout }) {
   const dropdownRef = useRef(null);
   const profileRef = useRef(null);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -80,6 +95,43 @@ export default function AdminTopNav({ user, onLogout }) {
     }
   };
 
+  const handleDelete = async (id) => {
+    const previous = notifications;
+
+    // Remove it locally first so the list responds immediately.
+    const remaining = notifications.filter((n) => n.id !== id);
+    setNotifications(remaining);
+    setUnread(remaining.filter((n) => !n.is_read).length);
+
+    try {
+      await deleteAdminNotification(id);
+    } catch (e) {
+      setNotifications(previous);
+      setUnread(previous.filter((n) => !n.is_read).length);
+      console.error('Failed to delete notification:', e.message);
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    try {
+      await deleteAllAdminNotifications();
+      setNotifications([]);
+      setUnread(0);
+      setConfirmClearAll(false);
+    } catch (e) {
+      setConfirmClearAll(false);
+      console.error('Failed to clear notifications:', e.message);
+    }
+  };
+
+  const openNotification = (notification) => {
+    setShowNotif(false);
+
+    if (notification.action_url) {
+      navigate(notification.action_url);
+    }
+  };
+
   const displayName = user?.first_name || user?.last_name
     ? `${user?.first_name || ''} ${user?.last_name || ''}`.trim()
     : user?.email;
@@ -105,12 +157,44 @@ export default function AdminTopNav({ user, onLogout }) {
             <div className={styles.dropdown}>
               <div className={styles.dropdownHeader}>
                 <span>Notifications</span>
-                {unread > 0 ? (
-                  <button type="button" className={styles.markReadLink} onClick={markAllRead}>
-                    Mark all read
-                  </button>
-                ) : null}
+
+                <div className={styles.dropdownHeaderActions}>
+                  {unread > 0 ? (
+                    <button
+                      type="button"
+                      className={styles.headerAction}
+                      onClick={markAllRead}
+                      title="Mark all as read"
+                    >
+                      <CheckCheck size={14} />
+                      Mark all read
+                    </button>
+                  ) : null}
+
+                  {notifications.length > 0 ? (
+                    confirmClearAll ? (
+                      <button
+                        type="button"
+                        className={`${styles.headerAction} ${styles.headerActionDanger}`}
+                        onClick={handleDeleteAll}
+                      >
+                        Confirm delete
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className={`${styles.headerAction} ${styles.headerActionDanger}`}
+                        onClick={() => setConfirmClearAll(true)}
+                        title="Delete all notifications"
+                      >
+                        <Trash2 size={14} />
+                        Delete all
+                      </button>
+                    )
+                  ) : null}
+                </div>
               </div>
+
               <div className={styles.dropdownBody}>
                 {loading ? (
                   <div className={styles.dropdownItem}>Loading…</div>
@@ -120,9 +204,27 @@ export default function AdminTopNav({ user, onLogout }) {
                       key={n.id}
                       className={`${styles.dropdownItem} ${n.is_read ? styles.read : styles.unread}`}
                     >
-                      <div className={styles.notifTitle}>{n.title}</div>
-                      <div className={styles.notifMsg}>{n.message}</div>
-                      <div className={styles.notifTime}>{formatTime(n.created_at)}</div>
+                      <button
+                        type="button"
+                        className={styles.notifMain}
+                        onClick={() => openNotification(n)}
+                      >
+                        <div className={styles.notifTitle}>{n.title}</div>
+                        <div className={styles.notifMsg}>{n.message}</div>
+                        <div className={styles.notifTime}>
+                          {formatTime(n.created_at)}
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        className={styles.notifDelete}
+                        onClick={() => handleDelete(n.id)}
+                        aria-label={`Delete notification: ${n.title}`}
+                        title="Delete notification"
+                      >
+                        <X size={15} />
+                      </button>
                     </div>
                   ))
                 ) : (

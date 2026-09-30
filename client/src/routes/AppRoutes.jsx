@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useAdminAuth } from '../context/useAdminAuth';
+import { useMaintenance } from '../context/maintenanceContextValue';
+import MaintenanceScreen from '../components/common/MaintenanceScreen';
 import LoginAndFRegister from '../pages/LoginAndRegister/LoginAndFRegister';
 import AdminLogin from '../pages/admin/AdminLogin';
 import AdminDashboard from '../pages/dashboards/adminDashboard/AdminDashboard';
@@ -13,6 +15,7 @@ import ForgotPassword from '../pages/ForgotPassword/ForgotPassword';
 
 function ProtectedRoute({ children, allowedRoles, redirectTo = '/login' }) {
   const { user } = useAuth();
+  const { status: maintenance } = useMaintenance();
 
   if (!user) {
     return <Navigate to={redirectTo} replace />;
@@ -22,7 +25,28 @@ function ProtectedRoute({ children, allowedRoles, redirectTo = '/login' }) {
     return <Navigate to={redirectTo} replace />;
   }
 
+  // The server already refuses non-admin calls during maintenance; this stops
+  // the UI from rendering a page whose every request is about to fail.
+  if (maintenance.enabled && user && user.role !== 'admin') {
+    return <MaintenanceScreen />;
+  }
+
   return children;
+}
+
+// Shown on the public login routes so a blocked user sees the reason instead of
+// an unexplained sign-in failure.
+//
+// Only applies once we know the visitor is a non-admin. A logged-out visitor has
+// no role yet, and treating that as "not an admin" would hide the admin login
+// form while maintenance is on, leaving no way to sign in and turn it back off.
+// The server still refuses non-admin logins on submit, so nothing gets through.
+function MaintenanceAware({ children }) {
+  const { status: maintenance } = useMaintenance();
+  const { user } = useAuth();
+
+  const blocked = maintenance.enabled && user && user.role !== 'admin';
+  return blocked ? <MaintenanceScreen /> : children;
 }
 
 function AppRoutes() {
@@ -31,11 +55,11 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/login" element={<LoginAndFRegister onAuthSuccess={login} />} />
-      <Route path="/admin/login" element={<AdminLogin onAuthSuccess={login} />} />
-      <Route path="/register" element={<LoginAndFRegister onAuthSuccess={login} />} />
-      <Route path="/set-password" element={<SetPassword />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/login" element={<MaintenanceAware><LoginAndFRegister onAuthSuccess={login} /></MaintenanceAware>} />
+      <Route path="/admin/login" element={<MaintenanceAware><AdminLogin onAuthSuccess={login} /></MaintenanceAware>} />
+      <Route path="/register" element={<MaintenanceAware><LoginAndFRegister onAuthSuccess={login} /></MaintenanceAware>} />
+      <Route path="/set-password" element={<MaintenanceAware><SetPassword /></MaintenanceAware>} />
+      <Route path="/forgot-password" element={<MaintenanceAware><ForgotPassword /></MaintenanceAware>} />
 
       <Route path="/dashboard">
         <Route

@@ -24,9 +24,15 @@ const {
   rejectCoordinator,
   getSettings,
   updateSettings,
+  setMaintenanceMode,
   getLogs,
+  deleteLog,
+  deleteLogs,
+  deleteAllLogs,
   getNotifications,
   markNotificationsRead,
+  deleteNotification,
+  deleteAllNotifications,
   getReport,
   uploadLogo,
   getImmersionPeriods,
@@ -41,12 +47,13 @@ const {
 } = require('../controllers/adminContollers/admin.controller');
 
 const { login, logout, profile, updateProfile } = require('../controllers/adminContollers/auth.controller');
-const { dashboard } = require('../controllers/adminContollers/dashboard.controller');
+const { dashboard, periodAnalytics } = require('../controllers/adminContollers/dashboard.controller');
 
 const {
   uploadTeachersExcel,
   uploadSupervisorsExcel,
   uploadCoordinatorsExcel,
+  downloadUploadTemplate,
 } = require('../controllers/adminContollers/upload.users.controller');
 
 const router = express.Router();
@@ -66,6 +73,7 @@ router.patch('/profile/password', updatePassword);
 router.post('/profile/picture', upload.single('photo'), uploadProfilePicture);
 
 router.get('/dashboard', dashboard);
+router.get('/dashboard/period-analytics', periodAnalytics);
 
 router.get('/users', getAllUsers);
 router.get('/users/status/:status', getUsersByStatus);
@@ -85,12 +93,18 @@ router.put('/staff/:id/disapprove', disapproveStaff);
 
 router.get('/settings', getSettings);
 router.put('/settings', updateSettings);
+router.put('/settings/maintenance', setMaintenanceMode);
 router.post('/settings/logo', upload.single('logo'), uploadLogo);
 
 router.get('/logs', getLogs);
+router.delete('/logs/all', deleteAllLogs);
+router.delete('/logs/bulk', deleteLogs);
+router.delete('/logs/:id', deleteLog);
 
 router.get('/notifications', getNotifications);
 router.patch('/notifications/read', markNotificationsRead);
+router.delete('/notifications', deleteAllNotifications);
+router.delete('/notifications/:id', deleteNotification);
 
 router.get('/reports/:type', getReport);
 
@@ -106,6 +120,8 @@ router.get('/immersion/periods/:periodId/archive-preview', previewPeriodArchive)
 router.post('/immersion/periods/:periodId/archive', archivePeriod);
 router.get('/archives', listArchivePeriods);
 router.get('/archives/:archiveId', getArchivePeriod);
+
+router.get('/upload/template/:type', downloadUploadTemplate);
 
 router.post('/upload/teachers', upload.single('file'), uploadTeachersExcel);
 router.post('/upload/supervisors', upload.single('file'), uploadSupervisorsExcel);

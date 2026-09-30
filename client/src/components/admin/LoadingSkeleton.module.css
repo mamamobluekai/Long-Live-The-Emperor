@@ -1,3 +1,4 @@
+/* Design system: Lexend + the RequirementsReview maroon palette. */
 .tableSkeleton {
   display: flex;
   flex-direction: column;
@@ -6,7 +7,7 @@
 
 .skeletonHeader {
   height: 40px;
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background: linear-gradient(90deg, #faf6f7 25%, #f1e9ec 50%, #faf6f7 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s ease-in-out infinite;
   border-radius: 10px;
@@ -14,7 +15,7 @@
 
 .skeletonRow {
   height: 44px;
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background: linear-gradient(90deg, #faf6f7 25%, #f1e9ec 50%, #faf6f7 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s ease-in-out infinite;
   border-radius: 8px;
@@ -32,7 +33,7 @@
 
 .cardSkeleton {
   height: 120px;
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background: linear-gradient(90deg, #faf6f7 25%, #f1e9ec 50%, #faf6f7 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s ease-in-out infinite;
   border-radius: 16px;

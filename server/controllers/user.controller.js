@@ -9,6 +9,7 @@ const {
   isAccountLocked,
   LOCK_TIME_MINUTES,
 } = require('../utils/loginAttempts');
+const { readMaintenance } = require('../middleware/maintenance');
 
 function parseLocalDate(dateStr) {
   if (!dateStr) return null;
@@ -371,6 +372,16 @@ const login = async (req, res) => {
 
     // Block login outside the active immersion period (except for admins).
     if (user.role !== 'admin') {
+      const maintenance = await readMaintenance();
+      if (maintenance.enabled) {
+        return res.status(503).json({
+          error: maintenance.message,
+          maintenance: true,
+          startedAt: maintenance.startedAt,
+          estimatedEnd: maintenance.estimatedEnd,
+        });
+      }
+
       const accessBlock = await checkImmersionPeriodAccess(user.role);
       if (accessBlock.blocked) {
         return res.status(403).json({

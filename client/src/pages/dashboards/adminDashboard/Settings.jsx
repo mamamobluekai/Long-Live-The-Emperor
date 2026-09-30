@@ -1,8 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   getAdminSettings,
-  updateAdminSettings,
-  uploadLogo,
   getImmersionPeriods,
   createImmersionPeriod,
   updateImmersionPeriod,
@@ -10,8 +8,20 @@ import {
   previewPeriodArchive,
   archiveImmersionPeriod,
 } from '../../../api/adminApi';
+import {
+  Archive,
+  CircleCheck,
+  Pencil,
+  Plus,
+  Settings as SettingsIcon,
+  TriangleAlert,
+  Wrench,
+  X,
+} from 'lucide-react';
 import { useToast } from '../../../components/admin/toastContext';
 import ConfirmModal from '../../../components/admin/ConfirmModal';
+import { setMaintenanceMode } from '../../../api/maintenanceApi';
+import { useMaintenance } from '../../../context/maintenanceContextValue';
 import styles from './Settings.module.css';
 
 const ACADEMIC_YEAR_OPTIONS = ['2025-2026', '2026-2027', '2027-2028'];
@@ -21,15 +31,6 @@ function formatDate(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-}
-
-function getDaysUntil(dateStr) {
-  if (!dateStr) return null;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const target = new Date(dateStr);
-  const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
-  return diff;
 }
 
 function computeStatus(startDate, endDate) {
@@ -43,14 +44,24 @@ function computeStatus(startDate, endDate) {
   return 'ongoing';
 }
 
+// Converts a stored timestamp into the format a datetime-local input expects.
+function toLocalInput(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 export default function SettingsPage() {
   const { showToast } = useToast();
+  const { status: maintenance, report: reportMaintenance } = useMaintenance();
+  const [maintenanceSaving, setMaintenanceSaving] = useState(false);
+  const [maintenanceForm, setMaintenanceForm] = useState({ message: '', estimatedEnd: '' });
+  const [maintenanceModal, setMaintenanceModal] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [logoUploading, setLogoUploading] = useState(false);
+  // Only the fields the period editor uses as defaults are kept from settings.
   const [form, setForm] = useState({});
-  const [preview, setPreview] = useState('');
-  const [activeTab, setActiveTab] = useState('immersion');
 
   const [periods, setPeriods] = useState([]);
   const [periodForm, setPeriodForm] = useState({
@@ -74,26 +85,13 @@ export default function SettingsPage() {
       const data = await getAdminSettings();
       const s = data.settings || {};
       setForm({
-        system_name: s.system_name || '',
-        school_name: s.school_name || '',
-        school_address: s.school_address || '',
         academic_year: s.academic_year || '',
         semester: s.semester || '',
-        attendance_time_in: s.attendance_time_in || '',
-        attendance_time_out: s.attendance_time_out || '',
-        announcements: s.announcements || '',
         immersion_start_date: s.immersion_start_date || '',
         immersion_end_date: s.immersion_end_date || '',
-        auto_activate: s.auto_activate ?? true,
-        auto_deactivate: s.auto_deactivate ?? true,
-        access_student: s.access_student ?? true,
-        access_teacher: s.access_teacher ?? true,
-        access_coordinator: s.access_coordinator ?? true,
-        access_supervisor: s.access_supervisor ?? true,
         required_hours: s.required_hours || 80,
         working_days: s.working_days || 'Mon,Tue,Wed,Thu,Fri',
       });
-      setPreview(s.logo_url || '');
     } catch (err) {
       showToast(err.message, 'error');
     }
@@ -116,45 +114,6 @@ export default function SettingsPage() {
     };
     init();
   }, [loadSettings, loadPeriods]);
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-  };
-
-  const handleLogoChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setLogoUploading(true);
-    try {
-      const data = await uploadLogo(file);
-      const url = data.logoUrl;
-      setPreview(url);
-      setForm((prev) => ({ ...prev, logo_url: url }));
-      showToast('Logo uploaded successfully.', 'success');
-    } catch (err) {
-      showToast(err.message, 'error');
-    } finally {
-      setLogoUploading(false);
-    }
-  };
-
-  const saveSettings = async (payload) => {
-    setSaving(true);
-    try {
-      await updateAdminSettings(payload);
-      showToast('Settings saved.', 'success');
-    } catch (err) {
-      showToast(err.message, 'error');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    saveSettings(form);
-  };
 
   const handlePeriodChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -248,408 +207,292 @@ export default function SettingsPage() {
     }
   };
 
-  const activePeriod = (periods || []).find((p) => p.is_active) || (periods || [])[0] || null;
-  const periodStart = activePeriod?.start_date || '';
-  const periodEnd = activePeriod?.end_date || '';
-  const statusStart = periodStart || form.immersion_start_date || '';
-  const statusEnd = periodEnd || form.immersion_end_date || '';
-
-  const immersionStatus = computeStatus(statusStart, statusEnd);
-  const daysUntil = getDaysUntil(statusStart);
-
+  // Tones map onto the shared status-badge palette in the CSS module.
   const statusConfig = {
-    upcoming: { label: 'Upcoming', color: '#f59e0b', icon: '🟡' },
-    ongoing: { label: 'Ongoing', color: '#22c55e', icon: '🟢' },
-    completed: { label: 'Completed', color: '#64748b', icon: '⚫' },
-    inactive: { label: 'Inactive', color: '#94a3b8', icon: '⚪' },
+    upcoming: { label: 'Upcoming', tone: 'upcoming' },
+    ongoing: { label: 'Ongoing', tone: 'ongoing' },
+    completed: { label: 'Completed', tone: 'completed' },
+    inactive: { label: 'Inactive', tone: 'inactive' },
   };
 
-  const statusInfo = statusConfig[immersionStatus];
+  const openMaintenanceModal = () => {
+    setMaintenanceForm({
+      message: maintenance.message || '',
+      // datetime-local needs "YYYY-MM-DDTHH:mm", not an ISO string with a Z.
+      estimatedEnd: toLocalInput(maintenance.estimatedEnd),
+    });
+    setMaintenanceModal(true);
+  };
+
+  const toggleMaintenance = async () => {
+    const enabling = !maintenance.enabled;
+    setMaintenanceSaving(true);
+    try {
+      const next = await setMaintenanceMode({
+        enabled: enabling,
+        message: maintenanceForm.message.trim() || null,
+        estimatedEnd: maintenanceForm.estimatedEnd ? new Date(maintenanceForm.estimatedEnd).toISOString() : null,
+      });
+      // Push into the app-wide context so other tabs/views react immediately.
+      reportMaintenance(next);
+      showToast(enabling ? 'Maintenance mode enabled.' : 'Maintenance mode disabled.', 'success');
+      setMaintenanceModal(false);
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setMaintenanceSaving(false);
+    }
+  };
 
   if (loading) {
     return (
-      <div className={styles.container}>
-        <h1 className={styles.title}>System Settings</h1>
-        <p>Loading settings…</p>
+      <div className={styles.page}>
+        <div className={styles.loading}>
+          <span className={styles.spinner} aria-hidden="true" />
+          Loading settings…
+        </div>
       </div>
     );
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>System Settings</h1>
-          <p className={styles.subtitle}>Configure system-wide settings and work immersion schedule</p>
+    <div className={styles.page}>
+      <div className={styles.pageHeader}>
+        <div className={styles.headerIdentity}>
+          <span className={styles.headerIcon} aria-hidden="true">
+            <SettingsIcon size={24} strokeWidth={1.9} />
+          </span>
+          <div>
+            <p className={styles.eyebrow}>CONFIGURATION</p>
+            <h1 className={styles.title}>System Settings</h1>
+            <p className={styles.subtitle}>
+              Manage the work immersion periods that drive each batch schedule. Changes here apply
+              across every role in the Work Immersion System.
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className={styles.tabs}>
-        <button
-          className={`${styles.tab} ${activeTab === 'immersion' ? styles.tabActive : ''}`}
-          onClick={() => setActiveTab('immersion')}
-          type="button"
-        >
-          Work Immersion
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === 'periods' ? styles.tabActive : ''}`}
-          onClick={() => setActiveTab('periods')}
-          type="button"
-        >
-          Immersion Periods
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === 'general' ? styles.tabActive : ''}`}
-          onClick={() => setActiveTab('general')}
-          type="button"
-        >
-          General
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === 'attendance' ? styles.tabActive : ''}`}
-          onClick={() => setActiveTab('attendance')}
-          type="button"
-        >
-          Attendance
-        </button>
+      <div className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <div>
+            <h2 className={styles.sectionTitle}>Immersion Periods</h2>
+            <p className={styles.sectionSubtitle}>
+              Create and manage the immersion periods that define each batch schedule.
+            </p>
+          </div>
+          <button type="button" className={styles.addBtn} onClick={() => openPeriodModal()}>
+            <Plus size={15} strokeWidth={2.2} aria-hidden="true" />
+            Add Immersion Period
+          </button>
+        </div>
+
+        <div className={styles.periodsTable}>
+          <div className={styles.periodsHeader}>
+            <span>Period</span>
+            <span>Start Date</span>
+            <span>End Date</span>
+            <span>Status</span>
+            <span>Batches</span>
+            <span>Actions</span>
+          </div>
+          {periods.length > 0 ? (
+            periods.map((period) => {
+              const pStatus = computeStatus(period.start_date, period.end_date);
+              const pStatusInfo = statusConfig[pStatus];
+              return (
+                <div key={period.id} className={styles.periodRow}>
+                  <div className={styles.periodName}>
+                    <strong>{period.period_name}</strong>
+                    <span className={styles.periodMeta}>{period.academic_year} - {period.semester}</span>
+                  </div>
+                  <span>{formatDate(period.start_date)}</span>
+                  <span>{formatDate(period.end_date)}</span>
+                  <span>
+                    <span className={`${styles.periodStatusBadge} ${styles[pStatusInfo.tone]}`}>
+                      {pStatusInfo.label}
+                    </span>
+                  </span>
+                  <span>{period.batch_count || 0}</span>
+                  <div className={styles.periodActions}>
+                    <button
+                      type="button"
+                      className={styles.periodEditBtn}
+                      onClick={() => openPeriodModal(period)}
+                    >
+                      <Pencil size={12} strokeWidth={2} aria-hidden="true" />
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.periodArchiveBtn}
+                      onClick={() => openArchiveModal(period)}
+                      title="Snapshot this period and remove its live data. Snapshot is viewable in Archived Periods."
+                    >
+                      <Archive size={12} strokeWidth={2} aria-hidden="true" />
+                      Archive
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.periodDeleteBtn}
+                      onClick={() => setDeletePeriodModal({ open: true, id: period.id, name: period.period_name })}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className={styles.emptyPeriods}>
+              <p>No immersion periods created yet.</p>
+              <button type="button" className={styles.addBtn} onClick={() => openPeriodModal()}>
+                <Plus size={15} strokeWidth={2.2} aria-hidden="true" />
+                Add First Period
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      {activeTab === 'immersion' && (
-        <div className={styles.section}>
-          <div className={styles.statusCard}>
-            <div className={styles.statusHeader}>
-              <h3 className={styles.statusTitle}>Work Immersion Status</h3>
-              <span className={styles.statusBadge} style={{ background: statusInfo.color }}>
-                {statusInfo.icon} {statusInfo.label}
-              </span>
+      <section
+        className={`${styles.maintCard} ${maintenance.enabled ? styles.maintCardOn : ''}`}
+        aria-labelledby="maintenance-section-title"
+      >
+        <div className={styles.maintHeader}>
+          <div className={styles.maintIdentity}>
+            <span className={styles.maintIcon} aria-hidden="true">
+              <Wrench size={19} strokeWidth={1.9} />
+            </span>
+            <div>
+              <h2 id="maintenance-section-title" className={styles.maintTitle}>
+                Maintenance Mode
+              </h2>
+              <p className={styles.maintSubtitle}>
+                Temporarily block students, teachers, supervisors and coordinators while you carry
+                out system work. Admins stay signed in so you can always switch it back off.
+              </p>
             </div>
-            {statusStart && statusEnd ? (
+          </div>
+
+          <span className={`${styles.maintBadge} ${maintenance.enabled ? styles.maintBadgeOn : styles.maintBadgeOff}`}>
+            {maintenance.enabled ? <TriangleAlert size={13} strokeWidth={2} /> : <CircleCheck size={13} strokeWidth={2} />}
+            {maintenance.enabled ? 'On' : 'Off'}
+          </span>
+        </div>
+
+        {maintenance.enabled ? (
+          <div className={styles.maintNotice}>
+            <strong>Maintenance mode is active.</strong>
+            {maintenance.message}
+          </div>
+        ) : (
+          <p className={styles.maintIdle}>The system is available to all users.</p>
+        )}
+
+        <div className={styles.maintActions}>
+          <button
+            type="button"
+            className={maintenance.enabled ? styles.maintStopBtn : styles.maintStartBtn}
+            onClick={openMaintenanceModal}
+          >
+            {maintenance.enabled ? (
               <>
-                <p className={styles.statusDates}>
-                  {formatDate(statusStart)} – {formatDate(statusEnd)}
-                </p>
-                {activePeriod && (
-                  <p className={styles.statusCountdown}>
-                    {activePeriod.period_name} ({activePeriod.academic_year} · {activePeriod.semester})
-                  </p>
-                )}
-                {immersionStatus === 'upcoming' && daysUntil !== null && (
-                  <p className={styles.statusCountdown}>Starts in: {daysUntil} day{daysUntil !== 1 ? 's' : ''}</p>
-                )}
-                {immersionStatus === 'ongoing' && (
-                  <p className={styles.statusCountdown}>Immersion is currently active</p>
-                )}
+                <CircleCheck size={15} strokeWidth={2} aria-hidden="true" />
+                Turn off maintenance
               </>
             ) : (
-              <p className={styles.statusEmpty}>No immersion dates set. Configure the schedule below.</p>
+              <>
+                <Wrench size={15} strokeWidth={2} aria-hidden="true" />
+                Enable maintenance mode
+              </>
             )}
-            <button type="button" className={styles.editScheduleBtn} onClick={() => setActiveTab('periods')}>
-              Edit Schedule
-            </button>
-          </div>
+          </button>
+        </div>
+      </section>
 
-          <form onSubmit={handleSubmit} noValidate>
-            <div className={styles.card}>
-              <h3 className={styles.cardTitle}>Work Immersion Schedule</h3>
-              <div className={styles.grid}>
-                <div className={styles.field}>
-                  <label htmlFor="academic_year">Academic Year</label>
-                  <select id="academic_year" name="academic_year" value={form.academic_year || ''} onChange={handleChange}>
-                    <option value="">Select Academic Year</option>
-                    {ACADEMIC_YEAR_OPTIONS.map((y) => <option key={y} value={y}>{y}</option>)}
-                  </select>
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="semester">Semester</label>
-                  <select id="semester" name="semester" value={form.semester || ''} onChange={handleChange}>
-                    <option value="">Select Semester</option>
-                    {SEMESTER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="immersion_start_date">Immersion Start Date</label>
-                  <input
-                    id="immersion_start_date"
-                    name="immersion_start_date"
-                    type="date"
-                    value={form.immersion_start_date || ''}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="immersion_end_date">Immersion End Date</label>
-                  <input
-                    id="immersion_end_date"
-                    name="immersion_end_date"
-                    type="date"
-                    value={form.immersion_end_date || ''}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="required_hours">Required Immersion Hours</label>
-                  <input
-                    id="required_hours"
-                    name="required_hours"
-                    type="number"
-                    min="1"
-                    value={form.required_hours || 80}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="working_days">Working Days</label>
-                  <input
-                    id="working_days"
-                    name="working_days"
-                    value={form.working_days || ''}
-                    onChange={handleChange}
-                    placeholder="Mon,Tue,Wed,Thu,Fri"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className={styles.card}>
-              <h3 className={styles.cardTitle}>Automatic System Access</h3>
-              <p className={styles.cardDescription}>
-                Control when non-admin users can access immersion features based on the schedule.
-              </p>
-              <div className={styles.toggleGrid}>
-                <label className={styles.toggleItem}>
-                  <input
-                    type="checkbox"
-                    name="auto_activate"
-                    checked={form.auto_activate ?? true}
-                    onChange={handleChange}
-                  />
-                  <span className={styles.toggleLabel}>Automatically open system on start date</span>
-                </label>
-                <label className={styles.toggleItem}>
-                  <input
-                    type="checkbox"
-                    name="auto_deactivate"
-                    checked={form.auto_deactivate ?? true}
-                    onChange={handleChange}
-                  />
-                  <span className={styles.toggleLabel}>Automatically close system on end date</span>
-                </label>
-              </div>
-
-              <h4 className={styles.toggleSectionTitle}>Access during immersion</h4>
-              <div className={styles.toggleGrid}>
-                <label className={styles.toggleItem}>
-                  <input
-                    type="checkbox"
-                    name="access_student"
-                    checked={form.access_student ?? true}
-                    onChange={handleChange}
-                  />
-                  <span className={styles.toggleLabel}>Student</span>
-                </label>
-                <label className={styles.toggleItem}>
-                  <input
-                    type="checkbox"
-                    name="access_teacher"
-                    checked={form.access_teacher ?? true}
-                    onChange={handleChange}
-                  />
-                  <span className={styles.toggleLabel}>Teacher</span>
-                </label>
-                <label className={styles.toggleItem}>
-                  <input
-                    type="checkbox"
-                    name="access_coordinator"
-                    checked={form.access_coordinator ?? true}
-                    onChange={handleChange}
-                  />
-                  <span className={styles.toggleLabel}>Coordinator</span>
-                </label>
-                <label className={styles.toggleItem}>
-                  <input
-                    type="checkbox"
-                    name="access_supervisor"
-                    checked={form.access_supervisor ?? true}
-                    onChange={handleChange}
-                  />
-                  <span className={styles.toggleLabel}>Supervisor</span>
-                </label>
-              </div>
-              <p className={styles.accessNote}>Admin access: Always Enabled</p>
-            </div>
-
-            <div className={styles.actions}>
-              <button type="submit" className={styles.saveBtn} disabled={saving}>
-                {saving ? 'Saving…' : 'Save Changes'}
+      {maintenanceModal && (
+        <div
+          className={styles.modalOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="maintenance-modal-title"
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setMaintenanceModal(false); }}
+        >
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <h3 id="maintenance-modal-title">
+                {maintenance.enabled ? 'Turn off maintenance mode' : 'Enable maintenance mode'}
+              </h3>
+              <button
+                type="button"
+                className={styles.modalClose}
+                onClick={() => setMaintenanceModal(false)}
+                aria-label="Close"
+              >
+                <X size={16} strokeWidth={2} />
               </button>
             </div>
-          </form>
-        </div>
-      )}
+            <div className={styles.modalForm}>
+              {maintenance.enabled ? (
+                <p className={styles.maintIntro}>
+                  Everyone except admins will be able to use the system again as soon as you
+                  confirm.
+                </p>
+              ) : (
+                <>
+                  <p className={styles.maintIntro}>
+                    All student, teacher, supervisor and coordinator accounts will be signed out and
+                    blocked from signing in until you turn this off. Admin accounts are not affected.
+                  </p>
 
-      {activeTab === 'periods' && (
-        <div className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <div>
-              <h3 className={styles.sectionTitle}>Immersion Periods</h3>
-              <p className={styles.sectionSubtitle}>Manage different immersion periods for different batches</p>
-            </div>
-            <button type="button" className={styles.addBtn} onClick={() => openPeriodModal()}>
-              + Add Immersion Period
-            </button>
-          </div>
-
-          <div className={styles.periodsTable}>
-            <div className={styles.periodsHeader}>
-              <span>Period</span>
-              <span>Start Date</span>
-              <span>End Date</span>
-              <span>Status</span>
-              <span>Batches</span>
-              <span>Actions</span>
-            </div>
-            {periods.length > 0 ? (
-              periods.map((period) => {
-                const pStatus = computeStatus(period.start_date, period.end_date);
-                const pStatusInfo = statusConfig[pStatus];
-                return (
-                  <div key={period.id} className={styles.periodRow}>
-                    <div className={styles.periodName}>
-                      <strong>{period.period_name}</strong>
-                      <span className={styles.periodMeta}>{period.academic_year} - {period.semester}</span>
-                    </div>
-                    <span>{formatDate(period.start_date)}</span>
-                    <span>{formatDate(period.end_date)}</span>
-                    <span>
-                      <span className={styles.periodStatusBadge} style={{ background: pStatusInfo.color }}>
-                        {pStatusInfo.label}
-                      </span>
-                    </span>
-                    <span>{period.batch_count || 0}</span>
-                    <div className={styles.periodActions}>
-                      <button
-                        type="button"
-                        className={styles.periodEditBtn}
-                        onClick={() => openPeriodModal(period)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.periodArchiveBtn}
-                        onClick={() => openArchiveModal(period)}
-                        title="Snapshot this period and remove its live data. Snapshot is viewable in Archived Periods."
-                      >
-                        Archive
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.periodDeleteBtn}
-                        onClick={() => setDeletePeriodModal({ open: true, id: period.id, name: period.period_name })}
-                      >
-                        Delete
-                      </button>
-                    </div>
+                  <div className={styles.fieldFull}>
+                    <label htmlFor="maintenance_message">Reason shown to users</label>
+                    <textarea
+                      id="maintenance_message"
+                      rows={3}
+                      value={maintenanceForm.message}
+                      onChange={(e) => setMaintenanceForm((f) => ({ ...f, message: e.target.value }))}
+                      placeholder="e.g. Scheduled database upgrade. Please check back shortly."
+                    />
                   </div>
-                );
-              })
-            ) : (
-              <div className={styles.emptyPeriods}>
-                <p>No immersion periods created yet.</p>
-                <button type="button" className={styles.addBtn} onClick={() => openPeriodModal()}>
-                  + Add First Period
+
+                  <div className={styles.fieldFull}>
+                    <label htmlFor="maintenance_estimated_end">Expected back by (optional)</label>
+                    <input
+                      id="maintenance_estimated_end"
+                      type="datetime-local"
+                      value={maintenanceForm.estimatedEnd}
+                      onChange={(e) => setMaintenanceForm((f) => ({ ...f, estimatedEnd: e.target.value }))}
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className={styles.modalActions}>
+                <button
+                  type="button"
+                  className={styles.cancelBtn}
+                  onClick={() => setMaintenanceModal(false)}
+                  disabled={maintenanceSaving}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className={maintenance.enabled ? styles.maintStopBtn : styles.archiveConfirmBtn}
+                  onClick={toggleMaintenance}
+                  disabled={maintenanceSaving}
+                >
+                  {maintenanceSaving
+                    ? 'Saving…'
+                    : maintenance.enabled
+                      ? 'Turn off maintenance'
+                      : 'Enable maintenance mode'}
                 </button>
               </div>
-            )}
+            </div>
           </div>
-        </div>
-      )}
-
-      {activeTab === 'general' && (
-        <div className={styles.section}>
-          <form onSubmit={handleSubmit} noValidate>
-            <div className={styles.card}>
-              <h3 className={styles.cardTitle}>General Settings</h3>
-              <div className={styles.logoSection}>
-                <label className={styles.logoLabel}>System Logo</label>
-                <div className={styles.logoShell}>
-                  {preview ? (
-                    <img src={preview} alt="Logo preview" className={styles.logoPreview} />
-                  ) : (
-                    <div className={styles.logoSquare}>No logo</div>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleLogoChange}
-                    disabled={logoUploading}
-                  />
-                  {logoUploading ? <span className={styles.note}>Uploading…</span> : null}
-                </div>
-              </div>
-              <div className={styles.grid}>
-                <div className={styles.field}>
-                  <label htmlFor="system_name">System Name</label>
-                  <input id="system_name" name="system_name" value={form.system_name || ''} onChange={handleChange} />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="school_name">School Name</label>
-                  <input id="school_name" name="school_name" value={form.school_name || ''} onChange={handleChange} />
-                </div>
-                <div className={styles.fieldFull}>
-                  <label htmlFor="school_address">School Address</label>
-                  <textarea id="school_address" name="school_address" rows={2} value={form.school_address || ''} onChange={handleChange} />
-                </div>
-              </div>
-            </div>
-
-            <div className={styles.card}>
-              <h3 className={styles.cardTitle}>System Announcements</h3>
-              <div className={styles.fieldFull}>
-                <label htmlFor="announcements">Announcements</label>
-                <textarea
-                  id="announcements"
-                  name="announcements"
-                  rows={3}
-                  value={form.announcements || ''}
-                  onChange={handleChange}
-                  placeholder="Broadcast a system-wide announcement to users."
-                />
-              </div>
-            </div>
-
-            <div className={styles.actions}>
-              <button type="submit" className={styles.saveBtn} disabled={saving}>
-                {saving ? 'Saving…' : 'Save Changes'}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {activeTab === 'attendance' && (
-        <div className={styles.section}>
-          <form onSubmit={handleSubmit} noValidate>
-            <div className={styles.card}>
-              <h3 className={styles.cardTitle}>Attendance Settings</h3>
-              <div className={styles.grid}>
-                <div className={styles.field}>
-                  <label htmlFor="attendance_time_in">Time In (opens)</label>
-                  <input id="attendance_time_in" name="attendance_time_in" type="time" value={form.attendance_time_in || ''} onChange={handleChange} />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="attendance_time_out">Time Out (opens)</label>
-                  <input id="attendance_time_out" name="attendance_time_out" type="time" value={form.attendance_time_out || ''} onChange={handleChange} />
-                </div>
-              </div>
-            </div>
-            <div className={styles.actions}>
-              <button type="submit" className={styles.saveBtn} disabled={saving}>
-                {saving ? 'Saving…' : 'Save Changes'}
-              </button>
-            </div>
-          </form>
         </div>
       )}
 
@@ -658,7 +501,9 @@ export default function SettingsPage() {
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
               <h3>{periodEditing ? 'Edit Immersion Period' : 'Add Immersion Period'}</h3>
-              <button type="button" className={styles.modalClose} onClick={() => setPeriodModal(false)}>✕</button>
+              <button type="button" className={styles.modalClose} onClick={() => setPeriodModal(false)} aria-label="Close">
+                <X size={16} strokeWidth={2} />
+              </button>
             </div>
             <form onSubmit={handlePeriodSubmit} className={styles.modalForm}>
               <div className={styles.grid}>
@@ -762,7 +607,9 @@ export default function SettingsPage() {
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
               <h3>Archive Immersion Period</h3>
-              <button type="button" className={styles.modalClose} onClick={closeArchiveModal} disabled={archiving}>✕</button>
+              <button type="button" className={styles.modalClose} onClick={closeArchiveModal} disabled={archiving} aria-label="Close">
+                <X size={16} strokeWidth={2} />
+              </button>
             </div>
             <div className={styles.modalForm}>
               <p className={styles.archiveIntro}>

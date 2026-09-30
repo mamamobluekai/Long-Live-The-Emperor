@@ -60,6 +60,10 @@ const ERROR_RULES = [
 
 const DEFAULT_MESSAGE = 'Something went wrong. Please try again.';
 
+// Used when the server flags maintenance but sends no reason.
+export const MAINTENANCE_FALLBACK_MESSAGE =
+  'The system is temporarily unavailable while we perform scheduled maintenance. Please try again later.';
+
 /**
  * Convert a raw error string into a user-friendly message.
  * @param {string} rawMessage
@@ -87,11 +91,23 @@ export function getErrorMessage(rawMessage) {
 
 /**
  * Normalize an error API response body into a friendly, UI-ready shape.
- * @param {{error?: string, message?: string, msg?: string, errors?: any[]}} data
- * @returns {{message: string}}
+ * @param {{error?: string, message?: string, msg?: string, errors?: any[], maintenance?: boolean, startedAt?: string, estimatedEnd?: string}} data
+ * @returns {{message: string, maintenance?: boolean, startedAt?: string, estimatedEnd?: string}}
  */
 export function mapErrorResponse(data) {
   if (!data) return { message: DEFAULT_MESSAGE };
+
+  // The maintenance reason is written by an admin for end users, so surface it
+  // verbatim instead of running it through the generic rules. The dedicated
+  // maintenance screen takes priority over whatever the current page shows.
+  if (data.maintenance) {
+    return {
+      message: data.error || data.message || MAINTENANCE_FALLBACK_MESSAGE,
+      maintenance: true,
+      startedAt: data.startedAt,
+      estimatedEnd: data.estimatedEnd,
+    };
+  }
 
   const rawMessage = data.error || data.message || data.msg || '';
   return { message: getErrorMessage(rawMessage) };

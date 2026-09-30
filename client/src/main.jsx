@@ -8,6 +8,7 @@ import { AdminAuthProvider } from './context/AdminAuthContext';
 import { ToastProvider } from './components/admin/ToastContainer';
 import { ServerErrorProvider } from './components/common/ServerErrorModal';
 import { NotificationProvider } from './context/NotificationContext.jsx';
+import { MaintenanceProvider } from './context/MaintenanceContext.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -16,7 +17,10 @@ createRoot(document.getElementById('root')).render(
         <ToastProvider>
           <ServerErrorProvider>
             <NotificationProvider>
-              <App />
+              {/* Above App so the login routes and guards can both read the flag. */}
+              <MaintenanceProvider>
+                <App />
+              </MaintenanceProvider>
             </NotificationProvider>
           </ServerErrorProvider>
         </ToastProvider>

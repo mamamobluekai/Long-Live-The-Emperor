@@ -1,4 +1,5 @@
 import { mapErrorResponse } from '../utils/errors';
+import { reportMaintenance } from './maintenanceApi';
 
 async function fetchJsonOrThrow(url, options) {
   try {
@@ -6,6 +7,9 @@ async function fetchJsonOrThrow(url, options) {
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
+      // Surface maintenance to the app-wide listener before throwing, so the
+      // user is moved off a page they can no longer use.
+      if (data && data.maintenance) reportMaintenance(data);
       const { message } = mapErrorResponse(data);
       throw new Error(message);
     }
@@ -63,6 +67,10 @@ export async function createAdmin(admin) {
 
 export async function getAdminDashboard() {
   return fetchJsonOrThrow(`${API_BASE}/admin/dashboard`, { headers: authHeaders() });
+}
+
+export async function getAdminPeriodAnalytics() {
+  return fetchJsonOrThrow(`${API_BASE}/admin/dashboard/period-analytics`, { headers: authHeaders() });
 }
 
 export async function getAdminProfile() {
@@ -187,6 +195,42 @@ export function getAccessLogsExportUrl(format = 'csv', params = {}) {
   return `${API_BASE}/admin/logs?${qs.toString()}`;
 }
 
+export async function deleteAccessLog(id) {
+  return fetchJsonOrThrow(`${API_BASE}/admin/logs/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+}
+
+export async function deleteAccessLogs({ ids = [], dateFrom, dateTo } = {}) {
+  return fetchJsonOrThrow(`${API_BASE}/admin/logs/bulk`, {
+    method: 'DELETE',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ ids, dateFrom, dateTo }),
+  });
+}
+
+export async function deleteAllAccessLogs() {
+  return fetchJsonOrThrow(`${API_BASE}/admin/logs/all`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+}
+
+export async function deleteAdminNotification(id) {
+  return fetchJsonOrThrow(`${API_BASE}/admin/notifications/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+}
+
+export async function deleteAllAdminNotifications() {
+  return fetchJsonOrThrow(`${API_BASE}/admin/notifications`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+}
+
 export async function getAdminNotifications() {
   return fetchJsonOrThrow(`${API_BASE}/admin/notifications`, { headers: authHeaders() });
 }
@@ -219,6 +263,12 @@ export async function disapproveStaff(id) {
 
 export async function deleteUser(id) {
   return fetchJsonOrThrow(`${API_BASE}/admin/users/${id}`, { method: 'DELETE', headers: authHeaders() });
+}
+
+export function getUploadTemplateUrl(type = 'teachers') {
+  const token = localStorage.getItem('wim-token');
+  const qs = token ? `?token=${encodeURIComponent(token)}` : '';
+  return `${API_BASE}/admin/upload/template/${type}${qs}`;
 }
 
 export async function uploadTeachersExcel(file) {

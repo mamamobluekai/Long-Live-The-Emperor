@@ -2,6 +2,10 @@ const pool = require('../db');
 const { generateTemporaryPassword } = require('../utils/generatePassword');
 const { hashPassword } = require('../utils/hashPassword');
 
+// Shown when an admin enables maintenance mode without writing a reason.
+const DEFAULT_MAINTENANCE_MESSAGE =
+  'The system is temporarily unavailable while we perform scheduled maintenance. Please try again later.';
+
 async function ensureAdminTables() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS system_settings (
@@ -15,6 +19,10 @@ async function ensureAdminTables() {
       attendance_time_in TIME DEFAULT '08:00',
       attendance_time_out TIME DEFAULT '17:00',
       announcements TEXT,
+      maintenance_mode BOOLEAN NOT NULL DEFAULT false,
+      maintenance_message TEXT,
+      maintenance_started_at TIMESTAMP,
+      maintenance_estimated_end TIMESTAMP,
       updated_by INTEGER REFERENCES users(id),
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       CONSTRAINT one_settings_row CHECK (id = 1)
@@ -314,6 +322,171 @@ async function getDashboardStats() {
   };
 }
 
+// Attendance is counted as "present" when the student checked in or the record
+// was flipped to 'present' by an approved appeal (see migration 016).
+const PRESENT_FILTER = `
+  (sa.check_in_time IS NOT NULL OR sa.status = 'present')
+`;
+
+// A requirement submission counts as completed once the coordinator approved it.
+// The workflow drives off `status` (Pending / Under Review / Approved / Rejected
+// / Needs Revision), which is what RequirementsReview and the coordinator
+// overview display, and it is independent of the document-upload `progress`.
+const REQUIREMENT_DONE_FILTER = `
+  (LOWER(srs.status) = 'approved')
+`;
+
+// Aggregates headcount, batches, attendance and requirement completion for every
+// work immersion period, then rolls the same figures up per academic year so the
+// dashboard can graph "per period" and "per year" from one payload.
+//
+// Period attribution mirrors the fallback chain already used by
+// periodArchive.service.js, because `immersion_period_id` is NULL on every row
+// created before migration 015 introduced the column:
+//   1. the explicit users.immersion_period_id / teacher_batches.immersion_period_id
+//   2. batch membership - a teacher/supervisor/coordinator owns a batch, a student
+//      is placed in one
+//   3. last resort: the single active period, since the system runs one
+//      immersion at a time
+async function getPeriodAnalytics() {
+  const periodsQuery = `
+    WITH active_period AS (
+      SELECT id
+      FROM immersion_periods
+      WHERE is_active = true
+      ORDER BY start_date DESC
+      LIMIT 1
+    ),
+    batch_period AS (
+      SELECT tb.id,
+             COALESCE(tb.immersion_period_id, (SELECT id FROM active_period)) AS period_id
+      FROM teacher_batches tb
+    ),
+    user_period AS (
+      SELECT
+        u.id,
+        u.role,
+        COALESCE(
+          u.immersion_period_id,
+          (
+            SELECT bp.period_id
+            FROM batch_period bp
+            JOIN teacher_batches tb ON tb.id = bp.id
+            WHERE (u.role = 'teacher'     AND tb.teacher_id = t.id)
+               OR (u.role = 'supervisor'  AND tb.supervisor_id = sv.id)
+               OR (u.role = 'coordinator' AND tb.coordinator_id = c.id)
+            LIMIT 1
+          ),
+          (
+            SELECT bp.period_id
+            FROM teacher_batch_students tbs
+            JOIN batch_period bp ON bp.id = tbs.teacher_batch_id
+            WHERE u.role = 'student' AND tbs.student_id = s.id
+            LIMIT 1
+          ),
+          (SELECT id FROM active_period)
+        ) AS period_id
+      FROM users u
+      LEFT JOIN teachers t ON t.user_id = u.id
+      LEFT JOIN supervisors sv ON sv.user_id = u.id
+      LEFT JOIN coordinators c ON c.user_id = u.id
+      LEFT JOIN students s ON s.user_id = u.id
+    )
+    SELECT
+      ip.id,
+      ip.period_name,
+      ip.academic_year,
+      ip.semester,
+      ip.start_date,
+      ip.end_date,
+      ip.status,
+      COUNT(DISTINCT up.id) FILTER (WHERE up.role = 'student')     AS students,
+      COUNT(DISTINCT up.id) FILTER (WHERE up.role = 'teacher')     AS teachers,
+      COUNT(DISTINCT up.id) FILTER (WHERE up.role = 'supervisor')  AS supervisors,
+      COUNT(DISTINCT up.id) FILTER (WHERE up.role = 'coordinator') AS coordinators,
+      COUNT(DISTINCT bp.id) AS batches,
+      COUNT(DISTINCT sa.id) AS attendance_records,
+      COUNT(DISTINCT sa.id) FILTER (WHERE ${PRESENT_FILTER}) AS present_records,
+      COUNT(DISTINCT srs.id) AS requirement_submissions,
+      COUNT(DISTINCT srs.id) FILTER (WHERE ${REQUIREMENT_DONE_FILTER}) AS requirements_completed
+    FROM immersion_periods ip
+    LEFT JOIN user_period up ON up.period_id = ip.id
+    LEFT JOIN batch_period bp ON bp.period_id = ip.id
+    LEFT JOIN student_attendance sa ON sa.teacher_batch_id = bp.id
+    LEFT JOIN students s ON s.user_id = up.id AND up.role = 'student'
+    LEFT JOIN student_requirement_submissions srs ON srs.student_id = s.id
+    GROUP BY ip.id
+    ORDER BY ip.start_date ASC`;
+
+  const { rows } = await pool.query(periodsQuery);
+
+  const pct = (part, total) => (Number(total) > 0 ? Math.round((Number(part) / Number(total)) * 100) : 0);
+
+  const periods = rows.map((r) => ({
+    id: r.id,
+    periodName: r.period_name,
+    academicYear: r.academic_year,
+    semester: r.semester,
+    startDate: r.start_date,
+    endDate: r.end_date,
+    status: r.status,
+    students: Number(r.students) || 0,
+    teachers: Number(r.teachers) || 0,
+    supervisors: Number(r.supervisors) || 0,
+    coordinators: Number(r.coordinators) || 0,
+    batches: Number(r.batches) || 0,
+    attendanceRecords: Number(r.attendance_records) || 0,
+    presentRecords: Number(r.present_records) || 0,
+    attendanceRate: pct(r.present_records, r.attendance_records),
+    requirementSubmissions: Number(r.requirement_submissions) || 0,
+    requirementsCompleted: Number(r.requirements_completed) || 0,
+    completionRate: pct(r.requirements_completed, r.requirement_submissions),
+  }));
+
+
+  // Roll the periods up into academic years (e.g. "2026-2027") for the yearly view.
+  const yearMap = new Map();
+  periods.forEach((p) => {
+    const key = p.academicYear || 'Unassigned';
+    if (!yearMap.has(key)) {
+      yearMap.set(key, {
+        academicYear: key,
+        periods: 0,
+        students: 0,
+        teachers: 0,
+        supervisors: 0,
+        coordinators: 0,
+        batches: 0,
+        attendanceRecords: 0,
+        presentRecords: 0,
+        requirementSubmissions: 0,
+        requirementsCompleted: 0,
+      });
+    }
+    const bucket = yearMap.get(key);
+    bucket.periods += 1;
+    bucket.students += p.students;
+    bucket.teachers += p.teachers;
+    bucket.supervisors += p.supervisors;
+    bucket.coordinators += p.coordinators;
+    bucket.batches += p.batches;
+    bucket.attendanceRecords += p.attendanceRecords;
+    bucket.presentRecords += p.presentRecords;
+    bucket.requirementSubmissions += p.requirementSubmissions;
+    bucket.requirementsCompleted += p.requirementsCompleted;
+  });
+
+  const years = [...yearMap.values()]
+    .map((y) => ({
+      ...y,
+      attendanceRate: pct(y.presentRecords, y.attendanceRecords),
+      completionRate: pct(y.requirementsCompleted, y.requirementSubmissions),
+    }))
+    .sort((a, b) => a.academicYear.localeCompare(b.academicYear));
+
+  return { periods, years };
+}
+
 const USER_SELECT = `
   SELECT u.id, u.email, u.role, u.status, u.phone, u.created_at, u.updated_at,
          COALESCE(s.first_name, t.first_name, a.first_name, sup.first_name, c.first_name, '') AS first_name,
@@ -595,10 +768,34 @@ async function getSettings() {
             immersion_start_date, immersion_end_date, auto_activate, auto_deactivate,
             access_student, access_teacher, access_coordinator, access_supervisor,
             required_hours, working_days,
+            maintenance_mode, maintenance_message,
+            maintenance_started_at, maintenance_estimated_end,
             updated_by, updated_at
      FROM system_settings WHERE id = 1`
   );
   return result.rows[0] || null;
+}
+
+// Maintenance state for the unauthenticated gate. Fails open (enabled: false)
+// so a database hiccup never locks every user out of the system.
+async function getMaintenanceStatus() {
+  try {
+    const result = await pool.query(
+      `SELECT maintenance_mode, maintenance_message,
+              maintenance_started_at, maintenance_estimated_end
+       FROM system_settings WHERE id = 1`
+    );
+    const row = result.rows[0] || {};
+    return {
+      enabled: Boolean(row.maintenance_mode),
+      message: row.maintenance_message || DEFAULT_MAINTENANCE_MESSAGE,
+      startedAt: row.maintenance_started_at || null,
+      estimatedEnd: row.maintenance_estimated_end || null,
+    };
+  } catch (err) {
+    console.error('getMaintenanceStatus error:', err.message);
+    return { enabled: false, message: DEFAULT_MAINTENANCE_MESSAGE, startedAt: null, estimatedEnd: null };
+  }
 }
 
 async function updateSettings(payload, updatedBy) {
@@ -611,6 +808,7 @@ async function updateSettings(payload, updatedBy) {
     'immersion_start_date', 'immersion_end_date', 'auto_activate', 'auto_deactivate',
     'access_student', 'access_teacher', 'access_coordinator', 'access_supervisor',
     'required_hours', 'working_days',
+    'maintenance_mode', 'maintenance_message', 'maintenance_estimated_end', 'maintenance_started_at',
   ];
   for (const key of allowed) {
     if (payload[key] !== undefined) {
@@ -726,6 +924,45 @@ async function getLogsForExport({ action, role, status, module, search, dateFrom
   return logs;
 }
 
+async function deleteLog(id) {
+  const result = await pool.query('DELETE FROM audit_logs WHERE id = $1 RETURNING id', [id]);
+  return { deleted: result.rowCount || 0 };
+}
+
+async function deleteLogs({ ids = [], dateFrom, dateTo } = {}) {
+  if (Array.isArray(ids) && ids.length > 0) {
+    const result = await pool.query('DELETE FROM audit_logs WHERE id = ANY($1::int[])', [ids]);
+    return { deleted: result.rowCount || 0 };
+  }
+
+  const filters = [];
+  const values = [];
+  let i = 1;
+
+  if (dateFrom) {
+    filters.push(`created_at >= $${i}`);
+    values.push(dateFrom);
+    i += 1;
+  }
+
+  if (dateTo) {
+    filters.push(`created_at <= $${i}`);
+    values.push(`${dateTo} 23:59:59`);
+    i += 1;
+  }
+
+  if (filters.length > 0) {
+    const result = await pool.query(
+      `DELETE FROM audit_logs WHERE ${filters.join(' AND ')}`,
+      values,
+    );
+    return { deleted: result.rowCount || 0 };
+  }
+
+  const result = await pool.query('DELETE FROM audit_logs');
+  return { deleted: result.rowCount || 0 };
+}
+
 async function getNotifications(userId) {
   const result = await pool.query(
     `SELECT id, title, message, type, is_read, action_url, related_user_id, created_at
@@ -756,6 +993,19 @@ async function markNotificationsRead(userId) {
     [userId]
   );
   return { success: true };
+}
+
+async function deleteNotification(userId, notificationId) {
+  const result = await pool.query(
+    'DELETE FROM notifications WHERE id = $1 AND user_id = $2 RETURNING id',
+    [notificationId, userId]
+  );
+  return { deleted: result.rowCount || 0 };
+}
+
+async function deleteAllNotifications(userId) {
+  const result = await pool.query('DELETE FROM notifications WHERE user_id = $1', [userId]);
+  return { deleted: result.rowCount || 0 };
 }
 
 async function ensureCoordinatorRegistrationNotifications(adminId) {
@@ -881,6 +1131,7 @@ async function getReport(type) {
 module.exports = {
   ensureAdminTables,
   getDashboardStats,
+  getPeriodAnalytics,
   getUsers,
   getUserById,
   updateUser,
@@ -893,11 +1144,16 @@ module.exports = {
   rejectCoordinator,
   getSettings,
   updateSettings,
+  getMaintenanceStatus,
   getLogs,
   getLogsForExport,
+  deleteLog,
+  deleteLogs,
   getNotifications,
   createNotification,
   markNotificationsRead,
+  deleteNotification,
+  deleteAllNotifications,
   ensureCoordinatorRegistrationNotifications,
   getUnreadNotificationCount,
   getReport,
@@ -1056,6 +1312,7 @@ async function getImmersionAccess() {
 module.exports = {
   ensureAdminTables,
   getDashboardStats,
+  getPeriodAnalytics,
   getUsers,
   getUserById,
   updateUser,
@@ -1068,11 +1325,16 @@ module.exports = {
   rejectCoordinator,
   getSettings,
   updateSettings,
+  getMaintenanceStatus,
   getLogs,
   getLogsForExport,
+  deleteLog,
+  deleteLogs,
   getNotifications,
   createNotification,
   markNotificationsRead,
+  deleteNotification,
+  deleteAllNotifications,
   ensureCoordinatorRegistrationNotifications,
   getUnreadNotificationCount,
   getReport,

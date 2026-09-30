@@ -19,6 +19,7 @@ const evaluationRoutes = require('./routes/evaluation.routes');
 const documentationRoutes = require('./routes/documentationRoutes');
 const notificationRoutes = require('./routes/notification.routes');
 const appealRoutes = require('./routes/appeal.routes');
+const { maintenanceGuard, readMaintenance } = require('./middleware/maintenance');
 
 const app = express();
 
@@ -32,6 +33,16 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Unauthenticated so the login screen can read the flag and show the reason.
+app.get('/api/maintenance/status', async (req, res) => {
+  const status = await readMaintenance();
+  res.json({ maintenance: status });
+});
+
+// Runs before the routers so maintenance mode applies to every route. Admins
+// and unauthenticated callers pass through untouched.
+app.use(maintenanceGuard);
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);

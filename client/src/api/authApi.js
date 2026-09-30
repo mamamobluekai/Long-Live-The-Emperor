@@ -1,4 +1,5 @@
 import { mapErrorResponse } from '../utils/errors';
+import { reportMaintenance } from './maintenanceApi';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
@@ -8,6 +9,9 @@ async function fetchJsonOrThrow(url, options) {
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
+      // A 503 from login means maintenance mode, not bad credentials, so tell
+      // the app before the friendly-message mapping hides that distinction.
+      if (data && data.maintenance) reportMaintenance(data);
       const { message } = mapErrorResponse(data);
       throw new Error(message);
     }

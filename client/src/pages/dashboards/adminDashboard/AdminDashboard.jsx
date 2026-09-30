@@ -9,7 +9,6 @@ import Settings from './Settings';
 import AdminProfileSettings from './AdminProfileSettings';
 import Reports from './Reports';
 import AccessLogs from './AccessLogs';
-import Notifications from './Notifications';
 import UploadUsers from './UploadUsers';
 import ArchivedPeriods from './ArchivedPeriods';
 
@@ -28,7 +27,6 @@ function AdminDashboard({ user, onLogout }) {
         <Route path="profile" element={<AdminProfileSettings />} />
         <Route path="reports" element={<Reports />} />
         <Route path="access-logs" element={<AccessLogs />} />
-        <Route path="notifications" element={<Notifications />} />
         <Route path="upload-users" element={<UploadUsers />} />
         <Route path="archives" element={<ArchivedPeriods />} />
         <Route path="*" element={<Navigate to="/dashboard/admin/dashboard" replace />} />

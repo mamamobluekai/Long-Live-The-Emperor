@@ -1,8 +1,171 @@
 const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
+const xlsx = require('xlsx');
 const pool = require('../../db');
 const { parseSheetRows, EMAIL_REGEX } = require('../../utils/excelUpload');
+
+// Example workbooks so an admin always has the exact column layout the importer
+// expects, plus a "Read me" sheet describing every field.
+const TEMPLATE_SPECS = {
+  teachers: {
+    sheet: 'Teachers',
+    columns: [
+      'Employee ID',
+      'First Name',
+      'Last Name',
+      'Email',
+      'Phone Number',
+      'Department',
+      'Position',
+    ],
+    sample: [
+      'T-1001',
+      'Juan',
+      'Dela Cruz',
+      'juan.delacruz@wims.edu.ph',
+      '09171234567',
+      'Mathematics',
+      'Department Head',
+    ],
+    guide: [
+      ['Employee ID', 'Required', 'Unique ID used by the system', 'T-1001'],
+      ['First Name', 'Required', 'Given name', 'Juan'],
+      ['Last Name', 'Required', 'Family name', 'Dela Cruz'],
+      ['Email', 'Required', 'Must be unique and a valid email', 'juan.delacruz@wims.edu.ph'],
+      ['Phone Number', 'Optional', 'Contact number', '09171234567'],
+      ['Department', 'Required', 'Department or strand handled', 'Mathematics'],
+      ['Position', 'Required', 'Designation or job title', 'Department Head'],
+    ],
+    notes: [
+      'Keep the header row exactly as shown; extra columns are ignored.',
+      'Accepted header aliases: "Employee No", "Given Name", "Surname", "Designation", "Contact Number".',
+      'New accounts are created with a random temporary password and a "pending" status that you approve afterwards.',
+    ],
+  },
+  supervisors: {
+    sheet: 'Supervisors',
+    columns: [
+      'Employee ID',
+      'Company Name',
+      'First Name',
+      'Last Name',
+      'Position',
+      'Email',
+      'Phone Number',
+      'Department',
+    ],
+    sample: [
+      'S-2001',
+      'Ace Hardware Inc.',
+      'Maria',
+      'Santos',
+      'Site Supervisor',
+      'maria.santos@acehardware.ph',
+      '09181234567',
+      'Operations',
+    ],
+    guide: [
+      ['Employee ID', 'Required', 'Unique ID used by the system', 'S-2001'],
+      ['Company Name', 'Required', 'Host company or business name', 'Ace Hardware Inc.'],
+      ['First Name', 'Required', 'Given name', 'Maria'],
+      ['Last Name', 'Required', 'Family name', 'Santos'],
+      ['Position', 'Required', 'Designation or job title', 'Site Supervisor'],
+      ['Email', 'Required', 'Must be unique and a valid email', 'maria.santos@acehardware.ph'],
+      ['Phone Number', 'Optional', 'Contact number', '09181234567'],
+      ['Department', 'Optional', 'Department or division in the company', 'Operations'],
+    ],
+    notes: [
+      'Keep the header row exactly as shown; extra columns are ignored.',
+      'Accepted header aliases: "Company", "Host Company", "Business Name", "Job Title", "Designation".',
+      'New accounts are created with a random temporary password and a "pending" status that you approve afterwards.',
+    ],
+  },
+  coordinators: {
+    sheet: 'Coordinators',
+    columns: [
+      'Coordinator ID',
+      'First Name',
+      'Last Name',
+      'Email',
+      'Phone Number',
+      'Department',
+      'Position',
+    ],
+    sample: [
+      'C-3001',
+      'Ana',
+      'Reyes',
+      'ana.reyes@wims.edu.ph',
+      '09191234567',
+      'Senior High School',
+      'Work Immersion Coordinator',
+    ],
+    guide: [
+      ['Coordinator ID', 'Required', 'Unique ID used by the system (may be titled "Employee ID")', 'C-3001'],
+      ['First Name', 'Required', 'Given name', 'Ana'],
+      ['Last Name', 'Required', 'Family name', 'Reyes'],
+      ['Email', 'Required', 'Must be unique and a valid email', 'ana.reyes@wims.edu.ph'],
+      ['Phone Number', 'Optional', 'Contact number', '09191234567'],
+      ['Department', 'Required', 'Department or strand handled', 'Senior High School'],
+      ['Position', 'Required', 'Designation or job title', 'Work Immersion Coordinator'],
+    ],
+    notes: [
+      'Keep the header row exactly as shown; extra columns are ignored.',
+      'Accepted header aliases: "Employee ID", "Given Name", "Surname", "Designation", "Contact Number".',
+      'New accounts are created with a random temporary password and a "pending" status that you approve afterwards.',
+    ],
+  },
+};
+
+const downloadUploadTemplate = async (req, res) => {
+  const spec = TEMPLATE_SPECS[req.params.type];
+
+  if (!spec) {
+    return res.status(400).json({ error: 'Unknown upload template.' });
+  }
+
+  try {
+    const workbook = xlsx.utils.book_new();
+
+    const dataSheet = xlsx.utils.aoa_to_sheet([spec.columns, spec.sample]);
+    dataSheet['!cols'] = spec.columns.map((column) => ({
+      wch: Math.max(16, column.length + 4),
+    }));
+    xlsx.utils.book_append_sheet(workbook, dataSheet, spec.sheet);
+
+    const guideRows = [
+      ['Field', 'Requirement', 'Description', 'Example'],
+      ...spec.guide,
+      [],
+      ['Notes', '', '', ''],
+      ...spec.notes.map((note) => [note, '', '', '']),
+    ];
+    const guideSheet = xlsx.utils.aoa_to_sheet(guideRows);
+    guideSheet['!cols'] = [
+      { wch: 18 },
+      { wch: 14 },
+      { wch: 48 },
+      { wch: 32 },
+    ];
+    xlsx.utils.book_append_sheet(workbook, guideSheet, 'Read me');
+
+    const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${req.params.type}_upload_template.xlsx"`,
+    );
+    res.send(buffer);
+  } catch (err) {
+    console.error('Template download error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -328,4 +491,5 @@ module.exports = {
   uploadTeachersExcel,
   uploadSupervisorsExcel,
   uploadCoordinatorsExcel,
+  downloadUploadTemplate,
 };

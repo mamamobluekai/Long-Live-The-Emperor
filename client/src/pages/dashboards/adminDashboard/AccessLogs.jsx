@@ -1,57 +1,55 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getAccessLogs, getAccessLogsExportUrl } from '../../../api/adminApi';
-import DataTable from '../../../components/admin/DataTable';
-import LoadingSkeleton from '../../../components/admin/LoadingSkeleton';
-import Pagination from '../../../components/admin/Pagination';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  ScrollText,
+  Search,
+  X,
+  Filter,
+  Download,
+  ChevronRight,
+  AlertCircle,
+  CalendarDays,
+  Clock3,
+  Trash2,
+  Layers,
+  UsersRound,
+} from 'lucide-react';
+
+import {
+  getAccessLogs,
+  getAccessLogsExportUrl,
+  deleteAccessLog,
+  deleteAccessLogs,
+  deleteAllAccessLogs,
+} from '../../../api/adminApi';
 import { useToast } from '../../../components/admin/toastContext';
 import styles from './AccessLogs.module.css';
 
 const ACTION_OPTIONS = [
-  { value: '', label: 'All Actions' },
-  { value: 'login', label: 'Login' },
-  { value: 'logout', label: 'Logout' },
-  { value: 'failed_login', label: 'Failed Login' },
-  { value: 'password_reset', label: 'Password Reset' },
-  { value: 'password_change', label: 'Change Password' },
-  { value: 'create_user', label: 'Create User' },
-  { value: 'edit_user', label: 'Edit User' },
-  { value: 'delete_user', label: 'Delete User' },
-  { value: 'approve_account', label: 'Approve Account' },
-  { value: 'reject_account', label: 'Reject Account' },
-  { value: 'disable_account', label: 'Disable Account' },
-  { value: 'activate_account', label: 'Activate Account' },
-  { value: 'change_user_role', label: 'Change User Role' },
-  { value: 'backup_database', label: 'Backup Database' },
-  { value: 'restore_database', label: 'Restore Database' },
-  { value: 'export_reports', label: 'Export Reports' },
-  { value: 'update_system_settings', label: 'Update System Settings' },
-  { value: 'upload_student_excel', label: 'Upload Student Excel' },
-  { value: 'upload_teacher_excel', label: 'Upload Teacher Excel' },
-  { value: 'upload_supervisor_excel', label: 'Upload Supervisor Excel' },
-  { value: 'assign_teacher', label: 'Assign Teacher' },
-  { value: 'assign_supervisor', label: 'Assign Supervisor' },
-  { value: 'assign_company', label: 'Assign Company' },
-  { value: 'approve_student', label: 'Approve Student' },
-  { value: 'reject_student', label: 'Reject Student' },
-  { value: 'view_assigned_students', label: 'View Assigned Students' },
-  { value: 'monitor_attendance', label: 'Monitor Attendance' },
-  { value: 'verify_attendance', label: 'Verify Attendance' },
-  { value: 'approve_daily_logs', label: 'Approve Daily Logs' },
-  { value: 'reject_daily_logs', label: 'Reject Daily Logs' },
-  { value: 'submit_evaluation', label: 'Submit Evaluation' },
-  { value: 'evaluate_student', label: 'Evaluate Student' },
-  { value: 'view_student_progress', label: 'View Student Progress' },
-  { value: 'time_in', label: 'Time In' },
-  { value: 'time_out', label: 'Time Out' },
-  { value: 'submit_daily_log', label: 'Submit Daily Log' },
-  { value: 'upload_requirement', label: 'Upload Requirement' },
-  { value: 'update_profile', label: 'Update Profile' },
-  { value: 'profile_photo_update', label: 'Profile Photo Update' },
-  { value: 'report_view', label: 'Report View' },
-  { value: 'notifications_read', label: 'Notifications Read' },
-  { value: 'coordinator_approval', label: 'Coordinator Approval' },
-  { value: 'coordinator_rejection', label: 'Coordinator Rejection' },
+  'login',
+  'logout',
+  'failed_login',
+  'password_change',
+  'password_reset',
+  'create_user',
+  'edit_user',
+  'delete_user',
+  'approve_account',
+  'reject_account',
+  'disable_account',
+  'activate_account',
+  'change_user_role',
+  'backup_database',
+  'restore_database',
+  'update_system_settings',
+  'upload_requirement',
+  'update_profile',
+  'report_view',
+  'time_in',
+  'time_out',
+  'submit_daily_log',
+  'approve_daily_logs',
+  'verify_attendance',
+  'evaluate_student',
 ];
 
 const STATUS_OPTIONS = [
@@ -77,262 +75,708 @@ const EXPORT_FORMATS = [
   { value: 'pdf', label: 'PDF' },
 ];
 
-function statusBadgeClass(status) {
-  switch ((status || '').toLowerCase()) {
-    case 'success':
-      return styles.badgeSuccess;
+const DAY_LIMIT = 500;
+const ALL_LIMIT = 5000;
+
+const titleCase = (value) => {
+  if (!value) return '';
+  return String(value)
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+};
+
+const statusBadgeClass = (status) => {
+  switch (String(status || 'success').toLowerCase()) {
     case 'failed':
-      return styles.badgeFailed;
+      return styles.badgeRejected;
     case 'warning':
-      return styles.badgeWarning;
+      return styles.badgePending;
     case 'info':
-      return styles.badgeInfo;
+      return styles.badgeReview;
     default:
-      return styles.badgeDefault;
+      return styles.badgeApproved;
   }
-}
+};
+
+const getInitials = (log) => {
+  const name = `${log.first_name || ''} ${log.last_name || ''}`.trim();
+
+  if (!name) return 'SYS';
+
+  return name
+    .split(' ')
+    .map((part) => part.charAt(0))
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+};
+
+const getUserName = (log) => {
+  if (!log.user_id) return 'System';
+  const name = `${log.first_name || ''} ${log.last_name || ''}`.trim();
+  return name || log.email || `User #${log.user_id}`;
+};
+
+const formatTime = (value) => {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+  return date.toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+// Local calendar key (YYYY-MM-DD) so logs are grouped by the user's own day.
+const dayKey = (value) => {
+  if (!value) return 'unknown';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'unknown';
+
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+
+  return `${date.getFullYear()}-${month}-${day}`;
+};
+
+const dayLabel = (key) => {
+  if (key === 'unknown') return 'Unknown date';
+
+  const [year, month, day] = key.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  const isToday =
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate();
+
+  const isYesterday =
+    date.getFullYear() === yesterday.getFullYear() &&
+    date.getMonth() === yesterday.getMonth() &&
+    date.getDate() === yesterday.getDate();
+
+  const formatted = date.toLocaleDateString(undefined, {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+  if (isToday) return `Today - ${formatted}`;
+  if (isYesterday) return `Yesterday - ${formatted}`;
+  return formatted;
+};
 
 export default function AccessLogs() {
-  const navigate = useNavigate();
   const { showToast } = useToast();
+
   const [logs, setLogs] = useState([]);
-  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 });
-  const [loading, setLoading] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [truncated, setTruncated] = useState(false);
+
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [searchInput, setSearchInput] = useState('');
-  const [filters, setFilters] = useState({
-    action: '',
-    status: '',
-    role: '',
-    dateFrom: '',
-    dateTo: '',
-  });
+
   const [exportFormat, setExportFormat] = useState('csv');
 
-  const loadLogs = useCallback(async (page = 1) => {
+  const [activeDay, setActiveDay] = useState(null);
+  const [dayLogs, setDayLogs] = useState([]);
+  const [dayLoading, setDayLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [confirm, setConfirm] = useState(null);
+
+  // Filters for the day that is open in the modal.
+  const [daySearch, setDaySearch] = useState('');
+  const [dayAction, setDayAction] = useState('');
+  const [dayStatus, setDayStatus] = useState('');
+  const [dayRole, setDayRole] = useState('');
+
+  // Every day is listed at once, so the whole log set is loaded in one request
+  // instead of being split across pages.
+  const loadLogs = useCallback(async () => {
     setLoading(true);
     setError('');
+
     try {
-      const params = {
-        page,
-        limit: pagination.limit,
-        ...(filters.action ? { action: filters.action } : {}),
-        ...(filters.status ? { status: filters.status } : {}),
-        ...(filters.role ? { role: filters.role } : {}),
-        ...(filters.dateFrom ? { dateFrom: filters.dateFrom } : {}),
-        ...(filters.dateTo ? { dateTo: filters.dateTo } : {}),
-        ...(searchInput ? { search: searchInput } : {}),
-      };
-      const data = await getAccessLogs(params);
+      const data = await getAccessLogs({ page: 1, limit: ALL_LIMIT });
+
       setLogs(data.logs || []);
-      setPagination((p) => ({
-        page: Number(data.pagination?.page) || page,
-        limit: Number(data.pagination?.limit) || p.limit,
-        total: Number(data.pagination?.total) || 0,
-      }));
+      setTotal(Number(data.pagination?.total) || 0);
+      setTruncated(
+        (Number(data.pagination?.total) || 0) > (data.logs?.length || 0),
+      );
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Unable to load access logs.');
+      setLogs([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
-  }, [filters, searchInput, pagination.limit]);
-
-  useEffect(() => {
-    loadLogs(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const applyFilters = () => {
-    loadLogs(1);
+  useEffect(() => {
+    loadLogs();
+  }, [loadLogs]);
+
+  // Group the current result set by calendar day.
+  const groups = useMemo(() => {
+    const map = new Map();
+
+    for (const log of logs) {
+      const key = dayKey(log.created_at);
+
+      if (!map.has(key)) {
+        map.set(key, { key, logs: [], users: new Set() });
+      }
+
+      const group = map.get(key);
+      group.logs.push(log);
+      group.users.add(log.user_id ?? 'system');
+    }
+
+    return Array.from(map.values()).map((group) => ({
+      key: group.key,
+      logs: group.logs,
+      count: group.logs.length,
+      userCount: group.users.size,
+      latest: group.logs[0]?.created_at,
+      earliest: group.logs[group.logs.length - 1]?.created_at,
+      failedCount: group.logs.filter(
+        (log) => String(log.status || '').toLowerCase() === 'failed',
+      ).length,
+    }));
+  }, [logs]);
+
+  // Filters live in the day modal and apply to the loaded day client-side.
+  const dayView = useMemo(() => {
+    const term = daySearch.trim().toLowerCase();
+
+    return dayLogs.filter((log) => {
+      if (dayStatus && String(log.status || '').toLowerCase() !== dayStatus) {
+        return false;
+      }
+
+      if (dayRole && String(log.role || '').toLowerCase() !== dayRole) {
+        return false;
+      }
+
+      if (
+        dayAction &&
+        !String(log.action || '').toLowerCase().includes(dayAction)
+      ) {
+        return false;
+      }
+
+      if (!term) return true;
+
+      return [
+        log.action,
+        log.details,
+        log.module,
+        log.email,
+        log.ip_address,
+        log.device,
+        log.first_name,
+        log.last_name,
+      ]
+        .filter(Boolean)
+        .some((field) => String(field).toLowerCase().includes(term));
+    });
+  }, [dayLogs, dayAction, dayStatus, dayRole, daySearch]);
+
+  const dayFilterCount =
+    [dayAction, dayStatus, dayRole].filter(Boolean).length +
+    (daySearch.trim() ? 1 : 0);
+
+  const handleClearDayFilters = () => {
+    setDaySearch('');
+    setDayAction('');
+    setDayStatus('');
+    setDayRole('');
   };
 
-  const resetFilters = () => {
-    setSearchInput('');
-    setFilters({ action: '', status: '', role: '', dateFrom: '', dateTo: '' });
-    setPagination((p) => ({ ...p, page: 1 }));
+  const openDay = async (key) => {
+    if (key === 'unknown') return;
+
+    setActiveDay(key);
+    setDayLogs([]);
+    setDayLoading(true);
+    setConfirm(null);
+    handleClearDayFilters();
+
+    try {
+      const data = await getAccessLogs({
+        dateFrom: key,
+        dateTo: key,
+        limit: DAY_LIMIT,
+      });
+
+      setDayLogs(data.logs || []);
+    } catch (err) {
+      showToast(err.message || 'Unable to load logs for that day.', 'error');
+    } finally {
+      setDayLoading(false);
+    }
+  };
+
+  const closeDay = () => {
+    setActiveDay(null);
+    setDayLogs([]);
+    setConfirm(null);
+    handleClearDayFilters();
+  };
+
+  const handleDeleteLog = async (log) => {
+    setDeletingId(log.id);
+
+    try {
+      await deleteAccessLog(log.id);
+
+      setDayLogs((prev) => prev.filter((item) => item.id !== log.id));
+      setLogs((prev) => prev.filter((item) => item.id !== log.id));
+      setTotal((prev) => Math.max(0, prev - 1));
+
+      showToast('Access log deleted.', 'success');
+    } catch (err) {
+      showToast(err.message || 'Failed to delete the log.', 'error');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleDeleteDay = async () => {
+    if (!activeDay) return;
+
+    setDayLoading(true);
+
+    try {
+      const data = await deleteAccessLogs({
+        dateFrom: activeDay,
+        dateTo: activeDay,
+      });
+
+      setDayLogs([]);
+      setConfirm(null);
+      showToast(data.message || 'Logs for that day were deleted.', 'success');
+      await loadLogs();
+    } catch (err) {
+      showToast(err.message || 'Failed to delete the logs.', 'error');
+    } finally {
+      setDayLoading(false);
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    setDayLoading(true);
+
+    try {
+      const data = await deleteAllAccessLogs();
+
+      setDayLogs([]);
+      setConfirm(null);
+      showToast(data.message || 'All access logs were deleted.', 'success');
+      await loadLogs();
+    } catch (err) {
+      showToast(err.message || 'Failed to clear the logs.', 'error');
+    } finally {
+      setDayLoading(false);
+    }
   };
 
   const handleExport = () => {
-    const params = {
-      ...(filters.action ? { action: filters.action } : {}),
-      ...(filters.status ? { status: filters.status } : {}),
-      ...(filters.role ? { role: filters.role } : {}),
-      ...(filters.dateFrom ? { dateFrom: filters.dateFrom } : {}),
-      ...(filters.dateTo ? { dateTo: filters.dateTo } : {}),
-      ...(searchInput ? { search: searchInput } : {}),
-    };
-    const url = getAccessLogsExportUrl(exportFormat, params);
-    window.open(url, '_blank');
-    showToast(`Exporting ${exportFormat.toUpperCase()}...`, 'success');
+    if (activeDay && dayView.length > 0) {
+      window.open(
+        getAccessLogsExportUrl(exportFormat, {
+          dateFrom: activeDay,
+          dateTo: activeDay,
+        }),
+        '_blank',
+      );
+      return;
+    }
+
+    if (total === 0) {
+      showToast('There are no records to export.', 'error');
+      return;
+    }
+
+    window.open(getAccessLogsExportUrl(exportFormat, {}), '_blank');
   };
 
-  const columns = [
-    { key: 'id', header: 'Log ID', width: '80px' },
-    {
-      key: 'user',
-      header: 'User',
-      render: (_, row) => {
-        if (!row.user_id) return 'System';
-        const name = `${row.first_name || ''} ${row.last_name || ''}`.trim();
-        return name || row.email || `User #${row.user_id}`;
-      },
-    },
-    { key: 'role', header: 'Role', render: (v) => (v ? v.charAt(0).toUpperCase() + v.slice(1) : 'System') },
-    {
-      key: 'action',
-      header: 'Action',
-      render: (v) => <span className={styles.actionBadge}>{v}</span>,
-    },
-    { key: 'module', header: 'Module', render: (v) => v || '-' },
-    { key: 'details', header: 'Description', render: (v) => v || '-' },
-    { key: 'ip_address', header: 'IP Address', render: (v) => v || '-' },
-    { key: 'device', header: 'Device', render: (v) => v || '-' },
-    {
-      key: 'created_at',
-      header: 'Timestamp',
-      render: (v) => (v ? new Date(v).toLocaleString() : '-'),
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      render: (v) => (
-        <span className={`${styles.statusBadge} ${statusBadgeClass(v)}`}>
-          {v ? v.charAt(0).toUpperCase() + v.slice(1) : 'Success'}
-        </span>
-      ),
-    },
-  ];
-
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <div className={styles.headerText}>
-          <h1 className={styles.title}>Access Logs</h1>
-          <p className={styles.subtitle}>Monitor all user activities and security events across the Work Immersion Monitoring System.</p>
+    <div className={styles.page}>
+      <div className={styles.pageHeader}>
+        <div>
+          <span className={styles.eyebrow}>Security &amp; Audit</span>
+
+          <h1>Access Logs</h1>
+
+          <p>
+            Activity is grouped by day. Open a date to review every event
+            recorded for it and remove entries you no longer need.
+          </p>
         </div>
-        <button type="button" className={styles.backBtn} onClick={() => navigate('/dashboard/admin/dashboard')}>
-          ← Back to Dashboard
-        </button>
+
+        <div className={styles.headerIcon}>
+          <ScrollText size={24} />
+        </div>
       </div>
+
+      {error && (
+        <div className={styles.errorAlert}>
+          <AlertCircle size={18} />
+          <span>{error}</span>
+        </div>
+      )}
 
       <div className={styles.card}>
-        <div className={styles.filterGrid}>
-          <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Date From</label>
-            <input
-              type="date"
-              value={filters.dateFrom}
-              onChange={(e) => setFilters((f) => ({ ...f, dateFrom: e.target.value }))}
-              className={styles.filterInput}
-            />
-          </div>
-          <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Date To</label>
-            <input
-              type="date"
-              value={filters.dateTo}
-              onChange={(e) => setFilters((f) => ({ ...f, dateTo: e.target.value }))}
-              className={styles.filterInput}
-            />
-          </div>
-          <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Action</label>
-            <select
-              value={filters.action}
-              onChange={(e) => setFilters((f) => ({ ...f, action: e.target.value }))}
-              className={styles.filterSelect}
-            >
-              {ACTION_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </div>
-          <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Status</label>
-            <select
-              value={filters.status}
-              onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))}
-              className={styles.filterSelect}
-            >
-              {STATUS_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </div>
-          <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Role</label>
-            <select
-              value={filters.role}
-              onChange={(e) => setFilters((f) => ({ ...f, role: e.target.value }))}
-              className={styles.filterSelect}
-            >
-              {ROLE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </div>
-          <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Search User</label>
-            <input
-              type="search"
-              placeholder="Name, email, action..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
-              className={styles.filterInput}
-            />
-          </div>
-        </div>
+        <div className={styles.metaBar}>
+          <span className={styles.summaryText}>
+            <Layers size={15} />
+            {groups.length} day{groups.length === 1 ? '' : 's'} •{' '}
+            {total.toLocaleString()} record{total === 1 ? '' : 's'}
+            {truncated ? ' (latest 5,000 loaded)' : ''}
+          </span>
 
-        <div className={styles.actionBar}>
-          <div className={styles.filterActions}>
-            <button type="button" className={styles.filterBtn} onClick={applyFilters} disabled={loading}>
-              {loading ? 'Loading…' : 'Filter Logs'}
-            </button>
-            <button type="button" className={styles.resetBtn} onClick={resetFilters}>
-              Reset Filters
-            </button>
-          </div>
           <div className={styles.exportGroup}>
             <select
+              className={styles.exportSelect}
               value={exportFormat}
               onChange={(e) => setExportFormat(e.target.value)}
-              className={styles.exportSelect}
+              aria-label="Export format"
             >
-              {EXPORT_FORMATS.map((f) => (
-                <option key={f.value} value={f.value}>{f.label}</option>
+              {EXPORT_FORMATS.map((format) => (
+                <option key={format.value} value={format.value}>
+                  {format.label}
+                </option>
               ))}
             </select>
-            <button type="button" className={styles.exportBtn} onClick={handleExport}>
-              Export Logs
+
+            <button
+              type="button"
+              className={styles.exportBtn}
+              onClick={handleExport}
+              disabled={loading || total === 0}
+            >
+              <Download size={16} />
+              Export
             </button>
           </div>
         </div>
+
+        {loading ? (
+          <div className={styles.loading}>
+            <div className={styles.spinner} />
+            <span>Loading access logs...</span>
+          </div>
+        ) : groups.length === 0 ? (
+          <div className={styles.empty}>
+            <ScrollText size={40} />
+            <h3>No access logs found</h3>
+            <p>Activity logs will appear here once users start using the system.</p>
+          </div>
+        ) : (
+          <div className={styles.groupList}>
+            {groups.map((group) => (
+              <button
+                type="button"
+                key={group.key}
+                className={styles.groupRow}
+                onClick={() => openDay(group.key)}
+              >
+                <div className={styles.groupIcon}>
+                  <CalendarDays size={20} />
+                </div>
+
+                <div className={styles.groupMain}>
+                  <strong>{dayLabel(group.key)}</strong>
+
+                  <span className={styles.groupMeta}>
+                    <span className={styles.groupMetaItem}>
+                      <Layers size={13} />
+                      {group.count} event{group.count === 1 ? '' : 's'}
+                    </span>
+
+                    <span className={styles.groupMetaItem}>
+                      <UsersRound size={13} />
+                      {group.userCount} actor{group.userCount === 1 ? '' : 's'}
+                    </span>
+
+                    <span className={styles.groupMetaItem}>
+                      <Clock3 size={13} />
+                      {formatTime(group.earliest)} - {formatTime(group.latest)}
+                    </span>
+
+                    {group.failedCount > 0 && (
+                      <span className={styles.groupAlert}>
+                        {group.failedCount} failed
+                      </span>
+                    )}
+                  </span>
+                </div>
+
+                <div className={styles.groupPreview}>
+                  {group.logs.slice(0, 3).map((log) => (
+                    <span key={log.id} className={styles.previewBadge}>
+                      {titleCase(log.action)}
+                    </span>
+                  ))}
+
+                  {group.logs.length > 3 && (
+                    <span className={styles.previewMore}>
+                      +{group.logs.length - 3} more
+                    </span>
+                  )}
+                </div>
+
+                <span className={styles.viewButton}>
+                  View logs
+                  <ChevronRight size={15} />
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {error ? <p className={styles.error}>{error}</p> : null}
+      {activeDay && (
+        <div className={styles.overlay} onClick={closeDay}>
+          <div
+            className={styles.detailPanel}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.panelHeader}>
+              <div className={styles.panelIdentity}>
+                <div className={styles.largeAvatar}>
+                  <CalendarDays size={20} />
+                </div>
 
-      {loading ? (
-        <LoadingSkeleton rows={8} />
-      ) : (
-        <>
-          <div className={styles.tableCard}>
-            <DataTable
-              columns={columns}
-              data={logs}
-              emptyMessage="No access logs found."
-            />
+                <div>
+                  <h2>{dayLabel(activeDay)}</h2>
+                  <p>
+                    {dayView.length} of {dayLogs.length} event
+                    {dayLogs.length === 1 ? '' : 's'} shown
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className={styles.closeButton}
+                onClick={closeDay}
+                aria-label="Close day details"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className={styles.panelToolbar}>
+              <div className={styles.searchBox}>
+                <Search size={18} />
+
+                <input
+                  placeholder="Search name, email, action or details..."
+                  value={daySearch}
+                  onChange={(e) => setDaySearch(e.target.value)}
+                />
+
+                {daySearch && (
+                  <button
+                    type="button"
+                    className={styles.searchClear}
+                    onClick={() => setDaySearch('')}
+                    aria-label="Clear search"
+                  >
+                    <X size={15} />
+                  </button>
+                )}
+              </div>
+
+              <select
+                className={styles.filter}
+                value={dayAction}
+                onChange={(e) => setDayAction(e.target.value)}
+                aria-label="Filter by action"
+              >
+                <option value="">All Actions</option>
+                {ACTION_OPTIONS.map((action) => (
+                  <option key={action} value={action}>
+                    {titleCase(action)}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                className={styles.filter}
+                value={dayStatus}
+                onChange={(e) => setDayStatus(e.target.value)}
+                aria-label="Filter by status"
+              >
+                {STATUS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                className={styles.filter}
+                value={dayRole}
+                onChange={(e) => setDayRole(e.target.value)}
+                aria-label="Filter by role"
+              >
+                {ROLE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                type="button"
+                className={`${styles.filterToggle} ${dayFilterCount ? styles.filterToggleActive : ''}`}
+                onClick={handleClearDayFilters}
+                disabled={dayFilterCount === 0}
+              >
+                <Filter size={16} />
+                Clear
+                {dayFilterCount > 0 && (
+                  <span className={styles.filterCount}>{dayFilterCount}</span>
+                )}
+              </button>
+            </div>
+
+            <div className={styles.panelActions}>
+              <button
+                type="button"
+                className={styles.dangerGhostBtn}
+                onClick={() => setConfirm('day')}
+                disabled={dayLogs.length === 0}
+              >
+                <Trash2 size={16} />
+                Delete this day
+              </button>
+
+              <button
+                type="button"
+                className={styles.dangerBtn}
+                onClick={() => setConfirm('all')}
+              >
+                <Trash2 size={16} />
+                Delete all logs
+              </button>
+            </div>
+
+            {dayLoading ? (
+              <div className={styles.loadingPanel}>
+                <div className={styles.spinner} />
+                <span>Loading logs for this day...</span>
+              </div>
+            ) : dayView.length === 0 ? (
+              <div className={styles.empty}>
+                <ScrollText size={34} />
+                <h3>No matching events</h3>
+                <p>
+                  {dayLogs.length === 0
+                    ? 'Everything recorded for this date has been removed.'
+                    : 'No events on this day match your search or filters.'}
+                </p>
+              </div>
+            ) : (
+              <div className={styles.panelBody}>
+                {dayView.map((log) => (
+                  <div className={styles.logItem} key={log.id}>
+                    <div className={styles.logTime}>
+                      {formatTime(log.created_at)}
+                    </div>
+
+                    <div className={styles.logUser}>
+                      <div className={styles.logAvatar}>
+                        {getInitials(log)}
+                      </div>
+
+                      <div className={styles.logUserText}>
+                        <strong>{getUserName(log)}</strong>
+                        <span>
+                          {log.role ? titleCase(log.role) : 'System'}
+                          {log.email ? ` • ${log.email}` : ''}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={styles.logMain}>
+                      <span className={styles.actionBadge}>
+                        {titleCase(log.action)}
+                      </span>
+
+                      <span className={styles.logDetails}>
+                        {log.details || 'No description'}
+                      </span>
+
+                      <span className={styles.logMeta}>
+                        {log.module ? `${log.module} • ` : ''}
+                        {log.ip_address || 'No IP'}
+                        {log.device ? ` • ${log.device}` : ''}
+                      </span>
+                    </div>
+
+                    <span
+                      className={`${styles.badge} ${statusBadgeClass(log.status)}`}
+                    >
+                      {titleCase(log.status) || 'Success'}
+                    </span>
+
+                    <button
+                      type="button"
+                      className={styles.deleteIconBtn}
+                      onClick={() => handleDeleteLog(log)}
+                      disabled={deletingId === log.id}
+                      aria-label={`Delete log ${log.id}`}
+                      title="Delete this log"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {confirm && (
+              <div className={styles.confirmBar}>
+                <AlertCircle size={18} />
+
+                <span>
+                  {confirm === 'all'
+                    ? 'Delete every access log in the system? This cannot be undone.'
+                    : `Delete all ${dayLogs.length} event${dayLogs.length === 1 ? '' : 's'} recorded on this day?`}
+                </span>
+
+                <div className={styles.confirmActions}>
+                  <button
+                    type="button"
+                    className={styles.confirmCancel}
+                    onClick={() => setConfirm(null)}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    className={styles.confirmDelete}
+                    onClick={
+                      confirm === 'all' ? handleDeleteAll : handleDeleteDay
+                    }
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-          <Pagination
-            current={pagination.page}
-            total={pagination.total}
-            limit={pagination.limit}
-            onPageChange={(page) => {
-              setPagination((p) => ({ ...p, page }));
-              loadLogs(page);
-            }}
-          />
-        </>
+        </div>
       )}
     </div>
   );
