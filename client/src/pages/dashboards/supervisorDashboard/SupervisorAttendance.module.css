@@ -7,9 +7,202 @@
    Modern Maroon Dashboard Theme
 ========================================================= */
 
+/* Design system: Lexend + the RequirementsReview maroon palette. */
+.page {
+  font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #26313f;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =========================================================
+   DAY PICKER + ATTENDANCE LIST
+   ========================================================= */
+
+.dayCard {
+  border: 1px solid #e2c9cf;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fffdfd 0%, #ffffff 40%);
+  box-shadow: 0 10px 26px -22px rgba(80, 20, 32, 0.5);
+  overflow: hidden;
+}
+
+.dayToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 16px 20px;
+  border-bottom: 1px solid #ecdfe2;
+  background: #fffafb;
+}
+
+.dayPicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.dayPicker label {
+  color: #8b1e2d;
+  font-size: 0.68rem;
+  font-weight: 780;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.daySelect {
+  min-width: 210px;
+  height: 40px;
+  padding: 0 12px;
+
+  border: 1px solid #e2c9cf;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  color: #172033;
+
+  font-family: inherit;
+  font-size: 0.83rem;
+  font-weight: 650;
+
+  outline: none;
+  cursor: pointer;
+
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.daySelect:focus {
+  border-color: #8b1e2d;
+  box-shadow: 0 0 0 3px rgba(109, 30, 48, 0.1);
+}
+
+.dayStats {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.dayStats span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 27px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.dayStatGood {
+  color: #15803d;
+  background: #eaf8ef;
+  border: 1px solid #bfe6cc;
+}
+
+.dayStatBad {
+  color: #b4233b;
+  background: #fde3e8;
+  border: 1px solid #f0b7c2;
+}
+
+.dayStatMuted {
+  color: #758195;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+
+.dayStatTotal {
+  color: #596579;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+
+.dayList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 6px 0;
+  list-style: none;
+}
+
+.dayListItem {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 20px;
+  border-bottom: 1px solid #f5e3e7;
+  transition: background 0.15s ease;
+}
+
+.dayListItem:last-child {
+  border-bottom: none;
+}
+
+.dayListItem:hover {
+  background: #fdf3f5;
+}
+
+.dayListAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: linear-gradient(140deg, #8b1e2d, #b8394f);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 780;
+  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.7);
+}
+
+.dayListName {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.dayListName strong {
+  color: #172033;
+  font-size: 0.86rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dayListName span {
+  color: #8490a1;
+  font-size: 0.72rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dayListStatus {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+
 /* =========================================================
    PAGE HEADER
-========================================================= */
+   ========================================================= */
 
 .pageHeader {
   position: relative;
@@ -20,9 +213,9 @@
   background:
     linear-gradient(
       135deg,
-      #581725 0%,
-      #6d1e30 55%,
-      #822d3e 100%
+      #8b1e2d 0%,
+      #8b1e2d 55%,
+      #b8394f 100%
     );
   color: #ffffff;
   box-shadow:
@@ -91,10 +284,10 @@
   align-items: flex-start;
   min-height: 78px;
   padding: 15px 17px;
-  border: 1px solid #817077;
+  border: 1px solid #596579;
   border-radius: 14px;
   background: #ffffff;
-  color: #3a292e;
+  color: #26313f;
   text-align: left;
   cursor: pointer;
   box-shadow:
@@ -108,13 +301,13 @@
 
 .batchTab:hover {
   transform: translateY(-1px);
-  border-color: #6d4a54;
+  border-color: #596579;
   box-shadow:
     0 7px 18px rgba(88, 23, 37, 0.08);
 }
 
 .batchTabActive {
-  border-color: #6d1e30;
+  border-color: #8b1e2d;
   background:
     linear-gradient(
       135deg,
@@ -136,21 +329,21 @@
   background:
     linear-gradient(
       180deg,
-      #581725,
-      #822d3e
+      #8b1e2d,
+      #b8394f
     );
 }
 
 .batchTabLabel {
   margin-bottom: 5px;
-  color: #581725;
+  color: #8b1e2d;
   font-size: 0.91rem;
   font-weight: 750;
   line-height: 1.3;
 }
 
 .batchTabMeta {
-  color: #89787d;
+  color: #758195;
   font-size: 0.75rem;
   line-height: 1.4;
 }
@@ -165,7 +358,7 @@
   gap: 12px;
   margin-bottom: 20px;
   padding: 17px;
-  border: 1px solid #817077;
+  border: 1px solid #596579;
   border-radius: 15px;
   background: #ffffff;
   box-shadow:
@@ -177,7 +370,7 @@
   flex-direction: column;
   gap: 7px;
   min-width: 170px;
-  color: #624b52;
+  color: #26313f;
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -186,10 +379,10 @@
   width: 100%;
   height: 42px;
   padding: 0 12px;
-  border: 1px solid #76646a;
+  border: 1px solid #596579;
   border-radius: 9px;
   background: #fff;
-  color: #34262a;
+  color: #26313f;
   font-family: inherit;
   font-size: 0.84rem;
   outline: none;
@@ -199,11 +392,11 @@
 }
 
 .input:hover {
-  border-color: #5f454e;
+  border-color: #26313f;
 }
 
 .input:focus {
-  border-color: #6d1e30;
+  border-color: #8b1e2d;
   box-shadow:
     0 0 0 3px rgba(109, 30, 48, 0.10);
 }
@@ -220,9 +413,9 @@
   background:
     linear-gradient(
       135deg,
-      #581725 0%,
-      #6d1e30 55%,
-      #822d3e 100%
+      #8b1e2d 0%,
+      #8b1e2d 55%,
+      #b8394f 100%
     );
   color: #ffffff;
   font-family: inherit;
@@ -260,10 +453,10 @@
 .btnSecondary {
   height: 42px;
   padding: 0 17px;
-  border: 1px solid #756068;
+  border: 1px solid #596579;
   border-radius: 9px;
   background: #ffffff;
-  color: #6d1e30;
+  color: #8b1e2d;
   font-family: inherit;
   font-size: 0.82rem;
   font-weight: 700;
@@ -275,8 +468,8 @@
 }
 
 .btnSecondary:hover:not(:disabled) {
-  border-color: #6d1e30;
-  background: #fbf4f6;
+  border-color: #8b1e2d;
+  background: #fdf3f5;
   transform: translateY(-1px);
 }
 
@@ -285,219 +478,8 @@
   cursor: not-allowed;
 }
 
-/* =========================================================
-   STATISTICS
-========================================================= */
-
-.statRow {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  margin-bottom: 20px;
-}
-
-.statCard {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  min-height: 105px;
-  padding: 20px;
-  overflow: hidden;
-  border: 1px solid #817077;
-  border-radius: 15px;
-  background: #ffffff;
-  box-shadow:
-    0 4px 14px rgba(88, 23, 37, 0.045);
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease;
-}
-
-.statCard::after {
-  content: "";
-  position: absolute;
-  width: 80px;
-  height: 80px;
-  right: -30px;
-  bottom: -35px;
-  border-radius: 50%;
-  background: rgba(109, 30, 48, 0.055);
-}
-
-.statCard:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 8px 22px rgba(88, 23, 37, 0.08);
-}
-
-.statValue {
-  position: relative;
-  z-index: 1;
-  color: #581725;
-  font-size: 1.65rem;
-  font-weight: 800;
-  line-height: 1.1;
-}
-
-.statLabel {
-  position: relative;
-  z-index: 1;
-  margin-top: 7px;
-  color: #89787d;
-  font-size: 0.76rem;
-  font-weight: 600;
-}
-
-/* =========================================================
-   ATTENDANCE TABLE CONTAINER
-========================================================= */
-
-.tableWrap {
-  width: 100%;
-  overflow: auto;
-  border: 1px solid #76646a;
-  border-radius: 16px;
-  background: #ffffff;
-  box-shadow:
-    0 5px 18px rgba(88, 23, 37, 0.055);
-}
-
-/* =========================================================
-   TABLE
-========================================================= */
-
-.table {
-  width: max-content;
-  min-width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  background: #ffffff;
-  font-size: 0.78rem;
-}
-
-.table thead {
-  background:
-    linear-gradient(
-      135deg,
-      #581725 0%,
-      #6d1e30 55%,
-      #822d3e 100%
-    );
-}
-
-.table th {
-  height: 52px;
-  padding: 0 14px;
-  border-right: 1px solid rgba(255, 255, 255, 0.18);
-  color: #ffffff;
-  font-size: 0.70rem;
-  font-weight: 750;
-  text-align: left;
-  text-transform: uppercase;
-  letter-spacing: 0.045em;
-  white-space: nowrap;
-}
-
-.table th:last-child {
-  border-right: 0;
-}
-
-.table td {
-  height: 72px;
-  padding: 10px 14px;
-  border-right: 1px solid #a99a9f;
-  border-bottom: 1px solid #9f9095;
-  color: #403236;
-  vertical-align: middle;
-  white-space: nowrap;
-}
-
-.table tbody tr {
-  transition: background 0.15s ease;
-}
-
-.table tbody tr:hover {
-  background: #fdf7f9;
-}
-
-.table tbody tr:last-child td {
-  border-bottom: 0;
-}
-
-/* =========================================================
-   STICKY STUDENT COLUMN
-========================================================= */
-
-.stickyCol {
-  position: sticky;
-  left: 0;
-  z-index: 3;
-  min-width: 210px;
-  background: #ffffff;
-  box-shadow:
-    5px 0 9px rgba(88, 23, 37, 0.09);
-}
-
-.table thead .stickyCol {
-  z-index: 5;
-  background:
-    linear-gradient(
-      135deg,
-      #581725 0%,
-      #6d1e30 55%,
-      #822d3e 100%
-    );
-  color: #ffffff;
-}
-
-.table tbody tr:hover .stickyCol {
-  background: #fdf7f9;
-}
-
-/* =========================================================
-   DAY COLUMNS
-========================================================= */
-
-.dayCol {
-  min-width: 115px;
-  text-align: center !important;
-}
-
-/* =========================================================
-   STUDENT INFORMATION
-========================================================= */
-
-.studentCell {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.studentName {
-  color: #321f24;
-  font-size: 0.82rem;
-  font-weight: 750;
-}
-
-.studentMeta {
-  color: #95858a;
-  font-size: 0.69rem;
-  line-height: 1.3;
-}
-
-/* =========================================================
-   ATTENDANCE DAY CELL
-========================================================= */
-
-.dayCell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-}
-
 .timeRow {
-  color: #88777d;
+  color: #758195;
   font-size: 0.66rem;
   line-height: 1.2;
   white-space: nowrap;
@@ -522,37 +504,137 @@
 /* Complete / Present */
 
 .pill_complete {
-  border: 1px solid #6d9d7d;
-  background: #edf8f1;
-  color: #267347;
+  border: 1px solid #27a35a;
+  background: #eaf8ef;
+  color: #15803d;
 }
 
 /* Currently In */
 
 .pill_in {
-  border: 1px solid #a78b4c;
-  background: #fff8e6;
-  color: #936b12;
+  border: 1px solid #b45309;
+  background: #fef3c7;
+  color: #b45309;
 }
 
 /* Absent */
 
 .pill_absent {
-  border: 1px solid #ad6f78;
-  background: #fff0f2;
-  color: #a13b48;
+  border: 1px solid #8b1e2d;
+  background: #fde3e8;
+  color: #b4233b;
+}
+
+/* Not started — no attendance record exists for this day */
+
+.pill_notstarted {
+  border: 1px solid #cbd5e1;
+  background: #f1f5f9;
+  color: #758195;
 }
 
 /* =========================================================
+   APPEAL BUTTONS
+   ========================================================= */
+
+.appealButton {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 26px;
+
+  padding: 3px 11px;
+
+  border: 1px solid #cf9aa8;
+  border-radius: 999px;
+
+  background: #fff7f8;
+
+  color: #8b1e2d;
+
+  font-family: inherit;
+  font-size: 0.65rem;
+  font-weight: 750;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.appealButton:hover {
+  background: #f9e8ec;
+  border-color: #b8394f;
+}
+
+.appealButton:focus-visible {
+  outline: 2px solid #b8394f;
+  outline-offset: 2px;
+}
+
+.appealDot {
+  width: 7px;
+  height: 7px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #b9860f;
+}
+
+.appealButtonStatus {
+  padding-left: 6px;
+
+  border-left: 1px solid #e3c6cd;
+
+  color: #8a6b74;
+
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.appealBtn_pending .appealDot {
+  background: #b9860f;
+}
+
+.appealBtn_approved .appealDot {
+  background: #1f8a4c;
+}
+
+.appealBtn_rejected .appealDot {
+  background: #b4233b;
+}
+
+.appealBtn_approved {
+  border-color: #a9d5bb;
+  background: #f4fbf6;
+  color: #1f6b40;
+}
+
+.appealBtn_rejected {
+  border-color: #e0b0ba;
+  background: #fdf5f6;
+  color: #9c2438;
+}
+
+
+/* =========================================================
    APPEAL
-========================================================= */
+   ========================================================= */
 
 .appealTag {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 2px 7px;
-  border: 1px solid #947ba5;
+  border: 1px solid #72508c;
   border-radius: 999px;
   background: #f6f1fb;
   color: #72508c;
@@ -562,18 +644,6 @@
   letter-spacing: 0.035em;
 }
 
-/* =========================================================
-   NO RECORD
-========================================================= */
-
-.noRecord {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  color: #c4b7bb;
-  font-size: 1rem;
-}
 
 /* =========================================================
    LOADING / EMPTY
@@ -583,63 +653,31 @@
 .empty {
   margin: 0 0 20px;
   padding: 27px 20px;
-  border: 1px dashed #8c787f;
+  border: 1px dashed #8490a1;
   border-radius: 13px;
-  background: #fdfafb;
-  color: #89787d;
+  background: #fffafb;
+  color: #758195;
   text-align: center;
   font-size: 0.86rem;
 }
 
 .loading {
-  color: #6d1e30;
+  color: #8b1e2d;
 }
 
 /* =========================================================
    TABLE SCROLLBAR
 ========================================================= */
 
-.tableWrap::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.tableWrap::-webkit-scrollbar-track {
-  background: #f7f1f3;
-  border-radius: 10px;
-}
-
-.tableWrap::-webkit-scrollbar-thumb {
-  background: #a4868f;
-  border-radius: 10px;
-}
-
-.tableWrap::-webkit-scrollbar-thumb:hover {
-  background: #8b4556;
-}
-
-/* =========================================================
-   RESPONSIVE
-========================================================= */
 
 @media (max-width: 900px) {
-  .filters {
-    flex-wrap: wrap;
-    align-items: stretch;
+  .dayToolbar {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
-  .filterField {
-    flex: 1;
-    min-width: 160px;
-  }
-
-  .btn,
-  .btnSecondary {
-    flex: 1;
-  }
-
-  .statRow {
-    grid-template-columns: repeat(3, 1fr);
+  .daySelect {
+    width: 100%;
   }
 }
 
@@ -657,38 +695,26 @@
     font-size: 0.82rem;
   }
 
-  .batchTabs {
-    grid-template-columns: 1fr;
+  .dayToolbar,
+  .dayListItem {
+    padding-left: 15px;
+    padding-right: 15px;
   }
 
-  .filters {
+  .dayPicker {
+    width: 100%;
     flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
   }
 
-  .filterField {
+  .dayListItem {
+    flex-wrap: wrap;
+  }
+
+  .dayListStatus {
     width: 100%;
-  }
-
-  .btn,
-  .btnSecondary {
-    width: 100%;
-    flex: none;
-  }
-
-  .statRow {
-    grid-template-columns: 1fr;
-  }
-
-  .statCard {
-    min-height: 90px;
-  }
-
-  .tableWrap {
-    border-radius: 12px;
-  }
-
-  .stickyCol {
-    min-width: 185px;
+    justify-content: flex-start;
   }
 }
 
@@ -701,152 +727,12 @@
   .pageHeader h2 {
     font-size: 1.2rem;
   }
-
-  .sectionTitle {
-    font-size: 0.95rem;
-  }
-
-  .batchTab {
-    min-height: 70px;
-    padding: 13px 14px;
-  }
-
-  .filters {
-    padding: 14px;
-  }
-
-  .statCard {
-    padding: 17px;
-  }
-
-  .statValue {
-    font-size: 1.45rem;
-  }
-
-  .table th {
-    height: 48px;
-    padding: 0 11px;
-    font-size: 0.64rem;
-  }
-
-  .table td {
-    padding: 9px 11px;
-  }
-
-  .stickyCol {
-    min-width: 175px;
-  }
-
-  .dayCol {
-    min-width: 105px;
-  }
 }
-
-/* =========================================================
-   CHART CARD
-========================================================= */
-
-.chartCard {
-  margin-bottom: 24px;
-  background: #ffffff;
-  border: 1px solid #76646a;
-  border-radius: 16px;
-  box-shadow:
-    0 4px 14px rgba(88, 23, 37, 0.045);
-  overflow: hidden;
-}
-
-.chartHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 22px 12px;
-  border-bottom: 1px solid #9f9095;
-}
-
-.chartHeader h3 {
-  margin: 0;
-  color: #581725;
-  font-size: 0.95rem;
-  font-weight: 750;
-}
-
-.chartHeader p {
-  margin: 4px 0 0;
-  color: #95858a;
-  font-size: 0.78rem;
-}
-
-.chartHeader span {
-  color: #95858a;
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-
-.chartWrap {
-  padding: 20px 22px;
-  overflow: auto;
-  background: #ffffff;
-}
-
-/* Line chart (custom SVG) */
-
-.lineChart {
-  display: block;
-  width: 100%;
-  height: auto;
-  font-family: inherit;
-}
-
-.chartAxis {
-  stroke: #8f7e84;
-  stroke-width: 1;
-}
-
-.chartGrid {
-  stroke: #b5a6ab;
-  stroke-width: 1;
-  stroke-dasharray: 4 3;
-}
-
-.chartLine {
-  fill: none;
-  stroke: #581725;
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.chartPoint {
-  fill: #581725;
-  stroke: #ffffff;
-  stroke-width: 2;
-}
-
-.chartPoint:hover {
-  fill: #822d3e;
-  r: 7;
-}
-
-.chartLabel {
-  fill: #95858a;
-  font-size: 10px;
-}
-
-.chartValue {
-  fill: #581725;
-  font-size: 10px;
-  font-weight: 700;
-}
-
-/* =========================================================
-   SCHEDULING + REPORTS (supervisor-owned attendance)
-   ========================================================= */
 
 .batchPickerRow {
   margin-bottom: 18px;
   padding: 15px 17px;
-  border: 1px solid #817077;
+  border: 1px solid #596579;
   border-radius: 14px;
   background: #ffffff;
   box-shadow:
@@ -857,7 +743,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #624b52;
+  color: #26313f;
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -865,10 +751,10 @@
 .batchPickerRow select {
   min-height: 40px;
   padding: 0 12px;
-  border: 1px solid #76646a;
+  border: 1px solid #596579;
   border-radius: 9px;
   background: #fff;
-  color: #34262a;
+  color: #26313f;
   font-family: inherit;
   font-size: 0.84rem;
   outline: none;
@@ -876,7 +762,7 @@
 }
 
 .batchPickerRow select:focus {
-  border-color: #6d1e30;
+  border-color: #8b1e2d;
   box-shadow:
     0 0 0 3px rgba(109, 30, 48, 0.10);
 }
@@ -884,7 +770,7 @@
 .section {
   margin-bottom: 20px;
   padding: 20px 22px;
-  border: 1px solid #817077;
+  border: 1px solid #596579;
   border-radius: 16px;
   background: #ffffff;
   box-shadow:
@@ -893,7 +779,7 @@
 
 .sectionTitle {
   margin: 0 0 14px;
-  color: #581725;
+  color: #8b1e2d;
   font-size: 1rem;
   font-weight: 750;
   letter-spacing: -0.01em;
@@ -911,7 +797,7 @@
   flex-direction: column;
   gap: 6px;
   min-width: 150px;
-  color: #624b52;
+  color: #26313f;
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -919,17 +805,17 @@
 .scheduleForm input {
   min-height: 40px;
   padding: 0 12px;
-  border: 1px solid #76646a;
+  border: 1px solid #596579;
   border-radius: 9px;
   background: #fff;
-  color: #34262a;
+  color: #26313f;
   font-family: inherit;
   font-size: 0.84rem;
   outline: none;
 }
 
 .scheduleForm input:focus {
-  border-color: #6d1e30;
+  border-color: #8b1e2d;
   box-shadow:
     0 0 0 3px rgba(109, 30, 48, 0.10);
 }
@@ -942,9 +828,9 @@
   background:
     linear-gradient(
       135deg,
-      #581725 0%,
-      #6d1e30 55%,
-      #822d3e 100%
+      #8b1e2d 0%,
+      #8b1e2d 55%,
+      #b8394f 100%
     );
   color: #ffffff;
   font-family: inherit;
@@ -963,10 +849,10 @@
 .secondaryButton {
   min-height: 40px;
   padding: 0 16px;
-  border: 1px solid #756068;
+  border: 1px solid #596579;
   border-radius: 9px;
   background: #ffffff;
-  color: #6d1e30;
+  color: #8b1e2d;
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: 700;
@@ -979,14 +865,14 @@
 }
 
 .muted {
-  color: #89787d;
+  color: #758195;
   font-size: 0.78rem;
 }
 
 .groupCard {
   margin-top: 12px;
   padding: 15px 17px;
-  border: 1px solid #d9c3ca;
+  border: 1px solid #e2c9cf;
   border-radius: 12px;
   background: #fffafb;
 }
@@ -997,7 +883,7 @@
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 12px;
-  color: #581725;
+  color: #8b1e2d;
   font-size: 0.88rem;
 }
 
@@ -1012,24 +898,24 @@
   font-size: 0.65rem;
   font-weight: 750;
   text-transform: capitalize;
-  border: 1px solid #ad6f78;
-  background: #fff0f2;
-  color: #a13b48;
+  border: 1px solid #8b1e2d;
+  background: #fde3e8;
+  color: #b4233b;
 }
 
 .status_present {
-  background: #f2fbf5;
+  background: #eaf8ef;
 }
 
 .status_present .statusPill {
-  border-color: #6d9d7d;
-  background: #edf8f1;
-  color: #267347;
+  border-color: #27a35a;
+  background: #eaf8ef;
+  color: #15803d;
 }
 
 .status_checked_in .statusPill,
 .status_checked_out .statusPill {
-  border-color: #6d9d7d;
-  background: #edf8f1;
-  color: #267347;
+  border-color: #27a35a;
+  background: #eaf8ef;
+  color: #15803d;
 }

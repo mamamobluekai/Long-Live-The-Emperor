@@ -145,7 +145,7 @@ function SupervisorEvaluation() {
   // Save criteria
   // -----------------------------
   return (
-    <div>
+    <div className={styles.page}>
       {/* Page Header */}
       <div className={styles.pageHeader}>
         <h2>Student Criteria</h2>

@@ -8,6 +8,7 @@ import {
   Megaphone,
   User,
   LayoutDashboard,
+  Send,
 } from 'lucide-react';
 
 const links = [
@@ -35,6 +36,11 @@ const links = [
     to: '/dashboard/coordinator/supervisors',
     label: 'Supervisors',
     icon: BriefcaseBusiness,
+  },
+  {
+    to: '/dashboard/coordinator/deployment',
+    label: 'Deployment',
+    icon: Send,
   },
   {
     to: '/dashboard/coordinator/announcements',

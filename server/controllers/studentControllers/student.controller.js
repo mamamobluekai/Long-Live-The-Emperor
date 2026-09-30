@@ -7,6 +7,7 @@ const {
   serializeRequirements,
 } = require('../coordinatorControllers/regexes/requirementsHelpers');
 const streamifier = require('streamifier');
+const { buildImmersionDateList, loadExcludedDates } = require('../../utils/immersionDays');
 
 const updateMyRequirements = async (req, res) => {
   const client = await pool.connect();
@@ -211,26 +212,9 @@ const REQUIRED_ATTENDANCE_DAYS = 10;
 // fix) into a local-timezone Date for weekday expansion, matching the logic in
 // immersionSchedule.controller.js getMySchedule so scheduled-day counts stay in
 // sync with what the Daily Documentation page renders.
-function parseDateKey(dateStr) {
-  if (!dateStr) return null;
-  if (dateStr instanceof Date) {
-    const y = dateStr.getUTCFullYear();
-    const m = dateStr.getUTCMonth();
-    const d = dateStr.getUTCDate();
-    return new Date(y, m, d);
-  }
-  const [y, m, d] = String(dateStr).slice(0, 10).split('-').map(Number);
-  if (!y || !m || !d) return null;
-  return new Date(y, m - 1, d);
-}
-
-function formatDateKey(date) {
-  if (!date || isNaN(date.getTime())) return null;
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
+// Scheduled days are now produced by the shared builder in
+// server/utils/immersionDays.js, the same one the teacher and supervisor views
+// use, so all three agree on the count.
 
 const getProgress = async (req, res) => {
   const client = await pool.connect();
@@ -256,10 +240,12 @@ const getProgress = async (req, res) => {
     const requiredRequirementCount = requirementsCounts.rows[0]?.required || 0;
     const uploadedRequirementCount = requirementsCounts.rows[0]?.uploaded || 0;
 
-    // --- Scheduled days: expand work_immersion_schedules into weekdays (Mon–Fri),
-    // mirroring the Daily Documentation page's schedule computation. ---
+    // --- Scheduled days: expand work_immersion_schedules through the shared
+    // builder, so weekends, Philippine holidays and supervisor-blocked dates
+    // are excluded exactly as the teacher and supervisor views exclude them. ---
     const scheduleResult = await client.query(
-      `SELECT start_date, duration_type, duration_value
+      `SELECT wis.teacher_batch_id, wis.supervisor_id,
+              wis.start_date, wis.duration_type, wis.duration_value
        FROM work_immersion_schedules wis
        JOIN teacher_batch_students tbs ON tbs.teacher_batch_id = wis.teacher_batch_id
        WHERE tbs.student_id = $1`,
@@ -267,24 +253,14 @@ const getProgress = async (req, res) => {
     );
 
     const scheduledDates = new Set();
-    scheduleResult.rows.forEach((row) => {
-      const start = parseDateKey(row.start_date);
-      if (!start) return;
-      const totalDays =
-        row.duration_type === 'hours'
-          ? Math.ceil(Number(row.duration_value) / 8)
-          : Number(row.duration_value);
-      let added = 0;
-      const cursor = new Date(start);
-      while (added < totalDays) {
-        const day = cursor.getDay();
-        if (day !== 0 && day !== 6) {
-          scheduledDates.add(formatDateKey(cursor));
-          added++;
-        }
-        cursor.setDate(cursor.getDate() + 1);
+    for (const row of scheduleResult.rows) {
+      const { blocked } = await loadExcludedDates(row.teacher_batch_id, row.supervisor_id ?? null);
+      for (const iso of buildImmersionDateList(row.start_date, row.duration_type, row.duration_value, {
+        blockedDates: blocked,
+      })) {
+        scheduledDates.add(iso);
       }
-    });
+    }
     const scheduledDays = scheduledDates.size;
 
     // --- Attendance: days where the student was present (at least Time In

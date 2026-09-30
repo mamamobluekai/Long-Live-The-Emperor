@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   getSupervisorBatches,
   getSupervisorBatchStatus,
@@ -6,9 +6,14 @@ import {
   updateSupervisorBatchConfig,
   getSupervisorBatchSchedules,
   upsertSupervisorBatchSchedule,
+  getSupervisorBlockedDates,
+  addSupervisorBlockedDate,
+  removeSupervisorBlockedDate,
 } from '../../../api/supervisorApi';
+import { Ban, CalendarClock, Check, Info, Pencil, Save, Undo2, X } from 'lucide-react';
 import Feedback from '../../../components/Feedback';
-import styles from './SupervisorAttendance.module.css';
+import SupervisorDatePicker from './SupervisorDatePicker';
+import styles from './SupervisorSchedule.module.css';
 
 function normalizeTime(value) {
   if (!value) return '';
@@ -46,8 +51,16 @@ function validateWindows(cfg) {
   return null;
 }
 
-function normalizeDate(value) {
-  if (!value) return '';
+// "2026-09-28" -> "Sep 28, 2026". Parsed manually so the string is never
+// shifted a day by the browser's timezone.
+function formatShortDate(iso) {
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return iso || '';
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${months[Number(m[2]) - 1]} ${Number(m[3])}, ${m[1]}`;
+}
+
+function normalizeDate(value) {  if (!value) return '';
   const str = String(value);
   if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
   if (str.includes('T')) return str.substring(0, 10);
@@ -72,8 +85,62 @@ function SupervisorSchedule() {
   const [loadingBatches, setLoadingBatches] = useState(true);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Each card is locked until its own Edit button is pressed, so a saved
+  // schedule can't be edited (or re-saved) by accident. Pressing Edit unlocks
+  // the fields and reveals the Save button; a successful save re-locks the card.
+  const [windowsEditing, setWindowsEditing] = useState(false);
+  const [editingGroups, setEditingGroups] = useState({});
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [blockedDates, setBlockedDates] = useState([]);
+  const [allBlocked, setAllBlocked] = useState([]);
+  const [holidays, setHolidays] = useState([]);
+  // Which group's blocks are being managed: a specific supervisor's group, or
+  // 'batch' for the whole batch. One supervisor's event must not knock out an
+  // immersion day for every other supervisor in the same batch.
+  const [blockScope, setBlockScope] = useState('batch');
+  const [blockModalOpen, setBlockModalOpen] = useState(false);
+  const [pendingBlock, setPendingBlock] = useState({ date: '', reason: '' });
+  const [blocking, setBlocking] = useState(false);
+  const noticeTimer = useRef(null);
+
+  // Maps for the calendar: 'YYYY-MM-DD' -> human label.
+  const blockedMap = useMemo(() => {
+    const map = {};
+    for (const b of blockedDates) map[b.date] = b.reason || 'Blocked';
+    return map;
+  }, [blockedDates]);
+
+  const holidayMap = useMemo(() => {
+    const map = {};
+    for (const h of holidays) map[h.date] = h.name;
+    return map;
+  }, [holidays]);
+
+  // Per-group blocked map for each group's calendar: batch-wide blocks (no
+  // supervisor_id) plus that group's own. A block for one supervisor must not
+  // show up on another supervisor's calendar.
+  const blockedMapByGroup = useMemo(() => {
+    const map = {};
+    for (const b of allBlocked) {
+      const key = String(b.supervisor_id ?? 'batch');
+      if (!map[key]) map[key] = {};
+      map[key][b.date] = b.reason || 'Blocked';
+    }
+    return map;
+  }, [allBlocked]);
+
+  const blockedForGroup = (group) => {
+    const key = String(group?.supervisor_id ?? 'batch');
+    return { ...(blockedMapByGroup.batch || {}), ...(blockedMapByGroup[key] || {}) };
+  };
+
+  // Name the group a blocked date belongs to, so a mixed list is readable.
+  const scopeNameFor = (supervisorId) => {
+    if (supervisorId == null) return 'Everyone in this batch';
+    const match = groups.find((g) => Number(g.supervisor_id) === Number(supervisorId));
+    return match?.supervisor_name || `Supervisor ${supervisorId}`;
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -104,10 +171,11 @@ function SupervisorSchedule() {
       setLoading(true);
       setError('');
       try {
-        const [s, c, g] = await Promise.all([
+        const [s, c, g, bd] = await Promise.all([
           getSupervisorBatchStatus(selectedId),
           getSupervisorBatchConfig(selectedId),
           getSupervisorBatchSchedules(selectedId),
+          getSupervisorBlockedDates(selectedId).catch(() => ({ blocked_dates: [], holidays: [] })),
         ]);
         if (cancelled) return;
         setStatus(s);
@@ -119,6 +187,10 @@ function SupervisorSchedule() {
           timezone: c.timezone,
         });
         setGroups(g.groups || []);
+        setBlockedDates(bd.blocked_dates || []);
+        setHolidays(bd.holidays || []);
+        setWindowsEditing(false);
+        setEditingGroups({});
       } catch (err) {
         if (!cancelled) setError(err.message);
       } finally {
@@ -129,14 +201,50 @@ function SupervisorSchedule() {
     return () => { cancelled = true; };
   }, [selectedId]);
 
-  const flash = (text) => {
-    setNotice(text);
-    setTimeout(() => setNotice(''), 4000);
+  // Edit unlocks the fields and swaps the button to Save.
+  const startEditWindows = () => {
+    setWindowsEditing(true);
+    setError('');
+    setNotice('');
   };
 
-  const saveWindows = async (e) => {
-    e.preventDefault();
+  const startEditGroup = (group) => {
+    const key = group.supervisor_id || 'batch';
+    setEditingGroups((g) => ({ ...g, [key]: true }));
+    setError('');
+    setNotice('');
+  };
+
+  const editWindow = (field, value) => {
+    setConfig((c) => ({ ...c, [field]: value }));
+  };
+
+  const editGroupStart = (group, startDate) => {
+    const key = group.supervisor_id || 'batch';
+    setGroups((gs) =>
+      gs.map((g) =>
+        (g.supervisor_id || 'batch') === key
+          ? { ...g, schedule: { ...(g.schedule || {}), start_date: startDate } }
+          : g
+      )
+    );
+  };
+
+  // Re-arming the timer on each flash stops an earlier timer from cutting a
+  // newer message short.
+  const flash = (text) => {
+    setNotice(text);
+    if (noticeTimer.current) clearTimeout(noticeTimer.current);
+    noticeTimer.current = setTimeout(() => setNotice(''), 4000);
+  };
+
+  useEffect(() => () => {
+    if (noticeTimer.current) clearTimeout(noticeTimer.current);
+  }, []);
+
+  const saveWindows = async () => {
     if (!selectedId || !config) return;
+    if (!windowsEditing) return;
 
     const problem = validateWindows(config);
     if (problem) {
@@ -163,6 +271,7 @@ function SupervisorSchedule() {
       });
       const s = await getSupervisorBatchStatus(selectedId);
       setStatus(s);
+      setWindowsEditing(false);
       flash('Attendance windows saved.');
     } catch (err) {
       setError(err.message);
@@ -173,6 +282,8 @@ function SupervisorSchedule() {
 
   const saveDuration = async (group, startDate) => {
     if (!selectedId) return;
+    const key = group.supervisor_id || 'batch';
+    if (!editingGroups[key]) return;
     setSaving(true);
     setError('');
     try {
@@ -184,6 +295,7 @@ function SupervisorSchedule() {
       });
       const g = await getSupervisorBatchSchedules(selectedId);
       setGroups(g.groups || []);
+      setEditingGroups((d) => ({ ...d, [key]: false }));
       flash('Immersion schedule saved.');
     } catch (err) {
       setError(err.message);
@@ -192,153 +304,519 @@ function SupervisorSchedule() {
     }
   };
 
+  const refreshExclusions = async (scope = blockScope) => {
+    if (!selectedId) return;
+    // One 'all' request feeds both the per-group calendars and the scope list.
+    const all = await getSupervisorBlockedDates(selectedId, 'all').catch(() => null);
+    if (all) {
+      setAllBlocked(all.blocked_dates || []);
+      setHolidays(all.holidays || []);
+    }
+
+    const scoped =
+      scope === 'batch'
+        ? { blocked_dates: (all?.blocked_dates || []).filter((b) => b.supervisor_id == null) }
+        : await getSupervisorBlockedDates(selectedId, scope).catch(() => null);
+
+    if (scoped) {
+      setBlockedDates(scoped.blocked_dates || []);
+    }
+  };
+
+  // Reload the blocked list whenever the managed scope changes, and default to
+  // the first group rather than the whole batch.
+  useEffect(() => {
+    const firstGroup = groups[0];
+    if (!firstGroup) return;
+    const firstKey = firstGroup.supervisor_id || 'batch';
+    setBlockScope((current) => (current === 'batch' ? firstKey : current));
+  }, [groups]);
+
+  // Escape closes the block modal, and the body must not scroll behind it.
+  useEffect(() => {
+    if (!blockModalOpen) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setBlockModalOpen(false);
+    };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [blockModalOpen]);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    refreshExclusions(blockScope);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId, blockScope]);
+
+  const blockDate = async (e) => {
+    e.preventDefault();
+    if (!selectedId) return;
+    const date = pendingBlock.date;
+    if (!date) {
+      setError('Pick a date to block.');
+      return;
+    }
+    setBlocking(true);
+    setError('');
+    try {
+      await addSupervisorBlockedDate(selectedId, {
+        date,
+        reason: pendingBlock.reason || null,
+        // 'batch' => supervisor_id null (whole batch); otherwise this group only.
+        supervisor_id: blockScope === 'batch' ? null : Number(blockScope),
+      });
+      setPendingBlock({ date: '', reason: '' });
+      setBlockModalOpen(false);
+      await refreshExclusions(blockScope);
+      flash('Date blocked. It no longer counts as an immersion day.');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBlocking(false);
+    }
+  };
+
+  const unblockDate = async (id) => {
+    setBlocking(true);
+    setError('');
+    try {
+      await removeSupervisorBlockedDate(id);
+      await refreshExclusions(blockScope);
+      flash('Date unblocked.');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBlocking(false);
+    }
+  };
+
   const selectedBatch = batches.find((b) => Number(b.request_id) === Number(selectedId));
 
   return (
-    <div>
+    <div className={styles.page}>
       <div className={styles.pageHeader}>
-        <h2>Attendance Schedule</h2>
-        <p>Set attendance windows and immersion duration for your batches. Teachers see these as read-only.</p>
+        <div className={styles.headerIcon}>
+          <CalendarClock size={24} />
+        </div>
+        <div>
+          <h1>Attendance Schedule</h1>
+          <p>Set attendance windows and immersion duration for your batches. Teachers see these as read-only.</p>
+        </div>
       </div>
 
-      {error && <Feedback type="error" message={error} />}
-      {notice && <Feedback type="success" message={notice} />}
+      {error && <Feedback type="error" message={error} onClose={() => setError('')} />}
+
+      {notice && (
+        <div className={styles.toast} role="status">
+          <span className={styles.toastIcon} aria-hidden="true">
+            <Check size={16} />
+          </span>
+          <span className={styles.toastBody}>{notice}</span>
+          <button
+            type="button"
+            className={styles.toastClose}
+            aria-label="Dismiss"
+            onClick={() => setNotice('')}
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
       {loadingBatches ? (
-        <p className={styles.loading}>Loading batches...</p>
+        <div className={styles.loadingPanel}>
+          <span className={styles.spinner} />
+          Loading batches...
+        </div>
       ) : batches.length === 0 ? (
-        <p className={styles.empty}>No teacher batches linked to you yet.</p>
+        <div className={styles.empty}>No teacher batches linked to you yet.</div>
+      ) : loading ? (
+        <div className={styles.loadingPanel}>
+          <span className={styles.spinner} />
+          Loading schedule...
+        </div>
       ) : (
-        <>
-          <div className={styles.batchPickerRow}>
-            <label>
-              Batch
-              <select value={selectedId || ''} onChange={(e) => setSelectedId(Number(e.target.value))}>
-                {batches.map((b) => (
-                  <option key={b.request_id} value={b.request_id}>
-                    {b.batch_label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+        <div className={styles.splitRow}>
+          <div className={styles.splitCol}>
+          {config && (
+            <section className={styles.card}>
+              <div className={styles.cardHeader}>
+                <div>
+                  <h2>
+                    Attendance Windows{config.timezone ? ` (${config.timezone})` : ''}
+                  </h2>
+                  <p>
+                    {selectedBatch ? selectedBatch.batch_label : 'Attendance windows for this batch'}
+                  </p>
+                </div>
+                <div className={styles.headerActions}>
+                  <span
+                    className={`${styles.badge} ${
+                      status?.attendance_open ? styles.badgeOpen : styles.badgeClosed
+                    }`}
+                  >
+                    {status?.attendance_open ? 'Open' : 'Closed'}
+                  </span>
+                </div>
+              </div>
 
-          {loading ? (
-            <p className={styles.loading}>Loading schedule...</p>
-          ) : (
-            <>
-              {config && (
-                <section className={styles.section}>
-                  <h3 className={styles.sectionTitle}>
-                    Attendance Windows {config.timezone ? `(${config.timezone})` : ''}
-                    {selectedBatch ? ` — ${selectedBatch.batch_label}` : ''}
-                  </h3>
-                  <form onSubmit={saveWindows} className={styles.scheduleForm}>
-                    <label>
-                      Time In Open
-                      <input
-                        type="time"
-                        value={config.time_in_open || ''}
-                        onChange={(e) => setConfig({ ...config, time_in_open: e.target.value })}
-                        required
-                      />
-                    </label>
-                    <label>
-                      Time In Close
-                      <input
-                        type="time"
-                        value={config.time_in_close || ''}
-                        onChange={(e) => setConfig({ ...config, time_in_close: e.target.value })}
-                        required
-                      />
-                    </label>
-                    <label>
-                      Time Out Open
-                      <input
-                        type="time"
-                        value={config.time_out_open || ''}
-                        onChange={(e) => setConfig({ ...config, time_out_open: e.target.value })}
-                        required
-                      />
-                    </label>
-                    <label>
-                      Time Out Close
-                      <input
-                        type="time"
-                        value={config.time_out_close || ''}
-                        onChange={(e) => setConfig({ ...config, time_out_close: e.target.value })}
-                        required
-                      />
-                    </label>
-                    <button type="submit" className={styles.primaryButton} disabled={saving}>
+              <div className={styles.cardBody}>
+                <form id="windows-form" onSubmit={saveWindows} className={styles.scheduleForm}>
+                  <label>
+                    Time In Open
+                    <input
+                      type="time"
+                      value={config.time_in_open || ''}
+                      onChange={(e) => editWindow('time_in_open', e.target.value)}
+                      readOnly={!windowsEditing}
+                      required
+                    />
+                  </label>
+                  <label>
+                    Time In Close
+                    <input
+                      type="time"
+                      value={config.time_in_close || ''}
+                      onChange={(e) => editWindow('time_in_close', e.target.value)}
+                      readOnly={!windowsEditing}
+                      required
+                    />
+                  </label>
+                  <label>
+                    Time Out Open
+                    <input
+                      type="time"
+                      value={config.time_out_open || ''}
+                      onChange={(e) => editWindow('time_out_open', e.target.value)}
+                      readOnly={!windowsEditing}
+                      required
+                    />
+                  </label>
+                  <label>
+                    Time Out Close
+                    <input
+                      type="time"
+                      value={config.time_out_close || ''}
+                      onChange={(e) => editWindow('time_out_close', e.target.value)}
+                      readOnly={!windowsEditing}
+                      required
+                    />
+                  </label>
+                </form>
+
+                <p className={styles.hint}>
+                  <Info size={15} />
+                  <span>
+                    All four times are required, and they must run in order: Time In opens first,
+                    then Time In closes, then Time Out opens, and Time Out closes last. Fill in all
+                    four — leaving one blank keeps an old value that can quietly break the window.
+                    Attendance then runs on its own: students can only sign in and out inside these
+                    hours. Example for a 7:30 PM to 11:30 PM shift — Time In Open 07:30 PM, Time In
+                    Close 08:00 PM, Time Out Open 11:00 PM, Time Out Close 11:30 PM.
+                  </span>
+                </p>
+
+                <div className={styles.formActions}>
+                  {windowsEditing ? (
+                    <button
+                      type="button"
+                      className={styles.primaryButton}
+                      disabled={saving}
+                      onClick={saveWindows}
+                    >
+                      <Save size={15} />
                       {saving ? 'Saving...' : 'Save Windows'}
                     </button>
-                  </form>
-                  <p className={styles.muted}>
-                    All four times are required and must be in order. For a
-                    7:30 PM - 11:30 PM shift enter 19:30 (Time In open), 20:00
-                    (Time In close), 23:00 (Time Out open), 23:30 (Time Out close).
-                    Changing only the first and last fields leaves the others on
-                    their old defaults, which silently breaks the window.
-                  </p>
-                  <p className={styles.muted}>
-                    Status: {status?.attendance_open ? 'Open' : 'Closed'} &middot;
-                    {' '}automatic &mdash; opens and closes by itself at the
-                    times above.
-                  </p>
-                </section>
-              )}
-
-              <section className={styles.section}>
-                <h3 className={styles.sectionTitle}>Work Immersion Duration (10 days, weekdays only)</h3>
-                {groups.length === 0 && <p className={styles.empty}>No students in this batch yet.</p>}
-                {groups.map((group) => {
-                  const schedule = group.schedule || {};
-                  const start = normalizeDate(schedule.start_date) || normalizeDate(new Date());
-                  return (
-                    <div key={group.supervisor_id || 'batch'} className={styles.groupCard}>
-                      <div className={styles.groupHeader}>
-                        <strong>{group.supervisor_name || 'Batch Students'}</strong>
-                        <span className={styles.muted}>
-                          {group.students.length} student{group.students.length !== 1 ? 's' : ''}
-                          {schedule.id ? ' · Schedule active' : ' · No schedule yet'}
-                        </span>
-                      </div>
-                      <div className={styles.scheduleForm}>
-                        <label>
-                          Start Date
-                          <input
-                            type="date"
-                            value={start}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setGroups((gs) =>
-                                gs.map((g) =>
-                                  g.supervisor_id === group.supervisor_id
-                                    ? { ...g, schedule: { ...(g.schedule || {}), start_date: val } }
-                                    : g
-                                )
-                              );
-                            }}
-                          />
-                        </label>
-                        <button
-                          type="button"
-                          className={styles.primaryButton}
-                          disabled={saving}
-                          onClick={() => saveDuration(group, start)}
-                        >
-                          {schedule.id ? 'Update Schedule' : 'Save Schedule'}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </section>
-            </>
+                  ) : (
+                    <button
+                      type="button"
+                      className={styles.secondaryButton}
+                      onClick={startEditWindows}
+                    >
+                      <Pencil size={15} />
+                      Edit
+                    </button>
+                  )}
+                </div>
+              </div>
+            </section>
           )}
-        </>
+
+          </div>
+
+          <div className={styles.splitCol}>
+          <section className={styles.card}>
+            <div className={styles.cardHeader}>
+              <div>
+                <h2>Work Immersion Duration</h2>
+                <p>10 days, weekdays only.</p>
+              </div>
+            </div>
+
+            <div className={styles.cardBody}>
+              {groups.length === 0 ? (
+                <div className={styles.empty}>No students in this batch yet.</div>
+              ) : (
+                <div className={styles.groupList}>
+                  {groups.map((group) => {
+                    const schedule = group.schedule || {};
+                    const start = normalizeDate(schedule.start_date) || normalizeDate(new Date());
+                    const groupKey = group.supervisor_id || 'batch';
+                    const isEditing = !!editingGroups[groupKey];
+                    return (
+                      <div key={groupKey} className={styles.groupCard}>
+                        <div className={styles.groupHeader}>
+                          <strong>{group.supervisor_name || 'Batch Students'}</strong>
+                          <div className={styles.groupMeta}>
+                            <span className={styles.tag}>
+                              {group.students.length} student{group.students.length !== 1 ? 's' : ''}
+                            </span>
+                            <span
+                              className={`${styles.badge} ${
+                                schedule.id ? styles.badgeActive : styles.badgeNone
+                              }`}
+                            >
+                              {schedule.id ? 'Schedule active' : 'No schedule yet'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className={styles.scheduleForm}>
+                          <div className={styles.dateField}>
+                            <span className={styles.dateLabel}>Start Date</span>
+                            <SupervisorDatePicker
+                              value={start}
+                              disabled={!isEditing}
+                              ariaLabel={`Start date for ${group.supervisor_name || 'batch students'}`}
+                              blockedDates={blockedForGroup(group)}
+                              holidays={holidayMap}
+                              onChange={(iso) => editGroupStart(group, iso)}
+                            />
+                          </div>
+                          <div className={styles.formActions}>
+                            {isEditing ? (
+                              <button
+                                type="button"
+                                className={styles.primaryButton}
+                                disabled={saving}
+                                onClick={() => saveDuration(group, start)}
+                              >
+                                <Save size={15} />
+                                {saving ? 'Saving...' : schedule.id ? 'Update Schedule' : 'Save Schedule'}
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                className={styles.secondaryButton}
+                                onClick={() => startEditGroup(group)}
+                              >
+                                <Pencil size={15} />
+                                Edit
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </section>
+          </div>
+        </div>
       )}
+
+      <section className={styles.card}>
+        <div className={styles.cardHeader}>
+          <div>
+            <h2>Blocked Dates</h2>
+            <p>Days that do not count as immersion, even on a weekday.</p>
+          </div>
+          <div className={styles.headerActions}>
+            <span className={styles.tag}>{blockedDates.length} blocked</span>
+            <button
+              type="button"
+              className={styles.primaryButton}
+              onClick={() => {
+                setPendingBlock({ date: '', reason: '' });
+                setBlockModalOpen(true);
+              }}
+            >
+              <Ban size={15} />
+              Block Date
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.cardBody}>
+          <p className={styles.hint}>
+            <Info size={15} />
+            <span>
+              Weekends and Philippine holidays are skipped automatically. Use this for anything
+              else that stops immersion, such as a school event, a training day, or a campus
+              closure. A blocked date is also refused as an appeal date and cannot be used for
+              check-in.
+            </span>
+          </p>
+
+          {blockedDates.length === 0 ? (
+            <div className={styles.empty}>No dates blocked for this selection yet.</div>
+          ) : (
+            <ul className={styles.blockList}>
+              {blockedDates.map((b) => (
+                <li key={b.id} className={styles.blockItem}>
+                  <div className={styles.blockInfo}>
+                    <strong>{formatShortDate(b.date)}</strong>
+                    <span className={styles.muted}>
+                      {b.scope === 'batch' ? 'Everyone in this batch' : scopeNameFor(b.supervisor_id)}
+                      {' \u00b7 '}
+                      {b.reason || 'No reason given'}
+                      {holidayMap[b.date] ? ` \u00b7 also a holiday (${holidayMap[b.date]})` : ''}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    disabled={blocking}
+                    onClick={() => unblockDate(b.id)}
+                  >
+                    <Undo2 size={15} />
+                    Unblock
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {holidays.length ? (
+            <details className={styles.holidayDetails}>
+              <summary>Philippine holidays on record ({holidays.length})</summary>
+              <ul className={styles.holidayList}>
+                {holidays.map((h) => (
+                  <li key={h.date}>
+                    <span>{formatShortDate(h.date)}</span>
+                    <span className={styles.muted}>
+                      {h.name}
+                      {h.is_regular ? ' \u00b7 regular' : ''}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ) : null}
+        </div>
+      </section>
+
+      {blockModalOpen ? (
+        <div
+          className={styles.modalOverlay}
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setBlockModalOpen(false);
+          }}
+        >
+          <div
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="block-date-title"
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setBlockModalOpen(false);
+            }}
+          >
+            <div className={styles.modalHeader}>
+              <div className={styles.modalHeaderIcon} aria-hidden="true">
+                <Ban size={20} />
+              </div>
+              <div>
+                <h3 id="block-date-title">Block Date</h3>
+                <p>Stop a date from counting as an immersion day.</p>
+              </div>
+              <button
+                type="button"
+                className={styles.modalClose}
+                aria-label="Close"
+                onClick={() => setBlockModalOpen(false)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={blockDate} className={styles.modalBody}>
+              <label className={styles.scopeField}>
+                <span className={styles.dateLabel}>Applies to</span>
+                <select
+                  className={styles.scopeSelect}
+                  value={blockScope}
+                  onChange={(e) =>
+                    setBlockScope(e.target.value === 'batch' ? 'batch' : e.target.value)
+                  }
+                >
+                  {groups.map((g) => {
+                    const key = String(g.supervisor_id || 'batch');
+                    return (
+                      <option key={key} value={key}>
+                        {g.supervisor_name || 'Batch Students'} only
+                      </option>
+                    );
+                  })}
+                  <option value="batch">Everyone in this batch</option>
+                </select>
+              </label>
+
+              <p className={styles.scopeNote}>
+                {blockScope === 'batch'
+                  ? 'Blocking for everyone affects every supervisor in this batch. Prefer a single group when only one has an event.'
+                  : `Only ${
+                      groups.find((g) => String(g.supervisor_id || 'batch') === String(blockScope))
+                        ?.supervisor_name || 'this group'
+                    } loses that day. Other groups in the batch are unaffected.`}
+              </p>
+
+              <div className={styles.dateField}>
+                <span className={styles.dateLabel}>Date to block</span>
+                <SupervisorDatePicker
+                  value={pendingBlock.date}
+                  ariaLabel="Date to block"
+                  blockedDates={blockedMap}
+                  holidays={holidayMap}
+                  onChange={(iso) => setPendingBlock((p) => ({ ...p, date: iso }))}
+                />
+              </div>
+
+              <label className={styles.reasonField}>
+                <span className={styles.dateLabel}>Reason (optional)</span>
+                <input
+                  type="text"
+                  value={pendingBlock.reason}
+                  maxLength={200}
+                  placeholder="e.g. School foundation day"
+                  onChange={(e) => setPendingBlock((p) => ({ ...p, reason: e.target.value }))}
+                />
+              </label>
+
+              <div className={styles.modalActions}>
+                <button
+                  type="button"
+                  className={styles.secondaryButton}
+                  onClick={() => setBlockModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className={styles.primaryButton} disabled={blocking}>
+                  <Ban size={15} />
+                  {blocking ? 'Saving...' : 'Block Date'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

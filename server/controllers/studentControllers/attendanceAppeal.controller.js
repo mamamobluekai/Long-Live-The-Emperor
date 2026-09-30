@@ -6,6 +6,20 @@ const cloudinary = require('../../db/cloudinary');
 const pool = require('../../db');
 const { getIO } = require('../../sockets');
 const { nowInManilaDateOnly, isValidManilaDate } = require('../../utils/manilaDate');
+const { buildImmersionDateList, loadExcludedDates } = require('../../utils/immersionDays');
+const { resolveAttendanceState, nowInTz } = require('../teacherControllers/attendanceSettings.controller');
+
+// Render a stored 'HH:MM[:SS]' window time for a user-facing message.
+function formatWindowTime(value) {
+  if (!value) return '';
+  const m = String(value).match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return '';
+  let hour = Number(m[1]);
+  const minute = m[2];
+  const suffix = hour >= 12 ? 'PM' : 'AM';
+  hour = hour % 12 || 12;
+  return `${hour}:${minute} ${suffix}`;
+}
 const {
   createNotification,
   getBatchTeacherUserId,
@@ -85,14 +99,46 @@ const submitAppeal = async (req, res) => {
     const student = studentRes.rows[0];
     if (!student) return res.status(404).json({ message: 'Student profile not found.' });
 
+    // Pick the batch this appeal belongs to.
+    //
+    // A student can be linked to several teacher batches, and only some of
+    // them have a work immersion schedule. `ORDER BY assigned_at DESC LIMIT 1`
+    // used to pick whichever row was inserted most recently, which could be a
+    // batch with no schedule at all. The appeal was then filed against that
+    // batch, its schedule lookup returned zero rows, and the date silently
+    // fell back to "today" — so an appeal for Sep 28 was stored as Sep 29 and
+    // the student's Day 1 card never showed it as filed.
+    //
+    // Mirror getActiveBatch() in attendance.controller: prefer the batch whose
+    // schedule actually covers the date being appealed, then fall back to the
+    // most recent assignment.
+    const sentDateForBatch = String(appeal_date || '').trim();
+    const preferredDate = isValidManilaDate(sentDateForBatch)
+      ? sentDateForBatch
+      : nowLocalDate();
+
     const batchRes = await client.query(
       `SELECT tbs.teacher_batch_id,
-              (SELECT teacher_id FROM teacher_batches WHERE id = tbs.teacher_batch_id) AS teacher_id
+              tb.teacher_id,
+              EXISTS (
+                SELECT 1 FROM work_immersion_schedules wis
+                WHERE wis.teacher_batch_id = tbs.teacher_batch_id
+              ) AS has_schedule,
+              EXISTS (
+                SELECT 1 FROM work_immersion_schedules wis
+                WHERE wis.teacher_batch_id = tbs.teacher_batch_id
+                  AND (
+                    $2::date BETWEEN wis.start_date AND wis.end_date
+                    OR (wis.end_date IS NULL AND wis.start_date <= $2::date)
+                  )
+              ) AS covers_date
        FROM teacher_batch_students tbs
        JOIN students s ON s.id = tbs.student_id OR s.user_id = tbs.student_id
+       JOIN teacher_batches tb ON tb.id = tbs.teacher_batch_id
        WHERE s.user_id = $1 OR tbs.student_id = $1
-       ORDER BY tbs.assigned_at DESC LIMIT 1`,
-      [userId]
+       ORDER BY covers_date DESC, has_schedule DESC, tbs.assigned_at DESC
+       LIMIT 1`,
+      [userId, preferredDate]
     );
     if (batchRes.rows.length === 0) {
       return res.status(400).json({ message: 'You are not assigned to a batch yet.' });
@@ -122,38 +168,88 @@ const submitAppeal = async (req, res) => {
          WHERE teacher_batch_id = $1`,
         [teacher_batch_id]
       );
-      const dateOnly = (v) => {
-        if (!v) return null;
-        if (v instanceof Date) {
-          return `${v.getUTCFullYear()}-${String(v.getUTCMonth() + 1).padStart(2, '0')}-${String(v.getUTCDate()).padStart(2, '0')}`;
-        }
-        return String(v).slice(0, 10);
-      };
-      // Build the same Mon–Fri attendance date list the client sees in
-      // its schedule, and accept the appeal if `sentDate` is in that set.
-      const isInAnySchedule = batchSchedules.rows.some((r) => {
-        const startStr = dateOnly(r.start_date);
-        if (!startStr) return false;
-        const [y, m, d] = startStr.split('-').map(Number);
-        const cur = new Date(Date.UTC(y, m - 1, d));
-        const totalDays = r.duration_type === 'hours'
-          ? Math.ceil(Number(r.duration_value) / 8)
-          : Number(r.duration_value);
-        for (let i = 0; i < totalDays; i++) {
-          const dow = cur.getUTCDay();
-          if (dow !== 0 && dow !== 6) {
-            const curStr = `${cur.getUTCFullYear()}-${String(cur.getUTCMonth() + 1).padStart(2, '0')}-${String(cur.getUTCDate()).padStart(2, '0')}`;
-            if (curStr === sentDate) return true;
-          }
-          cur.setUTCDate(cur.getUTCDate() + 1);
-        }
-        return false;
-      });
-      if (isInAnySchedule) {
-        appealDate = sentDate;
+      // Build the same immersion date list every other view uses, so a date
+      // that is a holiday or supervisor-blocked cannot be appealed as an
+      // immersion day. The shared helper works in 'YYYY-MM-DD' strings, which
+      // removes the UTC/local mismatch the old inline loop risked.
+      const { blocked } = await loadExcludedDates(teacher_batch_id, null);
+      const isInAnySchedule = batchSchedules.rows.some((r) =>
+        buildImmersionDateList(r.start_date, r.duration_type, r.duration_value, {
+          blockedDates: blocked,
+        }).includes(sentDate)
+      );
+
+      // The batch has no schedule rows at all, so there is no way to validate
+      // which day this appeal is for. Filing it against "today" is what caused
+      // appeals to be stored on the wrong date and then never appear as filed
+      // on the student's day card. Refuse instead of guessing.
+      if (batchSchedules.rows.length === 0) {
+        return res.status(400).json({
+          message: 'Your batch has no immersion schedule yet, so this day cannot be appealed.',
+        });
+      }
+
+      // The schedule has rows but none of them covers the requested day.
+      // Previously this fell through to "today", which silently filed the
+      // appeal against the wrong date: the student's day card then never
+      // showed an "already appealed" state (the dates did not match), so the
+      // same appeal appeared to vanish and the button came back. Rejecting is
+      // honest — the client should only ever send a date from its own
+      // schedule list.
+      if (!isInAnySchedule) {
+        return res.status(400).json({
+          message: 'That day is not part of your immersion schedule, so it cannot be appealed.',
+        });
+      }
+
+      appealDate = sentDate;
+    }
+
+    // No usable date from the client (missing or malformed). Only now fall
+    // back to Manila today, which covers appeals filed from the "today" cards.
+    if (!appealDate) appealDate = nowLocalDate();
+
+    // An appeal disputes a window that has already closed, so for TODAY the
+    // relevant window must have passed. Without this a student could appeal a
+    // Time Out hours before its window opened, or while it was still running,
+    // simply by calling the endpoint directly. Past days are always allowed.
+    if (appealDate === nowLocalDate()) {
+      const state = await resolveAttendanceState(teacher_batch_id);
+      const sched = state?.schedule || null;
+      const label = attendance_type === 'time_in' ? 'Time In' : 'Time Out';
+      const close = attendance_type === 'time_in' ? sched?.time_in?.close : sched?.time_out?.close;
+
+      if (!close) {
+        return res.status(400).json({
+          message: `There is no ${label} window set for your batch yet, so this cannot be appealed.`,
+        });
+      }
+
+      const [ch, cm] = String(close).split(':').map(Number);
+      const tz = state?.timezone || 'Asia/Manila';
+      const { hour, minute } = nowInTz(tz);
+
+      if (hour * 60 + minute < ch * 60 + cm) {
+        return res.status(400).json({
+          message: `The ${label} window is still open. You can appeal ${label.toLowerCase()} once it closes at ${formatWindowTime(close)}.`,
+        });
       }
     }
-    if (!appealDate) appealDate = nowLocalDate();
+
+    // Guard against duplicate appeals for the same day and type. The student
+    // dashboard suppresses the button once an appeal exists, but two tabs or
+    // a double tap could still race past that, so enforce it here too.
+    const duplicate = await client.query(
+      `SELECT id FROM attendance_appeals
+       WHERE student_id = $1 AND attendance_type = $2 AND appeal_date = $3`,
+      [student.id, attendance_type, appealDate]
+    );
+    if (duplicate.rows.length > 0) {
+      return res.status(409).json({
+        message: 'You have already submitted this appeal.',
+        appealId: duplicate.rows[0].id,
+      });
+    }
 
     let fileUrl = null;
     let fileName = null;

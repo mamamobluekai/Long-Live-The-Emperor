@@ -1,0 +1,278 @@
+/* =========================================================
+   PERSON SIDE DRAWER
+   Design system: Lexend + the RequirementsReview maroon palette.
+   ========================================================= */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 1000;
+
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+
+  background: rgba(23, 32, 51, 0.5);
+
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+
+  animation: fade 160ms ease;
+}
+
+.drawer {
+  display: flex;
+  flex-direction: column;
+
+  width: 50%;
+  height: 100%;
+
+  border-left: 1px solid #e8d2d8;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+
+  background: #ffffff;
+
+  font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #26313f;
+
+  box-shadow: -24px 0 60px -30px rgba(88, 23, 37, 0.5);
+
+  overflow: hidden;
+
+  animation: slideIn 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+/* ---------- Header ---------- */
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  padding: 20px 22px;
+
+  border-bottom: 1px solid #ecdfe2;
+
+  background:
+    radial-gradient(130% 160% at 0% 0%, rgba(139, 30, 45, 0.1) 0%, rgba(139, 30, 45, 0) 58%),
+    linear-gradient(120deg, #ffffff 0%, #fdf3f5 58%, #f9e8ec 100%);
+}
+
+.identityBlock {
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  min-width: 0;
+}
+
+.avatarFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 54px;
+  height: 54px;
+
+  flex-shrink: 0;
+
+  border-radius: 14px;
+
+  background: linear-gradient(140deg, #8b1e2d, #b8394f);
+
+  color: #ffffff;
+
+  font-size: 1.05rem;
+  font-weight: 800;
+
+  letter-spacing: 0.02em;
+
+  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.7);
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 4px;
+
+  color: #8b1e2d;
+
+  font-size: 0.68rem;
+  font-weight: 800;
+
+  letter-spacing: 0.09em;
+
+  text-transform: uppercase;
+}
+
+.header h2 {
+  margin: 0;
+
+  color: #172033;
+
+  font-size: 1.22rem;
+  font-weight: 780;
+
+  letter-spacing: -0.025em;
+
+  line-height: 1.25;
+}
+
+.header p {
+  margin: 4px 0 0;
+
+  color: #758195;
+
+  font-size: 0.78rem;
+}
+
+.closeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+
+  flex-shrink: 0;
+
+  border: 1px solid #e2c9cf;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  color: #596579;
+
+  font-family: inherit;
+  font-size: 1.05rem;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease;
+}
+
+.closeButton:hover {
+  background: #fff7f8;
+  border-color: #b8394f;
+  color: #8b1e2d;
+}
+
+
+/* ---------- Body ---------- */
+
+.body {
+  flex: 1;
+  min-height: 0;
+
+  padding: 20px 22px 24px;
+
+  overflow-y: auto;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+
+  gap: 11px;
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  padding: 12px 14px;
+
+  border: 1px solid #ecdfe2;
+  border-radius: 12px;
+
+  background: #fffafb;
+}
+
+.detailItem span {
+  color: #8490a1;
+
+  font-size: 0.64rem;
+  font-weight: 780;
+
+  letter-spacing: 0.06em;
+
+  text-transform: uppercase;
+}
+
+.detailItem strong {
+  color: #172033;
+
+  font-size: 0.85rem;
+  font-weight: 650;
+
+  line-height: 1.4;
+
+  word-break: break-word;
+}
+
+
+/* ---------- Animation ---------- */
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 900px) {
+  .drawer {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .header,
+  .body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .header h2 {
+    font-size: 1.05rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .drawer {
+    animation: none;
+  }
+}

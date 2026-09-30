@@ -4,11 +4,65 @@
   background:
     radial-gradient(
       circle at 90% 0%,
-      rgba(127, 29, 29, 0.055),
+      rgba(139, 30, 45, 0.055),
       transparent 30%
     ),
-    #f8f7f6;
-  color: #1c1917;
+    #faf7f8;
+  color: #172033;
+
+  /* Design system: Lexend + the RequirementsReview maroon palette. */
+  font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =========================================================
+   OVERVIEW SPLIT
+   Calendar and student list share the row evenly (50/50) so
+   neither panel dominates the overview.
+   ========================================================= */
+
+.overviewSplit {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: stretch;
+}
+
+/* Both columns are flex columns so the shorter one (the student list)
+   can scroll internally instead of leaving a gap under the calendar. */
+.overviewLeft,
+.overviewRight {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Let the Student Progress wrapper fill the column height. */
+.overviewRight > * {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Let the calendar card fill the column height so both panels line up. */
+.overviewLeft > * {
+  flex: 1;
+}
+
+/* Single column on narrow screens. The list stacks UNDER the calendar
+   because the student list is the primary content. */
+@media (max-width: 1000px) {
+  .overviewSplit {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .overviewRight > *,
+  .overviewLeft > * {
+    flex: initial;
+  }
 }
 
 /* =========================================================
@@ -25,7 +79,7 @@
 
 .eyebrow {
   margin-bottom: 7px;
-  color: #8f1d2c;
+  color: #8b1e2d;
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -34,20 +88,20 @@
 
 .pageHeader h1 {
   margin: 0;
-  color: #1c1917;
+  color: #172033;
   font-size: clamp(1.65rem, 3vw, 2.1rem);
   font-weight: 750;
   letter-spacing: -0.035em;
 }
 
 .pageHeader h1 span {
-  color: #8f1d2c;
+  color: #8b1e2d;
 }
 
 .pageHeader p {
   max-width: 720px;
   margin: 7px 0 0;
-  color: #78716c;
+  color: #596579;
   font-size: 0.9rem;
   line-height: 1.6;
 }
@@ -60,11 +114,11 @@
   padding: 0 15px;
 
   /* DARKER BORDER */
-  border: 1px solid #9f9793;
+  border: 1px solid #8490a1;
 
   border-radius: 10px;
   background: #fff;
-  color: #44403c;
+  color: #596579;
   font-size: 0.8rem;
   font-weight: 650;
   cursor: pointer;
@@ -76,8 +130,8 @@
 }
 
 .refreshButton:hover {
-  border-color: #a66b75;
-  background: #fffafa;
+  border-color: #8b1e2d;
+  background: #fffafb;
   transform: translateY(-1px);
 }
 
@@ -97,7 +151,7 @@
   justify-content: center;
   flex-direction: column;
   gap: 12px;
-  color: #78716c;
+  color: #596579;
 }
 
 .loadingState p {
@@ -110,9 +164,9 @@
   height: 32px;
 
   /* DARKER BORDER */
-  border: 3px solid #b8b0ac;
+  border: 3px solid #a9b0bd;
 
-  border-top-color: #8f1d2c;
+  border-top-color: #8b1e2d;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -133,11 +187,11 @@
   padding: 13px 15px;
 
   /* DARKER BORDER */
-  border: 1px solid #d99ca4;
+  border: 1px solid #e2c9cf;
 
   border-radius: 11px;
-  background: #fff7f7;
-  color: #7f1d1d;
+  background: #fffafb;
+  color: #8b1e2d;
   font-size: 0.8rem;
 }
 
@@ -152,7 +206,7 @@
 .errorBox button {
   border: 0;
   background: transparent;
-  color: #991b1b;
+  color: #b4233b;
   font-weight: 700;
   cursor: pointer;
 }
@@ -177,7 +231,7 @@
   padding: 19px;
 
   /* DARKER BORDER */
-  border: 1px solid #9f9793;
+  border: 1px solid #8490a1;
 
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.9);
@@ -196,23 +250,23 @@
 }
 
 .statIcon.maroon {
-  background: #f7e9eb;
-  color: #8f1d2c;
+  background: #f9e8ec;
+  color: #8b1e2d;
 }
 
 .statIcon.blue {
-  background: #eaf2ff;
-  color: #1d4ed8;
+  background: #eef3fb;
+  color: #37568c;
 }
 
 .statIcon.green {
-  background: #eaf7ef;
+  background: #eaf8ef;
   color: #166534;
 }
 
 .statIcon.purple {
-  background: #f2ecff;
-  color: #6d28d9;
+  background: #f0f0fc;
+  color: #514c91;
 }
 
 .statContent {
@@ -222,14 +276,14 @@
 .statContent span {
   display: block;
   margin-bottom: 3px;
-  color: #78716c;
+  color: #596579;
   font-size: 0.72rem;
   font-weight: 600;
 }
 
 .statContent strong {
   display: block;
-  color: #1c1917;
+  color: #172033;
   font-size: 1.55rem;
   line-height: 1.1;
   letter-spacing: -0.03em;
@@ -238,7 +292,7 @@
 .statContent small {
   display: block;
   margin-top: 5px;
-  color: #a8a29e;
+  color: #8490a1;
   font-size: 0.68rem;
 }
 
@@ -260,7 +314,7 @@
   padding: 21px;
 
   /* DARKER BORDER */
-  border: 1px solid #9f9793;
+  border: 1px solid #8490a1;
 
   border-radius: 15px;
   background: #fff;
@@ -279,7 +333,7 @@
 .panelHeader h2,
 .sectionTitle h2 {
   margin: 0;
-  color: #292524;
+  color: #26313f;
   font-size: 0.98rem;
   font-weight: 750;
   letter-spacing: -0.015em;
@@ -288,13 +342,13 @@
 .panelHeader p,
 .sectionTitle p {
   margin: 4px 0 0;
-  color: #a8a29e;
+  color: #8490a1;
   font-size: 0.74rem;
   line-height: 1.5;
 }
 
 .panelHeader > svg {
-  color: #8f1d2c;
+  color: #8b1e2d;
 }
 
 .chartIcon {
@@ -304,8 +358,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 9px;
-  background: #f7e9eb;
-  color: #8f1d2c;
+  background: #f9e8ec;
+  color: #8b1e2d;
 }
 
 /* =========================================================
@@ -321,7 +375,7 @@
   justify-content: flex-end;
   gap: 15px;
   margin-bottom: 10px;
-  color: #78716c;
+  color: #596579;
   font-size: 0.68rem;
 }
 
@@ -347,7 +401,7 @@
 }
 
 .absentDot {
-  background: #b91c1c;
+  background: #b4233b;
 }
 
 .chart {
@@ -358,7 +412,7 @@
   padding: 12px 5px 0;
 
   /* DARKER BORDER */
-  border-bottom: 1px solid #9f9793;
+  border-bottom: 1px solid #8490a1;
 }
 
 .chartColumn {
@@ -373,7 +427,7 @@
 
 .chartValue {
   min-height: 18px;
-  color: #78716c;
+  color: #596579;
   font-size: 0.65rem;
   font-weight: 700;
 }
@@ -409,12 +463,12 @@
 }
 
 .absentBar {
-  background: #b91c1c;
+  background: #b4233b;
 }
 
 .chartLabel {
   margin-top: 8px;
-  color: #a8a29e;
+  color: #8490a1;
   font-size: 0.62rem;
   white-space: nowrap;
 }
@@ -461,14 +515,14 @@
 }
 
 .donutCenter strong {
-  color: #292524;
+  color: #26313f;
   font-size: 1.55rem;
   letter-spacing: -0.04em;
 }
 
 .donutCenter span {
   margin-top: 2px;
-  color: #a8a29e;
+  color: #8490a1;
   font-size: 0.65rem;
 }
 
@@ -502,35 +556,35 @@
 }
 
 .statusIcon.present {
-  background: #eaf7ef;
+  background: #eaf8ef;
   color: #166534;
 }
 
 .statusIcon.late {
-  background: #fff7e6;
+  background: #fef3c7;
   color: #b45309;
 }
 
 .statusIcon.absent {
-  background: #fff0f0;
-  color: #b91c1c;
+  background: #fde3e8;
+  color: #b4233b;
 }
 
 .statusInfo strong {
   display: block;
-  color: #44403c;
+  color: #596579;
   font-size: 0.76rem;
 }
 
 .statusInfo span {
   display: block;
   margin-top: 2px;
-  color: #a8a29e;
+  color: #8490a1;
   font-size: 0.64rem;
 }
 
 .statusNumber {
-  color: #292524;
+  color: #26313f;
   font-size: 0.9rem;
 }
 
@@ -546,7 +600,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #8f1d2c;
+  color: #8b1e2d;
   font-size: 0.72rem;
   font-weight: 700;
   text-decoration: none;
@@ -567,10 +621,10 @@
   padding: 17px;
 
   /* DARKER BORDER */
-  border: 1px solid #aaa29e;
+  border: 1px solid #8490a1;
 
   border-radius: 12px;
-  background: #fcfbfa;
+  background: #fffdfd;
   transition:
     border-color 0.2s ease,
     transform 0.2s ease,
@@ -578,7 +632,7 @@
 }
 
 .batchCard:hover {
-  border-color: #9c6972;
+  border-color: #8b1e2d;
   transform: translateY(-2px);
   box-shadow:
     0 7px 20px rgba(28, 25, 23, 0.05);
@@ -598,13 +652,13 @@
   align-items: center;
   justify-content: center;
   border-radius: 9px;
-  background: #f7e9eb;
-  color: #8f1d2c;
+  background: #f9e8ec;
+  color: #8b1e2d;
 }
 
 .batchCard h3 {
   margin: 13px 0 7px;
-  color: #292524;
+  color: #26313f;
   font-size: 0.86rem;
   font-weight: 750;
 }
@@ -613,7 +667,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #78716c;
+  color: #596579;
   font-size: 0.7rem;
 }
 
@@ -626,13 +680,13 @@
 }
 
 .badgeApproved {
-  background: #eaf7ef;
+  background: #eaf8ef;
   color: #166534;
 }
 
 .badgeDefault {
-  background: #f1f0ef;
-  color: #57534e;
+  background: #faf7f8;
+  color: #758195;
 }
 
 .batchProgress {
@@ -643,25 +697,25 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 6px;
-  color: #a8a29e;
+  color: #8490a1;
   font-size: 0.64rem;
 }
 
 .progressHeader strong {
-  color: #8f1d2c;
+  color: #8b1e2d;
 }
 
 .progressTrack {
   height: 5px;
   overflow: hidden;
   border-radius: 99px;
-  background: #ebe9e7;
+  background: #ecdfe2;
 }
 
 .progressFill {
   height: 100%;
   border-radius: inherit;
-  background: #8f1d2c;
+  background: #8b1e2d;
   transition: width 0.4s ease;
 }
 
@@ -692,7 +746,7 @@
   padding: 15px;
 
   /* DARKER BORDER */
-  border: 1px solid #9f9793;
+  border: 1px solid #8490a1;
 
   border-radius: 12px;
   background: #fff;
@@ -707,7 +761,7 @@
 }
 
 .quickCard:hover {
-  border-color: #9c6972;
+  border-color: #8b1e2d;
   transform: translateY(-2px);
   box-shadow:
     0 8px 22px rgba(28, 25, 23, 0.055);
@@ -721,20 +775,20 @@
   align-items: center;
   justify-content: center;
   border-radius: 9px;
-  background: #f7e9eb;
-  color: #8f1d2c;
+  background: #f9e8ec;
+  color: #8b1e2d;
 }
 
 .quickCard h3 {
   margin: 0;
-  color: #292524;
+  color: #26313f;
   font-size: 0.76rem;
   font-weight: 750;
 }
 
 .quickCard p {
   margin: 3px 0 0;
-  color: #a8a29e;
+  color: #8490a1;
   font-size: 0.64rem;
   line-height: 1.4;
 }
@@ -742,7 +796,7 @@
 .quickArrow {
   margin-left: auto;
   flex: 0 0 auto;
-  color: #a8a29e;
+  color: #8490a1;
 }
 
 /* =========================================================
@@ -758,25 +812,25 @@
   flex-direction: column;
   gap: 7px;
   text-align: center;
-  color: #a8a29e;
+  color: #8490a1;
 }
 
 .emptyChart svg,
 .emptyState svg {
   margin-bottom: 5px;
-  color: #c4bfbb;
+  color: #e2c9cf;
 }
 
 .emptyChart strong,
 .emptyState strong {
-  color: #57534e;
+  color: #758195;
   font-size: 0.78rem;
 }
 
 .emptyChart span,
 .emptyState span {
   max-width: 320px;
-  color: #a8a29e;
+  color: #8490a1;
   font-size: 0.68rem;
   line-height: 1.5;
 }

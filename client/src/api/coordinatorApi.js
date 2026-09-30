@@ -181,8 +181,10 @@ export async function getSupervisorDeploymentRequests() {
   return apiFetch('/deployment-requests/supervisor');
 }
 
-export async function createSupervisorRequest({ coordinator_id, batch_label, strand, num_students, notes }) {
-  return apiFetch('/supervisor-requests', jsonBody({ coordinator_id, batch_label, strand, num_students, notes }));
+// The supervisor only asks for N students — the batch LABEL is supplied by the
+// coordinator when they fulfil the request.
+export async function createSupervisorRequest({ coordinator_id, strand, num_students, notes }) {
+  return apiFetch('/supervisor-requests', jsonBody({ coordinator_id, strand, num_students, notes }));
 }
 
 export async function getMyDeploymentRequests() {
@@ -201,6 +203,19 @@ export async function getDeploymentRequestStudents(requestId) {
   return apiFetch(`/deployment-requests/${requestId}/students`);
 }
 
-export async function fulfillSupervisorRequest(requestId, student_ids) {
-  return apiFetch(`/deployment-requests/${requestId}/fulfill`, jsonBody({ student_ids }));
+export async function approveDeploymentRequest(requestId) {
+  return apiFetch(`/deployment-requests/${requestId}/approve`, { method: 'PUT' });
+}
+
+export async function rejectDeploymentRequest(requestId) {
+  return apiFetch(`/deployment-requests/${requestId}/reject`, { method: 'PUT' });
+}
+
+// The coordinator labels the batch, picks the students and attaches the
+// supervisor to the created teacher batch.
+export async function fulfillSupervisorRequest(requestId, { batch_label, student_ids, teacher_id, max_students }) {
+  return apiFetch(
+    `/deployment-requests/${requestId}/fulfill`,
+    jsonBody({ batch_label, student_ids, teacher_id, max_students })
+  );
 }

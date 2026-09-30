@@ -167,23 +167,114 @@ function getDayStatus(
     if (canTimeOut) return 'can_time_out';
     if (open) return 'open';
 
-    return 'closed';
-  }
-
-  if (day.date < todayDate) {
-    if (
-      rec &&
-      (rec.check_in_time || rec.status === 'absent')
-    ) {
-      return rec.status === 'absent'
-        ? 'absent'
-        : 'present';
-    }
+    // The attendance window has fully elapsed and the student never clocked
+    // in or out. Today is now a missed day, so report it as an absence
+    // instead of a bare "Closed" so the student understands they can appeal.
+    if (rec && rec.status === 'present') return 'present';
 
     return 'absent';
   }
 
+  if (day.date < todayDate) {
+    // A past day is only "present" when the student actually clocked in
+    // and clocked out (or the teacher marked the day present). Every other
+    // outcome — no record at all, a marked absence, a check-in with no
+    // check-out — is an absence the student must be able to appeal.
+    const clockedIn = !!(rec && (rec.check_in_time || rec.status === 'present'));
+    const clockedOut = !!(rec && rec.check_out_time);
+
+    if (clockedIn && clockedOut) return 'present';
+    if (rec && rec.status === 'present') return 'present';
+
+    return 'absent';
+  }
+
+  // A future day is not yet appealable.
   return 'scheduled';
+}
+
+// A day is appealable when the student did not complete it: a missing
+// Time In, a missing Time Out, or an explicit absence mark. Each appeal is
+// only offered for the event that is actually missing, so a student who
+// already clocked in is not asked to appeal their (recorded) time in.
+//
+// Future days are never appealable. For a PAST day both windows have already
+// closed, so either appeal is fine. For TODAY each appeal waits until its own
+// window has closed: appealing a Time Out at 9:00 AM, four hours before the
+// Time Out window even opens, was possible before and made no sense.
+//
+// Note: the server stores status 'checked_in' / 'checked_out' for real
+// clock-ins, and 'present' only when a teacher resolved the day (including
+// an approved appeal). All three mean "a time in exists".
+function getAppealTargets(day, todayDate, attendanceRecord, windows = {}) {
+  if (!day || !todayDate) return [];
+
+  // Future days are not appealable.
+  if (day.date > todayDate) return [];
+
+  const rec = attendanceRecord || null;
+
+  // The teacher already resolved this day: either the student completed it,
+  // or a previous appeal was approved and the server flipped the day to
+  // 'present'. Either way there is nothing left to dispute.
+  if (rec && rec.status === 'present') return [];
+
+  const timedIn = !!(rec && (rec.check_in_time || rec.status === 'present'));
+  const timedOut = !!(rec && rec.check_out_time);
+
+  // A day with both events recorded has nothing to dispute.
+  if (timedIn && timedOut) return [];
+
+  const isToday = day.date === todayDate;
+  const timeInClosed = isToday ? windows.timeInClosed !== false : true;
+  const timeOutClosed = isToday ? windows.timeOutClosed !== false : true;
+
+  const targets = [];
+  // Only offer the Time In appeal when no time in was recorded at all, and
+  // only once today's Time In window has closed.
+  if (!timedIn && timeInClosed) targets.push('time_in');
+  // A recorded time in with no time out is appealable on the out side only.
+  if (timedIn && !timedOut && timeOutClosed) targets.push('time_out');
+  // A student marked absent with neither event recorded is missing both. The
+  // Time Out side is only offered once that window has closed.
+  if (!timedIn && !timedOut && timeOutClosed) targets.push('time_out');
+
+  return targets;
+}
+
+// Has this window's closing time already passed, in the batch's timezone?
+// Defaults to false so a missing/malformed config hides the appeal rather than
+// offering one that the server will reject.
+function windowHasClosed(closeTime, tz) {
+  const m = String(closeTime || '').match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return false;
+  const closeMin = Number(m[1]) * 60 + Number(m[2]);
+  const { h, m: mm } = nowPartsInTz(tz);
+  return h * 60 + mm >= closeMin;
+}
+
+// True when an appeal already exists for this day and attendance type, so
+// the dashboard can show a per-type "already appealed" state instead of
+// letting the student queue a duplicate. Time In and Time Out appeals are
+// tracked separately: appealing the time in does not block the time out.
+//
+// The stored `appeal_date` is authoritative: the server validates it against
+// the student's immersion schedule and rejects anything outside it, so an
+// appeal filed from a given day card is always stored against that same day.
+// That is what keeps this match reliable and stops a filed appeal from
+// reappearing as an available button.
+function hasAppealFor(appeals, date, type) {
+  if (!Array.isArray(appeals) || !date) return false;
+
+  const dayKey = normalizeDateKey(date);
+
+  return appeals.some((appeal) => {
+    if (!appeal) return false;
+    if (type && appeal.attendance_type !== type) return false;
+    if (!appeal.appeal_date) return false;
+
+    return normalizeDateKey(appeal.appeal_date) === dayKey;
+  });
 }
 
 function formatDateLabel(dateStr) {
@@ -761,6 +852,24 @@ function Attendance() {
     (manualOpen ||
       activeType === 'time_out');
 
+  // An appeal may only be filed once the window it disputes has actually
+  // closed, so a student cannot appeal a Time Out hours before the window
+  // opens, nor while it is still running.
+  const appealWindows = {
+    timeInClosed: windowHasClosed(schedule?.time_in?.close, access?.timezone),
+    timeOutClosed: windowHasClosed(schedule?.time_out?.close, access?.timezone),
+  };
+
+  const appealWindowHint = (type) => {
+    if (type === 'time_in' && !appealWindows.timeInClosed) {
+      return `Available after the Time In window closes (${formatTime12(schedule?.time_in?.close)}).`;
+    }
+    if (type === 'time_out' && !appealWindows.timeOutClosed) {
+      return `Available after the Time Out window closes (${formatTime12(schedule?.time_out?.close)}).`;
+    }
+    return null;
+  };
+
   // Countdown target
   let countdownTarget = null;
   let countdownLabel = '';
@@ -832,12 +941,9 @@ function Attendance() {
 
       countdownLabel =
         'Time Out closes in';
-    } else if (
-      phase === 'out_closed'
-    ) {
-      countdownLabel =
-        'Attendance for today is closed';
     }
+    // phase === 'out_closed' deliberately sets no label and no target, so
+    // the header shows just the Closed pill with no trailing message.
   }
 
   const submitAppealForm =
@@ -900,6 +1006,29 @@ function Attendance() {
 
         refresh();
       } catch (err) {
+        // A 409 means the server already has this appeal for the same day and
+        // type, even though the button was still showing one. That happens when
+        // local state drifted (stale tab, or an appeal filed before the day's
+        // date was stored correctly). Re-sync immediately so the button flips to
+        // the "already appeal" state instead of offering a duplicate that can
+        // never succeed.
+        if (err.response?.status === 409) {
+          flash(
+            'info',
+            err.response?.data?.message ||
+              'This appeal was already submitted.'
+          );
+
+          setShowAppealForm(false);
+          setAppealDate('');
+          setAppealExcuse('');
+          setAppealFile(null);
+
+          await refresh();
+
+          return;
+        }
+
         flash(
           'error',
           err.response?.data
@@ -1000,12 +1129,18 @@ function Attendance() {
         return 'Time Out is now open — you can time out.';
 
       case 'out_closed':
-        return 'Attendance for today is closed.';
+        return '';
 
       default:
         return '';
     }
   };
+
+  // Empty for phases that carry no message (e.g. once attendance for the day
+  // is closed), so the header renders just the Open/Closed pill.
+  const phaseText = inSchedule
+    ? phaseMessage()
+    : '';
 
 const openAppeal = (
     type,
@@ -1048,7 +1183,9 @@ const openAppeal = (
             >
               {open ? 'Open' : 'Closed'}
             </span>
-            <span className={styles.headerStatusText}>{phaseMessage()}</span>
+            {phaseText && (
+              <span className={styles.headerStatusText}>{phaseText}</span>
+            )}
           </div>
         )}
 
@@ -1327,13 +1464,18 @@ const openAppeal = (
                         canTimeOut
                       );
                       const isToday = day.date === todayDate;
-                      // A record exists when the student actually clocked in or
-                      // was explicitly marked absent. Only then is there
-                      // something an appeal can dispute.
-                      const hasRecord = !!(
-                        rec &&
-                        (rec.check_in_time || rec.status === 'absent')
-                      );
+                      // Appealable when the day was not completed. Both Time In
+                      // and Time Out appeals are offered so the student picks
+                      // which event they are disputing. This no longer requires
+                      // an attendance row to exist, so a student the teacher
+                      // never scanned can still appeal the day they were marked
+                      // absent for.
+                      const appealTargets = getAppealTargets(day, todayDate, rec, appealWindows);
+                      const canAppeal = appealTargets.length > 0;
+                      // Tracked per type so filing a Time In appeal does not
+                      // hide the Time Out appeal for the same day.
+                      const appealTimeInSent = hasAppealFor(appeals, day.date, 'time_in');
+                      const appealTimeOutSent = hasAppealFor(appeals, day.date, 'time_out');
                       const isExpanded = expandedDay === day.date;
                       const inWindow = schedule
                         ? `${formatTime12(schedule.time_in.open)} – ${formatTime12(schedule.time_in.close)}`
@@ -1394,10 +1536,12 @@ const openAppeal = (
                             <span
                               className={`${styles.dayStatus} ${
                                 dayStatus === 'present' || dayStatus === 'checked_in'
-                                  ? styles.dayOpen
+                                  ? styles.dayPresent
                                   : dayStatus === 'absent'
                                     ? styles.dayAbsent
-                                    : ''
+                                    : dayStatus === 'closed'
+                                      ? styles.dayClosed
+                                      : ''
                               }`}
                             >
                               {statusLabel}
@@ -1466,18 +1610,59 @@ const openAppeal = (
                                   </button>
                                 )}
 
-                                {/* Appeals only apply to a day that actually has a
-                                    record to dispute. A day that closed with no
-                                    time-in and no time-out has nothing to appeal,
-                                    so no button is shown. */}
-                                {hasRecord && (dayStatus === 'absent' || dayStatus === 'closed') && (
-                                  <button
-                                    className={styles.appealLink}
-                                    onClick={() => openAppeal('time_in', day.date)}
-                                  >
-                                    Appeal
-                                  </button>
+                                {/* Appeals are offered only for the event that
+                                    was not recorded. A student who never timed
+                                    in gets both a Time In and a Time Out
+                                    appeal; a student who timed in but never
+                                    timed out gets only the Time Out appeal.
+                                    Each type also tracks its own filed state, so
+                                    an existing appeal shows "Already appeal time
+                                    in/out" instead of a duplicate button. */}
+                                {canAppeal && appealTargets.includes('time_in') && (
+                                  appealTimeInSent ? (
+                                    <span className={styles.appealFiledBadge}>
+                                      Already appeal time in
+                                    </span>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      className={styles.appealLink}
+                                      onClick={() => openAppeal('time_in', day.date)}
+                                    >
+                                      Appeal Time In
+                                    </button>
+                                  )
                                 )}
+
+                                {canAppeal && appealTargets.includes('time_out') && (
+                                  appealTimeOutSent ? (
+                                    <span className={styles.appealFiledBadge}>
+                                      Already appeal time out
+                                    </span>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      className={styles.appealLink}
+                                      onClick={() => openAppeal('time_out', day.date)}
+                                    >
+                                      Appeal Time Out
+                                    </button>
+                                  )
+                                )}
+
+                                {/* Today only: the appeal is shown but locked
+                                    until the window it disputes has closed,
+                                    with the reason stated inline. */}
+                                {isToday &&
+                                  !appealTargets.includes('time_out') &&
+                                  !appealTimeOutSent &&
+                                  !rec?.check_out_time &&
+                                  rec?.status !== 'present' &&
+                                  appealWindowHint('time_out') && (
+                                    <span className={styles.appealLockedHint}>
+                                      {appealWindowHint('time_out')}
+                                    </span>
+                                  )}
 
                                 {dayStatus === 'present' && !isToday && (
                                   <span className={styles.dayTimeActual}>✓ Completed</span>

@@ -185,20 +185,30 @@ function TeacherAttendance() {
 
   // Read-only monitor: the supervisor owns attendance scheduling, so the
   // teacher cannot edit windows or immersion durations here.
-  function computeDates(startDate) {
-    const current = parseLocalDate(startDate);
+  //
+  // The immersion dates come from the SERVER (group.schedule.attendance_dates).
+  // This used to recompute "the next 10 weekdays" in the browser, which
+  // ignored Philippine holidays and supervisor-blocked dates and so showed
+  // days that were never going to count. The fallback below only applies when
+  // the server sent no list at all.
+  function computeDates(group) {
+    const fromServer = group?.schedule?.attendance_dates;
+    if (Array.isArray(fromServer) && fromServer.length) return fromServer;
 
+    const startDate = normalizeDateInput(group?.schedule?.start_date);
+    if (!startDate) return [];
+
+    const current = parseLocalDate(startDate);
     if (isNaN(current.getTime())) return [];
 
+    const total = Number(group?.schedule?.duration_value) || 10;
     const dates = [];
 
-    while (dates.length < 10) {
+    while (dates.length < total) {
       const day = current.getDay();
-
       if (day !== 0 && day !== 6) {
         dates.push(toLocalDateString(current));
       }
-
       current.setDate(current.getDate() + 1);
     }
 
@@ -310,7 +320,7 @@ function TeacherAttendance() {
               };
 
               const computedDates =
-                computeDates(form.start_date);
+                computeDates(group);
 
               return (
                 <div

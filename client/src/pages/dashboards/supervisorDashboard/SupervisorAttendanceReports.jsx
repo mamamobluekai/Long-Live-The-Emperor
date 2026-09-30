@@ -104,7 +104,7 @@ function SupervisorAttendanceReports() {
   const selectedBatch = batches.find((b) => Number(b.request_id) === Number(selectedId));
 
   return (
-    <div>
+    <div className={styles.page}>
       <div className={styles.pageHeader}>
         <h2>Attendance Reports & Records</h2>
         <p>Full per-day attendance grid and today's summary for your batches.</p>

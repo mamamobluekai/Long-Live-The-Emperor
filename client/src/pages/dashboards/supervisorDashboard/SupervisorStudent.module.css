@@ -1,95 +1,259 @@
 /* =========================================================
-   SUPERVISOR STUDENTS DASHBOARD
-   Modern Maroon Theme
-========================================================= */
+   SUPERVISOR STUDENTS PAGE
+   Design system: Lexend + the RequirementsReview maroon palette.
+   ========================================================= */
+
+.page {
+  font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #26313f;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- Page header (RequirementsReview card style) ---------- */
 
 .pageHeader {
-  position: relative;
-  overflow: hidden;
-
-  margin-bottom: 24px;
-  padding: 28px 30px;
-
-  border-radius: 20px;
-
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 22px;
+  padding: 22px 24px;
+  border: 1px solid #e8d2d8;
+  border-radius: 18px;
   background:
-    linear-gradient(
-      135deg,
-      #581725 0%,
-      #6d1e30 55%,
-      #822d3e 100%
-    );
-
-  color: #ffffff;
-
-  box-shadow:
-    0 12px 30px rgba(88, 23, 37, 0.18);
+    radial-gradient(130% 160% at 0% 0%, rgba(139, 30, 45, 0.1) 0%, rgba(139, 30, 45, 0) 58%),
+    radial-gradient(120% 150% at 100% 120%, rgba(190, 140, 63, 0.16) 0%, rgba(190, 140, 63, 0) 55%),
+    linear-gradient(120deg, #ffffff 0%, #fdf3f5 58%, #f9e8ec 100%);
+  box-shadow: 0 14px 32px -28px rgba(80, 20, 32, 0.55);
 }
 
-.pageHeader::before {
-  content: "";
-
-  position: absolute;
-
-  width: 260px;
-  height: 260px;
-
-  right: -95px;
-  top: -150px;
-
-  border-radius: 50%;
-
-  background: rgba(255, 255, 255, 0.065);
+.headerMain {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
 }
 
-.pageHeader::after {
-  content: "";
+.headerIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: linear-gradient(140deg, #8b1e2d, #b8394f);
+  color: #fff;
+  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
+}
 
-  position: absolute;
-
-  width: 170px;
-  height: 170px;
-
-  right: 100px;
-  bottom: -125px;
-
-  border-radius: 50%;
-
-  background: rgba(255, 255, 255, 0.04);
+.eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: #8b1e2d;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
 }
 
 .pageHeader h2 {
-  position: relative;
-  z-index: 1;
-
-  margin: 0 0 6px;
-
-  color: #ffffff;
-
-  font-size: 1.55rem;
-  font-weight: 750;
-
-  letter-spacing: -0.025em;
+  margin: 0;
+  color: #172033;
+  font-size: 1.6rem;
+  font-weight: 780;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
 }
 
 .pageHeader p {
+  margin: 6px 0 0;
+  max-width: 620px;
+  color: #596579;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+
+/* =========================================================
+   BATCH CARDS
+   ========================================================= */
+
+.batchList {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.batchCard {
   position: relative;
-  z-index: 1;
+  overflow: hidden;
+  padding: 20px 22px;
+  border: 1px solid #e2c9cf;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fffdfd 0%, #ffffff 40%);
+  box-shadow: 0 10px 26px -22px rgba(80, 20, 32, 0.5);
+}
 
-  max-width: 650px;
+.batchCard::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 18px;
+  bottom: 18px;
+  width: 4px;
+  border-radius: 0 5px 5px 0;
+  background: linear-gradient(180deg, #8b1e2d, #b8394f);
+}
 
+.batchHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
+.batchHeader > div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.batchHeader h3 {
   margin: 0;
+  color: #172033;
+  font-size: 1.05rem;
+  font-weight: 780;
+  letter-spacing: -0.02em;
+}
 
-  color: rgba(255, 255, 255, 0.78);
+.batchCount {
+  flex-shrink: 0;
+  padding: 4px 11px;
+  border: 1px solid #f0d7dc;
+  border-radius: 999px;
+  background: #fff7f8;
+  color: #8b1e2d;
+  font-size: 0.68rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
 
-  font-size: 0.86rem;
-  line-height: 1.55;
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 10px;
+  border: 1px solid #f0d7dc;
+  border-radius: 999px;
+  background: #fff7f8;
+  color: #8b1e2d;
+  font-size: 0.63rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ---- Teacher / coordinator info ---- */
+
+.batchPeople {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 11px;
+  margin-bottom: 15px;
+}
+
+.personCard {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 15px;
+  border: 1px solid #ecdfe2;
+  border-radius: 14px;
+  background: #fffafb;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.personCard:hover {
+  transform: translateY(-2px);
+  border-color: #cf9aa8;
+  box-shadow: 0 12px 24px -18px rgba(80, 20, 32, 0.45);
+}
+
+.personCard:focus-visible {
+  outline: 2px solid #b8394f;
+  outline-offset: 2px;
+}
+
+.personText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.personIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: linear-gradient(140deg, #8b1e2d, #b8394f);
+  color: #fff;
+  box-shadow: 0 6px 12px -8px rgba(139, 30, 45, 0.7);
+}
+
+.personCard > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.personLabel {
+  color: #8490a1;
+  font-size: 0.62rem;
+  font-weight: 780;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.personCard strong {
+  color: #172033;
+  font-size: 0.87rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resultNote {
+  margin: 14px 0 0;
+  color: #758195;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: center;
 }
 
 
 /* =========================================================
    FEEDBACK
-========================================================= */
+   ========================================================= */
 
 .message,
 .error {
@@ -103,268 +267,122 @@
 }
 
 .error {
-  border: 1px solid #e4c4c9;
+  border: 1px solid #e2c9cf;
 
-  background: #fff2f3;
+  background: #fde3e8;
 
-  color: #a23d49;
+  color: #a3303f;
 }
 
 
-/* =========================================================
-   STATISTICS
-========================================================= */
-
-.statRow {
-  display: grid;
-
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-
-  gap: 16px;
-
-  margin-bottom: 24px;
-}
-
-.statCard {
-  position: relative;
-
-  overflow: hidden;
-
+.searchBar {
   display: flex;
-  flex-direction: column;
-
-  min-height: 118px;
-
-  padding: 22px 23px;
-
-  border: 1px solid #eadcdf;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 18px;
+  padding: 14px 18px;
+  border: 1px solid #ecdfe2;
   border-radius: 16px;
+  background: #fffafb;
+  box-shadow: 0 6px 18px -16px rgba(80, 20, 32, 0.5);
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  padding: 0 14px;
+
+  border: 1px solid #e2c9cf;
+  border-radius: 11px;
 
   background: #ffffff;
 
-  box-shadow:
-    0 5px 18px rgba(88, 23, 37, 0.055);
+  color: #172033;
+
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 500;
+
+  outline: none;
 
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+    border-color 180ms ease,
+    box-shadow 180ms ease;
 }
 
-.statCard::before {
-  content: "";
-
-  position: absolute;
-
-  left: 0;
-  top: 0;
-  bottom: 0;
-
-  width: 4px;
-
-  background:
-    linear-gradient(
-      180deg,
-      #581725,
-      #822d3e
-    );
+.searchInput::placeholder {
+  color: #a3adbb;
 }
 
-.statCard::after {
-  content: "";
-
-  position: absolute;
-
-  width: 110px;
-  height: 110px;
-
-  right: -48px;
-  top: -55px;
-
-  border-radius: 50%;
-
-  background: rgba(109, 30, 48, 0.035);
+.searchInput:focus {
+  border-color: #8b1e2d;
+  box-shadow: 0 0 0 3px rgba(109, 30, 48, 0.1);
 }
 
-.statCard:hover {
-  transform: translateY(-2px);
+.searchButton,
+.clearButton {
+  height: 42px;
+  padding: 0 20px;
 
-  box-shadow:
-    0 10px 25px rgba(88, 23, 37, 0.09);
+  border-radius: 10px;
+
+  font-family: inherit;
+  font-size: 0.79rem;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 150ms ease;
 }
 
-.statValue {
-  position: relative;
-  z-index: 1;
-
-  color: #581725;
-
-  font-size: 1.8rem;
-  font-weight: 800;
-
-  line-height: 1.1;
-
-  letter-spacing: -0.035em;
+.searchButton {
+  border: 1px solid #8b1e2d;
+  background: linear-gradient(140deg, #8b1e2d, #b8394f);
+  color: #ffffff;
+  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
 }
 
-.statLabel {
-  position: relative;
-  z-index: 1;
-
-  margin-top: 7px;
-
-  color: #89777d;
-
-  font-size: 0.72rem;
-  font-weight: 700;
-
-  text-transform: uppercase;
-
-  letter-spacing: 0.07em;
+.searchButton:hover {
+  background: linear-gradient(140deg, #8b1e2d, #8b1e2d);
+  transform: translateY(-1px);
 }
 
-
-/* =========================================================
-   BATCH SECTION
-========================================================= */
-
-.section {
-  position: relative;
-
-  margin-bottom: 22px;
-  padding: 24px;
-
-  border: 1px solid #eadcdf;
-  border-radius: 17px;
-
+.clearButton {
+  border: 1px solid #e2c9cf;
   background: #ffffff;
-
-  box-shadow:
-    0 4px 15px rgba(88, 23, 37, 0.045);
+  color: #596579;
 }
 
-.section::before {
-  content: "";
-
-  position: absolute;
-
-  left: 0;
-  top: 21px;
-  bottom: 21px;
-
-  width: 3px;
-
-  border-radius: 0 5px 5px 0;
-
-  background:
-    linear-gradient(
-      180deg,
-      #581725,
-      #822d3e
-    );
-}
-
-
-/* =========================================================
-   SECTION TITLE
-========================================================= */
-
-.sectionTitle {
-  display: flex;
-
-  align-items: center;
-
-  gap: 9px;
-
-  margin: 0 0 7px;
-
-  color: #3b292e;
-
-  font-size: 1.02rem;
-  font-weight: 750;
-
-  letter-spacing: -0.015em;
-}
-
-.sectionTitle::before {
-  content: "";
-
-  width: 8px;
-  height: 8px;
-
-  flex: 0 0 auto;
-
-  border-radius: 50%;
-
-  background: #6d1e30;
-
-  box-shadow:
-    0 0 0 4px rgba(109, 30, 48, 0.09);
-}
-
-
-/* =========================================================
-   MUTED INFORMATION
-========================================================= */
-
-.muted {
-  margin: 0 0 17px;
-
-  color: #8a777d;
-
-  font-size: 0.78rem;
-
-  line-height: 1.55;
-}
-
-
-/* =========================================================
-   BATCH BADGE
-========================================================= */
-
-.badge {
-  display: inline-flex;
-
-  align-items: center;
-  justify-content: center;
-
-  min-height: 25px;
-
-  padding: 4px 10px;
-
-  border: 1px solid #ddc1c8;
-  border-radius: 999px;
-
-  background: #fbf2f5;
-
-  color: #6d1e30;
-
-  font-size: 0.64rem;
-  font-weight: 750;
-
-  line-height: 1;
-
-  text-transform: uppercase;
-
-  letter-spacing: 0.035em;
+.clearButton:hover {
+  background: #fdf3f5;
+  border-color: #cf9aa8;
+  color: #8b1e2d;
+  transform: translateY(-1px);
 }
 
 
 /* =========================================================
    TABLE CONTAINER
-========================================================= */
+   ========================================================= */
 
 .tableWrap {
   width: 100%;
 
   overflow-x: auto;
 
-  border: 1px solid #e8dce0;
-  border-radius: 13px;
+  border: 1px solid #e2c9cf;
+  border-radius: 16px;
 
-  background: #ffffff;
+  background: linear-gradient(180deg, #fffdfd 0%, #ffffff 40%);
 
-  box-shadow:
-    0 3px 12px rgba(88, 23, 37, 0.035);
+  box-shadow: 0 10px 26px -22px rgba(80, 20, 32, 0.5);
 }
 
 
@@ -390,9 +408,9 @@
   background:
     linear-gradient(
       135deg,
-      #581725 0%,
-      #6d1e30 55%,
-      #822d3e 100%
+      #8b1e2d 0%,
+      #8b1e2d 55%,
+      #b8394f 100%
     );
 }
 
@@ -427,10 +445,10 @@
 .table td {
   padding: 13px 14px;
 
-  border-right: 1px solid #f0e7e9;
-  border-bottom: 1px solid #eee5e7;
+  border-right: 1px solid #f5e3e7;
+  border-bottom: 1px solid #f5e3e7;
 
-  color: #4a3a3f;
+  color: #26313f;
 
   vertical-align: middle;
 }
@@ -447,7 +465,7 @@
 }
 
 .table tbody tr:hover {
-  background: #fdf7f9;
+  background: #fdf3f5;
 }
 
 .table tbody tr:last-child td {
@@ -460,7 +478,7 @@
 ========================================================= */
 
 .table td:first-child {
-  color: #6d1e30;
+  color: #8b1e2d;
 
   font-weight: 750;
 
@@ -473,7 +491,7 @@
 ========================================================= */
 
 .table td:nth-child(2) {
-  color: #322328;
+  color: #26313f;
 
   font-weight: 650;
 }
@@ -484,7 +502,7 @@
 ========================================================= */
 
 .table td:nth-child(3) {
-  color: #76666b;
+  color: #596579;
 
   font-size: 0.75rem;
 }
@@ -500,20 +518,20 @@
   align-items: center;
   justify-content: center;
 
-  min-height: 75px;
+  min-height: 90px;
 
   margin: 0;
 
-  padding: 18px;
+  padding: 22px;
 
-  border: 1px dashed #ddcbd0;
-  border-radius: 11px;
+  border: 1px dashed #e2c9cf;
+  border-radius: 14px;
 
-  background: #fdfafb;
+  background: linear-gradient(140deg, #fdfafb 0%, #fbf4f5 100%);
 
-  color: #89777d;
+  color: #758195;
 
-  font-size: 0.81rem;
+  font-size: 0.83rem;
 
   text-align: center;
 }
@@ -535,14 +553,14 @@
 
   padding: 25px;
 
-  border: 1px dashed #ddcbd0;
-  border-radius: 13px;
+  border: 1px dashed #e2c9cf;
+  border-radius: 14px;
 
-  background: #fdfafb;
+  background: #fffafb;
 
-  color: #6d1e30;
+  color: #8b1e2d;
 
-  font-size: 0.84rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -557,17 +575,17 @@
 }
 
 .tableWrap::-webkit-scrollbar-track {
-  background: #f7f1f3;
+  background: #fdf3f5;
 }
 
 .tableWrap::-webkit-scrollbar-thumb {
-  background: #c8a9b1;
+  background: #e2c9cf;
 
   border-radius: 10px;
 }
 
 .tableWrap::-webkit-scrollbar-thumb:hover {
-  background: #8d4b5b;
+  background: #8b1e2d;
 }
 
 
@@ -576,21 +594,26 @@
 ========================================================= */
 
 @media (max-width: 800px) {
-  .statRow {
-    grid-template-columns: 1fr;
-  }
-
   .pageHeader {
     padding: 24px;
-  }
-
-  .section {
-    padding: 21px;
   }
 }
 
 
 @media (max-width: 600px) {
+  .searchBar {
+    flex-wrap: wrap;
+  }
+
+  .searchInput {
+    flex: 1 0 100%;
+  }
+
+  .searchButton,
+  .clearButton {
+    flex: 1;
+  }
+
   .pageHeader {
     padding: 21px 18px;
 
@@ -598,35 +621,15 @@
   }
 
   .pageHeader h2 {
-    font-size: 1.3rem;
+    font-size: 1.32rem;
   }
 
   .pageHeader p {
     font-size: 0.8rem;
   }
 
-  .statCard {
-    min-height: 105px;
-
-    padding: 19px;
-  }
-
-  .statValue {
-    font-size: 1.55rem;
-  }
-
-  .section {
-    padding: 18px;
-
-    border-radius: 14px;
-  }
-
-  .sectionTitle {
-    flex-wrap: wrap;
-  }
-
   .tableWrap {
-    border-radius: 11px;
+    border-radius: 13px;
   }
 }
 
@@ -634,28 +637,6 @@
 @media (max-width: 420px) {
   .pageHeader {
     margin-bottom: 17px;
-  }
-
-  .section {
-    padding: 16px;
-  }
-
-  .statRow {
-    gap: 11px;
-  }
-
-  .statCard {
-    min-height: 95px;
-
-    padding: 17px;
-  }
-
-  .statValue {
-    font-size: 1.4rem;
-  }
-
-  .statLabel {
-    font-size: 0.65rem;
   }
 }
 
@@ -668,7 +649,7 @@
 }
 
 .studentRow:focus-visible {
-  outline: 2px solid #822d3e;
+  outline: 2px solid #b8394f;
   outline-offset: -2px;
 }
 
@@ -712,25 +693,25 @@
 }
 
 .reportButton {
-  border: 1px solid #dfc6cd;
+  border: 1px solid #e2c9cf;
   background: #fff8fa;
-  color: #6d1e30;
+  color: #8b1e2d;
 }
 
 .reportButton:hover {
-  background: #f8ecef;
-  border-color: #cfa8b2;
+  background: #f9e8ec;
+  border-color: #e2c9cf;
   transform: translateY(-1px);
 }
 
 .closeAction {
-  border: 1px solid #e6dfe2;
+  border: 1px solid #ecdfe2;
   background: #ffffff;
-  color: #6b5b61;
+  color: #596579;
 }
 
 .closeAction:hover {
-  background: #f7f3f4;
+  background: #faf7f8;
   transform: translateY(-1px);
 }
 
@@ -748,13 +729,13 @@
 
 .reportNotice_success {
   background: #eaf8ef;
-  border-color: #ccebd8;
+  border-color: #bfe6cc;
   color: #15803d;
 }
 
 .reportNotice_error {
   background: #fff3f5;
-  border-color: #f2cbd2;
+  border-color: #f0b7c2;
   color: #b4233b;
 }
 
@@ -763,16 +744,16 @@
 
   padding: 16px;
 
-  border: 1px solid #eadcdf;
+  border: 1px solid #ecdfe2;
   border-radius: 13px;
 
-  background: #fdfafb;
+  background: #fffafb;
 }
 
 .reportFormHeader h3 {
   margin: 0;
 
-  color: #1f2937;
+  color: #26313f;
   font-size: 0.92rem;
   font-weight: 800;
 }
@@ -780,7 +761,7 @@
 .reportFormHeader p {
   margin: 3px 0 0;
 
-  color: #7b6a70;
+  color: #596579;
   font-size: 0.76rem;
 }
 
@@ -800,7 +781,7 @@
 
   gap: 5px;
 
-  color: #6b5b61;
+  color: #596579;
 
   font-size: 0.72rem;
   font-weight: 700;
@@ -811,12 +792,12 @@
 .reportMessage textarea {
   padding: 9px 11px;
 
-  border: 1px solid #e3d7db;
+  border: 1px solid #ecdfe2;
   border-radius: 9px;
 
   background: #ffffff;
 
-  color: #403338;
+  color: #26313f;
 
   font-family: inherit;
   font-size: 0.82rem;
@@ -827,7 +808,7 @@
 
 .reportFields select:focus,
 .reportMessage textarea:focus {
-  border-color: #6d1e30;
+  border-color: #8b1e2d;
   box-shadow: 0 0 0 3px rgba(109, 30, 48, 0.1);
 }
 
@@ -846,24 +827,24 @@
 }
 
 .cancelReportButton {
-  border: 1px solid #e6dfe2;
+  border: 1px solid #ecdfe2;
   background: #ffffff;
-  color: #6b5b61;
+  color: #596579;
 }
 
 .cancelReportButton:hover {
-  background: #f7f3f4;
+  background: #faf7f8;
   transform: translateY(-1px);
 }
 
 .submitReportButton {
-  border: 1px solid #6d1e30;
-  background: linear-gradient(140deg, #6d1e30, #822d3e);
+  border: 1px solid #8b1e2d;
+  background: linear-gradient(140deg, #8b1e2d, #b8394f);
   color: #ffffff;
 }
 
 .submitReportButton:hover:not(:disabled) {
-  background: linear-gradient(140deg, #581725, #6d1e30);
+  background: linear-gradient(140deg, #8b1e2d, #8b1e2d);
   transform: translateY(-1px);
 }
 

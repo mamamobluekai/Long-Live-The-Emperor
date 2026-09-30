@@ -3,10 +3,9 @@ import DashboardSidebar from '../sharedSidebar/DashboardSidebar';
 import {
   ChartNoAxesColumn,
   Upload,
-  Users,
+  Layers,
   CalendarDays,
   ClipboardPenLine,
-  ClipboardList,
   ScrollText,
   User,
   Megaphone,
@@ -22,13 +21,13 @@ const links = [
   },
   {
     to: '/dashboard/supervisor/create-deployment-request',
-    label: 'Create Deployment Request',
+    label: 'Request Students',
     icon: Upload,
   },
   {
     to: '/dashboard/supervisor/students',
-    label: 'Students',
-    icon: Users,
+    label: 'Batches',
+    icon: Layers,
   },
   {
     to: '/dashboard/supervisor/attendance',
@@ -41,20 +40,17 @@ const links = [
     icon: CalendarDays,
   },
   {
-    to: '/dashboard/supervisor/attendance-reports',
-    label: 'Attendance Reports & Records',
-    icon: CalendarDays,
+    to: '/dashboard/supervisor/reports-concerns',
+    label: 'My Reports & Concerns',
+    icon: FileText,
   },
   {
     to: '/dashboard/supervisor/evaluate',
     label: 'Evaluate Student',
     icon: ClipboardPenLine,
   },
-  {
-    to: '/dashboard/supervisor/evaluation',
-    label: 'Student Criteria',
-    icon: ClipboardList,
-  },
+  // 'Student Criteria' was retired: criteria are now edited from the
+  // "Grading Criteria" modal on the Evaluate Student page.
    {
     to: '/dashboard/supervisor/grade-appeals',
     label: 'Grade Appeals',

@@ -1,0 +1,584 @@
+/* Design system: Lexend + the RequirementsReview maroon palette. */
+
+.page {
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #26313f;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- Page header ---------- */
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 28px;
+  padding: 22px 24px;
+  border: 1px solid #e8d2d8;
+  border-radius: 18px;
+  background:
+    radial-gradient(130% 160% at 0% 0%, rgba(139, 30, 45, 0.1) 0%, rgba(139, 30, 45, 0) 58%),
+    radial-gradient(120% 150% at 100% 120%, rgba(190, 140, 63, 0.16) 0%, rgba(190, 140, 63, 0) 55%),
+    linear-gradient(120deg, #ffffff 0%, #fdf3f5 58%, #f9e8ec 100%);
+  box-shadow: 0 14px 32px -28px rgba(80, 20, 32, 0.55);
+}
+
+.headerIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  color: #fff;
+  background: linear-gradient(140deg, #8b1e2d, #b8394f);
+  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
+}
+
+.pageHeader h1 {
+  margin: 0;
+  color: #172033;
+  font-size: 1.85rem;
+  font-weight: 780;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+}
+
+.pageHeader p {
+  margin: 8px 0 0;
+  max-width: 680px;
+  color: #596579;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* ---------- Cards ---------- */
+.card {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
+  background: linear-gradient(180deg, #fffdfd 0%, #ffffff 40%);
+  border: 1px solid #e6dfe2;
+  border-radius: 18px;
+  box-shadow: 0 12px 32px -28px rgba(80, 20, 32, 0.4);
+  transition: box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 22px;
+  left: 22px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, rgba(139, 30, 45, 0.75), rgba(184, 57, 79, 0.35), rgba(190, 140, 63, 0.55));
+}
+
+.card:hover {
+  border-color: #dcc9cf;
+  box-shadow: 0 18px 40px -30px rgba(80, 20, 32, 0.5);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 21px 22px 18px;
+  border-bottom: 1px solid #ecdfe2;
+}
+
+.cardHeader h2 {
+  margin: 0;
+  color: #172033;
+  font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+}
+
+.cardHeader p {
+  margin: 4px 0 0;
+  color: #8490a1;
+  font-size: 0.8rem;
+}
+
+.cardBody {
+  padding: 22px 24px 24px;
+}
+
+/* ---------- Forms ---------- */
+.row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.row + .row {
+  margin-top: 13px;
+}
+
+.filterField {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  color: #475d6e;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 11px;
+  color: #172033;
+  background: #fff;
+  border: 1px solid #dcc9cf;
+  border-radius: 9px;
+  outline: none;
+  font: inherit;
+  font-size: 0.85rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input,
+.select {
+  height: 38px;
+  padding: 0 12px;
+}
+
+.textarea {
+  min-height: 84px;
+  resize: vertical;
+}
+
+.input:hover,
+.select:hover,
+.textarea:hover {
+  border-color: #d8b8c0;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: #8b1e2d;
+  box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.1);
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: #a9b0bd;
+}
+
+.input[type='color'] {
+  padding: 3px;
+  cursor: pointer;
+}
+
+.muted {
+  color: #8490a1;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.scopeNote {
+  margin: -4px 0 0;
+  color: #8490a1;
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+/* ---------- Buttons ---------- */
+.btn,
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 15px;
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.btn {
+  color: #fff;
+  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
+  border: 1px solid #8b1e2d;
+  box-shadow: 0 2px 6px rgba(139, 30, 45, 0.25);
+}
+
+.btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7a1725 0%, #8b1e2d 100%);
+  border-color: #7a1725;
+  box-shadow: 0 4px 10px rgba(139, 30, 45, 0.35);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  color: #475d6e;
+  background: #fff;
+  border: 1px solid #dcc9cf;
+}
+
+.btnSecondary:hover:not(:disabled) {
+  color: #172033;
+  background: #fffafb;
+  border-color: #b8394f;
+}
+
+.btnSecondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ---------- Badges ---------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  color: #8b1e2d;
+  background: #fdf0f2;
+  border: 1px solid #f6cfd6;
+  font-size: 0.68rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.badgeApproved { color: #15803d; background: #eaf8ef; border: 1px solid #bfe6cc; }
+.badgePending { color: #9a5b10; background: #fff4df; border: 1px solid #f2dfb6; }
+
+.certifiedText {
+  color: #15803d;
+  font-size: 0.78rem;
+  font-weight: 780;
+}
+
+/* ---------- Table ---------- */
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+}
+
+.table th {
+  height: 44px;
+  padding: 0 16px;
+  color: #8b1e2d;
+  background: #fff7f8;
+  border-bottom: 1px solid #ecdfe2;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 10px 16px;
+  color: #475d6e;
+  border-bottom: 1px solid #ecdfe2;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.table tbody tr:hover {
+  background: #fffafb;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ---------- Preview ---------- */
+.previewWrap {
+  display: flex;
+  justify-content: center;
+}
+
+.previewNote {
+  margin: 16px 0 0;
+  color: #8490a1;
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ---------- Batch groups ---------- */
+.filterRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.filterRow .select {
+  width: auto;
+  min-width: 180px;
+}
+
+.batchCard {
+  margin-bottom: 16px;
+  padding: 16px 18px;
+  background: #fffdfd;
+  border: 1px solid #e6dfe2;
+  border-radius: 14px;
+}
+
+.batchCard:last-child {
+  margin-bottom: 0;
+}
+
+.batchHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.batchLabel {
+  margin: 0;
+  color: #172033;
+  font-size: 0.95rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- Modals ---------- */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(23, 32, 51, 0.45);
+  backdrop-filter: blur(3px);
+  animation: fadeIn 0.16s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  width: min(680px, 100%);
+  max-height: 90vh;
+  overflow: hidden;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px -18px rgba(80, 20, 32, 0.4);
+  animation: modalIn 0.2s ease-out;
+}
+
+/* The confirm dialog is a small, centered box. */
+.modalNarrow {
+  width: min(440px, 100%);
+}
+
+@keyframes modalIn {
+  from { transform: translateY(14px) scale(0.98); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  padding: 20px 22px 18px;
+  border-bottom: 1px solid #ecdfe2;
+  background:
+    radial-gradient(120% 150% at 0% 0%, rgba(139, 30, 45, 0.1) 0%, rgba(139, 30, 45, 0) 60%),
+    linear-gradient(120deg, #ffffff 0%, #fdf3f5 100%);
+}
+
+.modalHeader h3 {
+  margin: 0;
+  color: #172033;
+  font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+}
+
+.modalHeader p {
+  margin: 5px 0 0;
+  color: #8490a1;
+  font-size: 0.78rem;
+}
+
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 20px 22px 22px;
+}
+
+.modalClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  color: #596579;
+  background: #fff;
+  border: 1px solid #dcc9cf;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.modalClose:hover {
+  color: #172033;
+  background: #fff7f8;
+  border-color: #b8394f;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.confirmText {
+  margin: 0;
+  color: #475d6e;
+  font-size: 0.87rem;
+  line-height: 1.65;
+}
+
+/* ---------- Toasts ---------- */
+.toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 4000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 280px;
+  max-width: 420px;
+  padding: 14px 16px;
+  color: #26313f;
+  background: #fff;
+  border: 1px solid #e6dfe2;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 12px 32px -12px rgba(80, 20, 32, 0.35);
+  animation: toastIn 0.3s ease-out;
+}
+
+@keyframes toastIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.toastSuccess { border-color: #bfe6cc; border-left: 4px solid #15803d; }
+.toastError { border-color: #f0b7c2; border-left: 4px solid #b4233b; }
+
+.toastIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.toastSuccess .toastIcon { color: #15803d; background: #eaf8ef; }
+.toastError .toastIcon { color: #b4233b; background: #fde3e8; }
+
+.toastBody { flex: 1; min-width: 0; }
+
+.toastClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: #8490a1;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.toastClose:hover {
+  color: #172033;
+  background: #f1f5f9;
+}
+
+/* ---------- Loading / empty ---------- */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  color: #8490a1;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 760px) {
+  .pageHeader,
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .row {
+    grid-template-columns: 1fr;
+  }
+  .cardBody {
+    padding: 18px 16px 20px;
+  }
+  .modalActions {
+    flex-direction: column;
+  }
+  .modalActions button {
+    width: 100%;
+  }
+}

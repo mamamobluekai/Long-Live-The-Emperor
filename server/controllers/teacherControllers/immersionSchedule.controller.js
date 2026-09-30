@@ -3,6 +3,7 @@
 // may also be viewed/edited by the assigned teacher and batch coordinator.
 const pool = require('../../db/');
 const { assertBatchAccess } = require('../../utils/batchAccess');
+const { buildImmersionDateList: buildImmersionDayList, loadExcludedDates } = require('../../utils/immersionDays');
 
 function parseLocalDate(dateStr) {
   if (dateStr instanceof Date) {
@@ -57,36 +58,17 @@ async function ensureImmersionScheduleTable() {
   `);
 }
 
-function addWeekdays(startDate, weekdaysToAdd) {
-  const date = parseLocalDate(startDate);
-  let added = 0;
-  while (added < weekdaysToAdd) {
-    const day = date.getDay();
-    if (day !== 0 && day !== 6) {
-      added++;
-    }
-    if (added < weekdaysToAdd) {
-      date.setDate(date.getDate() + 1);
-    }
-  }
-  return toLocalDateString(date);
-}
-
-function isWeekday(dateStr) {
-  const d = parseLocalDate(dateStr);
-  const day = d.getDay();
-  return day !== 0 && day !== 6;
-}
-
-function isDateInSchedule(startDate, durationType, durationValue, targetDate) {
+// The authoritative "is this a valid immersion day" test, used to gate student
+// check-in/out. Builds the real day list so weekends, Philippine holidays and
+// supervisor-blocked dates are all excluded. `blocked` is passed in to avoid a
+// query per call.
+function isDateInSchedule(startDate, durationType, durationValue, targetDate, blocked) {
   if (!startDate || !durationType || !durationValue) return false;
-  const start = parseLocalDate(startDate);
-  const target = parseLocalDate(targetDate);
-  if (target < start) return false;
-  if (!isWeekday(targetDate)) return false;
-  const totalDays = durationType === 'hours' ? Math.ceil(Number(durationValue) / 8) : Number(durationValue);
-  const endDate = addWeekdays(startDate, totalDays);
-  return targetDate <= endDate;
+  const target = toLocalDateString(parseLocalDate(targetDate));
+  const dates = buildImmersionDayList(startDate, durationType, durationValue, {
+    blockedDates: blocked || new Set(),
+  });
+  return dates.includes(target);
 }
 
 async function getBatchScheduleForDate(teacherBatchId, targetDate) {
@@ -94,8 +76,9 @@ async function getBatchScheduleForDate(teacherBatchId, targetDate) {
     `SELECT wis.* FROM work_immersion_schedules wis WHERE wis.teacher_batch_id = $1`,
     [teacherBatchId]
   );
+  const { blocked } = await loadExcludedDates(teacherBatchId, null);
   for (const row of result.rows) {
-    if (isDateInSchedule(row.start_date, row.duration_type, row.duration_value, targetDate)) {
+    if (isDateInSchedule(row.start_date, row.duration_type, row.duration_value, targetDate, blocked)) {
       return row;
     }
   }
@@ -151,8 +134,23 @@ const getBatchSchedules = async (req, res) => {
       supervisorsMap.get(supId).students.push(s);
     }
 
+    // Attach the authoritative immersion dates to each group's schedule. The
+    // client used to recompute these in the browser as "the next 10 weekdays",
+    // which ignored Philippine holidays and supervisor-blocked dates and so
+    // showed days that were never going to count.
+    const scheduleById = new Map();
+    for (const row of schedulesResult.rows) {
+      const { blocked } = await loadExcludedDates(batchId, row.supervisor_id);
+      scheduleById.set(String(row.supervisor_id), {
+        ...row,
+        attendance_dates: buildImmersionDayList(row.start_date, row.duration_type, row.duration_value, {
+          blockedDates: blocked,
+        }),
+      });
+    }
+
     const groups = Array.from(supervisorsMap.entries()).map(([supervisor_id, data]) => {
-      const schedule = schedulesResult.rows.find(s => String(s.supervisor_id) === String(data.supervisor_id));
+      const schedule = scheduleById.get(String(data.supervisor_id)) || null;
       return {
         supervisor_id: supervisor_id === 'batch' ? null : Number(supervisor_id),
         supervisor_name: schedule ? `${schedule.supervisor_first_name || ''} ${schedule.supervisor_last_name || ''}`.trim() || 'Batch' : 'Batch',
@@ -199,7 +197,15 @@ const upsertBatchSchedule = async (req, res) => {
     if (duration_type === 'hours') {
       weekdays = Math.ceil(durVal / 8);
     }
-    const end_date = addWeekdays(effectiveStart, Math.max(1, weekdays));
+
+    // end_date must come from the real day list. Counting weekends only would
+    // push it earlier than the last immersion day whenever a holiday or a
+    // blocked date falls inside the range.
+    const { blocked: blockedForEnd } = await loadExcludedDates(batchId, supId);
+    const endList = buildImmersionDayList(effectiveStart, 'days', Math.max(1, weekdays), {
+      blockedDates: blockedForEnd,
+    });
+    const end_date = endList[endList.length - 1] || toLocalDateString(parseLocalDate(effectiveStart));
 
     // Keep the existing schedule's dates so documentation tied to dates that no
     // longer belong to the schedule can be reset when the teacher edits dates.
@@ -210,25 +216,15 @@ const upsertBatchSchedule = async (req, res) => {
        LIMIT 1`,
       [batchId, supId]
     );
+    // Same day generation as every other view, so blocked dates and Philippine
+    // holidays are excluded here too. Getting this wrong would let a student
+    // check in on a blocked day and then report it as a completed immersion day.
+    const { blocked } = await loadExcludedDates(batchId, supId);
     const expandDates = (row) => {
-      const dates = new Set();
-      if (!row) return dates;
-      const start = parseLocalDate(row.start_date);
-      if (!start) return dates;
-      const total =
-        row.duration_type === 'hours'
-          ? Math.ceil(Number(row.duration_value) / 8)
-          : Number(row.duration_value);
-      let added = 0;
-      while (added < total) {
-        const day = start.getDay();
-        if (day !== 0 && day !== 6) {
-          dates.add(toLocalDateString(start));
-          added += 1;
-        }
-        start.setDate(start.getDate() + 1);
-      }
-      return dates;
+      if (!row) return new Set();
+      return new Set(
+        buildImmersionDayList(row.start_date, row.duration_type, row.duration_value, { blockedDates: blocked })
+      );
     };
     const previousDates = expandDates(previous.rows[0]);
     const nextDates = expandDates({
@@ -318,24 +314,14 @@ const getMySchedule = async (req, res) => {
       [studentId]
     );
 
-    const schedules = result.rows.map((row) => {
-      const dates = [];
-      const current = parseLocalDate(row.start_date);
-      const totalDays = row.duration_type === 'hours' ? Math.ceil(Number(row.duration_value) / 8) : Number(row.duration_value);
-      let added = 0;
-      while (added < totalDays) {
-        const day = current.getDay();
-        if (day !== 0 && day !== 6) {
-          dates.push(toLocalDateString(current));
-          added++;
-        }
-        current.setDate(current.getDate() + 1);
-      }
-      return {
-        ...row,
-        attendance_dates: dates.join(','),
-      };
-    });
+    const schedules = [];
+    for (const row of result.rows) {
+      const { blocked } = await loadExcludedDates(row.teacher_batch_id, row.supervisor_id ?? null);
+      const dates = buildImmersionDayList(row.start_date, row.duration_type, row.duration_value, {
+        blockedDates: blocked,
+      });
+      schedules.push({ ...row, attendance_dates: dates.join(',') });
+    }
 
     res.json({ schedules });
   } catch (err) {
@@ -345,7 +331,6 @@ const getMySchedule = async (req, res) => {
 };
 
 module.exports = {
-  addWeekdays,
   isDateInSchedule,
   getBatchScheduleForDate,
   getBatchSchedules,

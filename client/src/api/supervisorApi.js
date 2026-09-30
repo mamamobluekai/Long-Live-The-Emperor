@@ -38,6 +38,12 @@ export async function getSupervisorBatchAttendance(requestId, { from, to } = {})
   return apiFetch(`/batches/${requestId}/attendance${qs ? `?${qs}` : ''}`);
 }
 
+// Per-student progress: requirements completion, attendance per immersion day,
+// and daily documentation per immersion day. Scoped to the supervisor server-side.
+export async function getSupervisorStudentProgress(studentId) {
+  return apiFetch(`/students/${studentId}/progress`);
+}
+
 export async function createSupervisorReportConcern(payload) {
   return apiFetch('/reports-concerns', {
     method: 'POST',
@@ -48,6 +54,48 @@ export async function createSupervisorReportConcern(payload) {
 
 export async function getSupervisorReportsConcerns() {
   return apiFetch('/reports-concerns');
+}
+
+// Withdraw a report the supervisor filed.
+export async function deleteSupervisorReportConcern(reportId) {
+  return apiFetch(`/reports-concerns/${reportId}`, { method: 'DELETE' });
+}
+
+// ----- Blocked immersion dates & Philippine holidays -----
+// A blocked date is skipped when counting immersion days, even on a Mon-Fri.
+// Philippine holidays are skipped automatically on every schedule read.
+
+export async function getSupervisorBlockedDates(batchId, supervisorId) {
+  const qs = supervisorId != null ? `?supervisor_id=${encodeURIComponent(supervisorId)}` : '';
+  return apiFetch(`/batches/${batchId}/blocked-dates${qs}`);
+}
+
+export async function addSupervisorBlockedDate(batchId, payload) {
+  return apiFetch(`/batches/${batchId}/blocked-dates`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function removeSupervisorBlockedDate(blockedId) {
+  return apiFetch(`/blocked-dates/${blockedId}`, { method: 'DELETE' });
+}
+
+export async function getSupervisorHolidays() {
+  return apiFetch('/holidays');
+}
+
+export async function addSupervisorHoliday(payload) {
+  return apiFetch('/holidays', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function removeSupervisorHoliday(id) {
+  return apiFetch(`/holidays/${id}`, { method: 'DELETE' });
 }
 
 // ----- Attendance scheduling & records (shared batch endpoints) -----
@@ -97,6 +145,16 @@ export async function openSupervisorBatchAttendance(batchId) {
 
 export async function closeSupervisorBatchAttendance(batchId) {
   return attendanceFetch(`/teacher/batch/${batchId}/close`, { method: 'POST' });
+}
+
+// Decide a student's time in / time out attendance appeal. Approving marks the
+// appealed event as present; rejecting leaves the record untouched.
+export async function reviewSupervisorAttendanceAppeal(appealId, { status, comment } = {}) {
+  return attendanceFetch(`/teacher/appeals/${appealId}/review`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status, comment: comment || null }),
+  });
 }
 
 export async function getSupervisorBatchSchedules(batchId) {

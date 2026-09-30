@@ -41,10 +41,17 @@ export async function supervisorUndoForceIssue(studentId) {
   return apiFetch(`/supervisor/certificate/undo/${studentId}`, { method: 'DELETE' });
 }
 
-export async function supervisorGetCertificateTemplate() {
-  return apiFetch('/supervisor/certificate/template/me');
+// Each batch can have its own design. Omit batchId (or pass 'default') for the
+// supervisor-wide default used by any batch without a design of its own.
+export async function supervisorGetCertificateTemplate(batchId) {
+  const qs =
+    batchId === undefined || batchId === null || batchId === 'default'
+      ? ''
+      : `?batchId=${encodeURIComponent(batchId)}`;
+  return apiFetch(`/supervisor/certificate/template/me${qs}`);
 }
 
+// Pass teacher_batch_id: null to save the supervisor default.
 export async function supervisorSaveCertificateTemplate(data) {
   return apiFetch('/supervisor/certificate/template/me', {
     method: 'PUT',

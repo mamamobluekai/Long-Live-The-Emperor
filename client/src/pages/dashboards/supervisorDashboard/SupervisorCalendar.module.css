@@ -1,0 +1,650 @@
+/* =========================================================
+   SUPERVISOR IMMERSION CALENDAR
+   Design system: Lexend + the RequirementsReview maroon palette.
+   Mirrors the student calendar in studentDashboard/Overview.jsx
+   so both dashboards read as one product.
+========================================================= */
+
+/* =========================
+   CARD SHELL
+   Matches the student calendar's card in Overview.module.css
+========================= */
+
+.card {
+  padding: 20px 22px 22px;
+
+  border: 1px solid #e8d2d8;
+  border-radius: 18px;
+
+  background:
+    radial-gradient(130% 160% at 0% 0%, rgba(139, 30, 45, 0.08) 0%, rgba(139, 30, 45, 0) 58%),
+    radial-gradient(120% 150% at 100% 120%, rgba(190, 140, 63, 0.12) 0%, rgba(190, 140, 63, 0) 55%),
+    linear-gradient(120deg, #ffffff 0%, #fdf3f5 58%, #f9e8ec 100%);
+
+  box-shadow: 0 14px 32px -28px rgba(80, 20, 32, 0.55);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+
+  margin-bottom: 18px;
+}
+
+.cardEyebrow {
+  margin: 0 0 4px;
+
+  color: #8b1e2d;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.cardTitle {
+  margin: 0;
+
+  color: #172033;
+  font-size: 1.35rem;
+  font-weight: 780;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.cardSubtitle {
+  margin: 6px 0 0;
+
+  max-width: 620px;
+  color: #596579;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+/* =========================
+   CALENDAR NAV
+========================= */
+
+.calendarNav {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.calendarNav button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+
+  border: 1px solid #e3d7db;
+  border-radius: 9px;
+
+  background: #ffffff;
+  color: #596579;
+
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 750;
+  cursor: pointer;
+
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.calendarNav button:hover {
+  border-color: #cf9aa8;
+  background: #fff7f8;
+  color: #8b1e2d;
+}
+
+.calendarNav button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.1);
+}
+
+.calendarNav .todayButton {
+  min-width: 58px;
+  border-color: #8b1e2d;
+  background: #8b1e2d;
+  color: #ffffff;
+}
+
+.calendarNav .todayButton:hover {
+  border-color: #7a1725;
+  background: #7a1725;
+  color: #ffffff;
+}
+
+/* =========================
+   GRID
+========================= */
+
+.weekdayRow,
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.weekdayRow {
+  margin-bottom: 6px;
+}
+
+.weekdayLabel {
+  padding: 6px 2px;
+
+  color: #8b1e2d;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.dayBlank {
+  min-height: 96px;
+}
+
+.dayCell {
+  position: relative;
+
+  display: flex;
+  min-width: 0;
+  min-height: 96px;
+
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+
+  padding: 10px 6px;
+
+  border: 1.5px solid #ecdfe2;
+  border-radius: 14px;
+
+  background: #ffffff;
+  color: #172033;
+
+  font: inherit;
+  cursor: pointer;
+
+  box-shadow: 0 4px 12px -10px rgba(80, 20, 32, 0.35);
+
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.dayCell:hover {
+  border-color: #cf9aa8;
+  box-shadow: 0 8px 18px -12px rgba(80, 20, 32, 0.5);
+  transform: translateY(-2px);
+}
+
+.dayCell:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.25);
+}
+
+.dayNumber {
+  color: #172033;
+  font-size: 1.15rem;
+  font-weight: 780;
+  line-height: 1.1;
+}
+
+.dayMarker {
+  width: 8px;
+  height: 8px;
+
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.dayShort {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+  opacity: 0.95;
+  text-transform: uppercase;
+}
+
+/* ---------- DAY STATES ---------- */
+
+.dayRest {
+  border-style: dashed;
+  background: #fbfcfd;
+  color: #b6bec9;
+  cursor: default;
+}
+
+.dayRest:hover {
+  border-color: #e8ecef;
+  box-shadow: none;
+  transform: none;
+}
+
+.dayRest .dayNumber {
+  font-weight: 600;
+}
+
+.complete {
+  border-color: #bfe3cd;
+  background: linear-gradient(150deg, #ffffff 0%, #eefaf3 100%);
+  color: #15803d;
+}
+
+.active,
+.partial {
+  border-color: #f0dcae;
+  background: linear-gradient(150deg, #ffffff 0%, #fff7e9 100%);
+  color: #b45309;
+}
+
+.active {
+  box-shadow: inset 0 0 0 1px rgba(180, 83, 9, 0.25);
+}
+
+.absent {
+  border-color: #f0c6cd;
+  background: linear-gradient(150deg, #ffffff 0%, #fff2f4 100%);
+  color: #b4233b;
+}
+
+.missed {
+  border-color: #dde3ea;
+  background: linear-gradient(150deg, #ffffff 0%, #f6f8fa 100%);
+  color: #64748b;
+}
+
+.upcoming {
+  border-color: #c9d8f0;
+  background: linear-gradient(150deg, #ffffff 0%, #f1f6fd 100%);
+  color: #37568c;
+}
+
+.dayToday {
+  box-shadow:
+    0 0 0 2px #8b1e2d,
+    0 10px 20px -14px rgba(139, 30, 45, 0.7);
+}
+
+.daySelected {
+  border-color: #8b1e2d;
+  box-shadow: 0 0 0 2px rgba(139, 30, 45, 0.35);
+}
+
+.daySelected.dayToday {
+  box-shadow:
+    0 0 0 3px #8b1e2d,
+    0 10px 20px -14px rgba(139, 30, 45, 0.7);
+}
+
+/* =========================
+   LEGEND
+========================= */
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+
+  margin-top: 16px;
+  padding-top: 14px;
+
+  border-top: 1px solid #eef1f4;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  color: #687386;
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.legendSwatch {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+
+.swatchcomplete {
+  border-color: #bfe3cd;
+  background: #d8f0e2;
+}
+
+.swatchactive,
+.swatchpartial {
+  border-color: #f0dcae;
+  background: #fbeccb;
+}
+
+.swatchabsent {
+  border-color: #f0c6cd;
+  background: #fbdde2;
+}
+
+.swatchmissed {
+  border-color: #dde3ea;
+  background: #e8edf2;
+}
+
+.swatchupcoming {
+  border-color: #c9d8f0;
+  background: #dce8f8;
+}
+
+.swatchrest {
+  border-style: dashed;
+  border-color: #e8ecef;
+  background: #fbfcfd;
+}
+
+/* =========================
+   STATES
+========================= */
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  margin-top: 16px;
+  padding: 18px;
+
+  border: 1px dashed #ddcfd3;
+  border-radius: 13px;
+
+  background: linear-gradient(140deg, #fdfafb 0%, #fbf4f5 100%);
+
+  color: #8490a1;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.emptyState p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.loadingState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  min-height: 220px;
+
+  color: #596579;
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.errorState {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+
+  padding: 14px 16px;
+
+  border: 1px solid #f0b7c2;
+  border-radius: 12px;
+
+  background: #fde3e8;
+  color: #b4233b;
+
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.errorState button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  margin-left: auto;
+  padding: 7px 13px;
+
+  border: 1px solid #b4233b;
+  border-radius: 9px;
+
+  background: transparent;
+  color: #b4233b;
+
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.errorState button:hover {
+  background: #b4233b;
+  color: #ffffff;
+}
+
+/* =========================================================
+   COMPACT MODE
+   Used on the supervisor overview, where the calendar shares a
+   50/50 row with the Student Progress list. Trims the chrome so
+   the month grid stays readable without dominating the row.
+   ========================================================= */
+
+.cardCompact {
+  display: flex;
+  flex-direction: column;
+  padding: 18px 18px 18px;
+}
+
+.cardCompact .cardHeader {
+  margin-bottom: 14px;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.cardCompact .cardTitle {
+  font-size: 1.2rem;
+}
+
+.cardCompact .cardEyebrow {
+  font-size: 0.68rem;
+}
+
+.cardCompact .weekdayRow,
+.cardCompact .calendarGrid {
+  gap: 6px;
+}
+
+.cardCompact .weekdayRow {
+  margin-bottom: 5px;
+}
+
+.cardCompact .weekdayLabel {
+  padding: 4px 0;
+  font-size: 0.66rem;
+  letter-spacing: 0.03em;
+}
+
+.cardCompact .dayCell,
+.cardCompact .dayBlank {
+  min-height: 64px;
+}
+
+.cardCompact .dayCell {
+  padding: 7px 4px;
+  gap: 4px;
+  border-width: 1px;
+  border-radius: 11px;
+}
+
+.cardCompact .dayNumber {
+  font-size: 0.92rem;
+}
+
+.cardCompact .dayMarker {
+  width: 6px;
+  height: 6px;
+}
+
+.cardCompact .calendarNav {
+  gap: 5px;
+}
+
+.cardCompact .calendarNav button {
+  min-width: 32px;
+  height: 32px;
+  font-size: 0.78rem;
+}
+
+.cardCompact .calendarNav .todayButton {
+  min-width: 52px;
+}
+
+/* The month grid absorbs any extra column height so the card's bottom
+   edge lines up with the student list beside it. */
+.cardCompact .calendarGrid {
+  flex: 1;
+  align-content: stretch;
+  grid-auto-rows: minmax(64px, 1fr);
+}
+
+.cardCompact .legend {
+  gap: 6px 12px;
+  margin-top: 13px;
+  padding-top: 11px;
+  flex-shrink: 0;
+}
+
+.cardCompact .legendItem {
+  font-size: 0.7rem;
+}
+
+.cardCompact .legendSwatch {
+  width: 10px;
+  height: 10px;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 650px) {
+  .weekdayRow,
+  .calendarGrid {
+    gap: 4px;
+  }
+
+  .weekdayLabel {
+    padding: 6px 0;
+    font-size: 0.6rem;
+    letter-spacing: 0.02em;
+  }
+
+  .dayCell {
+    min-height: 62px;
+    padding: 6px 2px;
+    border-radius: 10px;
+  }
+
+  .dayBlank {
+    min-height: 62px;
+  }
+
+  .dayNumber {
+    font-size: 0.88rem;
+  }
+
+  .dayShort {
+    font-size: 0.54rem;
+  }
+
+  .dayMarker {
+    width: 6px;
+    height: 6px;
+  }
+
+  .calendarNav button {
+    min-width: 34px;
+    height: 34px;
+  }
+
+  .calendarNav .todayButton {
+    min-width: 54px;
+  }
+
+  .legend {
+    gap: 6px 12px;
+  }
+
+  .legendItem {
+    font-size: 0.7rem;
+  }
+
+  .emptyState {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 430px) {
+  .dayCell,
+  .dayBlank {
+    min-height: 54px;
+  }
+
+  .dayNumber {
+    font-size: 0.8rem;
+  }
+
+  .dayShort {
+    font-size: 0.5rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .weekdayRow,
+  .calendarGrid {
+    gap: 3px;
+  }
+
+  .dayCell {
+    min-height: 48px;
+    border-radius: 8px;
+  }
+
+  .dayNumber {
+    font-size: 0.72rem;
+  }
+
+  .dayShort {
+    display: none;
+  }
+
+  .weekdayLabel {
+    font-size: 0.54rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dayCell,
+  .calendarNav button {
+    transition-duration: 0.01ms !important;
+  }
+}

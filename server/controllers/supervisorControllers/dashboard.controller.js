@@ -1,18 +1,12 @@
 const pool = require('../../db');
+const { buildImmersionDateList, loadExcludedDates } = require('../../utils/immersionDays');
 
-function scheduleDates(startDate, durationType, durationValue) {
-  const [year, month, day] = String(startDate).slice(0, 10).split('-').map(Number);
-  const current = new Date(year, month - 1, day);
-  const totalDays = durationType === 'hours' ? Math.ceil(Number(durationValue) / 8) : Number(durationValue);
-  const dates = [];
-
-  while (dates.length < totalDays) {
-    if (current.getDay() !== 0 && current.getDay() !== 6) {
-      dates.push(`${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`);
-    }
-    current.setDate(current.getDate() + 1);
-  }
-  return dates;
+// Immersion day generation is owned by server/utils/immersionDays.js, so the
+// dashboard skips Philippine holidays and supervisor-blocked dates exactly like
+// every other view instead of counting weekends alone.
+async function scheduleDates(startDate, durationType, durationValue, batchId = null, supervisorId = null) {
+  const { blocked } = await loadExcludedDates(batchId, supervisorId);
+  return buildImmersionDateList(startDate, durationType, durationValue, { blockedDates: blocked });
 }
 
 const getSupervisorDashboard = async (req, res) => {
@@ -92,13 +86,28 @@ const getSupervisorDashboard = async (req, res) => {
 
     const scheduleByBatch = new Map();
     for (const schedule of scheduleResult.rows) {
-      const dates = scheduleDates(schedule.start_date, schedule.duration_type, schedule.duration_value);
+      const dates = await scheduleDates(
+        schedule.start_date,
+        schedule.duration_type,
+        schedule.duration_value,
+        schedule.request_id,
+        supervisorId
+      );
       scheduleByBatch.set(`${schedule.source}:${schedule.request_id}`, dates);
     }
 
-    const scheduledDates = [...new Set(scheduleResult.rows.flatMap((schedule) =>
-      scheduleDates(schedule.start_date, schedule.duration_type, schedule.duration_value)
-    ))].sort();
+    const perBatchDates = await Promise.all(
+      scheduleResult.rows.map((schedule) =>
+        scheduleDates(
+          schedule.start_date,
+          schedule.duration_type,
+          schedule.duration_value,
+          schedule.request_id,
+          supervisorId
+        )
+      )
+    );
+    const scheduledDates = [...new Set(perBatchDates.flat())].sort();
     const assignedRows = assignedResult.rows;
     let attendanceRows = [];
 

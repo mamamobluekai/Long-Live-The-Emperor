@@ -1,4 +1,12 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
+import {
+  Award,
+  CheckCircle2,
+  AlertCircle,
+  Pencil,
+  Save,
+  X,
+} from 'lucide-react';
 import {
   supervisorGenerateCertificate,
   supervisorForceGenerateCertificate,
@@ -7,39 +15,469 @@ import {
   supervisorSaveCertificateTemplate,
 } from '../../../api/certificateApi';
 import { getSupervisorBatches } from '../../../api/supervisorApi';
-import styles from './SupervisorDashboardCertifications.module.css';
+import styles from './SupervisorCertifications.module.css';
 
-function CornerOrnament({ color, corner }) {
-  const transforms = { tl: 'rotate(0deg)', tr: 'rotate(90deg)', br: 'rotate(180deg)', bl: 'rotate(270deg)' };
-  const positions = {
-    tl: { top: 14, left: 14 },
-    tr: { top: 14, right: 14 },
-    br: { bottom: 14, right: 14 },
-    bl: { bottom: 14, left: 14 },
-  };
+const EMPTY_TEMPLATE = {
+  school_name: 'Work Immersion Program',
+  company_name: 'Host Company',
+  program_name: 'Work Immersion',
+  footer_text:
+    'Verify this certificate at the issuing institution. This is an official record of work immersion completion.',
+  border_color: '#8b1e2d',
+  title_text: 'CERTIFICATE OF COMPLETION',
+};
+
+// ---------------------------------------------------------------------------
+// Certificate preview
+//
+// This mirrors server/controllers/certificateControllers/certificate.controller.js
+// (buildCertificatePdf). The PDF is A4 landscape at 842x595pt; the preview is
+// drawn at 760px wide and scaled positions by 0.9, so the two read the same.
+// The certificate keeps a serif face on purpose - it is a document, not UI.
+// ---------------------------------------------------------------------------
+
+const PDF_W = 842;
+const PREVIEW_W = 760;
+const S = PREVIEW_W / PDF_W; // pt -> px
+
+/** Mirrors the server's tint() so the preview tints the accent identically. */
+function tint(hex, alpha) {
+  const m = String(hex || '#8b1e2d').trim().replace('#', '');
+  const full = m.length === 3 ? m.split('').map((c) => c + c).join('') : m;
+  const n = parseInt(full.slice(0, 6), 16);
+  if (Number.isNaN(n)) return `rgba(139,30,45,${alpha})`;
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
+}
+
+/** Mirrors the server's inkFor(). */
+function inkFor(hex, mix = 0) {
+  const m = String(hex || '#8b1e2d').trim().replace('#', '');
+  const full = m.length === 3 ? m.split('').map((c) => c + c).join('') : m;
+  const n = parseInt(full.slice(0, 6), 16);
+  if (Number.isNaN(n)) return '#1c1f2b';
+  const to = (c, t) => Math.round(c + (t - c) * mix);
+  return `rgb(${to((n >> 16) & 255, 255)}, ${to((n >> 8) & 255, 255)}, ${to(n & 255, 255)})`;
+}
+
+function CornerFlourish({ color, position }) {
+  const flipX = position.includes('right');
+  const flipY = position.includes('bottom');
   return (
     <svg
-      width="34"
-      height="34"
-      viewBox="0 0 34 34"
-      style={{ position: 'absolute', ...positions[corner], transform: transforms[corner] }}
+      width={54 * S}
+      height={54 * S}
+      viewBox="-14 -14 68 68"
+      style={{
+        position: 'absolute',
+        top: position.includes('top') ? 26 * S : undefined,
+        bottom: position.includes('bottom') ? 26 * S : undefined,
+        left: position.includes('left') ? 26 * S : undefined,
+        right: position.includes('right') ? 26 * S : undefined,
+        transform: `scale(${flipX ? -1 : 1}, ${flipY ? -1 : 1})`,
+        overflow: 'visible',
+      }}
+      aria-hidden="true"
     >
-      <path d="M2 2H22M2 2V22" stroke={color} strokeWidth="1.5" fill="none" strokeLinecap="square" />
-      <path d="M2 9C7 9 9 7 9 2" stroke={color} strokeWidth="1" fill="none" strokeLinecap="round" />
-      <circle cx="2" cy="2" r="1.6" fill={color} />
+      <path d="M0 54 L0 0 L54 0" stroke={color} strokeWidth="1.6" fill="none" />
+      <path d="M8 38 L38 8" stroke={tint(color, 0.6)} strokeWidth="0.7" fill="none" />
+      <circle cx="4" cy="4" r="2.6" fill={color} />
+      <circle cx="4" cy="4" r="5.2" fill="none" stroke={tint(color, 0.5)} strokeWidth="0.7" />
     </svg>
   );
 }
 
 function CertificateSeal({ color }) {
+  const r = 34 * S;
   return (
-    <svg width="64" height="80" viewBox="0 0 64 80">
-      <path d="M20 46 L14 78 L32 68 Z" fill={color} opacity="0.85" />
-      <path d="M44 46 L50 78 L32 68 Z" fill={color} opacity="0.65" />
-      <circle cx="32" cy="30" r="26" fill="#fff" stroke={color} strokeWidth="2" />
-      <circle cx="32" cy="30" r="20" fill="none" stroke={color} strokeWidth="1" strokeDasharray="2 3" />
-      <path d="M32 16l3.5 9.5 9.5.7-7.3 6.3 2.3 9.2L32 41.5l-8.7 4.4 2.3-9.2-7.3-6.3 9.5-.7z" fill={color} />
+    <svg width={r * 2} height={(r * 2) + 22 * S} viewBox={`0 0 ${r * 2} ${r * 2 + 22 * S}`} aria-hidden="true">
+      {/* ribbon tails */}
+      <path
+        d={`M${r - 15 * S} ${r + 20 * S} L${r - 4 * S} ${r + 50 * S} L${r + 6 * S} ${r + 38 * S} L${r + 15 * S} ${r + 20 * S} Z`}
+        fill={tint(color, 0.75)}
+      />
+      <path
+        d={`M${r + 15 * S} ${r + 20 * S} L${r + 4 * S} ${r + 50 * S} L${r - 6 * S} ${r + 38 * S} L${r - 15 * S} ${r + 20 * S} Z`}
+        fill={tint(color, 0.55)}
+      />
+      <circle cx={r} cy={r} r={r} fill="none" stroke={color} strokeWidth={1.6 * S} />
+      <circle cx={r} cy={r} r={r - 6 * S} fill="none" stroke={tint(color, 0.55)} strokeWidth={0.7 * S} />
+      <circle
+        cx={r}
+        cy={r}
+        r={r - 10 * S}
+        fill="none"
+        stroke={tint(color, 0.45)}
+        strokeWidth={0.5 * S}
+        strokeDasharray={`${1.6 * S} ${2.2 * S}`}
+      />
+      <path
+        d={`M${r} ${r - 12 * S} L${r + 3.6 * S} ${r - 3.9 * S} L${r + 11.8 * S} ${r - 3.2 * S} L${r + 5.6 * S} ${r + 2.4 * S} L${r + 7.7 * S} ${r + 10.4 * S} L${r} ${r + 5.9 * S} L${r - 7.7 * S} ${r + 10.4 * S} L${r - 5.6 * S} ${r + 2.4 * S} L${r - 11.8 * S} ${r - 3.2 * S} L${r - 3.6 * S} ${r - 3.9 * S} Z`}
+        fill={color}
+      />
+      {Array.from({ length: 8 }, (_, i) => {
+        const a = (Math.PI * 2 * i) / 8 + Math.PI / 8;
+        return (
+          <circle
+            key={i}
+            cx={r + Math.cos(a) * (r - 16 * S)}
+            cy={r + Math.sin(a) * (r - 16 * S)}
+            r={1.1 * S}
+            fill={tint(color, 0.6)}
+          />
+        );
+      })}
+      <text
+        x={r}
+        y={r + 13 * S}
+        textAnchor="middle"
+        fontSize={5.6 * S}
+        fill={tint(color, 0.55)}
+        letterSpacing={1.6 * S}
+        fontFamily="Helvetica, Arial, sans-serif"
+      >
+        VERIFIED
+      </text>
     </svg>
+  );
+}
+
+function CertificatePreview({
+  template,
+  sampleName = 'Juan Dela Cruz',
+  sampleSupervisor = 'Liza M. Fernandez',
+}) {
+  const accent = template.border_color || '#8b1e2d';
+  const INK = inkFor(accent, 0.12);
+  const BODY = inkFor(accent, 0.34);
+  const MUTED = inkFor(accent, 0.55);
+  const PAPER = '#fffdf9';
+
+  // Same vertical rhythm as the PDF, converted from pt to preview px.
+  const W = PREVIEW_W;
+  const M = 34 * S;
+  const H = 595 * S;
+  const footRuleY = H - M - 48 * S;
+  const footTextY = H - M - 38 * S;
+  const metaY = H - M - 80 * S;
+  const sigLabelY = H - M - 128 * S;
+  const sigRuleY = H - M - 116 * S;
+  const sealCy = sigRuleY - 90 * S;
+
+  const titleY = M + 66 * S;
+  const ruleY = titleY + 40 * S;
+  const certifyY = ruleY + 22 * S;
+  const nameY = certifyY + 22 * S;
+  const nameSize = (sampleName.length > 30 ? 28 : sampleName.length > 20 ? 32 : 36) * S;
+  const nameRuleY = nameY + nameSize + 8 * S;
+  const nameRuleW = Math.min(340, PDF_W * 0.34) * S;
+  const bodyY = Math.min(nameRuleY + 24 * S, sealCy - 60 * S - 34 * S);
+
+  return (
+    <div
+      style={{
+        position: 'relative',
+        width: '100%',
+        maxWidth: PREVIEW_W,
+        aspectRatio: `${PDF_W} / 595`,
+        margin: '0 auto',
+        background: PAPER,
+        fontFamily: '"Cormorant Garamond", "EB Garamond", "Iowan Old Style", Georgia, serif',
+        color: INK,
+        boxShadow: `0 24px 50px -18px rgba(15, 23, 42, 0.32), inset 0 0 0 ${2.6 * S}px ${accent}, inset 0 0 0 ${6.6 * S}px ${tint(accent, 0.55)}, inset 0 0 0 ${12 * S}px ${PAPER}, inset 0 0 0 ${12.5 * S}px ${tint(accent, 0.3)}`,
+      }}
+    >
+      {/* corner washes */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: 300 * S,
+          height: 300 * S,
+          borderRadius: '50%',
+          background: accent,
+          opacity: 0.05,
+          transform: 'translate(-40%, -40%)',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          right: 0,
+          width: 300 * S,
+          height: 300 * S,
+          borderRadius: '50%',
+          background: accent,
+          opacity: 0.05,
+          transform: 'translate(40%, 40%)',
+        }}
+      />
+
+      <CornerFlourish color={accent} position="top-left" />
+      <CornerFlourish color={accent} position="top-right" />
+      <CornerFlourish color={accent} position="bottom-left" />
+      <CornerFlourish color={accent} position="bottom-right" />
+
+      {/* eyebrow */}
+      <div
+        style={{
+          position: 'absolute',
+          top: M + 32 * S,
+          left: M + 44 * S,
+          right: M + 44 * S,
+          textAlign: 'center',
+          fontStyle: 'italic',
+          fontSize: 10.5 * S,
+          color: MUTED,
+          letterSpacing: 2.4 * S,
+          textTransform: 'uppercase',
+        }}
+      >
+        {template.school_name}
+      </div>
+
+      {/* tick */}
+      <svg
+        width={PREVIEW_W}
+        height={14 * S}
+        style={{ position: 'absolute', top: M + 46 * S, left: 0 }}
+        aria-hidden="true"
+      >
+        <line x1={PREVIEW_W / 2 - 26 * S} y1={7 * S} x2={PREVIEW_W / 2 - 6 * S} y2={7 * S} stroke={tint(accent, 0.45)} strokeWidth={0.7} />
+        <line x1={PREVIEW_W / 2 + 6 * S} y1={7 * S} x2={PREVIEW_W / 2 + 26 * S} y2={7 * S} stroke={tint(accent, 0.45)} strokeWidth={0.7} />
+        <rect
+          x={PREVIEW_W / 2 - 3.1 * S}
+          y={3.9 * S}
+          width={6.2 * S}
+          height={6.2 * S}
+          fill={accent}
+          transform={`rotate(45 ${PREVIEW_W / 2} 7 ${7 * S})`}
+        />
+      </svg>
+
+      {/* title */}
+      <div
+        style={{
+          position: 'absolute',
+          top: titleY,
+          left: M + 40 * S,
+          right: M + 40 * S,
+          textAlign: 'center',
+          fontSize: 30 * S,
+          fontWeight: 700,
+          letterSpacing: 3.2 * S,
+          lineHeight: 1.15,
+        }}
+      >
+        {template.title_text || 'CERTIFICATE OF COMPLETION'}
+      </div>
+
+      {/* ornamental rule */}
+      <svg
+        width={PREVIEW_W}
+        height={22 * S}
+        style={{ position: 'absolute', top: ruleY - 11 * S, left: 0 }}
+        aria-hidden="true"
+      >
+        <line x1={PREVIEW_W / 2 - 164 * S} y1={11 * S} x2={PREVIEW_W / 2 - 12 * S} y2={11 * S} stroke={tint(accent, 0.4)} strokeWidth={0.9} />
+        <line x1={PREVIEW_W / 2 + 12 * S} y1={11 * S} x2={PREVIEW_W / 2 + 164 * S} y2={11 * S} stroke={tint(accent, 0.4)} strokeWidth={0.9} />
+        <rect
+          x={PREVIEW_W / 2 - 5.7 * S}
+          y={11 * S - 5.7 * S}
+          width={11.4 * S}
+          height={11.4 * S}
+          fill="none"
+          stroke={accent}
+          strokeWidth={1.2 * S}
+          transform={`rotate(45 ${PREVIEW_W / 2} ${11 * S})`}
+        />
+        <circle cx={PREVIEW_W / 2} cy={11 * S} r={8.5 * S} fill="none" stroke={tint(accent, 0.4)} strokeWidth={0.6} />
+      </svg>
+
+      {/* certify + name + rule + body */}
+      <div
+        style={{
+          position: 'absolute',
+          top: certifyY,
+          left: M + 60 * S,
+          right: M + 60 * S,
+          textAlign: 'center',
+          fontStyle: 'italic',
+          fontSize: 13 * S,
+          color: BODY,
+        }}
+      >
+        This is to certify that
+      </div>
+
+      <div
+        style={{
+          position: 'absolute',
+          top: nameY,
+          left: M + 90 * S,
+          right: M + 90 * S,
+          textAlign: 'center',
+          fontSize: nameSize,
+          fontWeight: 700,
+          fontStyle: 'italic',
+          color: INK,
+          lineHeight: 1.1,
+        }}
+      >
+        {sampleName}
+      </div>
+
+      <svg
+        width={PREVIEW_W}
+        height={12 * S}
+        style={{ position: 'absolute', top: nameRuleY - 6 * S, left: 0 }}
+        aria-hidden="true"
+      >
+        <line
+          x1={PREVIEW_W / 2 - nameRuleW / 2}
+          y1={6 * S}
+          x2={PREVIEW_W / 2 + nameRuleW / 2}
+          y2={6 * S}
+          stroke={accent}
+          strokeWidth={1.1}
+        />
+        <line
+          x1={PREVIEW_W / 2 - nameRuleW / 2 + 18 * S}
+          y1={11 * S}
+          x2={PREVIEW_W / 2 + nameRuleW / 2 - 18 * S}
+          y2={11 * S}
+          stroke={tint(accent, 0.4)}
+          strokeWidth={0.6}
+        />
+      </svg>
+
+      <div
+        style={{
+          position: 'absolute',
+          top: bodyY,
+          left: M + 130 * S,
+          right: M + 130 * S,
+          textAlign: 'center',
+          fontSize: 12.5 * S,
+          color: BODY,
+          lineHeight: 1.6,
+        }}
+      >
+        has successfully completed the {template.program_name} at{' '}
+        <strong>{template.company_name || 'Host Company'}</strong>, having fulfilled all required
+        hours, daily documentation, and evaluation standards.
+      </div>
+
+      {/* seal */}
+      <div style={{ position: 'absolute', top: sealCy - 34 * S, left: '50%', transform: 'translateX(-50%)' }}>
+        <CertificateSeal color={accent} />
+      </div>
+
+      {/* signatures - real names above the rules, symmetric about the centre */}
+      {[
+        { edge: -230 * S, signer: sampleSupervisor, role: 'Work Immersion Supervisor' },
+        { edge: 30 * S, signer: template.company_name || 'Host Company', role: 'Company Representative' },
+      ].map((sig) => (
+        <div
+          key={sig.role}
+          style={{
+            position: 'absolute',
+            top: sigLabelY - 22 * S,
+            left: `calc(50% + ${sig.edge}px)`,
+            width: 200 * S,
+            textAlign: 'center',
+          }}
+        >
+          <div
+            style={{
+              fontSize: 11.5 * S,
+              fontStyle: 'italic',
+              color: INK,
+              marginBottom: 3 * S,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {sig.signer}
+          </div>
+          <div style={{ position: 'relative', height: 1 }}>
+            <div style={{ height: 1, background: tint(accent, 0.5) }} />
+            <div
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: -6 * S,
+                width: 1.4,
+                height: 7 * S,
+                background: accent,
+              }}
+            />
+          </div>
+          <div
+            style={{
+              marginTop: 6 * S,
+              fontSize: 9 * S,
+              color: MUTED,
+              letterSpacing: 0.8 * S,
+            }}
+          >
+            {sig.role}
+          </div>
+        </div>
+      ))}
+
+      {/* meta row - three equal columns so the middle value is truly centred */}
+      <div
+        style={{
+          position: 'absolute',
+          top: metaY,
+          left: M + 60 * S,
+          width: W - (M + 60) * 2,
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          fontFamily: 'Helvetica, Arial, sans-serif',
+          fontSize: 7.6 * S,
+          color: MUTED,
+        }}
+      >
+        <span style={{ textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          Issued by: {sampleSupervisor}
+        </span>
+        <span style={{ textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          Certificate No. CERT-0000000-0
+        </span>
+        <span style={{ textAlign: 'right' }}>September 30, 2026</span>
+      </div>
+
+      {/* footer */}
+      <div
+        style={{
+          position: 'absolute',
+          top: footRuleY,
+          left: M + 150 * S,
+          right: M + 150 * S,
+          height: 1,
+          background: tint(accent, 0.22),
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          top: footTextY,
+          left: M + 120 * S,
+          right: M + 120 * S,
+          textAlign: 'center',
+          fontSize: 8 * S,
+          fontStyle: 'italic',
+          color: MUTED,
+          lineHeight: 1.4,
+        }}
+      >
+        {template.footer_text}
+      </div>
+    </div>
   );
 }
 
@@ -58,11 +496,19 @@ function SupervisorCertifications() {
     company_name: 'Host Company',
     program_name: 'Work Immersion',
     footer_text: 'Verify this certificate at the issuing institution. This is an official record of work immersion completion.',
-    border_color: '#1e3a8a',
+    // Maroon, matching the rest of the supervisor UI. The certificate's own
+    // accent stays user-editable from the design modal.
+    border_color: '#8b1e2d',
     title_text: 'CERTIFICATE OF COMPLETION',
   });
   const [savingTemplate, setSavingTemplate] = useState(false);
+  const [designModalOpen, setDesignModalOpen] = useState(false);
+  // 'default' = the supervisor-wide design; a number = that batch's own design.
+  const [designScope, setDesignScope] = useState('default');
+  const [templatesByBatch, setTemplatesByBatch] = useState({});
 
+  // Every batch can hold its own design. Load them all once so switching scope
+  // is instant and the preview always reflects the selected batch.
   const loadAll = async () => {
     setLoading(true);
     setError('');
@@ -70,11 +516,27 @@ function SupervisorCertifications() {
     try {
       const [batchesData, templateData] = await Promise.all([
         getSupervisorBatches(),
-        supervisorGetCertificateTemplate(),
+        supervisorGetCertificateTemplate('default'),
       ]);
       const rawBatches = batchesData.batches || [];
       setBatches(rawBatches);
-      setTemplate((prev) => ({ ...prev, ...(templateData || {}) }));
+
+      const teacherBatches = rawBatches.filter((b) => b.source === 'teacher');
+      const perBatch = await Promise.all(
+        teacherBatches.map((b) =>
+          supervisorGetCertificateTemplate(b.request_id).catch(() => null)
+        )
+      );
+      const byBatch = { default: templateData || {} };
+      teacherBatches.forEach((b, i) => {
+        if (perBatch[i]) byBatch[b.request_id] = perBatch[i];
+      });
+      setTemplatesByBatch(byBatch);
+
+      // Editing or previewing a batch's design shows that batch's values.
+      const active =
+        designScope !== 'default' ? byBatch[designScope] : null;
+      setTemplate({ ...EMPTY_TEMPLATE, ...(templateData || {}), ...(active || {}) });
 
       const forced = {};
       for (const batch of rawBatches) {
@@ -95,6 +557,24 @@ function SupervisorCertifications() {
   useEffect(() => {
     loadAll();
   }, []);
+
+  // Escape closes whichever modal is open and locks page scroll behind it.
+  useEffect(() => {
+    const anyOpen = designModalOpen || Boolean(confirmForceId);
+    if (!anyOpen) return undefined;
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return;
+      if (confirmForceId) setConfirmForceId(null);
+      else setDesignModalOpen(false);
+    };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [designModalOpen, confirmForceId]);
 
   const handleGenerate = async (studentId) => {
     setGeneratingId(studentId);
@@ -177,9 +657,23 @@ function SupervisorCertifications() {
     setError('');
     setMessage('');
     try {
-      const saved = await supervisorSaveCertificateTemplate(template);
-      setTemplate((prev) => ({ ...prev, ...saved }));
-      setMessage('Certificate design saved.');
+      const teacherBatchId = designScope === 'default' ? null : Number(designScope);
+      const saved = await supervisorSaveCertificateTemplate({
+        ...template,
+        teacher_batch_id: teacherBatchId,
+      });
+      setTemplatesByBatch((prev) =>
+        teacherBatchId == null
+          ? prev
+          : { ...prev, [teacherBatchId]: { ...template, ...saved } }
+      );
+      setTemplate({ ...template, ...saved });
+      setMessage(
+        teacherBatchId == null
+          ? 'Default certificate design saved.'
+          : 'Certificate design saved for that batch.'
+      );
+      setDesignModalOpen(false);
       await loadAll();
     } catch (e) {
       setError(e.message);
@@ -188,295 +682,122 @@ function SupervisorCertifications() {
     }
   };
 
-  const accent = template.border_color || '#1e3a8a';
-
-  const outerFrameStyle = useMemo(
-    () => ({
-      width: '100%',
-      maxWidth: 760,
-      aspectRatio: '3 / 2',
-      margin: '0 auto',
-      background: '#fffdf8',
-      border: `2px solid ${accent}`,
-      boxShadow: `inset 0 0 0 6px #fffdf8, inset 0 0 0 7px ${accent}55, 0 24px 50px -18px rgba(15, 23, 42, 0.35)`,
-      borderRadius: 4,
-      position: 'relative',
-      padding: '30px 46px',
-      display: 'flex',
-      flexDirection: 'column',
-      fontFamily: '"Cormorant Garamond", "Iowan Old Style", Georgia, "Times New Roman", serif',
-    }),
-    [accent]
-  );
-
   return (
-    <div>
+    <div className={styles.page}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=EB+Garamond:ital@0;1&display=swap');
       `}</style>
 
       <div className={styles.pageHeader}>
-        <h2>Certifications</h2>
-        <p>Edit your certificate design, then generate signed PDF certificates for students assigned to your batches.</p>
-      </div>
-
-      {message && <div className={styles.message}>{message}</div>}
-      {error && <div className={styles.error}>{error}</div>}
-
-      <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Certificate Design</h3>
-        <form onSubmit={handleSaveTemplate}>
-          <div className={styles.row}>
-            <label className={styles.filterField}>
-              Program
-              <input
-                className={styles.input}
-                value={template.program_name}
-                onChange={(e) => handleTemplateChange('program_name', e.target.value)}
-                required
-              />
-            </label>
-            <label className={styles.filterField}>
-              School / Issuer
-              <input
-                className={styles.input}
-                value={template.school_name}
-                onChange={(e) => handleTemplateChange('school_name', e.target.value)}
-                required
-              />
-            </label>
-          </div>
-
-          <div className={styles.row} style={{ marginTop: 12 }}>
-            <label className={styles.filterField}>
-              Company / Host
-              <input
-                className={styles.input}
-                value={template.company_name}
-                onChange={(e) => handleTemplateChange('company_name', e.target.value)}
-                required
-              />
-            </label>
-            <label className={styles.filterField}>
-              Accent Color
-              <input
-                className={styles.input}
-                type="color"
-                value={template.border_color}
-                onChange={(e) => handleTemplateChange('border_color', e.target.value)}
-              />
-            </label>
-          </div>
-
-          <label className={styles.filterField} style={{ marginTop: 12 }}>
-            Footer Text
-            <textarea
-              className={styles.textarea}
-              value={template.footer_text}
-              onChange={(e) => handleTemplateChange('footer_text', e.target.value)}
-              required
-            />
-          </label>
-
-          <div className={styles.actions} style={{ marginTop: 14 }}>
-            <button className={styles.btn} type="submit" disabled={savingTemplate}>
-              {savingTemplate ? 'Saving...' : 'Save Student Download Design'}
-            </button>
-          </div>
-        </form>
-
-        <div style={{ marginTop: 24 }}>
-          <h4 className={styles.sectionTitle} style={{ marginBottom: 14 }}>
-            Preview
-          </h4>
-
-          <div style={outerFrameStyle}>
-            <CornerOrnament color={accent} corner="tl" />
-            <CornerOrnament color={accent} corner="tr" />
-            <CornerOrnament color={accent} corner="bl" />
-            <CornerOrnament color={accent} corner="br" />
-
-            <div style={{ textAlign: 'center', marginTop: 6 }}>
-              <p
-                style={{
-                  margin: 0,
-                  fontFamily: '"EB Garamond", Georgia, serif',
-                  fontStyle: 'italic',
-                  fontSize: 12,
-                  letterSpacing: '0.22em',
-                  color: '#6b7280',
-                  textTransform: 'uppercase',
-                }}
-              >
-                {template.school_name}
-              </p>
-              <h2
-                style={{
-                  margin: '8px 0 0',
-                  fontSize: 30,
-                  fontWeight: 600,
-                  letterSpacing: '0.06em',
-                  color: '#1c1f2b',
-                  lineHeight: 1.15,
-                }}
-              >
-                {template.title_text || 'CERTIFICATE OF COMPLETION'}
-              </h2>
-
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-              gap: 12,
-              margin: '14px auto 0',
-              width: '64%',
-                }}
-              >
-                <span style={{ flex: 1, height: 1, background: accent, opacity: 0.5 }} />
-                <span
-                  style={{
-                    width: 5,
-                    height: 5,
-                    background: accent,
-                    transform: 'rotate(45deg)',
-                    display: 'inline-block',
-                  }}
-                />
-                <span style={{ flex: 1, height: 1, background: accent, opacity: 0.5 }} />
-              </div>
-            </div>
-
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'center' }}>
-              <p
-                style={{
-                  margin: 0,
-                  fontFamily: '"EB Garamond", Georgia, serif',
-                  fontStyle: 'italic',
-                  color: '#4b5563',
-                  fontSize: 16,
-                }}
-              >
-                This is to certify that
-              </p>
-              <p
-                style={{
-                  margin: '8px 0',
-                  fontSize: 34,
-                  fontWeight: 600,
-                  fontStyle: 'italic',
-                  color: '#1c1f2b',
-                  borderBottom: `1px solid ${accent}66`,
-                  display: 'inline-block',
-                  padding: '0 6px 5px',
-                  alignSelf: 'center',
-                }}
-              >
-                Juan Dela Cruz
-              </p>
-              <p
-                style={{
-                  margin: '8px auto 0',
-                  fontFamily: '"EB Garamond", Georgia, serif',
-                  color: '#374151',
-                  fontSize: 15,
-                  maxWidth: '74%',
-                  lineHeight: 1.5,
-                }}
-              >
-                has successfully completed the {template.program_name} at{' '}
-                <strong style={{ fontWeight: 600 }}>{template.company_name || 'Host Company'}</strong>, having
-                fulfilled all required hours, documentation, and evaluation standards.
-              </p>
-            </div>
-
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4 }}>
-                <CertificateSeal color={accent} />
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  gap: 14,
-                  marginTop: 8,
-                }}
-              >
-                <div style={{ flex: 1, textAlign: 'center' }}>
-                  <div style={{ borderTop: '1px solid #94a3b8', margin: '0 4px 5px' }} />
-                  <p style={{ margin: 0, fontSize: 10, color: '#64748b', letterSpacing: '0.04em' }}>
-                    Work Immersion Supervisor
-                  </p>
-                </div>
-                <div style={{ flex: 1, textAlign: 'center' }}>
-                  <div style={{ borderTop: '1px solid #94a3b8', margin: '0 4px 5px' }} />
-                  <p style={{ margin: 0, fontSize: 10, color: '#64748b', letterSpacing: '0.04em' }}>
-                    Company Representative
-                  </p>
-                </div>
-              </div>
-
-              <p
-                style={{
-                  textAlign: 'center',
-                  color: '#94a3b8',
-                  fontSize: 8,
-                  lineHeight: 1.4,
-                  marginTop: 12,
-                  fontFamily: '"EB Garamond", Georgia, serif',
-                }}
-              >
-                {template.footer_text}
-              </p>
-            </div>
-          </div>
+        <div className={styles.headerIcon}>
+          <Award size={24} />
+        </div>
+        <div>
+          <h1>Certifications</h1>
+          <p>Edit your certificate design, then generate signed PDF certificates for students assigned to your batches.</p>
         </div>
       </div>
 
-      <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Assigned Students</h3>
-        <div className={styles.row} style={{ marginBottom: 12 }}>
-          <select className={styles.select} value={filter} onChange={(e) => setFilter(e.target.value)}>
-            <option value="all">All Students</option>
-            <option value="completed">Completed</option>
-            <option value="incomplete">Incomplete</option>
-          </select>
-          <span className={styles.muted} style={{ alignSelf: 'center' }}>
-            {batches.reduce((sum, b) => sum + (b.students?.length || 0), 0)} total
+      {message && (
+        <div className={`${styles.toast} ${styles.toastSuccess}`} role="status">
+          <span className={styles.toastIcon} aria-hidden="true">
+            <CheckCircle2 size={16} />
           </span>
+          <span className={styles.toastBody}>{message}</span>
+          <button
+            type="button"
+            className={styles.toastClose}
+            aria-label="Dismiss"
+            onClick={() => setMessage('')}
+          >
+            <X size={14} />
+          </button>
         </div>
-        {loading ? (
-          <p className={styles.loading}>Loading students...</p>
-        ) : batches.length === 0 ? (
-          <p className={styles.loading}>No batches assigned to you yet.</p>
-        ) : (
-          batches.map((b) => {
-            const batchStudents = (b.students || []).filter((s) =>
-              filter === 'completed' ? s.completed : filter === 'incomplete' ? !s.completed : true
-            );
-            if (batchStudents.length === 0) return null;
-            return (
-              <div key={`${b.source}-${b.request_id}`} className={styles.batchCard}>
-                <div className={styles.batchHeader}>
-                  <h4 className={styles.batchLabel}>{b.batch_label}</h4>
-                  <span className={styles.badge}>{b.strand || 'General'}</span>
-                </div>
-                <p className={styles.muted}>
-                  Coordinator: {b.coordinator_first_name} {b.coordinator_last_name} -{' '}
-                  {b.students?.length || 0} students
-                </p>
-                <div className={styles.tableWrap}>
+      )}
+      {error && (
+        <div className={`${styles.toast} ${styles.toastError}`} role="alert">
+          <span className={styles.toastIcon} aria-hidden="true">
+            <AlertCircle size={16} />
+          </span>
+          <span className={styles.toastBody}>{error}</span>
+          <button
+            type="button"
+            className={styles.toastClose}
+            aria-label="Dismiss"
+            onClick={() => setError('')}
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* Preview sits on top so the supervisor sees the current design before
+          deciding whether to edit it. */}
+      <section className={styles.card}>
+        <div className={styles.cardHeader}>
+          <div>
+            <h2>Certificate Preview</h2>
+            <p>How every generated certificate will look.</p>
+          </div>
+          <button
+            type="button"
+            className={styles.btn}
+            onClick={() => setDesignModalOpen(true)}
+          >
+            <Pencil size={15} />
+            Edit Design
+          </button>
+        </div>
+
+        <div className={styles.cardBody}>
+          <div className={styles.previewWrap}>
+            <CertificatePreview template={template} />
+          </div>
+          <p className={styles.previewNote}>
+            Sample names shown. Generated certificates carry the student&rsquo;s and
+            supervisor&rsquo;s real names, plus the host company from that batch&rsquo;s design.
+          </p>
+        </div>
+      </section>
+
+      <section className={styles.card}>
+        <div className={styles.cardHeader}>
+          <div>
+            <h2>Assigned Students</h2>
+            <p>Generate certificates for students who have completed immersion.</p>
+          </div>
+        </div>
+
+        <div className={styles.cardBody}>
+          <div className={styles.filterRow}>
+            <select className={styles.select} value={filter} onChange={(e) => setFilter(e.target.value)}>
+              <option value="all">All Students</option>
+              <option value="completed">Completed</option>
+              <option value="incomplete">Incomplete</option>
+            </select>
+            <span className={styles.muted}>
+              {batches.reduce((sum, b) => sum + (b.students?.length || 0), 0)} total
+            </span>
+          </div>
+          {loading ? (
+            <p className={styles.loading}>Loading students...</p>
+          ) : batches.length === 0 ? (
+            <p className={styles.loading}>No batches assigned to you yet.</p>
+          ) : (
+            batches.map((b) => {
+              const batchStudents = (b.students || []).filter((s) =>
+                filter === 'completed' ? s.completed : filter === 'incomplete' ? !s.completed : true
+              );
+              if (batchStudents.length === 0) return null;
+              return (
+                <div key={`${b.source}-${b.request_id}`} className={styles.batchCard}>
+                  <div className={styles.tableWrap}>
                   <table className={styles.table}>
                     <thead>
                       <tr>
                         <th>Student ID</th>
                         <th>Name</th>
                         <th>Email</th>
-                        <th>Grade</th>
-                        <th>Strand</th>
-                        <th>Attendance</th>
-                        <th>Docs</th>
                         <th>Status</th>
                         <th>Action</th>
                       </tr>
@@ -487,10 +808,6 @@ function SupervisorCertifications() {
                           <td>{s.student_number}</td>
                           <td>{s.first_name} {s.last_name}</td>
                           <td>{s.email}</td>
-                          <td>{s.grade_level || '-'}</td>
-                          <td>{s.track_strand || '-'}</td>
-                          <td>{s.attendance_days || 0}</td>
-                          <td>{s.verified_documents || 0}/{s.total_documents || 0}</td>
                           <td>
                             <span className={`${styles.badge} ${s.completed ? styles.badgeApproved : styles.badgePending}`}>
                               {s.completed ? 'Completed' : 'Incomplete'}
@@ -506,7 +823,7 @@ function SupervisorCertifications() {
                                 onClick={() => handleUndoForce(s.user_id)}
                                 disabled={generatingId === s.user_id}
                               >
-                                {generatingId === s.user_id ? 'Undoing...' : 'Undo Force Issue'}
+                                {generatingId === s.user_id ? 'Undoing...' : 'Undo Deploy'}
                               </button>
                             ) : s.completed ? (
                               <button
@@ -523,7 +840,7 @@ function SupervisorCertifications() {
                                 onClick={() => setConfirmForceId(s.user_id)}
                                 disabled={generatingId === s.user_id}
                               >
-                                Force Issue
+                                Deploy Certificate
                               </button>
                             )}
                           </td>
@@ -535,49 +852,187 @@ function SupervisorCertifications() {
               </div>
             );
           })
-        )}
-      </div>
+          )}
+        </div>
+      </section>
+
+      {/* Certificate design editor - a modal so the preview above stays put
+          and the page never reflows while editing. */}
+      {designModalOpen && (
+        <div
+          className={styles.modalOverlay}
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setDesignModalOpen(false);
+          }}
+        >
+          <div
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="design-modal-title"
+          >
+            <div className={styles.modalHeader}>
+              <div>
+                <h3 id="design-modal-title">Certificate Design</h3>
+                <p>These values appear on every generated certificate.</p>
+              </div>
+              <button
+                type="button"
+                className={styles.modalClose}
+                aria-label="Close"
+                onClick={() => setDesignModalOpen(false)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveTemplate} className={styles.modalBody}>
+              <label className={styles.filterField}>
+                Applies to
+                <select
+                  className={styles.select}
+                  value={designScope}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setDesignScope(next);
+                    // Switch the form to that scope's saved values, falling
+                    // back to the shared default for a batch with none yet.
+                    const nextTemplate =
+                      next === 'default'
+                        ? templatesByBatch.default
+                        : templatesByBatch[next] || templatesByBatch.default;
+                    setTemplate({ ...EMPTY_TEMPLATE, ...(nextTemplate || {}) });
+                  }}
+                >
+                  <option value="default">Default (all batches without their own)</option>
+                  {batches
+                    .filter((b) => b.source === 'teacher')
+                    .map((b) => (
+                      <option key={b.request_id} value={b.request_id}>
+                        {b.batch_label}
+                      </option>
+                    ))}
+                </select>
+              </label>
+
+              <p className={styles.scopeNote}>
+                {designScope === 'default'
+                  ? 'Used by any of your batches that does not have a design of its own.'
+                  : 'This design is used for every certificate issued in that batch.'}
+              </p>
+
+              <div className={styles.row}>
+                <label className={styles.filterField}>
+                  Program
+                  <input
+                    className={styles.input}
+                    value={template.program_name}
+                    onChange={(e) => handleTemplateChange('program_name', e.target.value)}
+                    required
+                  />
+                </label>
+                <label className={styles.filterField}>
+                  School / Issuer
+                  <input
+                    className={styles.input}
+                    value={template.school_name}
+                    onChange={(e) => handleTemplateChange('school_name', e.target.value)}
+                    required
+                  />
+                </label>
+              </div>
+
+              <div className={styles.row}>
+                <label className={styles.filterField}>
+                  Company / Host
+                  <input
+                    className={styles.input}
+                    value={template.company_name}
+                    onChange={(e) => handleTemplateChange('company_name', e.target.value)}
+                    required
+                  />
+                </label>
+                <label className={styles.filterField}>
+                  Accent Color
+                  <input
+                    className={styles.input}
+                    type="color"
+                    value={template.border_color}
+                    onChange={(e) => handleTemplateChange('border_color', e.target.value)}
+                  />
+                </label>
+              </div>
+
+              <label className={styles.filterField}>
+                Footer Text
+                <textarea
+                  className={styles.textarea}
+                  value={template.footer_text}
+                  onChange={(e) => handleTemplateChange('footer_text', e.target.value)}
+                  required
+                />
+              </label>
+
+              <div className={styles.modalActions}>
+                <button
+                  type="button"
+                  className={styles.btnSecondary}
+                  onClick={() => setDesignModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className={styles.btn} disabled={savingTemplate}>
+                  <Save size={15} />
+                  {savingTemplate ? 'Saving...' : 'Save Design'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {confirmForceId && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(15, 23, 42, 0.45)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999,
-        }}>
-          <div style={{
-            background: '#fff',
-            border: '1px solid #e2e8f0',
-            borderRadius: 18,
-            padding: 24,
-            maxWidth: 420,
-            width: '92%',
-            boxShadow: '0 20px 44px -12px rgba(15,23,42,0.35)',
-          }}>
-            <h3 style={{ margin: '0 0 8px', fontSize: 16, color: '#0f172a' }}>Force Issue Certificate?</h3>
-            <p style={{ margin: '0 0 16px', color: '#475569', fontSize: 14 }}>
-              This will generate a completion certificate even though this student has not yet completed all milestones. Are you sure you want to continue?
-            </p>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <button
-                className={styles.btnSecondary}
-                type="button"
-                onClick={() => setConfirmForceId(null)}
-                disabled={generatingId === confirmForceId}
-              >
-                Cancel
-              </button>
-              <button
-                className={styles.btn}
-                type="button"
-                onClick={() => handleForceGenerate(confirmForceId)}
-                disabled={generatingId === confirmForceId}
-              >
-                {generatingId === confirmForceId ? 'Issuing...' : 'Yes, Issue Certificate'}
-              </button>
+        <div
+          className={styles.modalOverlay}
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setConfirmForceId(null);
+          }}
+        >
+          <div
+            className={`${styles.modal} ${styles.modalNarrow}`}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="force-issue-title"
+            aria-describedby="force-issue-body"
+          >
+            <div className={styles.modalHeader}>
+              <h3 id="force-issue-title">Force Issue Certificate?</h3>
+            </div>
+            <div className={styles.modalBody}>
+              <p className={styles.confirmText} id="force-issue-body">
+                This will generate a completion certificate even though this student has not yet
+                completed all milestones. Are you sure you want to continue?
+              </p>
+              <div className={styles.modalActions}>
+                <button
+                  className={styles.btnSecondary}
+                  type="button"
+                  onClick={() => setConfirmForceId(null)}
+                  disabled={generatingId === confirmForceId}
+                >
+                  Cancel
+                </button>
+                <button
+                  className={styles.btn}
+                  type="button"
+                  onClick={() => handleForceGenerate(confirmForceId)}
+                  disabled={generatingId === confirmForceId}
+                >
+                  {generatingId === confirmForceId ? 'Issuing...' : 'Yes, Issue Certificate'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

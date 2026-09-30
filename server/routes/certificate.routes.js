@@ -7,8 +7,11 @@ const authorize = require('../middleware/authorizeRole');
 router.use(authenticate);
 
 router.get('/eligible', authorize('supervisor', 'admin'), certificate.getEligibleStudents);
-router.get('/template/me', authenticate, certificate.getMyCertificateTemplate);
-router.put('/template/me', authenticate, certificate.saveMyCertificateTemplate);
+// These are keyed by supervisor_id = req.user.id, so they must be restricted to
+// supervisors/admins. Previously they carried no authorize() at all (only the
+// router-level authenticate), letting any logged-in role read and write them.
+router.get('/template/me', authorize('supervisor', 'admin'), certificate.getMyCertificateTemplate);
+router.put('/template/me', authorize('supervisor', 'admin'), certificate.saveMyCertificateTemplate);
 router.post('/generate/:studentId', authorize('supervisor', 'admin'), certificate.generateCertificate);
 router.post('/force/:studentId', authorize('supervisor', 'admin'), certificate.forceGenerateCertificate);
 router.delete('/undo/:studentId', authorize('supervisor', 'admin'), certificate.undoForceIssue);

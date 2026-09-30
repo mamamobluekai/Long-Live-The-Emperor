@@ -148,8 +148,8 @@
 }
 
 .phaseClosed {
-  background: #fef2f2;
-  color: #b91c1c;
+  background: #eceff3;
+  color: #6b7280;
 }
 
 .phaseText {
@@ -440,15 +440,8 @@
   font-weight: 750;
 }
 
-.dayOpen {
-  background: #dcfce7;
-  color: #15803d;
-}
-
-.dayAbsent {
-  background: #fee2e2;
-  color: #b91c1c;
-}
+/* Status colors are declared next to the later .dayStatus definition
+   (see "STATUS COLORS" below), which is the one that applies. */
 
 
 /* =========================================================
@@ -1824,6 +1817,53 @@
   letter-spacing: 0.03em;
 }
 
+/* ---------- "Already appeal time in/out" badge ----------
+   A filed appeal sits in the same action row as the live Time In / Time Out /
+   Appeal buttons. Rendering it as a bordered chip (instead of bare text) makes
+   it read as a settled state — a status — rather than another tappable action,
+   so the student can tell at a glance which appeals are already submitted and
+   which are still available. */
+.appealFiledBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border: 1px solid #b9d8c2;
+  border-radius: 8px;
+  background: #f2fbf5;
+  color: #1c6b34;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+/* Shown in place of an appeal button that exists but is not yet available,
+   e.g. "Appeal Time Out" before the Time Out window has closed. */
+.appealLockedHint {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 11px;
+  border: 1px dashed #d8dee8;
+  border-radius: 8px;
+  background: #f7f8fa;
+  color: #7c8798;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* A small check dot so the badge is distinguishable without relying on colour
+   alone (colour-blind and greyscale-print friendly). */
+.appealFiledBadge::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2e9d55;
+}
+
 .dayToday {
   background: linear-gradient(180deg, #fffafb 0%, #ffffff 60%);
   box-shadow: inset 3px 0 0 #8b1e2d;
@@ -1842,6 +1882,27 @@
   font-size: 0.72rem;
   font-weight: 750;
   white-space: nowrap;
+}
+
+/* ---------- STATUS COLORS ----------
+   Declared after .dayStatus so the variant wins over the base badge color. */
+
+.dayPresent {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #15803d;
+}
+
+.dayAbsent {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+.dayClosed {
+  background: #eceff3;
+  border-color: #cbd2dc;
+  color: #6b7280;
 }
 
 /* ---------- DELETE CONFIRMATION ---------- */
@@ -2497,6 +2558,19 @@
   .dayPanelActions button {
     width: 100%;
     min-height: 44px;
+  }
+
+  /* On phones the action row stacks, so the filed-appeal badge should stretch
+     to the full width too — otherwise a right-aligned chip beside full-width
+     buttons looks misaligned. Full-width also gives the longer label
+     ("Already appeal time out") room to sit on one line. */
+  .appealFiledBadge {
+    display: flex;
+    width: 100%;
+    justify-content: flex-start;
+    min-height: 40px;
+    white-space: normal;
+    box-sizing: border-box;
   }
 
   .sectionHeaderRow {

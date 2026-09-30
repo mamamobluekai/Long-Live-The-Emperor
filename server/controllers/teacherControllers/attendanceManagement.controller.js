@@ -3,7 +3,8 @@
 // and the batch coordinator may view records, reports, stats, and appeals.
 const pool = require('../../db/');
 const { createNotification, getStudentUserId } = require('../../services/notification.service');
-const { assertBatchAccess } = require('../../utils/batchAccess');
+const { assertBatchAccess, resolveBatchAccess } = require('../../utils/batchAccess');
+const { buildImmersionDateList, loadExcludedDates } = require('../../utils/immersionDays');
 
 const TZ = 'Asia/Manila';
 
@@ -43,23 +44,9 @@ function formatAppealDates(appeal) {
   return { ...appeal, appeal_date: formatDateOnly(appeal.appeal_date) };
 }
 
-function immersionDates(startDate, durationType, durationValue) {
-  const [year, month, day] = String(startDate).slice(0, 10).split('-').map(Number);
-  const current = new Date(year, month - 1, day);
-  const totalDays = durationType === 'hours'
-    ? Math.ceil(Number(durationValue) / 8)
-    : Number(durationValue);
-  const dates = [];
-
-  while (dates.length < totalDays) {
-    if (current.getDay() !== 0 && current.getDay() !== 6) {
-      dates.push(`${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`);
-    }
-    current.setDate(current.getDate() + 1);
-  }
-
-  return dates;
-}
+// Immersion day generation is shared (server/utils/immersionDays.js) so the
+// teacher report counts the same days as the supervisor and student views,
+// skipping weekends, Philippine holidays and supervisor-blocked dates.
 
 // Ensure the requesting user may access the batch (teacher, supervisor, or coordinator).
 async function assertOwnsBatch(user, batchId) {
@@ -114,9 +101,14 @@ const getBatchAttendanceReport = async (req, res) => {
        ORDER BY start_date ASC`,
       [batchId]
     );
-    const dates = [...new Set(schedules.rows.flatMap((schedule) =>
-      immersionDates(schedule.start_date, schedule.duration_type, schedule.duration_value)
-    ))].sort();
+    const { blocked } = await loadExcludedDates(batchId, null);
+    const dates = [...new Set(
+      schedules.rows.flatMap((schedule) =>
+        buildImmersionDateList(schedule.start_date, schedule.duration_type, schedule.duration_value, {
+          blockedDates: blocked,
+        })
+      )
+    )].sort();
 
     if (dates.length === 0) return res.json({ dates: [], records: [] });
 
@@ -255,9 +247,16 @@ const reviewAppeal = async (req, res) => {
     if (appeal.rows.length === 0) return res.status(404).json({ error: 'Appeal not found.' });
 
     const row = appeal.rows[0];
-    const teacherRow = await client.query('SELECT id FROM teachers WHERE user_id = $1', [req.user.id]);
-    const teacherId = teacherRow.rows[0]?.id;
-    if (!teacherId || teacherId !== row.teacher_id) {
+
+    // The assigned TEACHER, the COORDINATOR who created the batch, and the
+    // SUPERVISOR linked to the batch may all decide an appeal. Teachers are
+    // still checked against this specific appeal's teacher_id so a teacher from
+    // another batch can never review someone else's appeal.
+    const access = await resolveBatchAccess(req.user, row.teacher_batch_id);
+    const mayReview = access.isTeacher
+      ? Number(access.teacherId) === Number(row.teacher_id)
+      : access.isSupervisor || access.isCoordinator;
+    if (!mayReview) {
       return res.status(403).json({ error: 'Access denied.' });
     }
 
@@ -270,21 +269,24 @@ const reviewAppeal = async (req, res) => {
       [status, comment || null, req.user.id, appealId]
     );
 
-    // If approved, mark the appealed date as fully present for that student.
-    // - Always sets status = 'present' regardless of attendance_type (time_in
-    //   or time_out) so an appeal for either event covers the whole day.
-    // - If the student already has a check_in / check_out timestamp for the
-    //   day (partial attendance), keep the existing timestamps.
-    // - If they were completely absent, no timestamps are fabricated — the
-    //   day simply flips from absent → present.
-    // - Falls back to a legacy status if the DB's check constraint doesn't
-    //   yet allow 'present' (run migration 016 to widen the constraint).
+    // If approved, the appealed event counts as present for that student.
+    // - The appeal id is written to the column that matches the appeal, so a
+    //   time-out approval never masquerades as a time-in approval on the record
+    //   (previously both columns were stamped with the same id).
+    // - Status becomes 'present' so the day reads as covered in the grid.
+    // - Existing check_in / check_out timestamps are kept: no timestamps are
+    //   ever fabricated, so a fully absent day just flips absent -> present.
+    // - Falls back to a legacy status if the DB's check constraint doesn't yet
+    //   allow 'present' (run migration 016 to widen the constraint).
     if (status === 'approved') {
       const appealDate = row.appeal_date || nowLocalDate();
+      const isTimeOut = row.attendance_type === 'time_out';
+      const inIdSql = isTimeOut ? 'NULL::int' : '$5';
+      const outIdSql = isTimeOut ? '$5' : 'NULL::int';
       const tryUpsert = (st) => client.query(
         `INSERT INTO student_attendance
           (student_id, teacher_batch_id, date, status, appeal_time_in_id, appeal_time_out_id)
-         VALUES ($1, $2, $3, $4, $5, $5)
+         VALUES ($1, $2, $3, $4, ${inIdSql}, ${outIdSql})
          ON CONFLICT (student_id, date) DO UPDATE SET
            status = EXCLUDED.status,
            appeal_time_in_id = COALESCE(student_attendance.appeal_time_in_id, EXCLUDED.appeal_time_in_id),
@@ -298,9 +300,8 @@ const reviewAppeal = async (req, res) => {
       } catch (e) {
         // Constraint still restricts to legacy values — fall back to the
         // appropriate one for the appealed attendance_type.
-        const fallback = row.attendance_type === 'time_out' ? 'checked_out' : 'checked_in';
         if (e.code !== '23514') throw e;
-        await tryUpsert(fallback);
+        await tryUpsert(isTimeOut ? 'checked_out' : 'checked_in');
       }
     }
 

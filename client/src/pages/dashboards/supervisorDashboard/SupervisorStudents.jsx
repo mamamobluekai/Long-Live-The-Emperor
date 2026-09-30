@@ -1,19 +1,22 @@
-import { useEffect, useState } from 'react';
-import { createSupervisorReportConcern, getSupervisorBatches } from '../../../api/supervisorApi';
+import { useEffect, useMemo, useState } from 'react';
+import { getSupervisorBatches } from '../../../api/supervisorApi';
 import Feedback from '../../../components/Feedback';
 import StudentDetailModal from '../../../components/shared/StudentDetailModal';
+import PersonDrawer from '../../../components/shared/PersonDrawer';
 import { getStudentName } from '../../../components/shared/studentFields';
+import { Layers, UserCog, Briefcase } from 'lucide-react';
 import styles from './SupervisorStudent.module.css';
+
+const joinName = (first, last) => `${first || ''} ${last || ''}`.trim() || 'Not provided';
 
 function SupervisorStudents() {
   const [batches, setBatches] = useState([]);
+  const [activePerson, setActivePerson] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [reportOpen, setReportOpen] = useState(false);
-  const [reportForm, setReportForm] = useState({ category: 'Concern', priority: 'normal', message: '' });
-  const [reportStatus, setReportStatus] = useState(null);
-  const [reporting, setReporting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [query, setQuery] = useState('');
+  const [term, setTerm] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -35,207 +38,268 @@ function SupervisorStudents() {
 
   const openStudent = (student, batch) => {
     setSelectedStudent({ student, batch });
-    setReportOpen(false);
-    setReportForm({ category: 'Concern', priority: 'normal', message: '' });
-    setReportStatus(null);
   };
 
   const closeStudent = () => {
     setSelectedStudent(null);
-    setReportOpen(false);
-    setReportStatus(null);
   };
 
-  const submitReport = async (event) => {
-    event.preventDefault();
-    if (!selectedStudent || reporting) return;
-
-    setReporting(true);
-    setReportStatus(null);
-    try {
-      await createSupervisorReportConcern({
-        student_id: selectedStudent.student.student_id,
-        batch_id: selectedStudent.batch.request_id,
-        batch_source: selectedStudent.batch.source,
-        category: reportForm.category,
-        priority: reportForm.priority,
-        message: reportForm.message,
+  // Teacher / coordinator profile opens in the shared side drawer.
+  const openPerson = (role, batch) => {
+    if (role === 'teacher') {
+      setActivePerson({
+        role: 'Teacher',
+        firstName: batch.teacher_first_name,
+        lastName: batch.teacher_last_name,
+        batchLabel: batch.batch_label,
+        fields: [
+          { label: 'Full Name', value: joinName(batch.teacher_first_name, batch.teacher_last_name) },
+          { label: 'Employee ID', value: batch.teacher_employee_id },
+          { label: 'Department', value: batch.teacher_department },
+          { label: 'Designation', value: batch.teacher_designation },
+          { label: 'School', value: batch.teacher_school },
+          { label: 'Email', value: batch.teacher_email },
+          { label: 'Phone', value: batch.teacher_phone },
+          { label: 'Batch', value: batch.batch_label },
+        ],
       });
-      setReportStatus({ type: 'success', text: 'Report submitted.' });
-      setReportForm({ category: 'Concern', priority: 'normal', message: '' });
-      setReportOpen(false);
-    } catch (err) {
-      setReportStatus({ type: 'error', text: err.message || 'Failed to submit report.' });
-    } finally {
-      setReporting(false);
+      return;
     }
+
+    setActivePerson({
+      role: 'Coordinator',
+      firstName: batch.coordinator_first_name,
+      lastName: batch.coordinator_last_name,
+      batchLabel: batch.batch_label,
+      fields: [
+        { label: 'Full Name', value: joinName(batch.coordinator_first_name, batch.coordinator_last_name) },
+        { label: 'Employee ID', value: batch.coordinator_employee_id },
+        { label: 'Department', value: batch.coordinator_department },
+        { label: 'Designation', value: batch.coordinator_designation },
+        { label: 'School', value: batch.coordinator_school },
+        { label: 'Email', value: batch.coordinator_email },
+        { label: 'Phone', value: batch.coordinator_phone },
+        { label: 'Batch', value: batch.batch_label },
+      ],
+    });
   };
 
-  const totalStudents = batches.reduce((sum, b) => sum + (b.students?.length || 0), 0);
+  const closePerson = () => setActivePerson(null);
+
+  // Search only runs on submit, so `term` is the committed query.
+  const handleSearch = (event) => {
+    event.preventDefault();
+    setTerm(query.trim());
+  };
+
+  const clearSearch = () => {
+    setQuery('');
+    setTerm('');
+  };
+
+  // Students per batch, filtered by the committed search term.
+  const visibleBatches = useMemo(() => {
+    const needle = term.toLowerCase();
+    return batches
+      .map((batch) => {
+        const rows = batch.students || [];
+        const batchMeta = [
+          batch.batch_label,
+          batch.strand,
+          batch.teacher_first_name,
+          batch.teacher_last_name,
+          batch.coordinator_first_name,
+          batch.coordinator_last_name,
+        ]
+          .filter(Boolean)
+          .some((field) => String(field).toLowerCase().includes(needle));
+        if (!needle) return { ...batch, visibleStudents: rows };
+        return {
+          ...batch,
+          visibleStudents: batchMeta
+            ? rows
+            : rows.filter((student) =>
+                [
+                  getStudentName(student),
+                  student.student_number,
+                  student.student_id,
+                  student.email,
+                  student.contact_number,
+                  student.phone,
+                  student.track_strand,
+                ]
+                  .filter(Boolean)
+                  .some((field) => String(field).toLowerCase().includes(needle))
+              ),
+        };
+      })
+      .filter((batch) => !needle || batch.visibleStudents.length > 0);
+  }, [batches, term]);
+
+  const totalMatches = visibleBatches.reduce(
+    (sum, batch) => sum + batch.visibleStudents.length,
+    0
+  );
 
   return (
-    <div>
+    <div className={styles.page}>
       <div className={styles.pageHeader}>
-        <h2>Assigned Students</h2>
-        <p>Students assigned to your deployment batches.</p>
+        <div className={styles.headerMain}>
+          <span className={styles.headerIcon}><Layers size={22} /></span>
+          <div>
+            <span className={styles.eyebrow}>Supervisor</span>
+            <h2>My Batches</h2>
+            <p>Teacher and coordinator information for every batch assigned to you.</p>
+          </div>
+        </div>
       </div>
 
       {error && <Feedback type="error" message={error} />}
 
       {loading ? (
-        <p className={styles.loading}>Loading students...</p>
+        <p className={styles.loading}>Loading batches...</p>
       ) : batches.length === 0 ? (
-        <p className={styles.empty}>No deployment batches assigned to you yet.</p>
+        <p className={styles.empty}>No batches assigned to you yet.</p>
       ) : (
         <>
-          <div className={styles.statRow}>
-            <div className={styles.statCard}>
-              <span className={styles.statValue}>{batches.length}</span>
-              <span className={styles.statLabel}>Batches</span>
-            </div>
-            <div className={styles.statCard}>
-              <span className={styles.statValue}>{totalStudents}</span>
-              <span className={styles.statLabel}>Students</span>
-            </div>
-          </div>
+          <form className={styles.searchBar} onSubmit={handleSearch}>
+            <input
+              className={styles.searchInput}
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search batches, teachers, coordinators or students..."
+              aria-label="Search batches"
+            />
+            <button type="submit" className={styles.searchButton}>Search</button>
+            {query && (
+              <button type="button" className={styles.clearButton} onClick={clearSearch}>
+                Clear
+              </button>
+            )}
+          </form>
 
-          {batches.map((b) => (
-            <div key={`${b.source}-${b.request_id}`} className={styles.section}>
-              <h3 className={styles.sectionTitle}>
-                {b.batch_label}
-                <span className={styles.badge} style={{ marginLeft: 10 }}>
-                  {b.strand || 'General'}
-                </span>
-              </h3>
-              <p className={styles.muted}>
-                Coordinator: {b.coordinator_first_name} {b.coordinator_last_name} -{' '}
-                {b.students?.length || 0} students
-              </p>
+          {visibleBatches.length === 0 ? (
+            <p className={styles.empty}>No batches or students match your search.</p>
+          ) : (
+            <div className={styles.batchList}>
+              {visibleBatches.map((batch) => (
+                <section
+                  key={`${batch.source}-${batch.request_id}`}
+                  className={styles.batchCard}
+                >
+                  <header className={styles.batchHeader}>
+                    <div>
+                      <h3>{batch.batch_label}</h3>
+                      {batch.strand ? (
+                        <span className={styles.badge}>{batch.strand}</span>
+                      ) : null}
+                    </div>
+                    <span className={styles.batchCount}>
+                      {batch.visibleStudents.length} student{batch.visibleStudents.length === 1 ? '' : 's'}
+                    </span>
+                  </header>
 
-              {b.students?.length === 0 ? (
-                <p className={styles.empty}>No students assigned yet.</p>
-              ) : (
-                <div className={styles.tableWrap}>
-                  <table className={styles.table}>
-                    <thead>
-                      <tr>
-                        <th>Student ID</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Strand</th>
-                        <th>Contact No.</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {b.students.map((s) => (
-                        <tr
-                          key={`${b.source}-${b.request_id}-${s.student_id}`}
-                          className={styles.studentRow}
-                          onClick={() => openStudent(s, b)}
-                          onKeyDown={(event) => {
-                            if (event.key === 'Enter' || event.key === ' ') {
-                              event.preventDefault();
-                              openStudent(s, b);
-                            }
-                          }}
-                          role="button"
-                          tabIndex={0}
-                          aria-label={`View information for ${getStudentName(s)}`}
-                        >
-                          <td>{s.student_number || s.student_id}</td>
-                          <td>{getStudentName(s)}</td>
-                          <td>{s.email}</td>
-                          <td>{s.track_strand || s.strand || '-'}</td>
-                          <td>{s.contact_number || s.phone || '-'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                  <div className={styles.batchPeople}>
+                    <button
+                      type="button"
+                      className={styles.personCard}
+                      onClick={() => openPerson('teacher', batch)}
+                    >
+                      <span className={styles.personIcon}><UserCog size={16} /></span>
+                      <span className={styles.personText}>
+                        <span className={styles.personLabel}>Teacher</span>
+                        <strong>
+                          {batch.teacher_first_name
+                            ? `${batch.teacher_first_name} ${batch.teacher_last_name || ''}`.trim()
+                            : 'Not assigned'}
+                        </strong>
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className={styles.personCard}
+                      onClick={() => openPerson('coordinator', batch)}
+                    >
+                      <span className={styles.personIcon}><Briefcase size={16} /></span>
+                      <span className={styles.personText}>
+                        <span className={styles.personLabel}>Coordinator</span>
+                        <strong>
+                          {batch.coordinator_first_name
+                            ? `${batch.coordinator_first_name} ${batch.coordinator_last_name || ''}`.trim()
+                            : 'Not assigned'}
+                        </strong>
+                      </span>
+                    </button>
+                  </div>
+
+                  {batch.visibleStudents.length === 0 ? (
+                    <p className={styles.empty}>No students in this batch.</p>
+                  ) : (
+                    <div className={styles.tableWrap}>
+                      <table className={styles.table}>
+                        <thead>
+                          <tr>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Strand</th>
+                            <th>Contact No.</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {batch.visibleStudents.map((student) => (
+                            <tr
+                              key={`${batch.source}-${batch.request_id}-${student.student_id}`}
+                              className={styles.studentRow}
+                              onClick={() => openStudent(student, batch)}
+                              onKeyDown={(event) => {
+                                if (event.key === 'Enter' || event.key === ' ') {
+                                  event.preventDefault();
+                                  openStudent(student, batch);
+                                }
+                              }}
+                              role="button"
+                              tabIndex={0}
+                              aria-label={`View information for ${getStudentName(student)}`}
+                            >
+                              <td>{student.student_number || student.student_id}</td>
+                              <td>{getStudentName(student)}</td>
+                              <td>{student.email}</td>
+                              <td>{student.track_strand || student.strand || '-'}</td>
+                              <td>{student.contact_number || student.phone || '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </section>
+              ))}
             </div>
-          ))}
+          )}
+
+          {term && totalMatches > 0 && (
+            <p className={styles.resultNote}>
+              {totalMatches} student{totalMatches === 1 ? '' : 's'} found.
+            </p>
+          )}
         </>
       )}
+
+      {activePerson && <PersonDrawer person={activePerson} onClose={closePerson} />}
 
       {selectedStudent && (() => {
         const { student, batch } = selectedStudent;
 
         return (
-          <StudentDetailModal student={student} batch={batch} onClose={closeStudent}>
-            {reportStatus && (
-              <div className={`${styles.reportNotice} ${styles['reportNotice_' + reportStatus.type]}`}>
-                {reportStatus.text}
-              </div>
-            )}
-
+          <StudentDetailModal student={student} batch={batch} onClose={closeStudent} variant="drawer">
             <div className={styles.modalActions}>
-              <button type="button" className={styles.reportButton} onClick={() => setReportOpen((open) => !open)}>
-                {reportOpen ? 'Hide Report' : 'Report Concern'}
-              </button>
               <button type="button" className={styles.closeAction} onClick={closeStudent}>
                 Close
               </button>
             </div>
-
-            {reportOpen && (
-              <form className={styles.reportForm} onSubmit={submitReport}>
-                <div className={styles.reportFormHeader}>
-                  <h3>Report Problem or Concern</h3>
-                  <p>{getStudentName(student)}</p>
-                </div>
-
-                <div className={styles.reportFields}>
-                  <label>
-                    Category
-                    <select
-                      value={reportForm.category}
-                      onChange={(event) => setReportForm((form) => ({ ...form, category: event.target.value }))}
-                    >
-                      <option value="Concern">Concern</option>
-                      <option value="Attendance">Attendance</option>
-                      <option value="Performance">Performance</option>
-                      <option value="Behavior">Behavior</option>
-                      <option value="Safety">Safety</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </label>
-
-                  <label>
-                    Priority
-                    <select
-                      value={reportForm.priority}
-                      onChange={(event) => setReportForm((form) => ({ ...form, priority: event.target.value }))}
-                    >
-                      <option value="low">Low</option>
-                      <option value="normal">Normal</option>
-                      <option value="high">High</option>
-                      <option value="urgent">Urgent</option>
-                    </select>
-                  </label>
-                </div>
-
-                <label className={styles.reportMessage}>
-                  Details
-                  <textarea
-                    rows={4}
-                    value={reportForm.message}
-                    onChange={(event) => setReportForm((form) => ({ ...form, message: event.target.value }))}
-                    placeholder="Describe the problem or concern."
-                    required
-                  />
-                </label>
-
-                <div className={styles.reportActions}>
-                  <button type="button" className={styles.cancelReportButton} onClick={() => setReportOpen(false)}>
-                    Cancel
-                  </button>
-                  <button type="submit" className={styles.submitReportButton} disabled={reporting || !reportForm.message.trim()}>
-                    {reporting ? 'Submitting...' : 'Submit Report'}
-                  </button>
-                </div>
-              </form>
-            )}
           </StudentDetailModal>
         );
       })()}

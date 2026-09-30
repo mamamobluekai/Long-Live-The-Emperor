@@ -41,7 +41,7 @@ function DetailSection({ title, children }) {
 
 // Shared "all student information" modal used by the teacher and supervisor
 // student tables so both dashboards show exactly the same detail view.
-function StudentDetailModal({ student, batch, onClose, children }) {
+function StudentDetailModal({ student, batch, onClose, children, variant = 'centered' }) {
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') onClose();
@@ -62,15 +62,19 @@ function StudentDetailModal({ student, batch, onClose, children }) {
     ? `${batch.coordinator_first_name || ''} ${batch.coordinator_last_name || ''}`.trim()
     : '';
 
+  const isDrawer = variant === 'drawer';
+  const shellClass = isDrawer ? `${styles.overlay} ${styles.overlayDrawer}` : styles.overlay;
+  const panelClass = isDrawer ? `${styles.modal} ${styles.modalDrawer}` : styles.modal;
+
   return (
     <div
-      className={styles.overlay}
+      className={shellClass}
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="student-modal-title">
+      <section className={panelClass} role="dialog" aria-modal="true" aria-labelledby="student-modal-title">
         <div className={styles.header}>
           <div className={styles.identityBlock}>
             {student.photo_url ? (

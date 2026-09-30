@@ -1,13 +1,7 @@
 import { useEffect, useState } from 'react';
-import { FileText, AlertCircle, MessageSquare, ChevronDown } from 'lucide-react';
+import { FileText, AlertCircle, MessageSquare, ChevronDown, Scale, X } from 'lucide-react';
 import { getSupervisorAppeals, respondToAppeal } from '../../../api/appealApi';
 import styles from './SupervisorGradeAppeals.module.css';
-
-const STATUS_COLORS = {
-  pending: '#f59e0b',
-  approved: '#22c55e',
-  rejected: '#ef4444',
-};
 
 const STATUS_LABELS = {
   pending: 'Pending',
@@ -15,12 +9,26 @@ const STATUS_LABELS = {
   rejected: 'Rejected',
 };
 
+// Dates read as words, e.g. "September 29, 2026, 3:04 PM".
+function formatDateTime(value) {
+  if (!value) return '';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
 function SupervisorGradeAppeals() {
   const [appeals, setAppeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [expandedAppeal, setExpandedAppeal] = useState(null);
+  const [openAppealId, setOpenAppealId] = useState(null);
   const [respondingAppeal, setRespondingAppeal] = useState(null);
   const [responseText, setResponseText] = useState('');
   const [responseStatus, setResponseStatus] = useState('approved');
@@ -56,6 +64,26 @@ function SupervisorGradeAppeals() {
   const pendingCount = appeals.filter(a => a.status === 'pending').length;
   const approvedCount = appeals.filter(a => a.status === 'approved').length;
   const rejectedCount = appeals.filter(a => a.status === 'rejected').length;
+
+  // The drawer takes Escape and locks page scroll; the respond modal stacks
+  // above it and closes first, so Escape falls through to the drawer.
+  useEffect(() => {
+    if (!openAppealId) return undefined;
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return;
+      if (respondingAppeal) setRespondingAppeal(null);
+      else setOpenAppealId(null);
+    };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [openAppealId, respondingAppeal]);
+
+  const openAppeal = appeals.find((a) => a.id === openAppealId) || null;
 
   async function handleRespond(e) {
     e.preventDefault();
@@ -108,16 +136,19 @@ function SupervisorGradeAppeals() {
     );
   }
 
-  return (
-    <div className={styles.container}>
-      <div className={styles.pageHeader}>
-        <div>
-          <h2>Grade Appeals</h2>
-          <p>Review and respond to student grade appeals.</p>
+    return (
+      <div className={styles.page}>
+        <div className={styles.pageHeader}>
+          <div className={styles.headerIcon}>
+            <Scale size={24} />
+          </div>
+          <div>
+            <h2>Grade Appeals</h2>
+            <p>Review and respond to student grade appeals.</p>
+          </div>
         </div>
-      </div>
 
-      {error && <div className={styles.error}>{error}</div>}
+        {error && <div className={styles.error}>{error}</div>}
 
       {/* Stats */}
       <div className={styles.statsGrid}>
@@ -186,14 +217,113 @@ function SupervisorGradeAppeals() {
               <AppealCard
                 key={appeal.id}
                 appeal={appeal}
-                expanded={expandedAppeal === appeal.id}
-                onToggle={() => setExpandedAppeal(expandedAppeal === appeal.id ? null : appeal.id)}
-                onRespond={() => openRespond(appeal)}
+                onOpen={() => setOpenAppealId(appeal.id)}
               />
             ))}
           </div>
         )}
       </div>
+
+      {/* Detail drawer - the full appeal, so the list stays compact and the
+          page never reflows when a card is opened. */}
+      {openAppeal && (
+        <div
+          className={styles.drawerOverlay}
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setOpenAppealId(null);
+          }}
+        >
+          <aside
+            className={styles.drawer}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="grade-appeal-title"
+          >
+            <div className={styles.drawerHeader}>
+              <div className={styles.drawerHeaderText}>
+                <span className={styles.drawerEyebrow}>
+                  {openAppeal.category_name || 'Overall Grade'} Appeal
+                </span>
+                <h2 id="grade-appeal-title">
+                  {openAppeal.first_name} {openAppeal.last_name}
+                </h2>
+                <p>
+                  {openAppeal.student_number}
+                  {[openAppeal.grade_level, openAppeal.track_strand].filter(Boolean).join(' · ')}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.closeButton}
+                onClick={() => setOpenAppealId(null)}
+                aria-label="Close"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className={styles.drawerBody}>
+              <div className={styles.drawerStatusRow}>
+                <span className={`${styles.statusBadge} ${styles[openAppeal.status] || ''}`}>
+                  {STATUS_LABELS[openAppeal.status] || openAppeal.status}
+                </span>
+                <span className={styles.drawerSubmittedAt}>
+                  Submitted {formatDateTime(openAppeal.created_at)}
+                </span>
+              </div>
+
+              <dl className={styles.drawerMeta}>
+                <div className={styles.drawerMetaRow}>
+                  <dt>Original Grade</dt>
+                  <dd>
+                    {openAppeal.overall_percentage
+                      ? `${openAppeal.overall_percentage}%`
+                      : openAppeal.overall_score || 'N/A'}
+                  </dd>
+                </div>
+                <div className={styles.drawerMetaRow}>
+                  <dt>Student Email</dt>
+                  <dd>{openAppeal.student_email}</dd>
+                </div>
+              </dl>
+
+              <section className={styles.drawerSection}>
+                <h3>Student's Reason</h3>
+                <p className={styles.drawerProse}>{openAppeal.reason || 'No reason provided.'}</p>
+              </section>
+
+              {openAppeal.supervisor_response && (
+                <section className={`${styles.drawerSection} ${styles.drawerSectionResponse}`}>
+                  <h3>
+                    <MessageSquare size={14} />
+                    Your Response ({STATUS_LABELS[openAppeal.status] || openAppeal.status})
+                  </h3>
+                  <p className={styles.drawerProse}>{openAppeal.supervisor_response}</p>
+                  {openAppeal.reviewed_at && (
+                    <span className={styles.drawerRespondedAt}>
+                      Responded {formatDateTime(openAppeal.reviewed_at)}
+                    </span>
+                  )}
+                </section>
+              )}
+            </div>
+
+            {openAppeal.status === 'pending' && (
+              <div className={styles.drawerFooter}>
+                <button
+                  type="button"
+                  className={styles.respondButton}
+                  onClick={() => openRespond(openAppeal)}
+                >
+                  <MessageSquare size={15} />
+                  Respond
+                </button>
+              </div>
+            )}
+          </aside>
+        </div>
+      )}
 
       {/* Response Modal */}
       {respondingAppeal && (
@@ -269,19 +399,16 @@ function SupervisorGradeAppeals() {
 }
 
 function StatCard({ label, value, type }) {
-  const colors = {
-    blue: '#3b82f6',
-    orange: '#f59e0b',
-    green: '#22c55e',
-    red: '#ef4444',
-  };
-  const color = colors[type] || colors.blue;
+  const valueClass = {
+    blue: styles.statBlue,
+    orange: styles.statOrange,
+    green: styles.statGreen,
+    red: styles.statRed,
+  }[type] || styles.statBlue;
 
   return (
     <div className={styles.statCard}>
-      <div className={styles.statIcon} style={{ background: `${color}15` }}>
-        <span style={{ color, fontSize: '20px', fontWeight: 700 }}>{value}</span>
-      </div>
+      <span className={`${styles.statIcon} ${valueClass}`}>{value}</span>
       <div className={styles.statContent}>
         <span className={styles.statLabel}>{label}</span>
       </div>
@@ -289,14 +416,30 @@ function StatCard({ label, value, type }) {
   );
 }
 
-function AppealCard({ appeal, expanded, onToggle, onRespond }) {
+function AppealCard({ appeal, onOpen }) {
   return (
-    <div className={`${styles.appealCard} ${expanded ? styles.expanded : ''}`}>
-      <div className={styles.appealCardHeader} onClick={onToggle}>
+    <div
+      className={styles.appealCard}
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
+    >
+      <div className={styles.appealCardHeader}>
         <div className={styles.appealMain}>
           <div className={styles.appealStudent}>
-            <span className={styles.studentName}>{appeal.first_name} {appeal.last_name}</span>
-            <span className={styles.studentMeta}>{appeal.student_number} · {appeal.grade_level || ''} · {appeal.track_strand || ''}</span>
+            <span className={styles.studentName}>
+              {appeal.first_name} {appeal.last_name}
+            </span>
+            <span className={styles.studentMeta}>
+              {appeal.student_number} · {appeal.grade_level || ''} ·{' '}
+              {appeal.track_strand || ''}
+            </span>
           </div>
           <div className={styles.appealCategory}>
             <AlertCircle size={14} />
@@ -304,68 +447,13 @@ function AppealCard({ appeal, expanded, onToggle, onRespond }) {
           </div>
         </div>
         <div className={styles.appealRight}>
-          <span
-            className={`${styles.statusBadge} ${styles[appeal.status]}`}
-            style={{ background: STATUS_COLORS[appeal.status] }}
-          >
-            {STATUS_LABELS[appeal.status]}
+          <span className={`${styles.statusBadge} ${styles[appeal.status] || ''}`}>
+            {STATUS_LABELS[appeal.status] || appeal.status}
           </span>
-          <ChevronDown
-            size={16}
-            className={`${styles.chevron} ${expanded ? styles.chevronOpen : ''}`}
-          />
+          <span className={styles.viewDetailsHint}>View details</span>
+          <ChevronDown size={16} className={styles.chevron} />
         </div>
       </div>
-
-      {expanded && (
-        <div className={styles.appealDetails}>
-          <div className={styles.detailRow}>
-            <span className={styles.detailLabel}>Submitted:</span>
-            <span>{new Date(appeal.created_at).toLocaleString()}</span>
-          </div>
-          <div className={styles.detailRow}>
-            <span className={styles.detailLabel}>Batch:</span>
-            <span>{appeal.batch_label || 'N/A'}</span>
-          </div>
-          <div className={styles.detailRow}>
-            <span className={styles.detailLabel}>Original Grade:</span>
-            <span>{appeal.overall_percentage ? `${appeal.overall_percentage}%` : appeal.overall_score || 'N/A'}</span>
-          </div>
-          <div className={styles.detailRow}>
-            <span className={styles.detailLabel}>Student Email:</span>
-            <span>{appeal.student_email}</span>
-          </div>
-          <div className={styles.appealReason}>
-            <strong>Student's Reason:</strong>
-            <p>{appeal.reason}</p>
-          </div>
-          {appeal.evaluation_comments && (
-            <div className={styles.evaluationComments}>
-              <strong>Evaluator Comments:</strong>
-              <p>{appeal.evaluation_comments}</p>
-            </div>
-          )}
-          {appeal.supervisor_response && (
-            <div className={styles.supervisorResponse}>
-              <div className={styles.responseHeader}>
-                <MessageSquare size={14} />
-                <strong>Your Previous Response ({STATUS_LABELS[appeal.status]}):</strong>
-              </div>
-              <p>{appeal.supervisor_response}</p>
-              <span className={styles.responseDate}>Responded: {new Date(appeal.reviewed_at).toLocaleString()}</span>
-            </div>
-          )}
-          {appeal.status === 'pending' && (
-            <button
-              type="button"
-              className={styles.respondButton}
-              onClick={onRespond}
-            >
-              <MessageSquare size={14} /> Respond
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 }

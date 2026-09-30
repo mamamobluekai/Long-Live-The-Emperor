@@ -461,7 +461,7 @@ function Progress() {
             {certificate
               ? 'Your certificate has been issued. You may download it now.'
               : completed
-              ? 'Your immersion is complete. You may now download your certificate.'
+              ? 'Your immersion is complete. Downloading issues your certificate with your name on it and your batch\u2019s design.'
               : 'Available once requirements, documentation, and 10 attendance days are complete.'}
           </p>
         </div>

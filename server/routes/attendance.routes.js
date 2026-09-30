@@ -28,7 +28,7 @@ router.get('/teacher/batch/:batchId/records', authenticate, authorize(...BATCH_R
 router.get('/teacher/batch/:batchId/report', authenticate, authorize(...BATCH_ROLES), attendanceManagement.getBatchAttendanceReport);
 router.get('/teacher/batch/:batchId/stats', authenticate, authorize(...BATCH_ROLES), attendanceManagement.getBatchStats);
 router.get('/teacher/batch/:batchId/appeals', authenticate, authorize(...BATCH_ROLES), attendanceManagement.getBatchAppeals);
-router.post('/teacher/appeals/:appealId/review', authenticate, authorize('teacher', 'coordinator'), attendanceManagement.reviewAppeal);
+router.post('/teacher/appeals/:appealId/review', authenticate, authorize('teacher', 'coordinator', 'supervisor'), attendanceManagement.reviewAppeal);
 
 // ----- Work immersion schedules -----
 router.get('/teacher/batch/:batchId/schedules', authenticate, authorize(...BATCH_ROLES), immersionSchedule.getBatchSchedules);

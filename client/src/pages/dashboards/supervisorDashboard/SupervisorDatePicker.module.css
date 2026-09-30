@@ -1,0 +1,327 @@
+/* Design system: Lexend + the RequirementsReview maroon palette. */
+/* ---------- Excluded-day states ---------- */
+.dayHoliday {
+  color: #9a5b10;
+  background: #fff4df;
+  border-color: #f2dfb6;
+  text-decoration: line-through;
+  text-decoration-color: rgba(154, 91, 16, 0.5);
+}
+
+.dayHoliday:hover {
+  color: #9a5b10;
+  background: #ffeccc;
+  border-color: #eccf96;
+}
+
+.dayBlocked {
+  color: #b4233b;
+  background: #fde3e8;
+  border-color: #f0b7c2;
+  text-decoration: line-through;
+  text-decoration-color: rgba(180, 35, 59, 0.5);
+}
+
+.dayBlocked:hover {
+  color: #b4233b;
+  background: #fbd0d9;
+  border-color: #e79aab;
+}
+
+/* A selected day always wins: the strikethrough would read as a mistake. */
+.daySelected.dayHoliday,
+.daySelected.dayBlocked,
+.daySelected.dayHoliday:hover,
+.daySelected.dayBlocked:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
+.daySelected.dayHoliday {
+  background: #9a5b10;
+  border-color: #9a5b10;
+}
+
+.daySelected.dayBlocked {
+  background: #b4233b;
+  border-color: #b4233b;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #f2e9ec;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #758195;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.legendSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+}
+
+.legendHoliday {
+  background: #fff4df;
+  border-color: #f2dfb6;
+}
+
+.legendBlocked {
+  background: #fde3e8;
+  border-color: #f0b7c2;
+}
+
+.legendWeekend {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+/* ---------- Popover (portalled to <body>, viewport-anchored) ---------- */
+.popover {
+  position: fixed;
+  z-index: 2000;
+  width: 322px;
+  padding: 16px;
+  color: #26313f;
+  background: #fff;
+  border: 1px solid #e6dfe2;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px -18px rgba(80, 20, 32, 0.4);
+  animation: popIn 0.16s ease-out;
+}
+
+.wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  height: 38px;
+  padding: 0 11px;
+  color: #172033;
+  background: #fff;
+  border: 1px solid #dcc9cf;
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.trigger:hover:not(:disabled) {
+  border-color: #d8b8c0;
+}
+
+.trigger:focus-visible {
+  outline: none;
+  border-color: #8b1e2d;
+  box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.12);
+}
+
+.trigger:disabled {
+  color: #8490a1;
+  background: #f7f5f6;
+  border-color: #ece0e3;
+  cursor: default;
+}
+
+.triggerOpen {
+  border-color: #8b1e2d;
+  box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.12);
+}
+
+.triggerEmpty {
+  color: #a9b0bd;
+  font-weight: 500;
+}
+
+.triggerIcon {
+  flex-shrink: 0;
+  color: #8b1e2d;
+}
+
+.triggerText {
+  flex: 1;
+  min-width: 0;
+}
+
+.clearBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: #8490a1;
+  border-radius: 50%;
+  transition: 0.15s ease;
+}
+
+.clearBtn:hover {
+  color: #8b1e2d;
+  background: #f5e3e7;
+}
+
+/* ---------- Popover (portalled to <body>, viewport-anchored) ---------- */
+
+@keyframes popIn {
+  from { transform: translateY(-6px) scale(0.98); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.headerLabel {
+  color: #172033;
+  font-family: 'Lexend', Inter, system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+}
+
+.navBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  color: #8b1e2d;
+  background: #fff;
+  border: 1px solid #ecdfe2;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.navBtn:hover {
+  color: #fff;
+  background: #8b1e2d;
+  border-color: #8b1e2d;
+}
+
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.weekday {
+  color: #8b1e2d;
+  font-size: 0.66rem;
+  font-weight: 750;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.day {
+  height: 40px;
+  color: #26313f;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.day:hover {
+  color: #8b1e2d;
+  background: #fdf1f3;
+  border-color: #efdee2;
+}
+
+.dayOutside {
+  color: #c9b6ba;
+  font-weight: 500;
+}
+
+.dayToday {
+  color: #8b1e2d;
+  border-color: #f0d7dc;
+  background: #fff7f8;
+}
+
+.daySelected,
+.daySelected:hover {
+  color: #fff;
+  background: #8b1e2d;
+  border-color: #8b1e2d;
+  box-shadow: 0 6px 14px -8px rgba(139, 30, 45, 0.75);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #f2e9ec;
+}
+
+.footBtn {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 12px;
+  color: #fff;
+  background: #8b1e2d;
+  border: 1px solid #8b1e2d;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.footBtn:hover {
+  background: #7a1725;
+  border-color: #7a1725;
+}
+
+.selectedLabel {
+  min-width: 0;
+  color: #8490a1;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+@media (max-width: 480px) {
+  .popover {
+    width: 100%;
+  }
+}
