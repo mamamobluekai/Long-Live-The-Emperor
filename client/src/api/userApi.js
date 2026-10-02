@@ -1,3 +1,5 @@
+import { withCsrf, methodNeedsCsrf } from '../utils/csrf';
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 function getToken() {
@@ -6,8 +8,11 @@ function getToken() {
 
 async function apiFetch(path, options = {}) {
   const token = getToken();
-  const headers = { ...(options.headers || {}) };
+  let headers = { ...(options.headers || {}) };
   if (token) headers.Authorization = `Bearer ${token}`;
+  // Echo the CSRF token on state-changing verbs so the server can verify the
+  // request originated from our page (#6 CSRF).
+  if (methodNeedsCsrf(options.method)) headers = withCsrf(headers);
   const res = await fetch(`${API_BASE}/users${path}`, {
     credentials: 'include',
     ...options,

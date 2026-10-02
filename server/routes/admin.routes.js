@@ -4,6 +4,8 @@ const multer = require('multer');
 const authenticate = require('../middleware/verifyToken');
 const authorize = require('../middleware/authorizeRole');
 const loginLimiter = require('../middleware/loginLimter');
+const { authLimiter, credentialLimiter, uploadLimiter } = require('../middleware/rateLimiters');
+const { uploadGuard } = require('../middleware/uploadGuard');
 
 const {
   getAllUsers,
@@ -61,7 +63,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const adminOnly = [authenticate, authorize('admin')];
 
-router.post('/login', loginLimiter, login);
+router.post('/login', authLimiter, credentialLimiter, loginLimiter, login);
 
 router.use(...adminOnly);
 
@@ -70,7 +72,7 @@ router.get('/profile', profile);
 router.put('/profile', updateProfile);
 
 router.patch('/profile/password', updatePassword);
-router.post('/profile/picture', upload.single('photo'), uploadProfilePicture);
+router.post('/profile/picture', uploadLimiter, upload.single('photo'), uploadGuard(['image']), uploadProfilePicture);
 
 router.get('/dashboard', dashboard);
 router.get('/dashboard/period-analytics', periodAnalytics);
@@ -94,7 +96,7 @@ router.put('/staff/:id/disapprove', disapproveStaff);
 router.get('/settings', getSettings);
 router.put('/settings', updateSettings);
 router.put('/settings/maintenance', setMaintenanceMode);
-router.post('/settings/logo', upload.single('logo'), uploadLogo);
+router.post('/settings/logo', uploadLimiter, upload.single('logo'), uploadGuard(['image']), uploadLogo);
 
 router.get('/logs', getLogs);
 router.delete('/logs/all', deleteAllLogs);
@@ -123,8 +125,8 @@ router.get('/archives/:archiveId', getArchivePeriod);
 
 router.get('/upload/template/:type', downloadUploadTemplate);
 
-router.post('/upload/teachers', upload.single('file'), uploadTeachersExcel);
-router.post('/upload/supervisors', upload.single('file'), uploadSupervisorsExcel);
-router.post('/upload/coordinators', upload.single('file'), uploadCoordinatorsExcel);
+router.post('/upload/teachers', uploadLimiter, upload.single('file'), uploadGuard(['spreadsheet']), uploadTeachersExcel);
+router.post('/upload/supervisors', uploadLimiter, upload.single('file'), uploadGuard(['spreadsheet']), uploadSupervisorsExcel);
+router.post('/upload/coordinators', uploadLimiter, upload.single('file'), uploadGuard(['spreadsheet']), uploadCoordinatorsExcel);
 
 module.exports = router;

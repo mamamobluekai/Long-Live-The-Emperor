@@ -1,9 +1,12 @@
 const express = require("express")
 const cors = require("cors")
-const helmet = require("helmet")
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const corsOptions = require('./config/corsOption');
+const securityHeaders = require('./middleware/securityHeaders');
+const requestGuard = require('./middleware/requestGuard');
+const { globalLimiter } = require('./middleware/rateLimiters');
+const { csrfProtection, issueCsrfToken } = require('./middleware/csrfProtection');
 const adminRoutes = require('./routes/admin.routes');
 const userRoutes = require('./routes/user.routes');
 const coordinatorRoutes = require('./routes/coordinator.routes');
@@ -23,11 +26,45 @@ const { maintenanceGuard, readMaintenance } = require('./middleware/maintenance'
 
 const app = express();
 
-app.use(helmet());
+// When deployed behind a reverse proxy (nginx / Render / Heroku) the real client
+// IP arrives in X-Forwarded-For. Enabling `trust proxy` lets express-rate-limit
+// key on the true client instead of the proxy. Left off locally because with no
+// proxy a client could otherwise spoof the header.
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+// Do not advertise the framework.
+app.disable('x-powered-by');
+
+// Security response headers incl. a strict Content-Security-Policy (#5 XSS,
+// clickjacking). Replaces the default `helmet()` call so the CSP is explicit.
+app.use(securityHeaders);
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: false, limit: '10kb' }));
 app.use(cookieParser());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Issue a CSRF token cookie before any state-changing route can be reached.
+app.use(issueCsrfToken);
+// Verify the double-submit token on mutations (#6 CSRF).
+app.use(csrfProtection);
+
+// Block obvious injection payloads early (#1 SQLi, #5 XSS, path traversal).
+app.use(requestGuard);
+
+// Global flood ceiling for the whole API (#4 DDoS / API flooding).
+app.use('/api', globalLimiter);
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  // Uploaded files are user-controlled; never let the browser sniff a type it
+  // could execute, and force a download for anything non-image.
+  setHeaders(res, filePath) {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    if (!/\.(png|jpe?g|gif|webp)$/i.test(filePath)) {
+      res.setHeader('Content-Disposition', 'attachment');
+    }
+  },
+}));
 
 
 app.get('/api/health', (req, res) => {

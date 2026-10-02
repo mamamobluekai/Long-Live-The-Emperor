@@ -9,6 +9,12 @@ const {
 } = require('../../utils/loginAttempts');
 const { writeAuditLog } = require('./admin.controller');
 const { getUnreadNotificationCount, ensureAdminTables, ensureCoordinatorRegistrationNotifications } = require('../../services/admin.service');
+const { logSecurityEvent, SECURITY_EVENTS, SEVERITY } = require('../../utils/securityLogger');
+const tokenStore = require('../../utils/tokenStore');
+
+// Anti-enumeration (#8): the admin login returns the same generic message for a
+// non-existent email, a non-admin email and a wrong password.
+const GENERIC_LOGIN_ERROR = 'Invalid email or password.';
 
 async function getClientUrl() {
   return process.env.CLIENT_URL || 'http://localhost:5173';
@@ -26,9 +32,16 @@ const login = async (req, res) => {
 
     const locked = await isAccountLocked(trimmedEmail);
     if (locked) {
-      return res.status(423).json({
-        error: `Account temporarily locked due to too many failed attempts. Try again in ${LOCK_TIME_MINUTES} minute(s).`,
+      // Generic response so a locked account is indistinguishable from a bad
+      // password (otherwise lockout itself confirms the email exists, #8).
+      await logSecurityEvent({
+        type: SECURITY_EVENTS.LOGIN_LOCKED,
+        severity: SEVERITY.WARNING,
+        req,
+        email: trimmedEmail,
+        detail: 'Admin login attempted while locked.',
       });
+      return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
     }
 
     const result = await pool.query(
@@ -38,23 +51,26 @@ const login = async (req, res) => {
 
     if (result.rows.length === 0) {
       await incrementLoginAttempts(trimmedEmail);
-      return res.status(401).json({ error: 'Invalid email or password.' });
+      await logSecurityEvent({ type: SECURITY_EVENTS.LOGIN_FAILED, severity: SEVERITY.WARNING, req, email: trimmedEmail, detail: 'admin login: unknown email' });
+      return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
     }
 
     const user = result.rows[0];
 
+    // Non-admin email: fail with the same generic message so the endpoint cannot
+    // be used to enumerate which emails are administrators (#8).
     if (user.role !== 'admin') {
       await incrementLoginAttempts(trimmedEmail);
-      return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
+      await logSecurityEvent({ type: SECURITY_EVENTS.LOGIN_FAILED, severity: SEVERITY.WARNING, req, email: trimmedEmail, detail: 'admin login: non-admin account' });
+      return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
     }
 
     const match = await comparePassword(password, user.password);
     if (!match) {
-      const attempts = await incrementLoginAttempts(trimmedEmail);
-      return res.status(401).json({
-        error: 'Invalid email or password.',
-        attemptsRemaining: attempts !== undefined ? Math.max(0, 5 - attempts.attempts) : undefined,
-      });
+      // No `attemptsRemaining` — it would leak that the account exists (#2/#8).
+      await incrementLoginAttempts(trimmedEmail);
+      await logSecurityEvent({ type: SECURITY_EVENTS.LOGIN_FAILED, severity: SEVERITY.WARNING, req, email: trimmedEmail, detail: 'admin login: bad password' });
+      return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
     }
 
     if (user.status === 'pending') {
@@ -76,13 +92,30 @@ const login = async (req, res) => {
 
     const payload = { id: user.id, email: user.email, role: user.role };
     const accessToken = generateAccessToken(payload);
-    const refreshToken = generateRefreshToken(payload);
+    // generateRefreshToken returns { token, jti }; persist the rotation record
+    // so this token can be validated and revoked later (#7 session hijacking).
+    const { token: refreshToken, jti: refreshJti } = generateRefreshToken(payload);
+
+    try {
+      await tokenStore.storeRefreshToken({ userId: user.id, token: refreshToken, jti: refreshJti, req });
+    } catch (storeErr) {
+      console.warn('Failed to persist admin refresh token:', storeErr.message);
+    }
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: tokenStore.REFRESH_TTL_MS,
+    });
+
+    await logSecurityEvent({
+      type: SECURITY_EVENTS.LOGIN_SUCCESS,
+      severity: SEVERITY.INFO,
+      req,
+      userId: user.id,
+      email: user.email,
+      detail: 'admin login',
     });
 
     const safeUser = {
@@ -108,7 +141,13 @@ const login = async (req, res) => {
     }
 
     const unread = await getUnreadNotificationCount(user.id);
-    res.json({ message: 'Login successful.', accessToken, user: safeUser, unreadNotifications: unread });
+    res.json({
+      message: 'Login successful.',
+      accessToken,
+      csrfToken: req.cookies?.csrfToken || null,
+      user: safeUser,
+      unreadNotifications: unread,
+    });
   } catch (err) {
     console.error('Admin login error:', err);
     res.status(500).json({ error: 'Server error during login.' });
@@ -121,11 +160,25 @@ const logout = async (req, res) => {
   } catch (e) {
     console.error('Logout audit log error:', e.message);
   }
+
+  // Revoke the refresh token and deny-list the current access token (#7).
+  try {
+    const refresh = req.cookies?.refreshToken;
+    if (refresh) await tokenStore.revokeRefreshToken(refresh);
+    if (req.user?.jti) {
+      await tokenStore.revokeAccessToken({ jti: req.user.jti, userId: req.user.id, reason: 'admin_logout' });
+    }
+  } catch (e) {
+    console.warn('Admin logout revoke error:', e.message);
+  }
+
   res.clearCookie('refreshToken', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
   });
+  const { clearCsrfToken } = require('../../middleware/csrfProtection');
+  clearCsrfToken(res);
     res.json({ message: 'Logged out successfully.' });
 };
 

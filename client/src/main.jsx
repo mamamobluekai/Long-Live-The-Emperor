@@ -9,6 +9,14 @@ import { ToastProvider } from './components/admin/ToastContainer';
 import { ServerErrorProvider } from './components/common/ServerErrorModal';
 import { NotificationProvider } from './context/NotificationContext.jsx';
 import { MaintenanceProvider } from './context/MaintenanceContext.jsx';
+import { installFetchCsrfInterceptor } from './utils/csrf';
+// Imported for its side effect: registers the axios CSRF interceptor on the
+// shared instance (see api/axiosClient.js).
+import './api/axiosClient';
+
+// Must run before the tree mounts, otherwise the first requests (maintenance
+// probe, then login) go out without the CSRF header and get a 403.
+installFetchCsrfInterceptor();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

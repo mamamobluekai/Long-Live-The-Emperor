@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../context/useAdminAuth';
 import { getErrorMessage } from '../../utils/errors';
+import SplashScreen from '../../components/auth/SplashScreen';
 import styles from './AdminLogin.module.css';
 
 
@@ -58,6 +59,7 @@ export default function AdminLogin() {
   };
 
   return (
+    <SplashScreen variant="admin">
     <div className={styles.shell}>
       <div className={styles.overlay} />
 
@@ -262,5 +264,6 @@ export default function AdminLogin() {
         </div>
       </div>
     </div>
+    </SplashScreen>
   );
 }

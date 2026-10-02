@@ -48,6 +48,7 @@ const ERROR_RULES = [
   { match: 'Upload failed', friendly: 'Upload failed. Please check your file and try again.' },
 
   // --- Generic server errors ---
+  { match: /invalid or missing csrf token/i, friendly: 'Your session expired before the request could be verified. Please refresh the page and try again.' },
   { match: 'Server error during login.', friendly: 'Something went wrong while signing in. Please try again in a moment.' },
   { match: 'Server error during registration.', friendly: 'Something went wrong while creating your account. Please try again in a moment.' },
   { match: 'Server error.', friendly: 'Something went wrong on our end. Please try again in a moment.' },

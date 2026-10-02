@@ -10,6 +10,22 @@ const {
   LOCK_TIME_MINUTES,
 } = require('../utils/loginAttempts');
 const { readMaintenance } = require('../middleware/maintenance');
+const { logSecurityEvent, countRecentEvents, SECURITY_EVENTS, SEVERITY } = require('../utils/securityLogger');
+const tokenStore = require('../utils/tokenStore');
+
+// Anti-enumeration (#8): every failed login returns the *same* generic message
+// and status code regardless of whether the email exists, the password was
+// wrong, the role did not match or the account is pending. Distinguishing these
+// cases would let an attacker harvest valid accounts one request at a time.
+const GENERIC_LOGIN_ERROR = 'Invalid email or password.';
+
+// Thresholds for the behavioural detectors. Exceeding either one marks the
+// attempt as brute-force / credential-stuffing in the telemetry feed so an
+// operator can react (and act as an early warning before lockout kicks in).
+const BRUTE_FORCE_WINDOW_MS = 10 * 60 * 1000;
+const BRUTE_FORCE_THRESHOLD = 12;
+const STUFFING_WINDOW_MS = 10 * 60 * 1000;
+const STUFFING_IP_THRESHOLD = 8;
 
 function parseLocalDate(dateStr) {
   if (!dateStr) return null;
@@ -278,6 +294,67 @@ const registerStudent = async (req, res) => {
 
 
 
+// Constant-ish-time guard used when an email does not exist, so a missing
+// account is not measurably faster to reject than a wrong password. Without
+// this, response timing is itself an enumeration oracle (#8).
+async function dummyCompare() {
+  try {
+    await comparePassword('timing-equalizer', '$2b$12$C6UzMDM.H6dfI/f/IKcEeO7ZGm3rS0m2jV6Qq0K7Kq0K7Kq0K7Kq0K');
+  } catch {
+    // ignore: bcrypt.compare on a malformed hash still costs some time
+  }
+}
+
+// Records a failed attempt and, if the failure count crosses the behavioural
+// thresholds, emits a brute-force / credential-stuffing security event.
+async function registerFailedLogin(req, email, reason) {
+  const attempts = await incrementLoginAttempts(email);
+  const ip = require('../utils/securityLogger').getClientIp(req);
+
+  await logSecurityEvent({
+    type: SECURITY_EVENTS.LOGIN_FAILED,
+    severity: SEVERITY.WARNING,
+    req,
+    email,
+    detail: reason,
+    metadata: { attempts: attempts?.attempts ?? null },
+  });
+
+  // Same-email burst -> brute force (#2).
+  const perEmail = await countRecentEvents({
+    type: SECURITY_EVENTS.LOGIN_FAILED,
+    email,
+    windowMs: BRUTE_FORCE_WINDOW_MS,
+  });
+  if (perEmail >= BRUTE_FORCE_THRESHOLD) {
+    await logSecurityEvent({
+      type: SECURITY_EVENTS.BRUTE_FORCE_SUSPECTED,
+      severity: SEVERITY.HIGH,
+      req,
+      email,
+      detail: `${perEmail} failures in ${BRUTE_FORCE_WINDOW_MS / 60000} min for one account.`,
+    });
+  }
+
+  // Many emails from one IP -> credential stuffing (#3).
+  const perIp = await countRecentEvents({
+    type: SECURITY_EVENTS.LOGIN_FAILED,
+    ip,
+    windowMs: STUFFING_WINDOW_MS,
+  });
+  if (perIp >= STUFFING_IP_THRESHOLD) {
+    await logSecurityEvent({
+      type: SECURITY_EVENTS.CREDENTIAL_STUFFING_SUSPECTED,
+      severity: SEVERITY.HIGH,
+      req,
+      email,
+      detail: `${perIp} failures from one IP in ${STUFFING_WINDOW_MS / 60000} min.`,
+    });
+  }
+
+  return attempts;
+}
+
 const login = async (req, res) => {
   try {
     const { email, password, role } = req.body;
@@ -291,9 +368,16 @@ const login = async (req, res) => {
     // Check lockout before even hitting the DB / comparing password
     const locked = await isAccountLocked(trimmedEmail);
     if (locked) {
-      return res.status(423).json({
-        error: `Account temporarily locked due to too many failed attempts. Try again in ${LOCK_TIME_MINUTES} minute(s).`,
+      await logSecurityEvent({
+        type: SECURITY_EVENTS.LOGIN_LOCKED,
+        severity: SEVERITY.WARNING,
+        req,
+        email: trimmedEmail,
+        detail: 'Login attempted while account was locked.',
       });
+      // Same generic wording as a normal failure: revealing "this account is
+      // locked" would confirm the account exists (#8).
+      return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
     }
 
     const result = await pool.query(
@@ -303,18 +387,20 @@ const login = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      await incrementLoginAttempts(trimmedEmail);
-      return res.status(401).json({ error: 'Invalid email or password.' });
+      // Burn comparable time to a real bcrypt compare, then fail generically.
+      await dummyCompare();
+      await registerFailedLogin(req, trimmedEmail, 'unknown email');
+      return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
     }
 
     const user = result.rows[0];
 
-    // Validate role: if a role is requested, the user's account must match it
+    // Validate role: if a role is requested, the user's account must match it.
+    // Fail with the same generic message so the response cannot be used to
+    // learn that the email exists under a different role (#8).
     if (role && user.role !== role) {
-      await incrementLoginAttempts(trimmedEmail);
-      return res.status(401).json({
-        error: `This account is not registered as a ${role}. Please select the correct role.`,
-      });
+      await registerFailedLogin(req, trimmedEmail, 'role mismatch');
+      return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
     }
 
     let profile = {};
@@ -356,13 +442,14 @@ const login = async (req, res) => {
 
     const match = await comparePassword(password, user.password);
     if (!match) {
-      const attempts = await incrementLoginAttempts(trimmedEmail);
-      return res.status(401).json({
-        error: 'Invalid email or password.',
-        attemptsRemaining: attempts !== undefined ? Math.max(0, 5 - attempts) : undefined,
-      });
+      // Deliberately do NOT return `attemptsRemaining`: it leaks that the email
+      // is real and lets an attacker budget their guesses (#2/#8).
+      await registerFailedLogin(req, trimmedEmail, 'bad password');
+      return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
     }
 
+    // Account-state failures only surface *after* the password is proven
+    // correct, so they cannot be used to probe which emails exist (#8).
     if (user.status === 'pending') {
       return res.status(403).json({ error: 'Your account is still pending approval.' });
     }
@@ -398,19 +485,41 @@ const login = async (req, res) => {
 
     const payload = { id: user.id, role: user.role, email: user.email };
     const accessToken = generateAccessToken(payload);
-    const refreshToken = generateRefreshToken(payload);
+    // generateRefreshToken now returns { token, jti } so the rotation record can
+    // be persisted and later validated/revoked (#7 session hijacking).
+    const { token: refreshToken, jti: refreshJti } = generateRefreshToken(payload);
 
+    try {
+      await tokenStore.storeRefreshToken({ userId: user.id, token: refreshToken, jti: refreshJti, req });
+    } catch (storeErr) {
+      console.warn('Failed to persist refresh token:', storeErr.message);
+    }
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: tokenStore.REFRESH_TTL_MS, // 7 days
+    });
+
+    await logSecurityEvent({
+      type: SECURITY_EVENTS.LOGIN_SUCCESS,
+      severity: SEVERITY.INFO,
+      req,
+      userId: user.id,
+      email: user.email,
     });
 
     delete user.password;
 
-    res.json({ message: 'Login successful.', accessToken, user });
+    // The CSRF cookie is issued globally by middleware; echo it so the SPA can
+    // begin sending the X-CSRF-Token header immediately after login.
+    res.json({
+      message: 'Login successful.',
+      accessToken,
+      csrfToken: req.cookies?.csrfToken || null,
+      user,
+    });
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Server error during login.' });
@@ -510,9 +619,104 @@ const setPassword = async (req, res) => {
   }
 };
 
+// Rotating refresh endpoint (#7). Exchanges a valid refresh cookie for a fresh
+// access token and a *new* refresh token, revoking the old one. Replaying an
+// already-revoked refresh token revokes the whole family and is logged as a
+// critical event (see utils/tokenStore.validateRefreshToken).
+const refreshAccessToken = async (req, res) => {
+  try {
+    const presented = req.cookies?.refreshToken;
+    if (!presented) {
+      return res.status(401).json({ error: 'No refresh token provided.' });
+    }
+
+    const { verifyRefreshToken } = require('../utils/generateToken');
+    let decoded;
+    try {
+      decoded = verifyRefreshToken(presented);
+    } catch {
+      return res.status(401).json({ error: 'Invalid or expired refresh token.' });
+    }
+
+    const check = await tokenStore.validateRefreshToken(presented, req);
+    if (!check.valid) {
+      res.clearCookie('refreshToken');
+      return res.status(401).json({ error: 'Refresh token is no longer valid.' });
+    }
+
+    const userResult = await pool.query(
+      'SELECT id, email, role, status FROM users WHERE id = $1',
+      [check.row.user_id]
+    );
+    if (userResult.rows.length === 0) {
+      res.clearCookie('refreshToken');
+      return res.status(401).json({ error: 'Account no longer exists.' });
+    }
+    const user = userResult.rows[0];
+    if (user.status !== 'approved') {
+      res.clearCookie('refreshToken');
+      return res.status(403).json({ error: 'Account is not active.' });
+    }
+
+    const payload = { id: user.id, role: user.role, email: user.email };
+    const accessToken = generateAccessToken(payload);
+    const { token: newRefresh, jti: newJti } = generateRefreshToken(payload);
+
+    // Rotate: revoke the presented token and persist the replacement.
+    await tokenStore.rotateRefreshToken(presented, newJti);
+    await tokenStore.storeRefreshToken({ userId: user.id, token: newRefresh, jti: newJti, req });
+
+    res.cookie('refreshToken', newRefresh, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: tokenStore.REFRESH_TTL_MS,
+    });
+
+    return res.json({ accessToken, csrfToken: req.cookies?.csrfToken || null });
+  } catch (err) {
+    console.error('Refresh token error:', err);
+    return res.status(500).json({ error: 'Server error during token refresh.' });
+  }
+};
+
+// Logout (#7). Revokes the refresh token AND adds the current access token's
+// jti to the deny-list so the still-valid access token cannot be replayed.
+const logout = async (req, res) => {
+  try {
+    const refresh = req.cookies?.refreshToken;
+    if (refresh) {
+      await tokenStore.revokeRefreshToken(refresh);
+    }
+    if (req.user?.jti) {
+      await tokenStore.revokeAccessToken({ jti: req.user.jti, userId: req.user.id, reason: 'logout' });
+    }
+    await logSecurityEvent({
+      type: SECURITY_EVENTS.TOKEN_REVOKED,
+      severity: SEVERITY.INFO,
+      req,
+      userId: req.user?.id || null,
+      detail: 'User logged out.',
+    });
+  } catch (err) {
+    console.warn('Logout cleanup error:', err.message);
+  }
+
+  res.clearCookie('refreshToken', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+  });
+  const { clearCsrfToken } = require('../middleware/csrfProtection');
+  clearCsrfToken(res);
+  return res.json({ message: 'Logged out successfully.' });
+};
+
 module.exports = {
   registerStudent,
   login,
+  refreshAccessToken,
+  logout,
   getMe,
   setPassword,
   checkImmersionPeriodAccess,
@@ -520,6 +724,8 @@ module.exports = {
 
 exports.registerStudent = registerStudent;
 exports.login = login;
+exports.refreshAccessToken = refreshAccessToken;
+exports.logout = logout;
 exports.getMe = getMe;
 exports.setPassword = setPassword;
 exports.checkImmersionPeriodAccess = checkImmersionPeriodAccess;

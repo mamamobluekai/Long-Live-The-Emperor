@@ -13,6 +13,7 @@ export function AuthProvider({ children }) {
   });
 
   const [token, setToken] = useState(() => localStorage.getItem('wim-token') || '');
+  const [csrfToken, setCsrfToken] = useState(() => localStorage.getItem('wim-csrf') || '');
 
   useEffect(() => {
     if (user) {
@@ -30,15 +31,27 @@ export function AuthProvider({ children }) {
     }
   }, [token]);
 
+  useEffect(() => {
+    if (csrfToken) {
+      localStorage.setItem('wim-csrf', csrfToken);
+    } else {
+      localStorage.removeItem('wim-csrf');
+    }
+  }, [csrfToken]);
+
   const login = (authData) => {
     const nextUser = authData?.user || null;
     setUser(nextUser);
     setToken(authData?.accessToken || '');
+    // Persist the CSRF token issued at login so subsequent mutating requests
+    // can echo it in the X-CSRF-Token header (#6 CSRF).
+    setCsrfToken(authData?.csrfToken || '');
   };
 
   const logout = () => {
     setUser(null);
     setToken('');
+    setCsrfToken('');
   };
 
   const updateUser = (partial) => {
