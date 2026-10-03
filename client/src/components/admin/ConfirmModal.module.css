@@ -1,3 +1,10 @@
+/* Must stack above the dialogs that open it. Confirm modals are triggered from
+   inside page-level dialogs (the user-management role list at 10000, the
+   profile drawer at 10000), and those are all fixed-position siblings sharing
+   one stacking context. At an equal z-index the later element in the DOM paints
+   on top, which buried the confirm behind the dialog it was opened from - hence
+   this sits one full layer higher, matching the convention already used in
+   SupervisorGradeAppeals (3100 over 3000). */
 .overlay {
   position: fixed;
   inset: 0;
@@ -5,7 +12,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000;
+  z-index: 11000;
   padding: 24px;
 }
 

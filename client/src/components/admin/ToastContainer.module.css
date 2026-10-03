@@ -1,9 +1,14 @@
+/* Toasts are the single error/success surface for the app, so they must sit
+   above every dialog they can be raised from: page modals at 10000
+   (UserManagement, Settings) and ConfirmModal at 11000. At 9999 the toast was
+   rendered *behind* those overlays and appeared to vanish, which left the
+   admin with no confirmation of an action at all. */
 .toastContainer {
   position: fixed;
   top: 24px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 9999;
+  z-index: 12000;
   max-width: calc(100vw - 48px);
   pointer-events: none;
 }

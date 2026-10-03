@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { loginUser, registerUser } from '../api/authApi';
 import { getErrorMessage } from '../utils/errors';
+import { getPasswordFormProblem } from '../utils/passwordPolicy';
 
 export function useAuthForm(onAuthSuccess) {
   const [mode, setMode] = useState('login');
@@ -37,6 +38,18 @@ export function useAuthForm(onAuthSuccess) {
     setError('');
     setMessage('');
     setLoginSuccess(null);
+
+    // The student picks their own password at registration and keeps it. Check
+    // it here as well as on the server so the rule is explained before submit
+    // rather than after a round trip.
+    if (mode === 'register') {
+      const problem = getPasswordFormProblem(form.password, form.confirmPassword);
+      if (problem) {
+        setError(problem);
+        setLoading(false);
+        return;
+      }
+    }
 
     try {
       const payload = mode === 'login'

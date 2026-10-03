@@ -4,8 +4,9 @@ import { io } from 'socket.io-client';
 import { getChatBatches } from '../api/chatApi';
 import { useAuth } from './AuthContext';
 import { ChatUnreadContext } from './chatUnreadContext';
+import { SOCKET_URL } from '../config/api';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+
 
 export function ChatUnreadProvider({ children }) {
   const { user, token } = useAuth();

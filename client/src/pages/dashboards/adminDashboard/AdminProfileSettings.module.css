@@ -455,6 +455,13 @@
   font-weight: 600;
 }
 
+.helperText {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
 .passwordHint {
   display: flex;
   align-items: center;

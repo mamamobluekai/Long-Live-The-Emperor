@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const pool = require('../db');
 const nodemailer = require('nodemailer');
 const { hashPassword } = require('../utils/hashPassword');
+const { validatePassword, validateConfirmation } = require('../utils/passwordPolicy');
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -111,12 +112,14 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ error: 'Password is required.' });
     }
 
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+    const problem = validatePassword(password);
+    if (problem) {
+      return res.status(400).json({ error: problem });
     }
 
-    if (confirmPassword !== undefined && password !== confirmPassword) {
-      return res.status(400).json({ error: 'Passwords do not match.' });
+    const mismatch = validateConfirmation(password, confirmPassword);
+    if (mismatch) {
+      return res.status(400).json({ error: mismatch });
     }
 
     const tokenResult = await pool.query(

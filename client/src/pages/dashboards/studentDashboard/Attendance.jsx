@@ -13,6 +13,7 @@ import {
 import {
   getMyDailyDocs,
 } from '../../../api/fileApi';
+import { API_BASE } from '../../../config/api';
 import styles from './Attendance.module.css';
 
 const TZ_LABEL = 'Asia/Manila';
@@ -750,10 +751,7 @@ function Attendance() {
         async (pos) => {
           try {
             await fetch(
-              `${
-                import.meta.env.VITE_API_URL ||
-                'http://localhost:5000/api'
-              }/tracking/location/update`,
+              `${API_BASE}/tracking/location/update`,
               {
                 method: 'POST',
                 headers: {

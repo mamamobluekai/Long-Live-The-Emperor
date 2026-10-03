@@ -178,7 +178,6 @@ export default function AccessLogs() {
   const [truncated, setTruncated] = useState(false);
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   const [exportFormat, setExportFormat] = useState('csv');
 
@@ -198,7 +197,6 @@ export default function AccessLogs() {
   // instead of being split across pages.
   const loadLogs = useCallback(async () => {
     setLoading(true);
-    setError('');
 
     try {
       const data = await getAccessLogs({ page: 1, limit: ALL_LIMIT });
@@ -209,13 +207,13 @@ export default function AccessLogs() {
         (Number(data.pagination?.total) || 0) > (data.logs?.length || 0),
       );
     } catch (err) {
-      setError(err.message || 'Unable to load access logs.');
+      showToast(err.message || 'Unable to load access logs.', 'error');
       setLogs([]);
       setTotal(0);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     loadLogs();
@@ -424,13 +422,6 @@ export default function AccessLogs() {
           <ScrollText size={24} />
         </div>
       </div>
-
-      {error && (
-        <div className={styles.errorAlert}>
-          <AlertCircle size={18} />
-          <span>{error}</span>
-        </div>
-      )}
 
       <div className={styles.card}>
         <div className={styles.metaBar}>

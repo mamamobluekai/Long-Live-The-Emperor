@@ -8,8 +8,9 @@ import { useTeacherBatch } from '../../../hooks/useTeacherBatch';
 import { getBatchCurrentLocations } from '../../../api/teacherApi';
 import { buildBatchColorMap } from '../../../utils/batchColors';
 import styles from './LiveMap.module.css';
+import { SOCKET_URL } from '../../../config/api';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+
 
 // Map Configuration — locked to Marinduque province, Philippines
 const MAP_CONFIG = {

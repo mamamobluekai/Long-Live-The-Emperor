@@ -1,8 +1,8 @@
 const multer = require('multer');
-const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const xlsx = require('xlsx');
 const pool = require('../../db');
+const { NO_PASSWORD_SENTINEL } = require('../../utils/passwordPolicy');
 const { parseSheetRows, EMAIL_REGEX } = require('../../utils/excelUpload');
 
 // Example workbooks so an admin always has the exact column layout the importer
@@ -239,14 +239,11 @@ const uploadTeachersExcel = async (req, res) => {
           continue;
         }
 
-        const tempPassword = Math.random().toString(36).slice(-12);
-        const hashedPassword = await bcrypt.hash(tempPassword, 10);
-
         const userResult = await client.query(
           `INSERT INTO users (email, password, role, phone, status)
            VALUES ($1, $2, 'teacher', $3, 'pending')
            RETURNING id`,
-          [email, hashedPassword, phone || null]
+          [email, NO_PASSWORD_SENTINEL, phone || null]
         );
 
         const userId = userResult.rows[0].id;
@@ -336,14 +333,11 @@ const uploadSupervisorsExcel = async (req, res) => {
           continue;
         }
 
-        const tempPassword = Math.random().toString(36).slice(-12);
-        const hashedPassword = await bcrypt.hash(tempPassword, 10);
-
         const userResult = await client.query(
           `INSERT INTO users (email, password, role, phone, status)
            VALUES ($1, $2, 'supervisor', $3, 'pending')
            RETURNING id`,
-          [email, hashedPassword, phone || null]
+          [email, NO_PASSWORD_SENTINEL, phone || null]
         );
 
         const userId = userResult.rows[0].id;
@@ -444,15 +438,12 @@ const uploadCoordinatorsExcel = async (req, res) => {
           continue;
         }
 
-        const tempPassword = Math.random().toString(36).slice(-12);
-        const hashedPassword = await bcrypt.hash(tempPassword, 10);
-
         // Insert coordinator in users table
         const userResult = await client.query(
           `INSERT INTO users (email, password, role, phone, status)
            VALUES ($1, $2, 'coordinator', $3, 'pending')
            RETURNING id`,
-          [email, hashedPassword, phone || null]
+          [email, NO_PASSWORD_SENTINEL, phone || null]
         );
 
         const userId = userResult.rows[0].id;

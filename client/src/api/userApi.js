@@ -1,6 +1,7 @@
 import { withCsrf, methodNeedsCsrf } from '../utils/csrf';
+import { API_BASE } from '../config/api';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
 
 function getToken() {
   return localStorage.getItem('wim-token') || '';
@@ -37,11 +38,11 @@ export async function updateUserProfile(profile) {
   });
 }
 
-export async function changeUserPassword(currentPassword, newPassword) {
+export async function changeUserPassword(currentPassword, newPassword, confirmPassword) {
   return apiFetch('/profile/password', {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ currentPassword, newPassword }),
+    body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
   });
 }
 

@@ -6,6 +6,7 @@ const nodemailer = require('nodemailer');
 const PDFDocument = require('pdfkit');
 const XLSX = require('xlsx');
 const { hashPassword } = require('../../utils/hashPassword');
+const { validatePassword, validateConfirmation } = require('../../utils/passwordPolicy');
 const { generateTemporaryPassword } = require('../../utils/generatePassword');
 const { login } = require('../user.controller');
 const adminService = require('../../services/admin.service');
@@ -39,8 +40,16 @@ const ROLE_LABELS = {
   admin: 'Admin',
 };
 
-async function sendApprovalEmail(user, approvedByLabel, tempPassword) {
+// How long an emailed set-your-password link stays usable after approval.
+const APPROVAL_TOKEN_TTL_MINUTES = 60;
+
+// No temporary password: the recipient sets and confirms their own password on
+// the linked page. `token` is a one-time, expiring link, and is the only
+// credential the holder needs. Returns true when the transport accepted the
+// message so the caller can warn when nothing was delivered.
+async function sendApprovalEmail(user, approvedByLabel, token, expiresInMinutes = 60) {
   const roleLabel = ROLE_LABELS[user.role] || user.role;
+  const setPasswordUrl = `${getClientUrl()}/set-password?token=${encodeURIComponent(token)}`;
   try {
     await transporter.sendMail({
       from: `"Work Immersion System" <${process.env.EMAIL_USER}>`,
@@ -50,25 +59,24 @@ async function sendApprovalEmail(user, approvedByLabel, tempPassword) {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #2a5298;">Account Approved</h2>
           <p>Hello <strong>${user.first_name} ${user.last_name}</strong>,</p>
-          <p>Your ${roleLabel} account has been approved by the administrator. A temporary password was created for you so you can log in right away.</p>
+          <p>Your ${roleLabel} account has been approved. Choose a password of your own using the button below - you will confirm it before it is saved.</p>
           <p><strong>Email:</strong> ${user.email}</p>
-          <p style="margin: 16px 0;">
-            <strong>Temporary password:</strong>
-            <code style="display: inline-block; background: #f1f5f9; padding: 8px 12px; border-radius: 5px; font-size: 16px; letter-spacing: 1px;">${tempPassword}</code>
-          </p>
           <p style="margin: 20px 0;">
-            <a href="${getClientUrl()}/login" style="background: #2a5298; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
-              Log In
+            <a href="${setPasswordUrl}" style="background: #2a5298; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Set Your Password
             </a>
           </p>
-          <p style="color: #666; font-size: 12px;">For your security, please change this password after logging in.</p>
+          <p style="color: #666; font-size: 12px;">This link is valid for ${expiresInMinutes} minutes and can be used only once.</p>
+          <p style="color: #666; font-size: 12px;">After setting it you can sign in with your email, and change your password again at any time from your profile settings.</p>
           <p style="color: #666; font-size: 12px;">Marinduque National High School - Work Immersion Office</p>
         </div>
       `,
     });
     console.log(`Approval email sent to ${user.email}`);
+    return true;
   } catch (emailErr) {
     console.error(`Failed to send approval email to ${user.email}:`, emailErr.message);
+    return false;
   }
 }
 
@@ -353,14 +361,6 @@ const approveStaff = async (req, res) => {
 
     const user = result.rows[0];
 
-    // Create a temporary password and set it as the user's password so they
-    // can log in immediately after approval.
-    const tempPassword = generateTemporaryPassword();
-    await pool.query(
-      `UPDATE users SET password = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
-      [await hashPassword(tempPassword), id]
-    );
-
     // Fetch role-specific data to get first_name and last_name
     let roleData = {};
     if (user.role === 'teacher') {
@@ -384,12 +384,28 @@ const approveStaff = async (req, res) => {
     }
 
     const userWithNames = { ...user, ...roleData };
-    await sendApprovalEmail(userWithNames, 'admin', tempPassword);
+
+    // One-time link instead of a temporary password: the staff member sets and
+    // confirms their own password on the /set-password?token= page.
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + APPROVAL_TOKEN_TTL_MINUTES * 60 * 1000);
+    await pool.query(
+      `INSERT INTO password_reset_tokens (user_id, token, expires_at)
+       VALUES ($1, $2, $3)`,
+      [user.id, token, expiresAt]
+    );
+
+    const emailed = await sendApprovalEmail(userWithNames, 'admin', token, APPROVAL_TOKEN_TTL_MINUTES);
 
     await writeAuditLog(req, 'account_approval', `${ROLE_LABELS[user.role]} ${userWithNames.first_name || ''} ${userWithNames.last_name || ''} (${user.email}) approved`);
-    await writeAuditLog(req, 'password_reset', `Temporary password generated for ${user.email} on approval`);
 
-    res.json({ message: `${ROLE_LABELS[user.role]} approved.`, user: userWithNames, tempPassword });
+    res.json({
+      message: emailed
+        ? `${ROLE_LABELS[user.role]} approved. Set-your-password link emailed.`
+        : `${ROLE_LABELS[user.role]} approved, but the email failed to send.`,
+      emailSent: emailed,
+      user: userWithNames,
+    });
   } catch (err) {
     console.error('Approve staff error:', err);
     res.status(500).json({ error: 'Server error.' });
@@ -579,13 +595,21 @@ const approveCoordinator = async (req, res) => {
       return res.status(404).json({ error: 'Pending coordinator not found.' });
     }
     const fullName = `${result.profile.first_name || ''} ${result.profile.last_name || ''}`.trim() || result.user.email;
-    await sendApprovalEmail(
+    const emailed = await sendApprovalEmail(
       { ...result.user, first_name: result.profile.first_name, last_name: result.profile.last_name, role: 'coordinator' },
       'admin',
-      result.tempPassword
+      result.token,
+      APPROVAL_TOKEN_TTL_MINUTES
     );
     await writeAuditLog(req, 'coordinator_approval', `Approved coordinator ${fullName}`);
-    res.json({ message: 'Coordinator approved.', tempPassword: result.tempPassword, user: result.user, profile: result.profile });
+    res.json({
+      message: emailed
+        ? 'Coordinator approved. Set-your-password link emailed.'
+        : 'Coordinator approved, but the email failed to send.',
+      emailSent: emailed,
+      user: result.user,
+      profile: result.profile,
+    });
   } catch (err) {
     console.error('Approve coordinator error:', err);
     res.status(500).json({ error: 'Server error.' });
@@ -610,14 +634,20 @@ const rejectCoordinator = async (req, res) => {
 
 const updatePassword = async (req, res) => {
   try {
-    const { currentPassword, newPassword } = req.body;
+    const { currentPassword, newPassword, confirmPassword } = req.body;
 
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ error: 'Current password and new password are required.' });
     }
 
-    if (newPassword.length < 8) {
-      return res.status(400).json({ error: 'New password must be at least 8 characters.' });
+    const mismatch = validateConfirmation(newPassword, confirmPassword);
+    if (mismatch) {
+      return res.status(400).json({ error: mismatch });
+    }
+
+    const problem = validatePassword(newPassword);
+    if (problem) {
+      return res.status(400).json({ error: problem });
     }
 
     const result = await adminService.updateAdminPassword(req.user.id, currentPassword, newPassword);

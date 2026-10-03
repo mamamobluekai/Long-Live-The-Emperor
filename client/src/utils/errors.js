@@ -47,6 +47,13 @@ const ERROR_RULES = [
   { match: 'Logo upload failed', friendly: 'Logo upload failed. Please try again.' },
   { match: 'Upload failed', friendly: 'Upload failed. Please check your file and try again.' },
 
+  // --- Session / token expiry ---
+  { match: /invalid or expired token/i, friendly: 'Your session has expired. Please log in again.' },
+  { match: /session has been revoked/i, friendly: 'You have been signed out. Please log in again.' },
+  { match: /access denied\. no token provided/i, friendly: 'You are not signed in. Please log in again.' },
+  { match: /no refresh token provided|invalid or expired refresh token|refresh token is no longer valid/i, friendly: 'Your session has expired. Please log in again.' },
+  { match: /account is not active|account no longer exists/i, friendly: 'Your account is no longer active. Please contact your administrator.' },
+
   // --- Generic server errors ---
   { match: /invalid or missing csrf token/i, friendly: 'Your session expired before the request could be verified. Please refresh the page and try again.' },
   { match: 'Server error during login.', friendly: 'Something went wrong while signing in. Please try again in a moment.' },

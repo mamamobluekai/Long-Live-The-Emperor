@@ -1,6 +1,7 @@
 const pool = require('../db');
 const nodemailer = require('nodemailer');
 const { hashPassword, comparePassword } = require('../utils/hashPassword');
+const { validatePassword, validateConfirmation } = require('../utils/passwordPolicy');
 const { generateAccessToken, generateRefreshToken } = require('../utils/generateToken');
 const {
   getLoginAttempts,
@@ -201,7 +202,7 @@ const registerStudent = async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields.' });
     }
 
-    if (confirmPassword !== undefined && password !== confirmPassword) {
+    if (confirmPassword === undefined || password !== confirmPassword) {
       return res.status(400).json({ error: 'Passwords do not match.' });
     }
 
@@ -210,8 +211,9 @@ const registerStudent = async (req, res) => {
       return res.status(400).json({ error: 'Invalid email address.' });
     }
 
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+    const weak = validatePassword(password);
+    if (weak) {
+      return res.status(400).json({ error: weak });
     }
 
     const trimmedEmail = String(email).trim();
@@ -588,22 +590,36 @@ const getMe = async (req, res) => {
   }
 };
 
+// Account activation only. This route is deliberately unauthenticated (a new
+// staff member cannot log in to activate), so it must never be able to touch an
+// account that is already usable. Restricting it to status = 'pending' means
+// knowing an email address alone can no longer overwrite the password of a
+// live, approved account (previously status IN ('pending','approved') allowed
+// exactly that). Changing the password of an active account goes through
+// PATCH /api/users/profile/password or the emailed reset-token flow, both of
+// which prove control of the account first.
 const setPassword = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    
+    const { email, password, confirmPassword } = req.body;
+
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required.' });
     }
-    
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+
+    const problem = validatePassword(password);
+    if (problem) {
+      return res.status(400).json({ error: problem });
     }
-    
+
+    const mismatch = validateConfirmation(password, confirmPassword);
+    if (mismatch) {
+      return res.status(400).json({ error: mismatch });
+    }
+
     const result = await pool.query(
       `UPDATE users
        SET password = $1, status = 'approved', updated_at = CURRENT_TIMESTAMP
-       WHERE email = $2 AND status IN ('pending', 'approved')
+       WHERE email = $2 AND status = 'pending'
        RETURNING id, email, role`,
       [await hashPassword(password), email]
     );
@@ -653,7 +669,11 @@ const refreshAccessToken = async (req, res) => {
       return res.status(401).json({ error: 'Account no longer exists.' });
     }
     const user = userResult.rows[0];
-    if (user.status !== 'approved') {
+    // Must match the login gate (lines 453/456), which rejects only these two
+    // states. Requiring exactly 'approved' here broke refresh for accounts
+    // stored as 'active' - notably admins - so their access token could never
+    // be renewed.
+    if (user.status === 'pending' || user.status === 'disapproved') {
       res.clearCookie('refreshToken');
       return res.status(403).json({ error: 'Account is not active.' });
     }

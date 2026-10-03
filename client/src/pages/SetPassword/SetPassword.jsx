@@ -15,11 +15,16 @@ import {
 } from 'lucide-react';
 
 import { resetPassword, verifyResetToken } from '../../api/authApi';
+import { getPasswordFormProblem } from '../../utils/passwordPolicy';
+import { API_BASE } from '../../config/api';
 import styles from './SetPassword.module.css';
 
+// Mirrors the server rule in server/utils/passwordPolicy.js. The displayed
+// checklist and the actual enforcement must agree, so both read the same tests.
 const PASSWORD_RULES = [
   { key: 'length', label: 'At least 8 characters', test: (v) => v.length >= 8 },
-  { key: 'letter', label: 'Contains a letter', test: (v) => /[a-zA-Z]/.test(v) },
+  { key: 'lowercase', label: 'Contains a lowercase letter', test: (v) => /[a-z]/.test(v) },
+  { key: 'uppercase', label: 'Contains an uppercase letter', test: (v) => /[A-Z]/.test(v) },
   { key: 'number', label: 'Contains a number', test: (v) => /\d/.test(v) },
 ];
 
@@ -90,13 +95,9 @@ export default function SetPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters.');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+    const problem = getPasswordFormProblem(password, confirmPassword);
+    if (problem) {
+      setError(problem);
       return;
     }
 
@@ -114,16 +115,19 @@ export default function SetPassword() {
         await resetPassword({ token, password, confirmPassword });
       } else {
         const res = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/users/set-password`,
+          `${API_BASE}/users/set-password`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({ email, password, confirmPassword }),
           },
         );
 
-        const data = await res.json();
+        // Guarded like every other api module: a gateway/proxy error page or an empty
+// body would otherwise throw a SyntaxError here, which replaces the server's
+        // real message and skips the `!res.ok` branch entirely.
+        const data = await res.json().catch(() => ({}));
 
         if (!res.ok) {
           throw new Error(data.error || data.message || 'Failed to set password');

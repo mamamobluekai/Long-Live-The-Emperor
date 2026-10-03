@@ -1,5 +1,6 @@
 const { verifyAccessToken } = require('../utils/generateToken');
 const { isAccessTokenRevoked } = require('../utils/tokenStore');
+const pool = require('../db');
 
 const authenticate = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -23,7 +24,47 @@ const authenticate = async (req, res, next) => {
       });
     }
 
-    req.user = decoded;
+    // The token payload is not authoritative for identity or authorisation. A
+    // role change, demotion or account freeze must take effect immediately
+    // rather than whenever the (1h) access token happens to expire, so the
+    // current role/status is re-read from the users table on every request.
+    let current;
+    try {
+      const result = await pool.query(
+        'SELECT id, email, role, status FROM users WHERE id = $1',
+        [decoded.id]
+      );
+      current = result.rows[0];
+    } catch (err) {
+      console.error('User lookup failed:', err.message, 'path=', req.path);
+      return res.status(503).json({ error: 'Unable to verify account. Please try again.' });
+    }
+
+    if (!current) {
+      return res.status(401).json({
+        error: 'Account no longer exists.',
+        details: 'This account was removed. Please log in again.',
+      });
+    }
+
+    // Block exactly the statuses login blocks, rather than demanding
+    // status === 'approved'. Status strings are stored inconsistently across
+    // this schema (deployment_requests use 'Approved', some hand-edited rows
+    // vary), so an equality test here would 403 accounts that can log in
+    // perfectly well. Mirroring the login gates keeps the two in step.
+    const status = String(current.status || '').trim().toLowerCase();
+    const BLOCKED_STATUSES = new Set(['pending', 'disapproved']);
+
+    if (BLOCKED_STATUSES.has(status)) {
+      return res.status(403).json({
+        error: status === 'pending'
+          ? 'Your account is still pending approval.'
+          : 'Your account was not approved.',
+        details: 'Please contact an administrator.',
+      });
+    }
+
+    req.user = { ...decoded, ...current };
     next();
   } catch (err) {
     console.error('verifyAccessToken failed:', err.name, err.message, 'path=', req.path, 'method=', req.method);

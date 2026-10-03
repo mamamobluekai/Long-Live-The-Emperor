@@ -1,6 +1,7 @@
 import { mapErrorResponse, MAINTENANCE_FALLBACK_MESSAGE } from '../utils/errors';
+import { API_BASE } from '../config/api';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
 
 // Fired whenever any API call comes back 503/maintenance, so the app can swap in
 // the maintenance screen immediately instead of waiting for the next poll.

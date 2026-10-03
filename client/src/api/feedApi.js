@@ -1,3 +1,4 @@
+import { API_BASE } from '../config/api';
 async function fetchJsonOrThrow(url, options) {
   try {
     const response = await fetch(url, options);
@@ -12,7 +13,7 @@ async function fetchJsonOrThrow(url, options) {
   }
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
 
 function authHeaders(extra = {}) {
   const token = localStorage.getItem('wim-token');
@@ -44,9 +45,10 @@ export async function createFeedPost(postData) {
 
   return fetch(`${API_BASE}/feed/posts`, {
     method: 'POST',
+    credentials: 'include',
     headers: authHeaders(),
     body: formData,
-  }).then((res) => res.json().then((data) => {
+  }).then((res) => res.json().catch(() => ({})).then((data) => {
     if (!res.ok) throw new Error(data.error || data.message || 'Failed to create post');
     return data;
   }));
@@ -68,9 +70,10 @@ export async function updateFeedPost(id, postData) {
 
   return fetch(`${API_BASE}/feed/posts/${id}`, {
     method: 'PUT',
+    credentials: 'include',
     headers: authHeaders(),
     body: formData,
-  }).then((res) => res.json().then((data) => {
+  }).then((res) => res.json().catch(() => ({})).then((data) => {
     if (!res.ok) throw new Error(data.error || data.message || 'Failed to update post');
     return data;
   }));

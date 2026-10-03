@@ -10,9 +10,9 @@ import {
   removeReaction,
 } from '../../api/chatApi';
 import { io } from 'socket.io-client';
+import { SOCKET_URL } from '../../config/api';
 import styles from './BatchChat.module.css';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 function getToken() {
   return localStorage.getItem('wim-token') || '';
@@ -134,7 +134,7 @@ export default function BatchChat({ user, inModal = false }) {
   useEffect(() => {
     if (!selectedBatchId) return;
     const token = getToken();
-    const socket = io(API_BASE, {
+    const socket = io(SOCKET_URL, {
       auth: { token },
       transports: ['websocket', 'polling'],
     });

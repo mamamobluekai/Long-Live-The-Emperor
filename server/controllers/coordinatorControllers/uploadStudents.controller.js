@@ -1,6 +1,6 @@
 const xlsx = require('xlsx');
-const bcrypt = require('bcryptjs');
 const pool = require('../../db');
+const { NO_PASSWORD_SENTINEL } = require('../../utils/passwordPolicy');
 
 const uploadStudentsExcel = async (req, res) => {
   try {
@@ -72,14 +72,11 @@ const uploadStudentsExcel = async (req, res) => {
           continue;
         }
 
-        const tempPassword = Math.random().toString(36).slice(-12);
-        const hashedPassword = await bcrypt.hash(tempPassword, 10);
-
         const userResult = await client.query(
           `INSERT INTO users (email, password, role, phone, status)
            VALUES ($1, $2, 'student', $3, 'pending')
            RETURNING id`,
-          [email, hashedPassword, contact]
+          [email, NO_PASSWORD_SENTINEL, contact]
         );
 
         const userId = userResult.rows[0].id;

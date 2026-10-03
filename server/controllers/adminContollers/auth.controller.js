@@ -188,16 +188,36 @@ const updateProfile = async (req, res) => {
     const { first_name, last_name, email, phone, department } = req.body;
     await client.query('BEGIN');
 
+    let newEmail = null;
+    if (email !== undefined && email !== null && String(email).trim() !== '') {
+      newEmail = String(email).trim().toLowerCase();
+      if (newEmail.length > 255 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'Please enter a valid email address.' });
+      }
+      const taken = await client.query(
+        'SELECT 1 FROM users WHERE LOWER(email) = $1 AND id <> $2',
+        [newEmail, req.user.id]
+      );
+      if (taken.rows.length > 0) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({ error: 'That email address is already in use.' });
+      }
+    }
+
     if (email !== undefined || phone !== undefined) {
       const userFields = [];
       const userValues = [];
       let i = 1;
-      if (email !== undefined) { userFields.push(`email = $${i}`); userValues.push(email); i++; }
+      if (email !== undefined && email !== null && String(email).trim() !== '') { userFields.push(`email = $${i}`); userValues.push(newEmail); i++; }
       if (phone !== undefined) { userFields.push(`phone = $${i}`); userValues.push(phone); i++; }
-      userFields.push(`updated_at = CURRENT_TIMESTAMP`);
-      userValues.push(req.user.id);
-      await client.query(`UPDATE users SET ${userFields.join(', ')} WHERE id = $${i}`, userValues);
+      if (userFields.length > 0) {
+        userFields.push(`updated_at = CURRENT_TIMESTAMP`);
+        userValues.push(req.user.id);
+        await client.query(`UPDATE users SET ${userFields.join(', ')} WHERE id = ${i}`, userValues);
+      }
     }
+
 
     const adminFields = [];
     const adminValues = [];
@@ -212,7 +232,11 @@ const updateProfile = async (req, res) => {
     }
 
     await client.query('COMMIT');
-    await writeAuditLog(req, 'profile_update', 'Admin updated profile');
+    await writeAuditLog(
+      req,
+      'profile_update',
+      newEmail ? `Admin changed their email to ${newEmail}` : 'Admin updated profile'
+    );
 
     const result = await pool.query(
       `SELECT u.id, u.email, u.role, u.status, u.phone, u.created_at, u.updated_at,
@@ -226,7 +250,14 @@ const updateProfile = async (req, res) => {
     }
     res.json({ user: result.rows[0] });
   } catch (err) {
-    await client.query('ROLLBACK');
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackErr) {
+      console.error('Rollback error:', rollbackErr);
+    }
+    if (err && err.code === '23505') {
+      return res.status(409).json({ error: 'That email address is already in use.' });
+    }
     console.error('Admin profile update error:', err);
     res.status(500).json({ error: 'Server error.' });
   } finally {

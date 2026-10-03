@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+import { API_BASE } from '../config/api';
+
 
 function authHeaders(extra = {}) {
   const token = localStorage.getItem('wim-token');
@@ -6,7 +7,11 @@ function authHeaders(extra = {}) {
 }
 
 async function request(path, options = {}) {
+  // credentials:'include' matches every other module. Without it the csrfToken
+  // cookie is not sent on these mutating calls, so csrfProtection skips
+  // verification for them.
   const response = await fetch(`${API_BASE}${path}`, {
+    credentials: 'include',
     ...options,
     headers: authHeaders(options.headers || {}),
   });

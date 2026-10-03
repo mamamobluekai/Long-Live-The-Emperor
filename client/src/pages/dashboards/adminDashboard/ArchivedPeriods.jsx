@@ -7,7 +7,6 @@ import {
   Layers,
   Send,
   ChevronRight,
-  AlertCircle,
   CalendarDays,
   Clock3,
   GraduationCap,
@@ -293,7 +292,6 @@ export default function ArchivedPeriods() {
 
   const [periods, setPeriods] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
 
   const [openArchive, setOpenArchive] = useState(null);
@@ -303,17 +301,15 @@ export default function ArchivedPeriods() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError('');
-
     try {
       const data = await listArchivePeriods();
       setPeriods(data.periods || []);
     } catch (err) {
-      setError(err.message);
+      showToast(err.message, 'error');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     load();
@@ -391,13 +387,6 @@ export default function ArchivedPeriods() {
           <Archive size={24} />
         </div>
       </div>
-
-      {error && (
-        <div className={styles.errorAlert}>
-          <AlertCircle size={18} />
-          <span>{error}</span>
-        </div>
-      )}
 
       <div className={styles.card}>
         <div className={styles.toolbar}>

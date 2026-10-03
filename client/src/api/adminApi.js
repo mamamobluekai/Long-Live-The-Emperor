@@ -1,9 +1,21 @@
 import { mapErrorResponse } from '../utils/errors';
+import { withCsrf, methodNeedsCsrf } from '../utils/csrf';
 import { reportMaintenance } from './maintenanceApi';
+import { API_BASE } from '../config/api';
 
-async function fetchJsonOrThrow(url, options) {
+async function fetchJsonOrThrow(url, options = {}) {
+  // Every mutating admin call must echo the CSRF token itself rather than
+  // leaning on the global fetch interceptor, so the header is present even if
+  // the interceptor was installed after this module captured `fetch`.
+  const method = options.method;
+  const headers = methodNeedsCsrf(method) ? withCsrf(options.headers) : options.headers;
+
   try {
-    const response = await fetch(url, options);
+    const response = await fetch(url, {
+      credentials: 'include',
+      ...options,
+      headers,
+    });
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
@@ -20,7 +32,7 @@ async function fetchJsonOrThrow(url, options) {
   }
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
 
 function authHeaders(extra = {}) {
   const token = localStorage.getItem('wim-token');
@@ -85,11 +97,11 @@ export async function updateAdminProfile(profile) {
   });
 }
 
-export async function changeAdminPassword(currentPassword, newPassword) {
+export async function changeAdminPassword(currentPassword, newPassword, confirmPassword) {
   return fetchJsonOrThrow(`${API_BASE}/admin/profile/password`, {
     method: 'PATCH',
     headers: authHeaders({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify({ currentPassword, newPassword }),
+    body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
   });
 }
 
@@ -98,9 +110,10 @@ export async function uploadAdminProfilePicture(file) {
   formData.append('photo', file);
   return fetch(`${API_BASE}/admin/profile/picture`, {
     method: 'POST',
-    headers: authHeaders(),
+    credentials: 'include',
+    headers: withCsrf(authHeaders()),
     body: formData,
-  }).then((res) => res.json().then((data) => {
+  }).then((res) => res.json().catch(() => ({})).then((data) => {
     if (!res.ok) {
       const { message } = mapErrorResponse(data);
       throw new Error(message);
@@ -172,9 +185,10 @@ export async function uploadLogo(file) {
   formData.append('logo', file);
   return fetch(`${API_BASE}/admin/settings/logo`, {
     method: 'POST',
-    headers: authHeaders(),
+    credentials: 'include',
+    headers: withCsrf(authHeaders()),
     body: formData,
-  }).then((res) => res.json().then((data) => {
+  }).then((res) => res.json().catch(() => ({})).then((data) => {
     if (!res.ok) {
       const { message } = mapErrorResponse(data);
       throw new Error(message);
@@ -276,7 +290,8 @@ export async function uploadTeachersExcel(file) {
   formData.append('file', file);
   return fetch(`${API_BASE}/admin/upload/teachers`, {
     method: 'POST',
-    headers: authHeaders(),
+    credentials: 'include',
+    headers: withCsrf(authHeaders()),
     body: formData,
   }).then(res => res.json().then(data => {
     if (!res.ok) {
@@ -292,7 +307,8 @@ export async function uploadSupervisorsExcel(file) {
   formData.append('file', file);
   return fetch(`${API_BASE}/admin/upload/supervisors`, {
     method: 'POST',
-    headers: authHeaders(),
+    credentials: 'include',
+    headers: withCsrf(authHeaders()),
     body: formData,
   }).then(res => res.json().then(data => {
     if (!res.ok) {
@@ -308,7 +324,8 @@ export async function uploadCoordinatorsExcel(file) {
   formData.append('file', file);
   return fetch(`${API_BASE}/admin/upload/coordinators`, {
     method: 'POST',
-    headers: authHeaders(),
+    credentials: 'include',
+    headers: withCsrf(authHeaders()),
     body: formData,
   }).then(res => res.json().then(data => {
     if (!res.ok) {

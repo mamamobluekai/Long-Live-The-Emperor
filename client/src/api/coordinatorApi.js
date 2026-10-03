@@ -1,4 +1,4 @@
-﻿const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+﻿import { API_BASE } from '../config/api';
 
 function getToken() {
   return localStorage.getItem('wim-token') || '';
@@ -20,9 +20,13 @@ async function apiFetch(path, options = {}) {
   return data;
 }
 
-function jsonBody(body) {
+// `method` defaults to POST because most coordinator endpoints create. Callers
+// that hit a PUT/DELETE route must pass it here rather than spreading jsonBody
+// into an options object - jsonBody carries its own `method`, so spreading it
+// last silently overrode the intended verb and produced a 404.
+function jsonBody(body, method = 'POST') {
   return {
-    method: 'POST',
+    method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   };
@@ -58,18 +62,15 @@ export async function deleteStudent(id) {
 }
 
 export async function bulkApproveStudents(studentIds) {
-  return apiFetch('/students/bulk/approve', jsonBody({ student_ids: studentIds }));
+  return apiFetch('/students/bulk/approve', jsonBody({ student_ids: studentIds }, 'PUT'));
 }
 
 export async function bulkDisapproveStudents(studentIds) {
-  return apiFetch('/students/bulk/disapprove', jsonBody({ student_ids: studentIds }));
+  return apiFetch('/students/bulk/disapprove', jsonBody({ student_ids: studentIds }, 'PUT'));
 }
 
 export async function bulkDeleteStudents(studentIds) {
-  return apiFetch('/students/bulk', {
-    method: 'DELETE',
-    ...jsonBody({ student_ids: studentIds }),
-  });
+  return apiFetch('/students/bulk', jsonBody({ student_ids: studentIds }, 'DELETE'));
 }
 
 export async function uploadStudentsExcel(file) {
@@ -107,7 +108,7 @@ export async function getRequirements(studentId) {
 }
 
 export async function verifyDocument(id, { status, remarks }) {
-  return apiFetch(`/documents/${id}/verify`, jsonBody({ status, remarks }));
+  return apiFetch(`/documents/${id}/verify`, jsonBody({ status, remarks }, 'PUT'));
 }
 
 /* ---------------- Document types (Requirements management) ---------------- */
@@ -157,7 +158,7 @@ export async function createTeacherBatch({ teacher_id, batch_label, max_students
 }
 
 export async function updateTeacherBatch(batchId, { batch_label, max_students, supervisor_id }) {
-  return apiFetch(`/teacher-batches/${batchId}`, { method: 'PUT', ...jsonBody({ batch_label, max_students, supervisor_id }) });
+  return apiFetch(`/teacher-batches/${batchId}`, jsonBody({ batch_label, max_students, supervisor_id }, 'PUT'));
 }
 
 export async function deleteTeacherBatch(batchId) {

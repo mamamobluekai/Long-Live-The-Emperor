@@ -13,10 +13,22 @@ export const CSRF_COOKIE = 'csrfToken';
 export const CSRF_HEADER = 'X-CSRF-Token';
 
 // Read a single cookie by name. Returns '' when absent (e.g. before first load).
-export function getCsrfToken() {
+function readCookie(name) {
   if (typeof document === 'undefined') return '';
-  const match = document.cookie.match(new RegExp(`(?:^|; )${CSRF_COOKIE}=([^;]*)`));
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
   return match ? decodeURIComponent(match[1]) : '';
+}
+
+// The server issues the token twice: as the `csrfToken` cookie AND in the login
+// response body (which AuthContext keeps in `localStorage['wim-csrf']`). The
+// cookie is only readable by JS when the app and the API share an origin. When
+// they do not - client on a LAN address, API on localhost, or any split-host
+// dev setup - `document.cookie` comes back empty while the browser still sends
+// the cookie on credentialed requests, so the server sees a cookie with no
+// matching header and returns 403. Falling back to the stored copy keeps the
+// double-submit match working in both layouts.
+export function getCsrfToken() {
+  return readCookie(CSRF_COOKIE) || localStorage.getItem('wim-csrf') || '';
 }
 
 // Merge the CSRF header into an existing headers object.

@@ -115,27 +115,7 @@ Every limiter returns `429` with a `retryAfter` hint and logs `rate_limit_hit`.
 
 ---
 
-## 6. CSRF (Cross-Site Request Forgery)
-
-**Defence:**
-
-- `refreshToken` and `csrfToken` cookies are `SameSite=strict`, which blocks the
-  classic cross-site form-post.
-- **Signed double-submit cookie** (`middleware/csrfProtection.js`): a random
-  `csrfToken` cookie (readable by our own JS) must be echoed in the
-  `X-CSRF-Token` header on every non-GET request; the server compares them with
-  `crypto.timingSafeEqual`. A cross-site attacker cannot read the cookie, so it
-  cannot forge the header.
-- Client helper `client/src/utils/csrf.js` (`withCsrf()`) attaches the header;
-  `AuthContext` persists the token issued at login.
-- Failures log `csrf_failed` (severity `high`).
-
-Safe methods (`GET`, `HEAD`, `OPTIONS`) and callers with no CSRF cookie
-(non-browser clients, pre-login) are unaffected.
-
----
-
-## 7. Session Hijacking
+## 6. Session Hijacking
 
 **Defence:**
 

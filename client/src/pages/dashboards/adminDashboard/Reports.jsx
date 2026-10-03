@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getAdminReport, getReportUrl } from '../../../api/adminApi';
 import DataTable from '../../../components/admin/DataTable';
 import LoadingSkeleton from '../../../components/admin/LoadingSkeleton';
+import { useToast } from '../../../components/admin/toastContext';
 import styles from './Reports.module.css';
 
 const REPORT_TYPES = [
@@ -25,11 +26,11 @@ export default function ReportsPage() {
   const [format, setFormat] = useState('json');
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+
+  const { showToast } = useToast();
 
   const fetchData = async (type, fmt) => {
     setLoading(true);
-    setError('');
     try {
       if (fmt === 'json') {
         const res = await getAdminReport(type, 'json');
@@ -39,7 +40,7 @@ export default function ReportsPage() {
         setData([]);
       }
     } catch (err) {
-      setError(err.message);
+      showToast(err.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -73,8 +74,6 @@ export default function ReportsPage() {
           </button>
         </div>
       </div>
-
-      {error ? <p className={styles.error}>{error}</p> : null}
 
       {loading ? (
         <LoadingSkeleton rows={6} />

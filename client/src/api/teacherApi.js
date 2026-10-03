@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { API_BASE } from '../config/api';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 
 function authHeaders(token) {
   return { Authorization: `Bearer ${token}` };
@@ -13,28 +14,28 @@ function getToken() {
 /* ---------------- Teacher Batch ---------------- */
 
 export async function getMyTeacherBatch(token) {
-  const res = await axios.get(`${API_URL}/coordinator/teacher-batches/me`, {
+  const res = await axios.get(`${API_BASE}/coordinator/teacher-batches/me`, {
     headers: authHeaders(token),
   });
   return res.data;
 }
 
 export async function getTeacherBatchStudents(batchId, token) {
-  const res = await axios.get(`${API_URL}/coordinator/teacher-batches/${batchId}/students`, {
+  const res = await axios.get(`${API_BASE}/coordinator/teacher-batches/${batchId}/students`, {
     headers: authHeaders(token),
   });
   return res.data;
 }
 
 export async function getTeacherReportsConcerns(token) {
-  const res = await axios.get(`${API_URL}/coordinator/teacher/reports-concerns`, {
+  const res = await axios.get(`${API_BASE}/coordinator/teacher/reports-concerns`, {
     headers: authHeaders(token),
   });
   return res.data;
 }
 
 export async function confirmReportConcern(reportId, token) {
-  const res = await axios.patch(`${API_URL}/coordinator/teacher/reports-concerns/${reportId}/confirm`, {}, {
+  const res = await axios.patch(`${API_BASE}/coordinator/teacher/reports-concerns/${reportId}/confirm`, {}, {
     headers: authHeaders(token),
   });
   return res.data;
@@ -43,42 +44,42 @@ export async function confirmReportConcern(reportId, token) {
 /* ---------------- Attendance ---------------- */
 
 export async function getTeacherBatchStatus(batchId, token) {
-  const res = await axios.get(`${API_URL}/attendance/teacher/batch/${batchId}/status`, {
+  const res = await axios.get(`${API_BASE}/attendance/teacher/batch/${batchId}/status`, {
     headers: authHeaders(token),
   });
   return res.data;
 }
 
 export async function openBatchAttendance(batchId, token) {
-  const res = await axios.post(`${API_URL}/attendance/teacher/batch/${batchId}/open`, {}, {
+  const res = await axios.post(`${API_BASE}/attendance/teacher/batch/${batchId}/open`, {}, {
     headers: authHeaders(token),
   });
   return res.data;
 }
 
 export async function closeBatchAttendance(batchId, token) {
-  const res = await axios.post(`${API_URL}/attendance/teacher/batch/${batchId}/close`, {}, {
+  const res = await axios.post(`${API_BASE}/attendance/teacher/batch/${batchId}/close`, {}, {
     headers: authHeaders(token),
   });
   return res.data;
 }
 
 export async function getBatchConfig(batchId, token) {
-  const res = await axios.get(`${API_URL}/attendance/teacher/batch/${batchId}/config`, {
+  const res = await axios.get(`${API_BASE}/attendance/teacher/batch/${batchId}/config`, {
     headers: authHeaders(token),
   });
   return res.data;
 }
 
 export async function updateBatchConfig(batchId, config, token) {
-  const res = await axios.put(`${API_URL}/attendance/teacher/batch/${batchId}/config`, config, {
+  const res = await axios.put(`${API_BASE}/attendance/teacher/batch/${batchId}/config`, config, {
     headers: authHeaders(token),
   });
   return res.data;
 }
 
 export async function getBatchRecords(batchId, date, token) {
-  const res = await axios.get(`${API_URL}/attendance/teacher/batch/${batchId}/records`, {
+  const res = await axios.get(`${API_BASE}/attendance/teacher/batch/${batchId}/records`, {
     headers: authHeaders(token),
     params: date ? { date } : {},
   });
@@ -86,14 +87,14 @@ export async function getBatchRecords(batchId, date, token) {
 }
 
 export async function getBatchAttendanceReport(batchId, token) {
-  const res = await axios.get(`${API_URL}/attendance/teacher/batch/${batchId}/report`, {
+  const res = await axios.get(`${API_BASE}/attendance/teacher/batch/${batchId}/report`, {
     headers: authHeaders(token),
   });
   return res.data;
 }
 
 export async function getBatchStats(batchId, date, token) {
-  const res = await axios.get(`${API_URL}/attendance/teacher/batch/${batchId}/stats`, {
+  const res = await axios.get(`${API_BASE}/attendance/teacher/batch/${batchId}/stats`, {
     headers: authHeaders(token),
     params: date ? { date } : {},
   });
@@ -101,7 +102,7 @@ export async function getBatchStats(batchId, date, token) {
 }
 
 export async function getBatchAppeals(batchId, status, token) {
-  const res = await axios.get(`${API_URL}/attendance/teacher/batch/${batchId}/appeals`, {
+  const res = await axios.get(`${API_BASE}/attendance/teacher/batch/${batchId}/appeals`, {
     headers: authHeaders(token),
     params: status ? { status } : {},
   });
@@ -109,21 +110,21 @@ export async function getBatchAppeals(batchId, status, token) {
 }
 
 export async function reviewAppeal(appealId, payload, token) {
-  const res = await axios.post(`${API_URL}/attendance/teacher/appeals/${appealId}/review`, payload, {
+  const res = await axios.post(`${API_BASE}/attendance/teacher/appeals/${appealId}/review`, payload, {
     headers: authHeaders(token),
   });
   return res.data;
 }
 
 export async function getBatchSchedules(batchId, token) {
-  const res = await axios.get(`${API_URL}/attendance/teacher/batch/${batchId}/schedules`, {
+  const res = await axios.get(`${API_BASE}/attendance/teacher/batch/${batchId}/schedules`, {
     headers: authHeaders(token),
   });
   return res.data;
 }
 
 export async function upsertBatchSchedule(batchId, payload, token) {
-  const res = await axios.put(`${API_URL}/attendance/teacher/batch/${batchId}/schedules`, payload, {
+  const res = await axios.put(`${API_BASE}/attendance/teacher/batch/${batchId}/schedules`, payload, {
     headers: authHeaders(token),
   });
   return res.data;
@@ -132,7 +133,7 @@ export async function upsertBatchSchedule(batchId, payload, token) {
 /* ---------------- Evaluations ---------------- */
 
 export async function getTeacherBatchEvaluations() {
-  const res = await axios.get(`${API_URL}/evaluation/teacher/my-batch`, {
+  const res = await axios.get(`${API_BASE}/evaluation/teacher/my-batch`, {
     headers: authHeaders(getToken()),
   });
   return res.data;
@@ -141,14 +142,14 @@ export async function getTeacherBatchEvaluations() {
 /* ---------------- Files ---------------- */
 
 export async function getAllFiles() {
-  const res = await axios.get(`${API_URL}/files/all`, {
+  const res = await axios.get(`${API_BASE}/files/all`, {
     headers: authHeaders(getToken()),
   });
   return res.data;
 }
 
 export async function getFileById(id) {
-  const res = await axios.get(`${API_URL}/files/${id}`, {
+  const res = await axios.get(`${API_BASE}/files/${id}`, {
     headers: authHeaders(getToken()),
   });
   return res.data;
@@ -157,14 +158,14 @@ export async function getFileById(id) {
 /* ---------------- Documentation ---------------- */
 
 export async function getBatchDailyDocSummary(batchId, token) {
-  const res = await axios.get(`${API_URL}/documentation/batch/${batchId}/summary`, {
+  const res = await axios.get(`${API_BASE}/documentation/batch/${batchId}/summary`, {
     headers: authHeaders(token),
   });
   return res.data;
 }
 
 export async function getStudentDailyDocs(params, token) {
-  const res = await axios.get(`${API_URL}/documentation/daily`, {
+  const res = await axios.get(`${API_BASE}/documentation/daily`, {
     headers: authHeaders(token),
     params,
   });
@@ -172,21 +173,21 @@ export async function getStudentDailyDocs(params, token) {
 }
 
 export async function gradeDailyDoc(docId, payload, token) {
-  const res = await axios.post(`${API_URL}/documentation/daily/${docId}/grade`, payload, {
+  const res = await axios.post(`${API_BASE}/documentation/daily/${docId}/grade`, payload, {
     headers: authHeaders(token),
   });
   return res.data;
 }
 
 export async function getDocumentationCriteria(token) {
-  const res = await axios.get(`${API_URL}/documentation/criteria`, {
+  const res = await axios.get(`${API_BASE}/documentation/criteria`, {
     headers: authHeaders(token),
   });
   return res.data;
 }
 
 export async function saveDocumentationCriteria(criteria, token) {
-  const res = await axios.put(`${API_URL}/documentation/criteria`, { criteria }, {
+  const res = await axios.put(`${API_BASE}/documentation/criteria`, { criteria }, {
     headers: authHeaders(token),
   });
   return res.data;
@@ -195,7 +196,7 @@ export async function saveDocumentationCriteria(criteria, token) {
 /* ---------------- Tracking / Live Map ---------------- */
 
 export async function getBatchCurrentLocations(batchId, token, config = {}) {
-  const res = await axios.get(`${API_URL}/tracking/location/batch/${batchId}`, {
+  const res = await axios.get(`${API_BASE}/tracking/location/batch/${batchId}`, {
     headers: authHeaders(token),
     ...config,
   });
@@ -203,7 +204,7 @@ export async function getBatchCurrentLocations(batchId, token, config = {}) {
 }
 
 export async function getStudentLocationHistory(studentId, token) {
-  const res = await axios.get(`${API_URL}/tracking/location/history/${studentId}`, {
+  const res = await axios.get(`${API_BASE}/tracking/location/history/${studentId}`, {
     headers: authHeaders(token),
   });
   return res.data;

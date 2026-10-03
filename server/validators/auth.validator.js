@@ -1,4 +1,5 @@
 const { body, validationResult } = require('express-validator');
+const { passwordPolicyValidator, validateConfirmation } = require('../utils/passwordPolicy');
 
 const registerValidation = [
   body('studentId')
@@ -28,17 +29,16 @@ const registerValidation = [
     .isEmail().withMessage('Valid email is required')
     .normalizeEmail(),
 
-  body('password')
-    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+  // The student chooses their own password here and it stays theirs until they
+  // change it, so it is held to the full shared strength policy.
+  body('password').custom(passwordPolicyValidator),
 
-  // registerStudent only checks this if it's present (`!== undefined`),
-  // so keep it optional here too rather than forcing it.
+  // Registration always sends both fields from the form, so a missing
+  // confirmation is a client bug rather than an optional extra.
   body('confirmPassword')
-    .optional({ nullable: true })
     .custom((value, { req }) => {
-      if (value !== req.body.password) {
-        throw new Error('Passwords do not match');
-      }
+      const problem = validateConfirmation(req.body.password, value);
+      if (problem) throw new Error(problem);
       return true;
     }),
 
@@ -67,12 +67,20 @@ const forgotValidation = [
     .normalizeEmail(),
 ];
 
+// Used by the emailed set-password link on an approved account, so the same
+  // policy applies as at registration.
 const resetValidation = [
   body('token')
     .notEmpty().withMessage('Reset token is required'),
 
-  body('password')
-    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+  body('password').custom(passwordPolicyValidator),
+
+  body('confirmPassword')
+    .custom((value, { req }) => {
+      const problem = validateConfirmation(req.body.password, value);
+      if (problem) throw new Error(problem);
+      return true;
+    }),
 ];
 
 const verifyTokenValidation = [

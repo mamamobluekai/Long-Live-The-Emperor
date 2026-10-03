@@ -19,6 +19,7 @@ import {
 } from 'recharts';
 import { useAdminAuth } from '../../../context/useAdminAuth';
 import { getAdminDashboard, getAdminPeriodAnalytics } from '../../../api/adminApi';
+import { useToast } from '../../../components/admin/toastContext';
 import styles from './Dashboard.module.css';
 
 // Palette lifted from the RequirementsReview / CoordinatorOverview design system.
@@ -65,11 +66,11 @@ export default function AdminDashboardPage() {
   const [groupBy, setGroupBy] = useState('period');
   const [selectedYear, setSelectedYear] = useState(ALL_YEARS);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+
+  const { showToast } = useToast();
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError('');
     try {
       const [dashboard, periodData] = await Promise.all([
         getAdminDashboard(),
@@ -82,11 +83,11 @@ export default function AdminDashboardPage() {
         years: periodData?.years || [],
       });
     } catch (err) {
-      setError(err.message || 'Unable to load the overview.');
+      showToast(err.message || 'Unable to load the overview.', 'error');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     load();
@@ -162,12 +163,6 @@ export default function AdminDashboardPage() {
           <GraduationCap size={22} strokeWidth={1.9} />
         </span>
       </section>
-
-      {error ? (
-        <div className={styles.errorState} role="alert">
-          <span>{error}</span>
-        </div>
-      ) : null}
 
       <section className={styles.statsGrid} aria-label="Users by role">
         {loading && !stats

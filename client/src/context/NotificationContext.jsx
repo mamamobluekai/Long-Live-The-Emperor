@@ -9,8 +9,9 @@ import {
 import { useAuth } from './AuthContext';
 import { NotificationContext } from './notificationContext';
 import { isGroupChatNotification } from '../utils/notificationFilters';
+import { SOCKET_URL } from '../config/api';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+
 
 export function NotificationProvider({ children }) {
   const { user, token } = useAuth();

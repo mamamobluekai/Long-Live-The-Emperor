@@ -14,17 +14,15 @@ export default function CoordinatorsPage() {
   const { showToast } = useToast();
   const [coordinators, setCoordinators] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [actionModal, setActionModal] = useState({ open: false, id: null, type: null });
 
   const load = async () => {
     setLoading(true);
-    setError('');
     try {
       const data = await getPendingCoordinators();
       setCoordinators(data.coordinators || []);
     } catch (err) {
-      setError(err.message);
+      showToast(err.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -39,7 +37,16 @@ export default function CoordinatorsPage() {
     try {
       if (type === 'approve') {
         const data = await approveCoordinator(id);
-        showToast(`Coordinator approved. Temp password: ${data.tempPassword || ''}`, 'success', 8000);
+        // The coordinator sets their own password from the emailed link; if
+        // that mail failed the admin needs to know, since there is no
+        // password to fall back on.
+        showToast(
+          data.emailSent === false
+            ? 'Coordinator approved, but the email failed to send. Resend from the coordinator list.'
+            : data.message || 'Coordinator approved. Set-your-password link emailed.',
+          data.emailSent === false ? 'error' : 'success',
+          8000,
+        );
       } else {
         await rejectCoordinator(id);
         showToast('Coordinator rejected.', 'success');
@@ -96,8 +103,6 @@ export default function CoordinatorsPage() {
         <h2>Pending Coordinator Approvals</h2>
         <p>{coordinators.length} pending registration(s)</p>
       </div>
-
-      {error ? <p className={styles.error}>{error}</p> : null}
 
       {loading ? (
         <LoadingSkeleton rows={5} />

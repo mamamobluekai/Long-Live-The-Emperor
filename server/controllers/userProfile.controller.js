@@ -2,6 +2,7 @@ const pool = require('../db');
 const cloudinary = require('../db/cloudinary');
 const streamifier = require('streamifier');
 const { hashPassword, comparePassword } = require('../utils/hashPassword');
+const { validatePassword, validateConfirmation } = require('../utils/passwordPolicy');
 const { writeAuditLog } = require('./adminContollers/admin.controller');
 
 function uploadBufferToCloudinary(buffer, resourceType, originalName) {
@@ -27,6 +28,18 @@ const ROLE_TABLES = {
   supervisor: 'supervisors',
   coordinator: 'coordinators',
   admin: 'admins',
+};
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const normalizeEmail = (value) => String(value).trim().toLowerCase();
+
+const validateEmail = (value) => {
+  const email = normalizeEmail(value);
+  if (!email) return { error: 'Email is required.' };
+  if (email.length > 255) return { error: 'Email is too long.' };
+  if (!EMAIL_PATTERN.test(email)) return { error: 'Please enter a valid email address.' };
+  return { email };
 };
 
 const getMyProfile = async (req, res) => {
@@ -70,9 +83,26 @@ const updateMyProfile = async (req, res) => {
     const userValues = [];
     let ui = 1;
 
-    if (body.email !== undefined && body.email !== null && body.email !== '') {
+    let newEmail = null;
+    if (body.email !== undefined && body.email !== null && String(body.email).trim() !== '') {
+      const check = validateEmail(body.email);
+      if (check.error) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: check.error });
+      }
+      newEmail = check.email;
+
+      const taken = await client.query(
+        'SELECT 1 FROM users WHERE LOWER(email) = $1 AND id <> $2',
+        [newEmail, req.user.id]
+      );
+      if (taken.rows.length > 0) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({ error: 'That email address is already in use.' });
+      }
+
       userFields.push(`email = $${ui}`);
-      userValues.push(body.email);
+      userValues.push(newEmail);
       ui++;
     }
     if (body.phone !== undefined) {
@@ -135,10 +165,23 @@ const updateMyProfile = async (req, res) => {
       return res.status(404).json({ error: 'User not found.' });
     }
 
-    await writeAuditLog(req, 'profile_update', `${req.user.role} updated their profile`);
+    await writeAuditLog(
+      req,
+      'profile_update',
+      newEmail
+        ? `${req.user.role} changed their email to ${newEmail}`
+        : `${req.user.role} updated their profile`
+    );
     res.json({ user: result.rows[0] });
   } catch (err) {
-    await client.query('ROLLBACK');
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackErr) {
+      console.error('Rollback error:', rollbackErr);
+    }
+    if (err && err.code === '23505') {
+      return res.status(409).json({ error: 'That email address is already in use.' });
+    }
     console.error('Update profile error:', err);
     res.status(500).json({ error: 'Server error.' });
   } finally {
@@ -148,14 +191,20 @@ const updateMyProfile = async (req, res) => {
 
 const changeMyPassword = async (req, res) => {
   try {
-    const { currentPassword, newPassword } = req.body;
+    const { currentPassword, newPassword, confirmPassword } = req.body;
 
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ error: 'Current password and new password are required.' });
     }
 
-    if (newPassword.length < 8) {
-      return res.status(400).json({ error: 'New password must be at least 8 characters.' });
+    const mismatch = validateConfirmation(newPassword, confirmPassword);
+    if (mismatch) {
+      return res.status(400).json({ error: mismatch });
+    }
+
+    const problem = validatePassword(newPassword);
+    if (problem) {
+      return res.status(400).json({ error: problem });
     }
 
     const result = await pool.query(`SELECT password FROM users WHERE id = $1`, [req.user.id]);

@@ -23,7 +23,10 @@ import {
 
 import { useToast } from '../../../components/admin/toastContext';
 import { useAuth } from '../../../context/AuthContext';
+import { getPasswordFormProblem } from '../../../utils/passwordPolicy';
 import styles from './AdminProfileSettings.module.css';
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const ROLE_FIELDS = {
   admin: [{ name: 'department', label: 'Department', icon: Building2 }],
@@ -147,10 +150,24 @@ export default function AdminProfileSettings() {
   const handleSaveProfile = async (e) => {
     e.preventDefault();
 
+    const trimmedEmail = (form.email || '').trim();
+
+    if (trimmedEmail !== (originalForm.email || '').trim()) {
+      if (!EMAIL_PATTERN.test(trimmedEmail)) {
+        showToast('Please enter a valid email address.', 'error');
+        return;
+      }
+
+      if (trimmedEmail !== trimmedEmail.toLowerCase()) {
+        showToast('Email must be in lowercase.', 'error');
+        return;
+      }
+    }
+
     setSaving(true);
 
     try {
-      const payload = { ...form };
+      const payload = { ...form, email: trimmedEmail };
 
       const roleFields = ROLE_FIELDS[user?.role] || [];
 
@@ -171,24 +188,20 @@ export default function AdminProfileSettings() {
       updateUser({ ...data.user });
 
       showToast('Profile updated successfully.', 'success');
+      setEditing(false);
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
       setSaving(false);
-      setEditing(false);
     }
   };
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
 
-    if (pwdForm.newPassword !== pwdForm.confirmPassword) {
-      showToast('New passwords do not match.', 'error');
-      return;
-    }
-
-    if (pwdForm.newPassword.length < 8) {
-      showToast('Password must be at least 8 characters.', 'error');
+    const problem = getPasswordFormProblem(pwdForm.newPassword, pwdForm.confirmPassword);
+    if (problem) {
+      showToast(problem, 'error');
       return;
     }
 
@@ -197,7 +210,8 @@ export default function AdminProfileSettings() {
     try {
       await changeAdminPassword(
         pwdForm.currentPassword,
-        pwdForm.newPassword
+        pwdForm.newPassword,
+        pwdForm.confirmPassword
       );
 
       showToast('Password changed successfully.', 'success');
@@ -415,6 +429,10 @@ export default function AdminProfileSettings() {
                     disabled={!editing || saving}
                   />
                 </div>
+
+                <small className={styles.helperText}>
+                  This is the email you use to sign in.
+                </small>
               </div>
 
               <div className={styles.field}>

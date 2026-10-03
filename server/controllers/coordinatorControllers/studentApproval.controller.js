@@ -1,4 +1,5 @@
 const pool = require('../../db/');
+const crypto = require('crypto');
 const { sendStudentApprovalEmail } = require('./regexes/email');
 
 const getPendingStudents = async (req, res) => {
@@ -53,6 +54,18 @@ const getStudentStrands = async (req, res) => {
   }
 };
 
+// Mirrors the admin approval flow but without handing out a temp password.
+// Approval issues a one-time link instead; the student opens it and chooses
+// their own password + confirmation on /set-password?token=..., which the page
+// submits to the token-based reset endpoint.
+//
+// Why a token and not the plain email flow: /api/users/set-password (email only,
+// no token) is reserved for 'pending' activation, and this account is already
+// 'approved' by the time the mail goes out. The token endpoint is the one that
+// can safely set a password for an approved account, because possession of the
+// emailed link is the proof.
+const APPROVAL_TOKEN_TTL_MINUTES = 60;
+
 const approveStudent = async (req, res) => {
   try {
     const { id } = req.params;
@@ -77,11 +90,30 @@ const approveStudent = async (req, res) => {
       user.last_name = studentResult.rows[0].last_name;
     }
 
-    // Preserve the student's existing password for manually registered accounts.
-    // The coordinator approval email should simply confirm access is now available.
-    await sendStudentApprovalEmail(user);
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + APPROVAL_TOKEN_TTL_MINUTES * 60 * 1000);
 
-    res.json({ message: 'Student approved.', user });
+    await pool.query(
+      `INSERT INTO password_reset_tokens (user_id, token, expires_at)
+       VALUES ($1, $2, $3)`,
+      [user.id, token, expiresAt]
+    );
+
+    const emailed = await sendStudentApprovalEmail(user, {
+      token,
+      expiresInMinutes: APPROVAL_TOKEN_TTL_MINUTES,
+    });
+
+    // The mail is best-effort: the account is approved either way. Tell the
+    // caller explicitly when nothing arrived so the coordinator can resend
+    // instead of assuming the student has their link.
+    res.json({
+      message: emailed
+        ? 'Student approved. Set-your-password link emailed.'
+        : 'Student approved, but the email failed to send. Resend from the student list.',
+      emailSent: emailed,
+      user,
+    });
   } catch (err) {
     console.error('Approve student error:', err);
     res.status(500).json({ error: 'Server error.' });

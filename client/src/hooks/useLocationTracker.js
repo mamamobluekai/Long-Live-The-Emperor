@@ -7,9 +7,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+import { API_BASE, SOCKET_URL } from '../config/api';
 
 function classifyLocationError(err) {
   if (!navigator.geolocation) {
@@ -78,7 +76,7 @@ export function useLocationTracker({ token, teacherBatchId: propTeacherBatchId }
         const { latitude, longitude, accuracy } = pos.coords;
         try {
           await axios.post(
-            `${API_URL}/tracking/location/update`,
+            `${API_BASE}/tracking/location/update`,
             { latitude, longitude, accuracy },
             { headers: { Authorization: `Bearer ${token}` } }
           );
@@ -105,7 +103,7 @@ export function useLocationTracker({ token, teacherBatchId: propTeacherBatchId }
       setError(message);
       try {
         await axios.post(
-          `${API_URL}/tracking/attendance/location-issue`,
+          `${API_BASE}/tracking/attendance/location-issue`,
           { issueType },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -118,7 +116,7 @@ export function useLocationTracker({ token, teacherBatchId: propTeacherBatchId }
     try {
       const { latitude, longitude } = pos.coords;
       const res = await axios.post(
-        `${API_URL}/tracking/attendance/check-in`,
+        `${API_BASE}/tracking/attendance/check-in`,
         { latitude, longitude },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -150,7 +148,7 @@ export function useLocationTracker({ token, teacherBatchId: propTeacherBatchId }
       const { issueType } = classifyLocationError(err);
       try {
         await axios.post(
-          `${API_URL}/tracking/attendance/location-issue`,
+          `${API_BASE}/tracking/attendance/location-issue`,
           { issueType },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -161,7 +159,7 @@ export function useLocationTracker({ token, teacherBatchId: propTeacherBatchId }
 
     try {
       await axios.post(
-        `${API_URL}/tracking/attendance/check-out`,
+        `${API_BASE}/tracking/attendance/check-out`,
         { latitude, longitude },
         { headers: { Authorization: `Bearer ${token}` } }
       );
