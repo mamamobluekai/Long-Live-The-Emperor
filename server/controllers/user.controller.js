@@ -2,6 +2,7 @@ const pool = require('../db');
 const nodemailer = require('nodemailer');
 const { hashPassword, comparePassword } = require('../utils/hashPassword');
 const { validatePassword, validateConfirmation } = require('../utils/passwordPolicy');
+const { normalizeEmail } = require('../utils/normalizeEmail');
 const { getRefreshCookieOptions } = require('../utils/refreshCookie');
 const { generateAccessToken, generateRefreshToken } = require('../utils/generateToken');
 const {
@@ -217,7 +218,7 @@ const registerStudent = async (req, res) => {
       return res.status(400).json({ error: weak });
     }
 
-    const trimmedEmail = String(email).trim();
+    const trimmedEmail = normalizeEmail(email);
     const trimmedStudentId = String(studentId).trim();
 
     // Check if email already exists
@@ -366,7 +367,10 @@ const login = async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required.' });
     }
 
-    const trimmedEmail = String(email).trim();
+    // Must match how the address was stored at registration. Looking up the raw
+    // input meant an account saved in one form could not be signed in to with
+    // another (e.g. "John.Doe@Gmail.com" is stored as "johndoe@gmail.com").
+    const trimmedEmail = normalizeEmail(email);
 
     // Check lockout before even hitting the DB / comparing password
     const locked = await isAccountLocked(trimmedEmail);

@@ -63,7 +63,8 @@ const getStudentStrands = async (req, res) => {
 // 'approved' by the time the mail goes out. The token endpoint is the one that
 // can safely set a password for an approved account, because possession of the
 // emailed link is the proof.
-const APPROVAL_TOKEN_TTL_MINUTES = approvalLink.APPROVAL_TOKEN_TTL_MINUTES;
+//
+// The link's lifetime is set centrally in utils/linkExpiry.js.
 
 const approveStudent = async (req, res) => {
   try {
@@ -71,7 +72,7 @@ const approveStudent = async (req, res) => {
     const result = await pool.query(
       `UPDATE users SET status = 'approved', updated_at = CURRENT_TIMESTAMP
        WHERE id = $1 AND status = 'pending' AND role = 'student'
-       RETURNING id, email, role`,
+       RETURNING id, email, role, password`,
       [id]
     );
     if (result.rows.length === 0) {
@@ -89,17 +90,21 @@ const approveStudent = async (req, res) => {
       user.last_name = studentResult.rows[0].last_name;
     }
 
-    const { emailSent } = await approvalLink.issueAndEmailApprovalLink(user);
+    const { emailSent, linkSent } = await approvalLink.issueAndEmailApprovalLink(user);
 
-    // The mail is best-effort: the account is approved either way. Tell the
-    // caller explicitly when nothing arrived so the coordinator can resend
-    // instead of assuming the student has their link.
+    // A student who self-registered already has a password, so they get a plain
+    // approval notice. One created by Excel upload has none, so they get the
+    // set-password link. Either way the mail is best-effort and the account is
+    // approved regardless - so say so explicitly when nothing was delivered.
     res.json({
       message: emailSent
-        ? 'Student approved. Set-your-password link emailed.'
-        : 'Student approved, but the email failed to send. Resend from the student list.',
+        ? linkSent
+          ? 'Student approved. Set-your-password link emailed.'
+          : 'Student approved. Approval email sent.'
+        : 'Student approved, but the email failed to send. Use Resend email on their row.',
       emailSent,
-      user,
+      linkSent,
+      user: approvalLink.publicUser(user),
     });
   } catch (err) {
     console.error('Approve student error:', err);
@@ -256,9 +261,12 @@ const bulkApproveStudents = async (req, res) => {
     // password and no way to get one. Each now gets the same one-time
     // set-password link as a single approval.
     let emailFailures = 0;
+    let linksSent = 0;
     if (approvedIds.length > 0) {
+      // u.password decides per student whether a set-password link is needed or
+      // a plain approval notice is enough (see approvalLink.service).
       const recipients = await client.query(
-        `SELECT u.id, u.email, u.role, s.first_name, s.last_name
+        `SELECT u.id, u.email, u.role, u.password, s.first_name, s.last_name
          FROM users u
          JOIN students s ON s.user_id = u.id
          WHERE u.id = ANY($1)`,
@@ -271,20 +279,24 @@ const bulkApproveStudents = async (req, res) => {
       for (const recipient of recipients.rows) {
         // Each student needs a distinct token, so issue individually.
         // eslint-disable-next-line no-await-in-loop
-        const { emailSent } = await approvalLink.issueAndEmailApprovalLink(recipient);
+        const { emailSent, linkSent } = await approvalLink.issueAndEmailApprovalLink(recipient);
         if (!emailSent) emailFailures += 1;
+        if (linkSent) linksSent += 1;
       }
     }
 
     const summary = `${approvedIds.length} student(s) approved.`;
     const emailNote = emailFailures
-      ? ` ${emailFailures} set-password email(s) failed - resend from the student list.`
-      : ' Set-your-password links emailed.';
+      ? ` ${emailFailures} email(s) failed - resend from the student list.`
+      : linksSent
+        ? ` ${linksSent} set-password link(s) emailed.`
+        : ' Approval emails sent.';
 
     res.json({
       message: summary + emailNote,
       count: approvedIds.length,
       emailFailures,
+      linksSent,
     });
   } catch (err) {
     await client.query('ROLLBACK');

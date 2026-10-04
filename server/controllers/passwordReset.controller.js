@@ -2,6 +2,8 @@ const crypto = require('crypto');
 const pool = require('../db');
 const nodemailer = require('nodemailer');
 const { hashPassword } = require('../utils/hashPassword');
+const { normalizeEmail } = require('../utils/normalizeEmail');
+const { LINK_TTL_MINUTES, LINK_TTL_LABEL } = require('../utils/linkExpiry');
 const { validatePassword, validateConfirmation } = require('../utils/passwordPolicy');
 
 const transporter = nodemailer.createTransport({
@@ -17,7 +19,9 @@ function getClientUrl() {
 }
 
 const FORGOT_PASSWORD_TOKEN_BYTES = 32;
-const FORGOT_PASSWORD_TOKEN_TTL_MINUTES = 30;
+// Same three-day window as the approval link - both are redeemed on the same
+// /set-password?token= page. See utils/linkExpiry.js.
+const FORGOT_PASSWORD_TOKEN_TTL_MINUTES = LINK_TTL_MINUTES;
 
 const forgotPassword = async (req, res) => {
   try {
@@ -27,7 +31,9 @@ const forgotPassword = async (req, res) => {
       return res.status(400).json({ error: 'Email is required.' });
     }
 
-    const trimmedEmail = String(email).trim().toLowerCase();
+    // Same canonical form login and registration use, so the reset link is
+    // found no matter how the address was typed.
+    const trimmedEmail = normalizeEmail(email);
 
     const result = await pool.query(
       `SELECT id, role, status FROM users WHERE email = $1`,
@@ -68,10 +74,12 @@ const forgotPassword = async (req, res) => {
         <h2 style="color: #2a5298;">Password Reset Request</h2>
         <p>Hello,</p>
         <p>You recently requested to reset your password for the Work Immersion Monitoring System.</p>
-        <p>Click the button below to set a new password. This link is valid for ${FORGOT_PASSWORD_TOKEN_TTL_MINUTES} minutes.</p>
+        <p>Click the button below to set a new password. This link is valid for ${LINK_TTL_LABEL} and can be used only once.</p>
         <p style="text-align: center; margin: 24px 0;">
           <a href="${resetLink}" style="background: #3b82f6; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; display: inline-block;">Set New Password</a>
         </p>
+        <p style="color: #666; font-size: 12px;">If the button does not work, copy this address into your browser:<br />
+          ${resetLink}</p>
         <p>If you did not request a password reset, you can safely ignore this email.</p>
         <p style="color: #666; font-size: 12px;">Marinduque National High School - Work Immersion Office</p>
       </div>

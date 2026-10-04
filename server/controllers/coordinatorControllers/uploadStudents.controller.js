@@ -1,6 +1,7 @@
 const xlsx = require('xlsx');
 const pool = require('../../db');
 const { NO_PASSWORD_SENTINEL } = require('../../utils/passwordPolicy');
+const { normalizeEmail } = require('../../utils/normalizeEmail');
 
 const uploadStudentsExcel = async (req, res) => {
   try {
@@ -34,7 +35,10 @@ const uploadStudentsExcel = async (req, res) => {
         const studentId = String(row['Student ID']).trim();
         const firstName = String(row['First Name']).trim();
         const lastName = String(row['Last Name']).trim();
-        const email = String(row['Email']).trim();
+        // Canonicalised so an imported account is stored the same way registration
+        // stores one; otherwise the duplicate check below and a later login
+        // could disagree about whether the address already exists.
+        const email = normalizeEmail(row['Email']);
         const middleName = String(row['Middle Name'] || '').trim();
         const section = String(row['Section'] || '').trim();
         const strand = String(row['Strand'] || '').trim();

@@ -82,7 +82,7 @@ export default function ForgotPassword() {
 
             <p className={styles.successText}>
               We sent a password reset link. Follow it to create a new
-              password. The link expires in 30 minutes.
+              password. The link expires in 3 days.
             </p>
 
             <div className={styles.sentTo}>

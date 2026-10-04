@@ -14,7 +14,7 @@ const approvalLink = require('../../services/approvalLink.service');
 
 // Token issuing, revocation and the approval email all live in one service so
 // every route below behaves the same way. See services/approvalLink.service.js.
-const { ROLE_LABELS, APPROVAL_TOKEN_TTL_MINUTES } = approvalLink;
+const { ROLE_LABELS } = approvalLink;
 
 // Every approval route below uses approvalLink.issueAndEmailApprovalLink() to
 // mail a fresh one-time "set your password" link, and
@@ -311,7 +311,7 @@ const approveStaff = async (req, res) => {
     const result = await pool.query(
       `UPDATE users SET status = 'approved', updated_at = CURRENT_TIMESTAMP
        WHERE id = $1 AND status = 'pending' AND role IN ('teacher', 'supervisor', 'coordinator')
-       RETURNING id, email, role`,
+       RETURNING id, email, role, password`,
       [id]
     );
     if (result.rows.length === 0) {
@@ -326,8 +326,8 @@ const approveStaff = async (req, res) => {
     const roleData = await loadRoleNames(user.id, user.role);
     const userWithNames = { ...user, ...roleData };
 
-    // One-time link instead of a temporary password: the staff member sets and
-    // confirms their own password on the /set-password?token= page.
+    // Staff created by Excel upload have no password yet, so this mails them a
+    // one-time set-password link and they set their own on the linked page.
     const { emailSent } = await approvalLink.issueAndEmailApprovalLink(userWithNames);
 
     await writeAuditLog(req, 'account_approval', `${ROLE_LABELS[user.role]} ${userWithNames.first_name || ''} ${userWithNames.last_name || ''} (${user.email}) approved`);
@@ -337,7 +337,8 @@ const approveStaff = async (req, res) => {
         ? `${ROLE_LABELS[user.role]} approved. Set-your-password link emailed.`
         : `${ROLE_LABELS[user.role]} approved, but the email failed to send.`,
       emailSent,
-      user: userWithNames,
+      // publicUser strips the password hash that decides link-vs-notice.
+      user: approvalLink.publicUser(userWithNames),
     });
   } catch (err) {
     console.error('Approve staff error:', err);
@@ -501,14 +502,16 @@ const updateUserStatus = async (req, res) => {
     let emailSent = null;
 
     if (status === 'approved') {
-      // getUserById puts the role-table profile under `profile`, while the mail
-      // wants the names at the top level.
-      const profile = user.profile || {};
-      const recipient = {
-        ...user,
-        first_name: user.first_name || profile.first_name || '',
-        last_name: user.last_name || profile.last_name || '',
-      };
+      // getApprovalRecipient is a focused query that includes the stored
+      // password, so the service can tell a self-registered account (just
+      // notify) from an uploaded one (needs a set-password link). Deliberately
+      // not read from getUserById: that select feeds list endpoints, so pulling
+      // the hash through it would risk leaking it to a client.
+      const recipient = await approvalLink.getApprovalRecipient(user.id);
+      if (recipient) {
+        recipient.first_name = recipient.first_name || user.first_name || '';
+        recipient.last_name = recipient.last_name || user.last_name || '';
+      }
       ({ emailSent } = await approvalLink.issueAndEmailApprovalLink(recipient));
     } else if (status === 'disapproved') {
       await approvalLink.revokeApprovalTokens(user.id);
@@ -519,7 +522,7 @@ const updateUserStatus = async (req, res) => {
       message:
         status === 'approved'
           ? emailSent
-            ? `${roleLabel} approved. Set-your-password link emailed.`
+            ? `${roleLabel} approved. Approval email sent.`
             : `${roleLabel} approved, but the email failed to send. Use Resend link to try again.`
           : `User status updated to ${status}.`,
       emailSent,
@@ -580,19 +583,25 @@ const approveCoordinator = async (req, res) => {
       return res.status(404).json({ error: 'Pending coordinator not found.' });
     }
     const fullName = `${result.profile.first_name || ''} ${result.profile.last_name || ''}`.trim() || result.user.email;
-    // The token was already issued by the service; this only mails the link.
-    const emailSent = await approvalLink.sendApprovalEmail(
-      { ...result.user, first_name: result.profile.first_name, last_name: result.profile.last_name, role: 'coordinator' },
-      result.token,
-      APPROVAL_TOKEN_TTL_MINUTES,
-    );
+    // Coordinators are created by Excel upload, so they normally have no
+    // password yet and get a set-password link; the service call keeps that
+    // decision in one place.
+    const { emailSent, linkSent } = await approvalLink.issueAndEmailApprovalLink({
+      ...result.user,
+      first_name: result.profile.first_name,
+      last_name: result.profile.last_name,
+      role: 'coordinator',
+    });
     await writeAuditLog(req, 'coordinator_approval', `Approved coordinator ${fullName}`);
     res.json({
       message: emailSent
-        ? 'Coordinator approved. Set-your-password link emailed.'
-        : 'Coordinator approved, but the email failed to send. Resend from the coordinator list.',
+        ? linkSent
+          ? 'Coordinator approved. Set-your-password link emailed.'
+          : 'Coordinator approved. Approval email sent.'
+        : 'Coordinator approved, but the email failed to send. Resend from User Management.',
       emailSent,
-      user: result.user,
+      linkSent,
+      user: approvalLink.publicUser(result.user),
       profile: result.profile,
     });
   } catch (err) {

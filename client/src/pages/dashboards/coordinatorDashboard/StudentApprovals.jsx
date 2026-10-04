@@ -154,16 +154,19 @@ function StudentApprovals() {
     try {
       const data = await approveStudent(id);
 
-      // The mail is best-effort: the account is approved either way. If it
-      // failed the student cannot sign in, so report it as an error rather
-      // than claiming the link was sent.
+      // A student who self-registered already has a password, so their approval mail
+      // is a notice with no link. One added by Excel upload has none, so they get
+      // a set-password link - which is why `linkSent` drives the wording.
       const emailFailed = data?.emailSent === false;
       setMessage(
         emailFailed
-          ? 'Student approved, but the set-password email failed to send. Use Resend email on their row.'
-          : data?.message || 'Student approved. An email with their password setup link was sent.',
+          ? 'Student approved, but the email failed to send. Use Resend email on their row.'
+          : data?.message
+            || (data?.linkSent
+              ? 'Student approved. An email with their password setup link was sent.'
+              : 'Student approved. They can now sign in with the password they registered with.'),
       );
-      if (emailFailed) setError('Set-password email failed to send.');
+      if (emailFailed) setError('Approval email failed to send.');
 
       await load();
     } catch (err) {
@@ -241,7 +244,7 @@ function StudentApprovals() {
       // partial delivery failure is visible instead of reading as a clean run.
       setMessage(data.message || `${selectedIds.length} student(s) approved.`);
       if (data.emailFailures > 0) {
-        setError(`${data.emailFailures} set-password email(s) failed to send. Use Resend email on those rows.`);
+        setError(`${data.emailFailures} approval email(s) failed to send. Use Resend email on those rows.`);
       }
       setSelectedIds([]);
       await load();

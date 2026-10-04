@@ -717,33 +717,28 @@ async function getPendingStaff() {
   return result.rows;
 }
 
-// Approval issues a one-time set-your-password token instead of a temporary
-// password. The account is 'approved' from this point, so the email-based
-// /set-password?email= activation path no longer applies to it; the token link
-// is the mechanism that can set a password on an approved account, and the
-// holder chooses and confirms their own password on that page.
-const { issueApprovalToken } = require('./approvalLink.service');
-
+// Approval flips the account to 'approved' and returns it; the controller then
+// calls approvalLink.issueAndEmailApprovalLink(), which decides whether the
+// recipient needs a set-password link or only an approval notice. Keeping the
+// decision there means every approve route behaves identically.
 async function approveCoordinator(id) {
   const result = await pool.query(
     `UPDATE users
      SET status = 'approved', updated_at = CURRENT_TIMESTAMP
      WHERE id = $1 AND status = 'pending' AND role = 'coordinator'
-     RETURNING id, email, role`,
+     RETURNING id, email, role, password`,
     [id]
   );
   if (result.rows.length === 0) return null;
 
   const user = result.rows[0];
 
-  const token = await issueApprovalToken(user.id);
-
   const coordResult = await pool.query(
     `SELECT first_name, last_name FROM coordinators WHERE user_id = $1`,
     [id]
   );
   const profile = coordResult.rows[0] || {};
-  return { user, profile, token };
+  return { user, profile };
 }
 
 async function rejectCoordinator(id) {

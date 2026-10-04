@@ -8,6 +8,7 @@ const {
   LOCK_TIME_MINUTES,
 } = require('../../utils/loginAttempts');
 const { writeAuditLog } = require('./admin.controller');
+const { normalizeEmail } = require('../../utils/normalizeEmail');
 const { getUnreadNotificationCount, ensureAdminTables, ensureCoordinatorRegistrationNotifications } = require('../../services/admin.service');
 const { logSecurityEvent, SECURITY_EVENTS, SEVERITY } = require('../../utils/securityLogger');
 const tokenStore = require('../../utils/tokenStore');
@@ -29,7 +30,9 @@ const login = async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required.' });
     }
 
-    const trimmedEmail = String(email).trim();
+    // Normalised so a signed-in admin reaches their account however they typed
+    // the address; see utils/normalizeEmail.js.
+    const trimmedEmail = normalizeEmail(email);
 
     const locked = await isAccountLocked(trimmedEmail);
     if (locked) {

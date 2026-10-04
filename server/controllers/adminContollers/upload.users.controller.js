@@ -3,6 +3,7 @@ const nodemailer = require('nodemailer');
 const xlsx = require('xlsx');
 const pool = require('../../db');
 const { NO_PASSWORD_SENTINEL } = require('../../utils/passwordPolicy');
+const { normalizeEmail } = require('../../utils/normalizeEmail');
 const { parseSheetRows, EMAIL_REGEX } = require('../../utils/excelUpload');
 
 // Example workbooks so an admin always has the exact column layout the importer
@@ -202,7 +203,9 @@ const uploadTeachersExcel = async (req, res) => {
         const employeeId = row.employeeId;
         const firstName = row.firstName;
         const lastName = row.lastName;
-        const email = row.email;
+        // Canonicalised to match how registration stores an address, so the
+        // duplicate check below and a later login agree.
+        const email = normalizeEmail(row.email);
         const department = row.department;
         const position = row.position;
         const phone = row.phone || '';
@@ -297,7 +300,9 @@ const uploadSupervisorsExcel = async (req, res) => {
         const firstName = row.firstName;
         const lastName = row.lastName;
         const position = row.position;
-        const email = row.email;
+        // Canonicalised to match how registration stores an address, so the
+        // duplicate check below and a later login agree.
+        const email = normalizeEmail(row.email);
         const department = row.department || '';
         const phone = row.phone || '';
 
@@ -390,7 +395,9 @@ const uploadCoordinatorsExcel = async (req, res) => {
         const coordinatorId = row.coordinatorId || row.employeeId;
         const firstName = row.firstName;
         const lastName = row.lastName;
-        const email = row.email;
+        // Canonicalised to match how registration stores an address, so the
+        // duplicate check below and a later login agree.
+        const email = normalizeEmail(row.email);
         const department = row.department;
         const position = row.position;
         const phone = row.phone || '';
