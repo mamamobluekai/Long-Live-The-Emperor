@@ -594,6 +594,97 @@
   justify-content: flex-end;
 }
 
+/* ---------- Bulk selection ---------- */
+
+.checkCell {
+  width: 44px;
+  padding-left: 14px !important;
+  padding-right: 0 !important;
+}
+
+.rowCheck {
+  width: 16px;
+  height: 16px;
+  accent-color: #8b1e2d;
+  cursor: pointer;
+}
+
+.rowCheck:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.rowSelected,
+.modalTable tbody tr.rowSelected:hover {
+  background: #fdf2f4;
+}
+
+.bulkBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: -4px 0 14px;
+  padding: 10px 14px;
+  border: 1px solid #ecd0d6;
+  border-radius: 10px;
+  background: #fff7f8;
+}
+
+.bulkCount {
+  color: #8b1e2d;
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.bulkActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bulkButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid #e2d3d7;
+  border-radius: 8px;
+  background: #fff;
+  color: #5b6472;
+  font-size: 0.78rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.bulkButton:hover {
+  border-color: #c9a2ad;
+  color: #8b1e2d;
+}
+
+.bulkButtonGood:hover {
+  border-color: #9fd6b3;
+  background: #eaf8ef;
+  color: #15803d;
+}
+
+.bulkButtonWarn:hover {
+  border-color: #e3c47f;
+  background: #fff4df;
+  color: #9a5b10;
+}
+
+.bulkButtonDanger:hover {
+  border-color: #f0b7c2;
+  background: #fde3e8;
+  color: #b4233b;
+}
+
 .modalToolbar {
   display: flex;
   align-items: center;

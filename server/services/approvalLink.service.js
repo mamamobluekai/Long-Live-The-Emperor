@@ -217,8 +217,6 @@ function buildApprovalEmailText(user, token) {
       '',
       nextStep,
       '',
-      `Open Work Immersion App: ${getClientUrl()}/login`,
-      '',
       `Sign in with this email: ${user.email}`,
       'Use the password you created when you registered. If you have forgotten it, use the "Forgot password" link on the sign-in page.',
       '',

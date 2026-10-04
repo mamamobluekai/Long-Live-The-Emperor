@@ -57,6 +57,9 @@ export default function UserManagement() {
   const [pagination, setPagination] = useState({ page: 1, limit: 200, total: 0 });
   const [deleteModal, setDeleteModal] = useState({ open: false, id: null, name: '' });
   const [statusModal, setStatusModal] = useState({ open: false, id: null, name: '', next: '' });
+  // Bulk confirmations carry the whole selected id list instead of one id.
+  const [bulkStatusModal, setBulkStatusModal] = useState({ open: false, ids: [], next: '' });
+  const [bulkDeleteModal, setBulkDeleteModal] = useState({ open: false, ids: [] });
   const [profile, setProfile] = useState(null);
 
   // Role shortcut modal: which role is open, its rows, and its own pagination.
@@ -175,6 +178,66 @@ export default function UserManagement() {
     } catch (err) {
       showToast(err.message, 'error');
     }
+  };
+
+  // Refreshes everything a write to the directory can change.
+  const refreshAll = useCallback(() => {
+    fetchUsers();
+    fetchRoleCounts();
+    if (roleModal.open) fetchRoleUsers(roleModal.key);
+  }, [fetchUsers, fetchRoleCounts, fetchRoleUsers, roleModal]);
+
+  // Bulk runs go one row at a time. There is no admin bulk endpoint, and the
+  // per-account routes are the ones that also fire the approval mail, so
+  // reusing them keeps a bulk approve from behaving differently from a single
+  // one. Sequentially, because each approval mails its own recipient and a
+  // burst of parallel sends is what gets Gmail to throttle the account.
+  const runBulk = async (ids, run) => {
+    const failures = [];
+    for (const id of ids) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        await run(id);
+      } catch {
+        failures.push(id);
+      }
+    }
+    refreshAll();
+    return failures;
+  };
+
+  const handleBulkStatus = async (ids, status) => {
+    if (ids.length === 0) return;
+    const failures = await runBulk(ids, (id) => updateUserStatus(id, status));
+    setBulkStatusModal({ open: false, ids: [], next: '' });
+    if (failures.length > 0) {
+      showToast(
+        `${status === 'approved' ? 'Activated' : 'Deactivated'} ${ids.length - failures.length} of ${ids.length}. ${failures.length} failed - open each row to retry.`,
+        'error',
+        8000,
+      );
+      return;
+    }
+    showToast(
+      `${ids.length} account${ids.length === 1 ? '' : 's'} ${status === 'approved' ? 'activated' : 'deactivated'}.`,
+      'success',
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    const { ids } = bulkDeleteModal;
+    if (ids.length === 0) return;
+    const failures = await runBulk(ids, (id) => deleteUser(id));
+    setBulkDeleteModal({ open: false, ids: [] });
+    if (failures.length > 0) {
+      showToast(
+        `Deleted ${ids.length - failures.length} of ${ids.length}. ${failures.length} failed - try again one by one.`,
+        'error',
+        8000,
+      );
+      return;
+    }
+    showToast(`${ids.length} account${ids.length === 1 ? '' : 's'} deleted.`, 'success');
   };
 
   const totalUsers = pagination.total;
@@ -321,6 +384,8 @@ export default function UserManagement() {
         total={roleTotal}
         loading={roleLoading}
         actions={actions}
+        onBulkStatus={(ids, status) => setBulkStatusModal({ open: true, ids, next: status })}
+        onBulkDelete={(ids) => setBulkDeleteModal({ open: true, ids })}
         onClose={() => setRoleModal((m) => ({ ...m, open: false }))}
       />
       <ConfirmModal
@@ -344,6 +409,28 @@ export default function UserManagement() {
           if (roleModal.open) fetchRoleUsers(roleModal.key);
         }} />
       ) : null}
+      <ConfirmModal
+        isOpen={bulkStatusModal.open}
+        title={bulkStatusModal.next === 'approved' ? 'Activate Accounts' : 'Deactivate Accounts'}
+        message={
+          bulkStatusModal.next === 'approved'
+            ? `Activate ${bulkStatusModal.ids.length} selected account(s)? Each one will be able to sign in and use the system, and an approval email is sent to every one of them.`
+            : `Deactivate ${bulkStatusModal.ids.length} selected account(s)? They will no longer be able to sign in.`
+        }
+        confirmLabel={bulkStatusModal.next === 'approved' ? 'Activate All' : 'Deactivate All'}
+        isDestructive={bulkStatusModal.next !== 'approved'}
+        onConfirm={() => handleBulkStatus(bulkStatusModal.ids, bulkStatusModal.next)}
+        onClose={() => setBulkStatusModal({ open: false, ids: [], next: '' })}
+      />
+      <ConfirmModal
+        isOpen={bulkDeleteModal.open}
+        title="Delete Accounts"
+        message={`Are you sure you want to delete ${bulkDeleteModal.ids.length} selected account(s)? This action cannot be undone.`}
+        confirmLabel="Delete All"
+        isDestructive
+        onConfirm={handleBulkDelete}
+        onClose={() => setBulkDeleteModal({ open: false, ids: [] })}
+      />
     </div>
   );
 }
@@ -357,23 +444,33 @@ function RoleUsersModal({
   total,
   loading,
   actions,
+  onBulkStatus,
+  onBulkDelete,
   onClose,
 }) {
   // Filters are local to the dialog and reset whenever a new role is opened.
   const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  // Checked row ids. Held here rather than in the page so the set survives the
+  // status/search filter changes without the parent re-rendering on each click.
+  const [selected, setSelected] = useState([]);
 
   useEffect(() => {
     if (isOpen) {
       setSearchInput('');
       setStatusFilter('all');
+      setSelected([]);
     }
   }, [isOpen, role.key]);
 
-  if (!isOpen) return null;
-  const Icon = role.icon;
+  const toggleRow = (id) => {
+    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
   const search = searchInput.trim().toLowerCase();
-  const visible = users.filter((row) => {
+
+  // The rows the search box and status chips leave on screen.
+  const visible = (users || []).filter((row) => {
     if (statusFilter !== 'all' && row.status !== statusFilter) return false;
     if (!search) return true;
     const haystack = [
@@ -387,6 +484,22 @@ function RoleUsersModal({
       .toLowerCase();
     return haystack.includes(search);
   });
+
+  // Select-all only covers the rows currently visible, so filtering down never
+  // silently sweeps in hidden accounts.
+  const visibleIds = visible.map((row) => row.id);
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selected.includes(id));
+
+  const toggleAllVisible = () => {
+    setSelected((prev) =>
+      allVisibleSelected ? prev.filter((id) => !visibleIds.includes(id)) : [...new Set([...prev, ...visibleIds])],
+    );
+  };
+
+  const clearSelection = () => setSelected([]);
+
+  if (!isOpen) return null;
+  const Icon = role.icon;
 
   return (
     <div
@@ -466,6 +579,54 @@ function RoleUsersModal({
           </div>
         </div>
 
+        {/* Bulk bar. Only rendered once something is checked, so the modal keeps
+            the same two-row layout when nobody is selecting. */}
+        {selected.length > 0 ? (
+          <div className={styles.bulkBar} role="group" aria-label="Bulk actions">
+            <span className={styles.bulkCount}>
+              {selected.length} selected
+            </span>
+            <div className={styles.bulkActions}>
+              <button
+                type="button"
+                className={`${styles.bulkButton} ${styles.bulkButtonGood}`}
+                onClick={() => onBulkStatus(selected, 'approved')}
+                title="Activate every selected account"
+              >
+                <CircleCheck size={15} strokeWidth={2} />
+                Activate
+              </button>
+              <button
+                type="button"
+                className={`${styles.bulkButton} ${styles.bulkButtonWarn}`}
+                onClick={() => onBulkStatus(selected, 'disapproved')}
+                title="Deactivate every selected account"
+              >
+                <PowerOff size={15} strokeWidth={2} />
+                Deactivate
+              </button>
+              <button
+                type="button"
+                className={`${styles.bulkButton} ${styles.bulkButtonDanger}`}
+                onClick={() => onBulkDelete(selected)}
+                title="Delete every selected account"
+              >
+                <Trash2 size={15} strokeWidth={2} />
+                Delete
+              </button>
+              <button
+                type="button"
+                className={styles.bulkButton}
+                onClick={clearSelection}
+                title="Clear the selection"
+              >
+                <X size={15} strokeWidth={2} />
+                Clear
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         <div className={styles.modalBody}>
           {loading ? (
             <div className={styles.modalLoading}>
@@ -483,6 +644,16 @@ function RoleUsersModal({
               <table className={styles.modalTable}>
                 <thead>
                   <tr>
+                    <th className={styles.checkCell}>
+                      <input
+                        type="checkbox"
+                        className={styles.rowCheck}
+                        checked={allVisibleSelected}
+                        onChange={toggleAllVisible}
+                        disabled={visible.length === 0}
+                        aria-label={`Select all visible ${role.label.toLowerCase()}`}
+                      />
+                    </th>
                     <th>User</th>
                     <th>Role</th>
                     <th>Status</th>
@@ -492,7 +663,16 @@ function RoleUsersModal({
                 </thead>
                 <tbody>
                   {visible.map((row) => (
-                    <tr key={row.id}>
+                    <tr key={row.id} className={selected.includes(row.id) ? styles.rowSelected : undefined}>
+                      <td className={styles.checkCell}>
+                        <input
+                          type="checkbox"
+                          className={styles.rowCheck}
+                          checked={selected.includes(row.id)}
+                          onChange={() => toggleRow(row.id)}
+                          aria-label={`Select ${`${row.first_name || ''} ${row.last_name || ''}`.trim() || row.email}`}
+                        />
+                      </td>
                       <td>
                         <div className={styles.userCell}>
                           <div className={styles.avatar}>

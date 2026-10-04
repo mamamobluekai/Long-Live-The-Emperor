@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   KeyRound,
   Lock,
@@ -29,7 +29,6 @@ const PASSWORD_RULES = [
 ];
 
 export default function SetPassword() {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const token = searchParams.get('token');
@@ -47,6 +46,9 @@ export default function SetPassword() {
   const [tokenError, setTokenError] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  // Set once the password is accepted. The form is replaced by the
+  // verification notice instead of redirecting, so the wording is actually read.
+  const [verified, setVerified] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -134,8 +136,10 @@ export default function SetPassword() {
         }
       }
 
-      setMessage('Password set successfully. Redirecting to login...');
-      setTimeout(() => navigate('/login'), 2000);
+      // No auto-redirect: the screen below replaces the form and stays put until
+      // the recipient goes and signs in themselves.
+      setVerified(true);
+      setMessage('');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -152,9 +156,11 @@ export default function SetPassword() {
               <KeyRound size={24} />
             </div>
 
-            <h1>Set your password</h1>
+            <h1>{verified ? 'Account verified' : 'Set your password'}</h1>
 
-            {tokenState === 'email' && email ? (
+            {verified ? (
+              <p>Your account is now verified and ready for Work Immersion.</p>
+            ) : tokenState === 'email' && email ? (
               <p>
                 Welcome, <strong>{email}</strong>. Create a password to activate
                 your account.
@@ -166,14 +172,38 @@ export default function SetPassword() {
             )}
           </div>
 
-          {tokenState === 'verifying' && (
+          {/* Terminal success notice. Message only, by request - no button and no
+              redirect, so nothing on this page competes with the confirmation. */}
+          {verified && (
+            <div className={styles.verifiedState}>
+              <span className={styles.verifiedIcon} aria-hidden="true">
+                <CheckCircle2 size={30} strokeWidth={1.9} />
+              </span>
+
+              <h2 className={styles.verifiedTitle}>Congratulations!</h2>
+
+              <p className={styles.verifiedText}>
+                Your account is verified. You can now open Work Immersion and sign in
+                with your email address
+                {email ? (
+                  <>
+                    {' '}
+                    (<strong>{email}</strong>)
+                  </>
+                ) : null}{' '}
+                and the password you just set.
+              </p>
+            </div>
+          )}
+
+          {!verified && tokenState === 'verifying' && (
             <div className={styles.loadingState}>
               <div className={styles.spinner} />
               Verifying your reset link...
             </div>
           )}
 
-          {tokenState === 'invalid' && (
+          {!verified && tokenState === 'invalid' && (
             <>
               <div className={`${styles.alert} ${styles.errorAlert}`}>
                 <AlertCircle size={17} />
@@ -194,7 +224,7 @@ export default function SetPassword() {
             </>
           )}
 
-          {tokenState === 'missing' && (
+          {!verified && tokenState === 'missing' && (
             <>
               <div className={`${styles.alert} ${styles.errorAlert}`}>
                 <AlertCircle size={17} />
@@ -215,7 +245,7 @@ export default function SetPassword() {
             </>
           )}
 
-          {(tokenState === 'valid' || tokenState === 'email') && (
+          {!verified && (tokenState === 'valid' || tokenState === 'email') && (
             <>
               {tokenState === 'valid' && (
                 <div className={`${styles.alert} ${styles.successAlert}`}>
