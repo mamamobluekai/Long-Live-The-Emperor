@@ -1,23 +1,27 @@
 // One place that owns "how does this server send mail".
 //
 // Why this exists: the activation email worked locally but timed out in
-// production. Gmail is reached over SMTP (ports 465/587), and Render's free
-// tier blocks outbound SMTP to stop spam (Render changelog, 2025-09-16), so the
-// connection never completes and nodemailer reports ETIMEDOUT. No amount of
-// fixing the approval logic helps while the transport cannot leave the host.
+// production. Gmail over SMTP uses ports 465/587, and Render's free tier blocks
+// outbound SMTP to stop spam (Render changelog, 2025-09-16), so the connection
+// never completes and nodemailer reports ETIMEDOUT. No amount of fixing the
+// approval logic helps while the transport cannot leave the host.
 //
-// The provider is therefore chosen at boot from what the environment provides:
+// The provider is therefore chosen at boot from what the environment provides,
+// in this order:
 //
-//   RESEND_API_KEY set  -> Resend's HTTPS API on port 443, which Render allows.
+//   GMAIL_REFRESH_TOKEN -> Gmail REST API over HTTPS on 443. Preferred: it is
+//                          this project's own Gmail account, and HTTPS is
+//                          unaffected by the SMTP block. See utils/gmailApi.js.
+//   RESEND_API_KEY      -> Resend's HTTPS API. Kept as a fallback.
 //   otherwise           -> Gmail over SMTP, correct on a laptop and on any host
 //                          that permits SMTP.
 //
-// Resend is called with a plain HTTPS POST rather than through nodemailer.
-// Nodemailer only speaks SMTP, so pointing it at an HTTP API makes it fake an
-// SMTP conversation; against Resend that ended in "Connection closed" during the
-// verify() handshake. A direct fetch is what the API actually expects, has no
-// handshake to fail, and lets the HTTP status be reported precisely.
+// Both HTTPS providers are called with plain REST requests rather than through
+// nodemailer. Nodemailer only speaks SMTP, so pointing it at an HTTP API makes it
+// fake an SMTP conversation; against Resend that ended in "Connection closed"
+// during the verify() handshake.
 const nodemailer = require('nodemailer');
+const gmailApi = require('./gmailApi');
 
 const RESEND_ENDPOINT = 'https://api.resend.com/emails';
 
@@ -33,6 +37,7 @@ let startupCheckDone = false;
 // Human-readable name of the active provider, for the boot log.
 function providerName() {
   const active = resolveProvider();
+  if (active === 'gmail-api') return gmailApi.describe();
   if (active === 'resend') return 'Resend (HTTPS)';
   if (active === 'gmail') return 'Gmail (SMTP)';
   return 'none';
@@ -40,7 +45,8 @@ function providerName() {
 
 function resolveProvider() {
   if (!provider) {
-    if (process.env.RESEND_API_KEY) provider = 'resend';
+    if (gmailApi.isConfigured()) provider = 'gmail-api';
+    else if (process.env.RESEND_API_KEY) provider = 'resend';
     else if (process.env.EMAIL_USER && process.env.EMAIL_PASS) provider = 'gmail';
     else provider = 'none';
   }
@@ -64,7 +70,7 @@ function getSmtpTransport() {
 // instead of a bare failure, because the two causes need opposite fixes.
 function mailConfigError() {
   if (resolveProvider() !== 'none') return null;
-  return 'No mail provider is configured. Set RESEND_API_KEY (required on Render free tier) or EMAIL_USER and EMAIL_PASS.';
+  return 'No mail provider is configured. Set GMAIL_REFRESH_TOKEN (plus GMAIL_CLIENT_ID and GMAIL_CLIENT_SECRET) for the Gmail API, or RESEND_API_KEY, or EMAIL_USER and EMAIL_PASS for SMTP.';
 }
 
 // The From address. Resend rejects anything but a domain it is allowed to send
@@ -108,8 +114,17 @@ async function fetchWithTimeout(url, options) {
 function resendErrorReason(status, body) {
   const detail = body?.message || body?.name || '';
   if (status === 401 || status === 403) {
+    // Resend refuses to send from onboarding@resend.dev to anyone but the
+    // account owner. Saying "set RESEND_FROM to the testing address" would be
+    // useless advice to an admin who has already done exactly that, so the
+    // suggestion is only offered when it would actually change something.
     if (/domain/i.test(detail)) {
-      return `Resend rejected the sending domain (${detail}). Verify the domain in Resend, or set RESEND_FROM=Work Immersion <onboarding@resend.dev> to send to your own address while testing.`;
+      const usingTestingAddress = /^onboarding@resend\.dev>?$/i.test(
+        fromAddress().replace(/.*<\s*/, '').replace(/\s*>$/, ''),
+      );
+      return usingTestingAddress
+        ? `RESEND_FROM is Resend's shared testing address, which can only deliver to the Resend account owner. Verify your own domain at resend.com/domains and set RESEND_FROM to an address on it, or remove RESEND_API_KEY and use Gmail over SMTP on a host that permits it.`
+        : `Resend rejected the sending domain (${detail}). Verify the domain in Resend, or set RESEND_FROM=Work Immersion <onboarding@resend.dev> to send to your own address while testing.`;
     }
     return `Resend rejected the API key (${detail}). Check that RESEND_API_KEY on the host is correct and has not been revoked.`;
   }
@@ -185,8 +200,10 @@ async function sendViaGmail({ to, subject, html, text }) {
 // Single send entry point so every caller behaves identically and reports the
 // same reason on failure.
 async function sendMail({ to, subject, html, text }) {
-  if (resolveProvider() === 'resend') return sendViaResend({ to, subject, html, text });
-  if (resolveProvider() === 'gmail') return sendViaGmail({ to, subject, html, text });
+  const active = resolveProvider();
+  if (active === 'gmail-api') return gmailApi.sendMail({ to, subject, html, text });
+  if (active === 'resend') return sendViaResend({ to, subject, html, text });
+  if (active === 'gmail') return sendViaGmail({ to, subject, html, text });
   return { sent: false, reason: mailConfigError() };
 }
 
@@ -197,6 +214,19 @@ function verifyStartup() {
   startupCheckDone = true;
 
   const active = resolveProvider();
+
+  if (active === 'gmail-api') {
+    // A send-only Gmail scope cannot read anything, so there is nothing to probe
+    // that would distinguish a good refresh token from a revoked one. Reporting
+    // "configured" is honest; the first real send validates it and returns the
+    // exact reason if it is wrong.
+    if (!process.env.GMAIL_CLIENT_SECRET) {
+      console.error(`Mail: ${providerName()} is missing GMAIL_CLIENT_SECRET, so the token exchange cannot complete.`);
+      return;
+    }
+    console.log(`Mail: ready via ${providerName()}. The refresh token is validated on the first send.`);
+    return;
+  }
 
   if (active === 'resend') {
     // Deliberately no authenticated API call here. Resend's send-only keys are
@@ -218,7 +248,7 @@ function verifyStartup() {
       if (err) {
         console.error(`Mail: ${providerName()} verification failed - ${err.message}`);
         console.error(
-          `Mail: if this is a timeout or connection error, the host is blocking outbound SMTP (Render free tier does, since 2025-09-26). Set RESEND_API_KEY to send over HTTPS instead.`,
+          `Mail: if this is a timeout or connection error, the host is blocking outbound SMTP (Render free tier does, since 2025-09-26). Set GMAIL_REFRESH_TOKEN to send through the Gmail API over HTTPS instead.`,
         );
       } else {
         console.log(`Mail: ready via ${providerName()}.`);
@@ -227,7 +257,7 @@ function verifyStartup() {
     return;
   }
 
-  console.error('Mail: no provider configured. Set RESEND_API_KEY or EMAIL_USER/EMAIL_PASS.');
+  console.error('Mail: no provider configured. Set GMAIL_REFRESH_TOKEN for the Gmail API, or EMAIL_USER/EMAIL_PASS for SMTP.');
 }
 
 // Names and addresses reach the mail bodies from Excel imports and typed forms,
