@@ -137,8 +137,16 @@ export default function UserManagement() {
 
   const handleStatusChange = async (id, status) => {
     try {
-      await updateUserStatus(id, status);
-      showToast(`User status updated to ${status}.`, 'success');
+      const data = await updateUserStatus(id, status);
+      // Approving mails a one-time set-password link. When that mail fails the
+      // account is still active but the owner cannot sign in, so report the
+      // failure and point at the resend action rather than a bare success.
+      const emailFailed = status === 'approved' && data?.emailSent === false;
+      showToast(
+        data?.message || `User status updated to ${status}.`,
+        emailFailed ? 'error' : 'success',
+        emailFailed ? 8000 : undefined,
+      );
       // Refresh the summary cards, the role badges, and the open role modal.
       fetchUsers();
       fetchRoleCounts();

@@ -42,7 +42,7 @@ export default function CoordinatorsPage() {
         // password to fall back on.
         showToast(
           data.emailSent === false
-            ? 'Coordinator approved, but the email failed to send. Resend from the coordinator list.'
+            ? 'Coordinator approved, but the email failed to send. Open the coordinator in User Management and use Resend link.'
             : data.message || 'Coordinator approved. Set-your-password link emailed.',
           data.emailSent === false ? 'error' : 'success',
           8000,
@@ -119,7 +119,7 @@ export default function CoordinatorsPage() {
         isOpen={actionModal.open}
         title={actionModal.type === 'approve' ? 'Approve Coordinator' : 'Reject Coordinator'}
         message={actionModal.type === 'approve'
-          ? 'Approve this coordinator? They will receive a temporary password via email.'
+          ? 'Approve this coordinator? They will be emailed a one-time link to set their own password.'
           : 'Reject this coordinator registration?'}
         confirmLabel={actionModal.type === 'approve' ? 'Approve' : 'Reject'}
         isDestructive={actionModal.type === 'reject'}

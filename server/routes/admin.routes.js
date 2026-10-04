@@ -18,6 +18,7 @@ const {
   getUserById,
   updateUser,
   updateUserStatus,
+  resendApprovalLink,
   resetUserPassword,
   updatePassword,
   uploadProfilePicture,
@@ -83,6 +84,7 @@ router.get('/users/:id', getUserById);
 router.put('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
 router.patch('/users/:id/status', updateUserStatus);
+router.post('/users/:id/resend-approval', resendApprovalLink);
 router.patch('/users/:id/reset-password', resetUserPassword);
 
 router.get('/coordinators', getCoordinators);

@@ -1,6 +1,5 @@
 const pool = require('../../db/');
-const crypto = require('crypto');
-const { sendStudentApprovalEmail } = require('./regexes/email');
+const approvalLink = require('../../services/approvalLink.service');
 
 const getPendingStudents = async (req, res) => {
   try {
@@ -64,7 +63,7 @@ const getStudentStrands = async (req, res) => {
 // 'approved' by the time the mail goes out. The token endpoint is the one that
 // can safely set a password for an approved account, because possession of the
 // emailed link is the proof.
-const APPROVAL_TOKEN_TTL_MINUTES = 60;
+const APPROVAL_TOKEN_TTL_MINUTES = approvalLink.APPROVAL_TOKEN_TTL_MINUTES;
 
 const approveStudent = async (req, res) => {
   try {
@@ -90,32 +89,43 @@ const approveStudent = async (req, res) => {
       user.last_name = studentResult.rows[0].last_name;
     }
 
-    const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + APPROVAL_TOKEN_TTL_MINUTES * 60 * 1000);
-
-    await pool.query(
-      `INSERT INTO password_reset_tokens (user_id, token, expires_at)
-       VALUES ($1, $2, $3)`,
-      [user.id, token, expiresAt]
-    );
-
-    const emailed = await sendStudentApprovalEmail(user, {
-      token,
-      expiresInMinutes: APPROVAL_TOKEN_TTL_MINUTES,
-    });
+    const { emailSent } = await approvalLink.issueAndEmailApprovalLink(user);
 
     // The mail is best-effort: the account is approved either way. Tell the
     // caller explicitly when nothing arrived so the coordinator can resend
     // instead of assuming the student has their link.
     res.json({
-      message: emailed
+      message: emailSent
         ? 'Student approved. Set-your-password link emailed.'
         : 'Student approved, but the email failed to send. Resend from the student list.',
-      emailSent: emailed,
+      emailSent,
       user,
     });
   } catch (err) {
     console.error('Approve student error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+// Recovery path when the approval mail bounced or expired. Issues a fresh
+// one-time token, which also invalidates the previous link.
+const resendStudentApprovalLink = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const recipient = await approvalLink.getApprovalRecipient(Number(id));
+    if (!recipient || recipient.role !== 'student') {
+      return res.status(404).json({ error: 'Student not found.' });
+    }
+
+    const { emailSent } = await approvalLink.resendApprovalLink(recipient);
+    res.json({
+      message: emailSent
+        ? 'Set-your-password link emailed.'
+        : 'The email failed to send. Check the mail settings and try again.',
+      emailSent,
+    });
+  } catch (err) {
+    console.error('Resend student approval link error:', err);
     res.status(500).json({ error: 'Server error.' });
   }
 };
@@ -143,6 +153,9 @@ const disapproveStudent = async (req, res) => {
       user.first_name = studentResult.rows[0].first_name;
       user.last_name = studentResult.rows[0].last_name;
     }
+
+    // Invalidates any set-password link already mailed to this student.
+    await approvalLink.revokeApprovalTokens(user.id);
 
     res.json({ message: 'Student disapproved.', user });
   } catch (err) {
@@ -234,9 +247,44 @@ const bulkApproveStudents = async (req, res) => {
 
     await client.query('COMMIT');
 
+    // The approved rows are collected in the same transaction so the mails go
+    // out only for students that were actually flipped to approved.
+    const approvedIds = result.rows.map((r) => r.id);
+
+    // Approving in bulk used to send nothing, which left every one of those
+    // students unable to sign in: their account was active but they had no
+    // password and no way to get one. Each now gets the same one-time
+    // set-password link as a single approval.
+    let emailFailures = 0;
+    if (approvedIds.length > 0) {
+      const recipients = await client.query(
+        `SELECT u.id, u.email, u.role, s.first_name, s.last_name
+         FROM users u
+         JOIN students s ON s.user_id = u.id
+         WHERE u.id = ANY($1)`,
+        [approvedIds],
+      );
+
+      // Sequential on purpose: a bulk approve of a full year would otherwise
+      // open a burst of SMTP connections and get the sender throttled or
+      // temporarily blocked.
+      for (const recipient of recipients.rows) {
+        // Each student needs a distinct token, so issue individually.
+        // eslint-disable-next-line no-await-in-loop
+        const { emailSent } = await approvalLink.issueAndEmailApprovalLink(recipient);
+        if (!emailSent) emailFailures += 1;
+      }
+    }
+
+    const summary = `${approvedIds.length} student(s) approved.`;
+    const emailNote = emailFailures
+      ? ` ${emailFailures} set-password email(s) failed - resend from the student list.`
+      : ' Set-your-password links emailed.';
+
     res.json({
-      message: `${result.rows.length} student(s) approved.`,
-      count: result.rows.length,
+      message: summary + emailNote,
+      count: approvedIds.length,
+      emailFailures,
     });
   } catch (err) {
     await client.query('ROLLBACK');
@@ -267,9 +315,19 @@ const bulkDisapproveStudents = async (req, res) => {
 
     await client.query('COMMIT');
 
+    // Drop any outstanding set-password links so a rejected student cannot use
+    // one to set a password and get the account re-approved.
+    const revokedIds = result.rows.map((r) => r.id);
+    if (revokedIds.length > 0) {
+      await client.query(
+        `DELETE FROM password_reset_tokens WHERE user_id = ANY($1)`,
+        [revokedIds],
+      );
+    }
+
     res.json({
-      message: `${result.rows.length} student(s) disapproved.`,
-      count: result.rows.length,
+      message: `${revokedIds.length} student(s) disapproved.`,
+      count: revokedIds.length,
     });
   } catch (err) {
     await client.query('ROLLBACK');
@@ -346,6 +404,7 @@ module.exports = {
   getStudentStrands,
   approveStudent,
   disapproveStudent,
+  resendStudentApprovalLink,
   deleteStudent,
   bulkApproveStudents,
   bulkDisapproveStudents,

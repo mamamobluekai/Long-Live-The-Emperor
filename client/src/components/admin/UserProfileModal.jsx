@@ -12,10 +12,11 @@ import {
   MapPin,
   Phone,
   School,
+  Send,
   UserCog,
   X,
 } from 'lucide-react';
-import { getUserProfile, updateUserStatus } from '../../../src/api/adminApi';
+import { getUserProfile, updateUserStatus, resendApprovalEmail } from '../../../src/api/adminApi';
 import { useToast } from './toastContext';
 import styles from './UserProfileModal.module.css';
 
@@ -90,6 +91,7 @@ export default function UserProfileModal({ user, onClose, onUpdated }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -118,14 +120,38 @@ export default function UserProfileModal({ user, onClose, onUpdated }) {
   const handleStatus = async (status) => {
     setSaving(true);
     try {
-      await updateUserStatus(user.id, status);
-      showToast(`Account ${status === 'approved' ? 'activated' : 'deactivated'}.`, 'success');
+      const data = await updateUserStatus(user.id, status);
+      // Approving mails a one-time set-password link. A failed mail leaves the
+      // account active but unable to sign in, so surface it and offer Resend.
+      const emailFailed = status === 'approved' && data?.emailSent === false;
+      showToast(
+        data?.message || `Account ${status === 'approved' ? 'activated' : 'deactivated'}.`,
+        emailFailed ? 'error' : 'success',
+        emailFailed ? 8000 : undefined,
+      );
       onUpdated?.();
-      onClose?.();
+      // Stay open on a mail failure so the Resend link is right there.
+      if (!emailFailed) onClose?.();
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Re-mails a brand new set-password link for an approved account.
+  const handleResendLink = async () => {
+    setResending(true);
+    try {
+      const data = await resendApprovalEmail(user.id);
+      showToast(
+        data?.message || 'Set-your-password link emailed.',
+        data?.emailSent === false ? 'error' : 'success',
+      );
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setResending(false);
     }
   };
 
@@ -259,6 +285,20 @@ export default function UserProfileModal({ user, onClose, onUpdated }) {
               {saving ? 'Saving…' : 'Activate account'}
             </button>
           )}
+          {/* Only for an approved account: the recovery path when the approval
+              email bounced or expired. Mints a new one-time link. */}
+          {isActive ? (
+            <button
+              type="button"
+              className={styles.secondaryBtn}
+              onClick={handleResendLink}
+              disabled={saving || resending}
+              title="Email a new set-password link to this account"
+            >
+              <Send size={16} strokeWidth={2} />
+              {resending ? 'Sending…' : 'Resend link'}
+            </button>
+          ) : null}
           <button type="button" className={styles.secondaryBtn} onClick={onClose} disabled={saving}>
             Close
           </button>

@@ -91,14 +91,23 @@ export function installFetchCsrfInterceptor() {
     const method = String(init.method || input?.method || 'GET').toUpperCase();
     if (!methodNeedsCsrf(method)) return originalFetch(input, init);
 
+    // Build the header set from whatever the caller supplied plus the token.
+    const send = (token) => {
+      // `Headers` normalises casing and merges any Headers/init headers object.
+      const headers = new Headers(init.headers ?? input?.headers ?? undefined);
+      if (token && !headers.has(CSRF_HEADER)) headers.set(CSRF_HEADER, token);
+      return originalFetch(input, { ...init, headers });
+    };
+
     const token = getCsrfToken();
-    if (!token) return originalFetch(input, init);
+    if (token) return send(token);
 
-    // `Headers` normalises casing and merges any Headers/init headers object.
-    const headers = new Headers(init.headers ?? input?.headers ?? undefined);
-    if (!headers.has(CSRF_HEADER)) headers.set(CSRF_HEADER, token);
-
-    return originalFetch(input, { ...init, headers });
+    // No token yet - on a fresh browser that happens before the user has ever
+    // logged in. Sending the mutation now would omit X-CSRF-Token and come back
+    // 403, so fetch one first rather than letting the request fail. This is what
+    // previously broke /users/forgot-password, /users/register and
+    // /users/reset-password, since only the login helpers warmed the token.
+    return ensureCsrfToken().then(send);
   };
 
   patchedFetch.__csrfPatched = true;

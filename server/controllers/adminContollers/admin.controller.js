@@ -2,7 +2,6 @@ const pool = require('../../db');
 const path = require('path');
 const cloudinary = require('../../db/cloudinary');
 const streamifier = require('streamifier');
-const nodemailer = require('nodemailer');
 const PDFDocument = require('pdfkit');
 const XLSX = require('xlsx');
 const { hashPassword } = require('../../utils/hashPassword');
@@ -11,74 +10,16 @@ const { generateTemporaryPassword } = require('../../utils/generatePassword');
 const { login } = require('../user.controller');
 const adminService = require('../../services/admin.service');
 const periodArchiveService = require('../../services/periodArchive.service');
+const approvalLink = require('../../services/approvalLink.service');
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+// Token issuing, revocation and the approval email all live in one service so
+// every route below behaves the same way. See services/approvalLink.service.js.
+const { ROLE_LABELS, APPROVAL_TOKEN_TTL_MINUTES } = approvalLink;
 
-transporter.verify((err) => {
-  if (err) {
-    console.error('Email transporter verification failed:', err.message);
-  } else {
-    console.log('Email transporter ready.');
-  }
-});
-
-function getClientUrl() {
-  return process.env.CLIENT_URL || 'http://localhost:5173';
-}
-
-const ROLE_LABELS = {
-  teacher: 'Teacher',
-  supervisor: 'Supervisor',
-  coordinator: 'Coordinator',
-  student: 'Student',
-  admin: 'Admin',
-};
-
-// How long an emailed set-your-password link stays usable after approval.
-const APPROVAL_TOKEN_TTL_MINUTES = 60;
-
-// No temporary password: the recipient sets and confirms their own password on
-// the linked page. `token` is a one-time, expiring link, and is the only
-// credential the holder needs. Returns true when the transport accepted the
-// message so the caller can warn when nothing was delivered.
-async function sendApprovalEmail(user, approvedByLabel, token, expiresInMinutes = 60) {
-  const roleLabel = ROLE_LABELS[user.role] || user.role;
-  const setPasswordUrl = `${getClientUrl()}/set-password?token=${encodeURIComponent(token)}`;
-  try {
-    await transporter.sendMail({
-      from: `"Work Immersion System" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: `Your Work Immersion ${roleLabel} Account is Approved`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2a5298;">Account Approved</h2>
-          <p>Hello <strong>${user.first_name} ${user.last_name}</strong>,</p>
-          <p>Your ${roleLabel} account has been approved. Choose a password of your own using the button below - you will confirm it before it is saved.</p>
-          <p><strong>Email:</strong> ${user.email}</p>
-          <p style="margin: 20px 0;">
-            <a href="${setPasswordUrl}" style="background: #2a5298; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
-              Set Your Password
-            </a>
-          </p>
-          <p style="color: #666; font-size: 12px;">This link is valid for ${expiresInMinutes} minutes and can be used only once.</p>
-          <p style="color: #666; font-size: 12px;">After setting it you can sign in with your email, and change your password again at any time from your profile settings.</p>
-          <p style="color: #666; font-size: 12px;">Marinduque National High School - Work Immersion Office</p>
-        </div>
-      `,
-    });
-    console.log(`Approval email sent to ${user.email}`);
-    return true;
-  } catch (emailErr) {
-    console.error(`Failed to send approval email to ${user.email}:`, emailErr.message);
-    return false;
-  }
-}
+// Every approval route below uses approvalLink.issueAndEmailApprovalLink() to
+// mail a fresh one-time "set your password" link, and
+// approvalLink.revokeApprovalTokens() to invalidate outstanding links when an
+// account is deactivated.
 
 const getAllUsers = async (req, res) => {
   try {
@@ -344,6 +285,26 @@ const createAdmin = async (req, res) => {
   }
 };
 
+// The profile name for an account, read from whichever role table holds it.
+// Used for the greeting line in the approval email.
+async function loadRoleNames(userId, role, client = pool) {
+  const table = {
+    student: 'students',
+    teacher: 'teachers',
+    supervisor: 'supervisors',
+    coordinator: 'coordinators',
+    admin: 'admins',
+  }[role];
+
+  if (!table) return {};
+
+  const result = await client.query(
+    `SELECT first_name, last_name FROM ${table} WHERE user_id = $1`,
+    [userId],
+  );
+  return result.rows[0] || {};
+}
+
 const approveStaff = async (req, res) => {
   try {
     const { id } = req.params;
@@ -361,49 +322,21 @@ const approveStaff = async (req, res) => {
 
     const user = result.rows[0];
 
-    // Fetch role-specific data to get first_name and last_name
-    let roleData = {};
-    if (user.role === 'teacher') {
-      const roleResult = await pool.query(
-        `SELECT first_name, last_name FROM teachers WHERE user_id = $1`,
-        [id]
-      );
-      roleData = roleResult.rows[0] || {};
-    } else if (user.role === 'supervisor') {
-      const roleResult = await pool.query(
-        `SELECT first_name, last_name FROM supervisors WHERE user_id = $1`,
-        [id]
-      );
-      roleData = roleResult.rows[0] || {};
-    } else if (user.role === 'coordinator') {
-      const roleResult = await pool.query(
-        `SELECT first_name, last_name FROM coordinators WHERE user_id = $1`,
-        [id]
-      );
-      roleData = roleResult.rows[0] || {};
-    }
-
+    // Fetch role-specific data to get first_name and last_name for the greeting.
+    const roleData = await loadRoleNames(user.id, user.role);
     const userWithNames = { ...user, ...roleData };
 
     // One-time link instead of a temporary password: the staff member sets and
     // confirms their own password on the /set-password?token= page.
-    const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + APPROVAL_TOKEN_TTL_MINUTES * 60 * 1000);
-    await pool.query(
-      `INSERT INTO password_reset_tokens (user_id, token, expires_at)
-       VALUES ($1, $2, $3)`,
-      [user.id, token, expiresAt]
-    );
-
-    const emailed = await sendApprovalEmail(userWithNames, 'admin', token, APPROVAL_TOKEN_TTL_MINUTES);
+    const { emailSent } = await approvalLink.issueAndEmailApprovalLink(userWithNames);
 
     await writeAuditLog(req, 'account_approval', `${ROLE_LABELS[user.role]} ${userWithNames.first_name || ''} ${userWithNames.last_name || ''} (${user.email}) approved`);
 
     res.json({
-      message: emailed
+      message: emailSent
         ? `${ROLE_LABELS[user.role]} approved. Set-your-password link emailed.`
         : `${ROLE_LABELS[user.role]} approved, but the email failed to send.`,
-      emailSent: emailed,
+      emailSent,
       user: userWithNames,
     });
   } catch (err) {
@@ -428,29 +361,14 @@ const disapproveStaff = async (req, res) => {
     }
 
     const user = result.rows[0];
-    
+
+    // Rejecting invalidates any link already mailed out, otherwise the recipient
+    // could still set a password and resetPassword would flip the account back
+    // to 'approved'.
+    await approvalLink.revokeApprovalTokens(user.id);
+
     // Fetch role-specific data to get first_name and last_name
-    let roleData = {};
-    if (user.role === 'teacher') {
-      const roleResult = await pool.query(
-        `SELECT first_name, last_name FROM teachers WHERE user_id = $1`,
-        [id]
-      );
-      roleData = roleResult.rows[0] || {};
-    } else if (user.role === 'supervisor') {
-      const roleResult = await pool.query(
-        `SELECT first_name, last_name FROM supervisors WHERE user_id = $1`,
-        [id]
-      );
-      roleData = roleResult.rows[0] || {};
-    } else if (user.role === 'coordinator') {
-      const roleResult = await pool.query(
-        `SELECT first_name, last_name FROM coordinators WHERE user_id = $1`,
-        [id]
-      );
-      roleData = roleResult.rows[0] || {};
-    }
-    
+    const roleData = await loadRoleNames(user.id, user.role);
     const userWithNames = { ...user, ...roleData };
     await writeAuditLog(req, 'account_rejection', `${ROLE_LABELS[user.role]} ${userWithNames.first_name || ''} ${userWithNames.last_name || ''} (${user.email}) disapproved`);
     res.json({ message: `${ROLE_LABELS[user.role]} disapproved.`, user: userWithNames });
@@ -557,6 +475,15 @@ const resetUserPassword = async (req, res) => {
   }
 };
 
+// The admin's generic status toggle, reached from the "Activate account" button
+// in User Management and from the user profile modal.
+//
+// Approving here has to do what the dedicated approve routes do: the account
+// has just become usable, and if it still has no password of its own the only
+// way its owner learns that is the mail. Previously this route flipped the
+// status and said nothing, so newly approved accounts could not sign in at all.
+// Deactivating revokes any outstanding link for the same reason as
+// disapproveStaff - resetPassword would otherwise re-approve the account.
 const updateUserStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -570,9 +497,67 @@ const updateUserStatus = async (req, res) => {
     }
     const action = status === 'approved' ? 'account_activation' : status === 'disapproved' ? 'account_rejection' : 'account_status_change';
     await writeAuditLog(req, action, `Set user ${id} status to ${status}`);
-    res.json({ message: `User status updated to ${status}.`, user });
+
+    let emailSent = null;
+
+    if (status === 'approved') {
+      // getUserById puts the role-table profile under `profile`, while the mail
+      // wants the names at the top level.
+      const profile = user.profile || {};
+      const recipient = {
+        ...user,
+        first_name: user.first_name || profile.first_name || '',
+        last_name: user.last_name || profile.last_name || '',
+      };
+      ({ emailSent } = await approvalLink.issueAndEmailApprovalLink(recipient));
+    } else if (status === 'disapproved') {
+      await approvalLink.revokeApprovalTokens(user.id);
+    }
+
+    const roleLabel = ROLE_LABELS[user.role] || 'Account';
+    res.json({
+      message:
+        status === 'approved'
+          ? emailSent
+            ? `${roleLabel} approved. Set-your-password link emailed.`
+            : `${roleLabel} approved, but the email failed to send. Use Resend link to try again.`
+          : `User status updated to ${status}.`,
+      emailSent,
+      user,
+    });
   } catch (err) {
     console.error('Update user status error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+// Recovery path for an approved account whose mail bounced or expired. Issues a
+// brand new one-time token, which also invalidates any previous link.
+const resendApprovalLink = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const recipient = await approvalLink.getApprovalRecipient(Number(id));
+    if (!recipient) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    const { emailSent } = await approvalLink.resendApprovalLink(recipient);
+    await writeAuditLog(
+      req,
+      'approval_email_resend',
+      `Resent set-password link to ${recipient.email}`,
+      '',
+      emailSent ? 'success' : 'failed',
+    );
+
+    res.json({
+      message: emailSent
+        ? 'Set-your-password link emailed.'
+        : 'The email failed to send. Check the mail settings and try again.',
+      emailSent,
+    });
+  } catch (err) {
+    console.error('Resend approval link error:', err);
     res.status(500).json({ error: 'Server error.' });
   }
 };
@@ -595,18 +580,18 @@ const approveCoordinator = async (req, res) => {
       return res.status(404).json({ error: 'Pending coordinator not found.' });
     }
     const fullName = `${result.profile.first_name || ''} ${result.profile.last_name || ''}`.trim() || result.user.email;
-    const emailed = await sendApprovalEmail(
+    // The token was already issued by the service; this only mails the link.
+    const emailSent = await approvalLink.sendApprovalEmail(
       { ...result.user, first_name: result.profile.first_name, last_name: result.profile.last_name, role: 'coordinator' },
-      'admin',
       result.token,
-      APPROVAL_TOKEN_TTL_MINUTES
+      APPROVAL_TOKEN_TTL_MINUTES,
     );
     await writeAuditLog(req, 'coordinator_approval', `Approved coordinator ${fullName}`);
     res.json({
-      message: emailed
+      message: emailSent
         ? 'Coordinator approved. Set-your-password link emailed.'
-        : 'Coordinator approved, but the email failed to send.',
-      emailSent: emailed,
+        : 'Coordinator approved, but the email failed to send. Resend from the coordinator list.',
+      emailSent,
       user: result.user,
       profile: result.profile,
     });
@@ -624,6 +609,8 @@ const rejectCoordinator = async (req, res) => {
       return res.status(404).json({ error: 'Pending coordinator not found.' });
     }
     const fullName = `${result.profile.first_name || ''} ${result.profile.last_name || ''}`.trim() || result.user.email;
+    // A rejection must invalidate any link already issued.
+    await approvalLink.revokeApprovalTokens(result.user.id);
     await writeAuditLog(req, 'coordinator_rejection', `Rejected coordinator ${fullName}`);
     res.json({ message: 'Coordinator rejected.', user: result.user, profile: result.profile });
   } catch (err) {
@@ -1059,6 +1046,7 @@ module.exports = {
   getUserById,
   updateUser,
   updateUserStatus,
+  resendApprovalLink,
   resetUserPassword,
   updatePassword,
   uploadProfilePicture,

@@ -1,10 +1,6 @@
 const pool = require('../db');
-const crypto = require('crypto');
 const { generateTemporaryPassword } = require('../utils/generatePassword');
 const { hashPassword } = require('../utils/hashPassword');
-
-// How long an emailed set-your-password link stays usable after approval.
-const APPROVAL_TOKEN_TTL_MINUTES = 60;
 
 // Shown when an admin enables maintenance mode without writing a reason.
 const DEFAULT_MAINTENANCE_MESSAGE =
@@ -726,6 +722,8 @@ async function getPendingStaff() {
 // /set-password?email= activation path no longer applies to it; the token link
 // is the mechanism that can set a password on an approved account, and the
 // holder chooses and confirms their own password on that page.
+const { issueApprovalToken } = require('./approvalLink.service');
+
 async function approveCoordinator(id) {
   const result = await pool.query(
     `UPDATE users
@@ -738,13 +736,7 @@ async function approveCoordinator(id) {
 
   const user = result.rows[0];
 
-  const token = crypto.randomBytes(32).toString('hex');
-  const expiresAt = new Date(Date.now() + APPROVAL_TOKEN_TTL_MINUTES * 60 * 1000);
-  await pool.query(
-    `INSERT INTO password_reset_tokens (user_id, token, expires_at)
-     VALUES ($1, $2, $3)`,
-    [user.id, token, expiresAt]
-  );
+  const token = await issueApprovalToken(user.id);
 
   const coordResult = await pool.query(
     `SELECT first_name, last_name FROM coordinators WHERE user_id = $1`,

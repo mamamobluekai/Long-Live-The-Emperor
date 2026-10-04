@@ -864,6 +864,7 @@
 }
 
 .approveBtn,
+.resendBtn,
 .deleteBtn {
   display: inline-flex;
   align-items: center;
@@ -885,6 +886,24 @@
 .approveBtn:hover {
   background: #d9f2e3;
   border-color: #7fc79a;
+}
+
+/* Resend the set-password link to an already-approved student. Neutral blue so
+   it reads as a secondary action next to the green approve button. */
+.resendBtn {
+  border: 1px solid #b9cbe6;
+  background: #e6eefb;
+  color: #37568c;
+}
+
+.resendBtn:hover:not(:disabled) {
+  background: #d8e4f7;
+  border-color: #93aed6;
+}
+
+.resendBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .deleteBtn {

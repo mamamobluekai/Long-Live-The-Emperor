@@ -8,6 +8,7 @@ const {
   getStudentStrands,
   approveStudent,
   disapproveStudent,
+  resendStudentApprovalLink,
   deleteStudent,
   bulkApproveStudents,
   bulkDisapproveStudents,
@@ -67,6 +68,7 @@ router.get('/students/strands', authorize('coordinator', 'admin'), getStudentStr
 router.post('/students/upload', authorize('coordinator', 'admin'), uploadExcel.single('file'), uploadStudentsExcel);
 router.put('/students/:id/approve', authorize('coordinator', 'admin'), approveStudent);
 router.put('/students/:id/disapprove', authorize('coordinator', 'admin'), disapproveStudent);
+router.post('/students/:id/resend-approval', authorize('coordinator', 'admin'), resendStudentApprovalLink);
 router.delete('/students/:id', authorize('coordinator', 'admin'), deleteStudent);
 router.put('/students/bulk/approve', authorize('coordinator', 'admin'), bulkApproveStudents);
 router.put('/students/bulk/disapprove', authorize('coordinator', 'admin'), bulkDisapproveStudents);

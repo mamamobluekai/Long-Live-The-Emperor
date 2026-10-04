@@ -57,6 +57,12 @@ export async function disapproveStudent(id) {
   return apiFetch(`/students/${id}/disapprove`, { method: 'PUT' });
 }
 
+// Mails a fresh set-password link to an already-approved student. The response
+// carries `emailSent` so the coordinator can see a delivery failure.
+export async function resendStudentApprovalEmail(id) {
+  return apiFetch(`/students/${id}/resend-approval`, { method: 'POST' });
+}
+
 export async function deleteStudent(id) {
   return apiFetch(`/students/${id}`, { method: 'DELETE' });
 }

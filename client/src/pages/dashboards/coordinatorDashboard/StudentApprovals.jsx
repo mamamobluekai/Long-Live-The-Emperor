@@ -3,6 +3,7 @@ import {
   getPendingStudents,
   getStudentStrands,
   approveStudent,
+  resendStudentApprovalEmail,
   deleteStudent,
   bulkApproveStudents,
   bulkDeleteStudents,
@@ -11,6 +12,7 @@ import {
 import {
   Check,
   CheckSquare,
+  Mail,
   Search,
   Square,
   Trash2,
@@ -56,6 +58,9 @@ function StudentApprovals() {
   // Bulk selection & actions
   const [selectedIds, setSelectedIds] = useState([]);
   const [bulkLoading, setBulkLoading] = useState(false);
+
+  // Tracks which student's Resend button is in flight, so only that row spins.
+  const [resendingId, setResendingId] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -147,15 +152,42 @@ function StudentApprovals() {
 
   const handleApprove = async (id) => {
     try {
-      await approveStudent(id);
+      const data = await approveStudent(id);
 
+      // The mail is best-effort: the account is approved either way. If it
+      // failed the student cannot sign in, so report it as an error rather
+      // than claiming the link was sent.
+      const emailFailed = data?.emailSent === false;
       setMessage(
-        'Student approved. An email with their password setup link was sent.'
+        emailFailed
+          ? 'Student approved, but the set-password email failed to send. Use Resend email on their row.'
+          : data?.message || 'Student approved. An email with their password setup link was sent.',
       );
+      if (emailFailed) setError('Set-password email failed to send.');
 
       await load();
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  // Re-mails a fresh one-time set-password link to an approved student. This is
+  // the recovery path when the original approval mail bounced or expired.
+  const handleResendEmail = async (id) => {
+    setResendingId(id);
+    setError('');
+    setMessage('');
+    try {
+      const data = await resendStudentApprovalEmail(id);
+      if (data?.emailSent === false) {
+        setError('The set-password email failed to send. Please try again.');
+      } else {
+        setMessage(data?.message || 'Set-your-password link emailed.');
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setResendingId(null);
     }
   };
 
@@ -205,7 +237,12 @@ function StudentApprovals() {
     setMessage('');
     try {
       const data = await bulkApproveStudents(selectedIds);
+      // The server reports how many of the set-password emails failed so a
+      // partial delivery failure is visible instead of reading as a clean run.
       setMessage(data.message || `${selectedIds.length} student(s) approved.`);
+      if (data.emailFailures > 0) {
+        setError(`${data.emailFailures} set-password email(s) failed to send. Use Resend email on those rows.`);
+      }
       setSelectedIds([]);
       await load();
     } catch (err) {
@@ -620,6 +657,20 @@ function StudentApprovals() {
                                   aria-label="Approve student"
                                 >
                                   <Check size={15} />
+                                </button>
+                              )}
+
+                              {/* Approved but no password link received: mail a new
+                                  one. Mints a fresh one-time token each time. */}
+                              {student.status === 'approved' && (
+                                <button
+                                  className={styles.resendBtn}
+                                  onClick={() => handleResendEmail(student.id)}
+                                  disabled={resendingId === student.id}
+                                  title="Resend the set-password email"
+                                  aria-label="Resend set-password email to student"
+                                >
+                                  <Mail size={15} />
                                 </button>
                               )}
 

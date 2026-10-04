@@ -145,6 +145,16 @@ export async function updateUserStatus(id, status) {
   });
 }
 
+// Mails a fresh set-password link to an already-approved account. Use when the
+// original approval email bounced or expired - the response carries
+// `emailSent` so the UI can report a delivery failure.
+export async function resendApprovalEmail(id) {
+  return fetchJsonOrThrow(`${API_BASE}/admin/users/${id}/resend-approval`, {
+    method: 'POST',
+    headers: authHeaders(),
+  });
+}
+
 export async function resetUserPassword(id, password) {
   return fetchJsonOrThrow(`${API_BASE}/admin/users/${id}/reset-password`, {
     method: 'PATCH',
