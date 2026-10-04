@@ -42,9 +42,47 @@ const resetLoginAttempts = async (email, ipAddress) => {
   );
 };
 
+// Kept for callers that already hold an attempts row.
 const isAccountLocked = (attempts) => {
   if (!attempts || !attempts.locked_until) return false;
   return new Date(attempts.locked_until) > new Date();
 };
 
-module.exports = { getLoginAttempts, incrementLoginAttempts, resetLoginAttempts, isAccountLocked, MAX_ATTEMPTS, LOCK_TIME_MINUTES };
+// Reads the lockout state for an email address.
+//
+// This exists because both login controllers used to call isAccountLocked() with
+// an email *string* and await it. On a string, `attempts.locked_until` is
+// undefined, so the function always answered false and the lockout branch was
+// unreachable - five wrong passwords never locked anything. This is the
+// by-address version they actually meant.
+//
+// `attemptsRemaining` is reported so the UI can warn before the lock, but it is
+// only meaningful for an address that exists, so callers must not send it back
+// to the client (see utils/loginErrors.js).
+const getLockoutState = async (email) => {
+  const row = await getLoginAttempts(email);
+  if (!row) return { locked: false, minutesRemaining: 0, attempts: 0, attemptsRemaining: MAX_ATTEMPTS };
+
+  if (row.locked_until && new Date(row.locked_until) > new Date()) {
+    const minutes = Math.ceil((new Date(row.locked_until) - Date.now()) / 60000);
+    return { locked: true, minutesRemaining: minutes, attempts: row.attempts, attemptsRemaining: 0 };
+  }
+
+  return {
+    locked: false,
+    minutesRemaining: 0,
+    attempts: row.attempts,
+    // A lock that has already expired starts the count again.
+    attemptsRemaining: Math.max(0, MAX_ATTEMPTS - (row.locked_until ? 0 : row.attempts)),
+  };
+};
+
+module.exports = {
+  getLoginAttempts,
+  incrementLoginAttempts,
+  resetLoginAttempts,
+  isAccountLocked,
+  getLockoutState,
+  MAX_ATTEMPTS,
+  LOCK_TIME_MINUTES,
+};

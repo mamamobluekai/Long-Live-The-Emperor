@@ -73,7 +73,45 @@ export const MAINTENANCE_FALLBACK_MESSAGE =
   'The system is temporarily unavailable while we perform scheduled maintenance. Please try again later.';
 
 /**
+ * Short heading for the login toast, keyed by the server's failure code.
+ *
+ * The server already sends a full sentence explaining what went wrong
+ * (see server/utils/loginErrors.js). These titles only label the toast, so the
+ * user sees "Wrong password" next to the full explanation rather than having to
+ * read the whole sentence to work out what went wrong.
+ */
+export const LOGIN_ERROR_TITLES = {
+  MISSING_CREDENTIALS: 'Missing details',
+  ACCOUNT_NOT_FOUND: 'No account found',
+  WRONG_PASSWORD: 'Wrong password',
+  WRONG_ROLE_ADMIN: 'Wrong sign-in page',
+  WRONG_ROLE_SELECTED: 'Wrong role selected',
+  ACCOUNT_PENDING: 'Awaiting approval',
+  ACCOUNT_DISAPPROVED_ADMIN: 'Account not approved',
+  ACCOUNT_DISAPPROVED_USER: 'Account not approved',
+  ACCOUNT_LOCKED: 'Account locked',
+  MAINTENANCE: 'System maintenance',
+  PERIOD_CLOSED: 'Outside immersion period',
+  SERVER_ERROR: 'Sign-in problem',
+  INVALID_CREDENTIALS: 'Sign-in failed',
+};
+
+/**
+ * Title for a login failure, falling back to a neutral heading.
+ */
+export function getLoginErrorTitle(code) {
+  return LOGIN_ERROR_TITLES[code] || 'Sign-in failed';
+}
+
+/**
  * Convert a raw error string into a user-friendly message.
+ *
+ * An unrecognised message is returned as-is rather than replaced with the
+ * generic default. The rules above exist to reword *legacy* server strings that
+ * were written for developers; the current login endpoints send finished,
+ * user-facing sentences ("That password is incorrect..."), and collapsing those
+ * into "Something went wrong" is what made correct errors look vague.
+ *
  * @param {string} rawMessage
  * @returns {string}
  */
@@ -94,13 +132,14 @@ export function getErrorMessage(rawMessage) {
     }
   }
 
-  return DEFAULT_MESSAGE;
+  // Not a legacy string. Trust the server's wording.
+  return msg;
 }
 
 /**
  * Normalize an error API response body into a friendly, UI-ready shape.
- * @param {{error?: string, message?: string, msg?: string, errors?: any[], maintenance?: boolean, startedAt?: string, estimatedEnd?: string}} data
- * @returns {{message: string, maintenance?: boolean, startedAt?: string, estimatedEnd?: string}}
+ * @param {{error?: string, message?: string, msg?: string, code?: string, errors?: any[], maintenance?: boolean, startedAt?: string, estimatedEnd?: string}} data
+ * @returns {{message: string, code?: string, maintenance?: boolean, startedAt?: string, estimatedEnd?: string}}
  */
 export function mapErrorResponse(data) {
   if (!data) return { message: DEFAULT_MESSAGE };
@@ -111,6 +150,7 @@ export function mapErrorResponse(data) {
   if (data.maintenance) {
     return {
       message: data.error || data.message || MAINTENANCE_FALLBACK_MESSAGE,
+      code: data.code,
       maintenance: true,
       startedAt: data.startedAt,
       estimatedEnd: data.estimatedEnd,
@@ -118,5 +158,5 @@ export function mapErrorResponse(data) {
   }
 
   const rawMessage = data.error || data.message || data.msg || '';
-  return { message: getErrorMessage(rawMessage) };
+  return { message: getErrorMessage(rawMessage), code: data.code };
 }

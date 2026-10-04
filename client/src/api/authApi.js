@@ -14,13 +14,21 @@ async function fetchJsonOrThrow(url, options) {
       // A 503 from login means maintenance mode, not bad credentials, so tell
       // the app before the friendly-message mapping hides that distinction.
       if (data && data.maintenance) reportMaintenance(data);
-      const { message } = mapErrorResponse(data);
-      throw new Error(message);
+      const { message, code } = mapErrorResponse(data);
+      // The code identifies the failure (wrong password, wrong role, locked,
+      // pending...) so the sign-in form can label its toast instead of showing
+      // one undifferentiated message for every failure. `data` is attached too
+      // because the wrong-role response carries the account's real role, which
+      // the form uses to switch tabs for the user.
+      throw Object.assign(new Error(message), { code, status: response.status, data });
     }
     return data;
   } catch (err) {
-    const { message } = mapErrorResponse({ error: err.message });
-    throw new Error(message, { cause: err });
+    // Already a mapped API error - rethrow as-is rather than running its
+    // friendly text through the rules a second time.
+    if (err && err.code !== undefined && err.status) throw err;
+    const { message, code } = mapErrorResponse({ error: err.message });
+    throw Object.assign(new Error(message), { code, cause: err });
   }
 }
 

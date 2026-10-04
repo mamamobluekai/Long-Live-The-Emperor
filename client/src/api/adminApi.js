@@ -22,11 +22,17 @@ async function fetchJsonOrThrow(url, options = {}) {
       // Surface maintenance to the app-wide listener before throwing, so the
       // user is moved off a page they can no longer use.
       if (data && data.maintenance) reportMaintenance(data);
-      const { message } = mapErrorResponse(data);
-      throw new Error(message);
+      const { message, code } = mapErrorResponse(data);
+      // `code` survives on the error so a caller can tell why something failed
+      // - the login page needs it to label the toast ("Wrong password" vs
+      // "Account locked" rather than one generic heading).
+      throw Object.assign(new Error(message), { code, status: response.status, data });
     }
     return data;
   } catch (err) {
+    // An already-mapped API error keeps its code and wording; only a genuine
+    // transport failure reaches here and needs translating.
+    if (err && err.status) throw err;
     const { message } = mapErrorResponse({ error: err.message });
     throw new Error(message, { cause: err });
   }

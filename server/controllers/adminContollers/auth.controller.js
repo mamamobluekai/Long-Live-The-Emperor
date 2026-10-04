@@ -2,11 +2,10 @@ const pool = require('../../db');
 const { hashPassword, comparePassword } = require('../../utils/hashPassword');
 const { generateAccessToken, generateRefreshToken } = require('../../utils/generateToken');
 const {
-  incrementLoginAttempts,
   resetLoginAttempts,
-  isAccountLocked,
-  LOCK_TIME_MINUTES,
+  getLockoutState,
 } = require('../../utils/loginAttempts');
+const { sendLoginError, recordFailure } = require('../../utils/loginErrors');
 const { writeAuditLog } = require('./admin.controller');
 const { normalizeEmail } = require('../../utils/normalizeEmail');
 const { getUnreadNotificationCount, ensureAdminTables, ensureCoordinatorRegistrationNotifications } = require('../../services/admin.service');
@@ -14,30 +13,20 @@ const { logSecurityEvent, SECURITY_EVENTS, SEVERITY } = require('../../utils/sec
 const tokenStore = require('../../utils/tokenStore');
 const { getRefreshCookieOptions } = require('../../utils/refreshCookie');
 
-// Anti-enumeration (#8): the admin login returns the same generic message for a
-// non-existent email, a non-admin email and a wrong password.
-const GENERIC_LOGIN_ERROR = 'Invalid email or password.';
-
-async function getClientUrl() {
-  return process.env.CLIENT_URL || 'http://localhost:5173';
-}
-
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required.' });
+      return sendLoginError(res, 'MISSING_CREDENTIALS');
     }
 
     // Normalised so a signed-in admin reaches their account however they typed
     // the address; see utils/normalizeEmail.js.
     const trimmedEmail = normalizeEmail(email);
 
-    const locked = await isAccountLocked(trimmedEmail);
-    if (locked) {
-      // Generic response so a locked account is indistinguishable from a bad
-      // password (otherwise lockout itself confirms the email exists, #8).
+    const lockout = await getLockoutState(trimmedEmail);
+    if (lockout.locked) {
       await logSecurityEvent({
         type: SECURITY_EVENTS.LOGIN_LOCKED,
         severity: SEVERITY.WARNING,
@@ -45,7 +34,7 @@ const login = async (req, res) => {
         email: trimmedEmail,
         detail: 'Admin login attempted while locked.',
       });
-      return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
+      return sendLoginError(res, 'ACCOUNT_LOCKED', { minutes: lockout.minutesRemaining });
     }
 
     const result = await pool.query(
@@ -54,36 +43,35 @@ const login = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      await incrementLoginAttempts(trimmedEmail);
+      await recordFailure(trimmedEmail, req.ip);
       await logSecurityEvent({ type: SECURITY_EVENTS.LOGIN_FAILED, severity: SEVERITY.WARNING, req, email: trimmedEmail, detail: 'admin login: unknown email' });
-      return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
+      return sendLoginError(res, 'ACCOUNT_NOT_FOUND');
     }
 
     const user = result.rows[0];
 
-    // Non-admin email: fail with the same generic message so the endpoint cannot
-    // be used to enumerate which emails are administrators (#8).
+    // The account exists but is not an administrator, so say which kind of
+    // account it is and point at the right sign-in page. Naming the role is
+    // what makes "wrong tab" recoverable; see utils/loginErrors.js for the
+    // privacy switch.
     if (user.role !== 'admin') {
-      await incrementLoginAttempts(trimmedEmail);
+      await recordFailure(trimmedEmail, req.ip);
       await logSecurityEvent({ type: SECURITY_EVENTS.LOGIN_FAILED, severity: SEVERITY.WARNING, req, email: trimmedEmail, detail: 'admin login: non-admin account' });
-      return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
+      return sendLoginError(res, 'WRONG_ROLE_ADMIN', { role: user.role });
     }
 
     const match = await comparePassword(password, user.password);
     if (!match) {
-      // No `attemptsRemaining` — it would leak that the account exists (#2/#8).
-      await incrementLoginAttempts(trimmedEmail);
+      await recordFailure(trimmedEmail, req.ip);
       await logSecurityEvent({ type: SECURITY_EVENTS.LOGIN_FAILED, severity: SEVERITY.WARNING, req, email: trimmedEmail, detail: 'admin login: bad password' });
-      return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
+      return sendLoginError(res, 'WRONG_PASSWORD');
     }
 
     if (user.status === 'pending') {
-      return res.status(403).json({ error: 'Your account is still pending approval.' });
+      return sendLoginError(res, 'ACCOUNT_PENDING');
     }
     if (user.status === 'disapproved') {
-      return res.status(403).json({
-        error: 'Your account was not approved. Contact your administrator.',
-      });
+      return sendLoginError(res, 'ACCOUNT_DISAPPROVED_ADMIN');
     }
 
     await resetLoginAttempts(trimmedEmail);
@@ -152,7 +140,7 @@ const login = async (req, res) => {
     });
   } catch (err) {
     console.error('Admin login error:', err);
-    res.status(500).json({ error: 'Server error during login.' });
+    sendLoginError(res, 'SERVER_ERROR');
   }
 };
 

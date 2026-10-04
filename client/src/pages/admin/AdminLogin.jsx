@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../context/useAdminAuth';
-import { getErrorMessage } from '../../utils/errors';
+import { getLoginErrorTitle } from '../../utils/errors';
+import { useToast } from '../../components/admin/toastContext';
 import SplashScreen from '../../components/auth/SplashScreen';
 import styles from './AdminLogin.module.css';
 
@@ -9,6 +10,7 @@ import styles from './AdminLogin.module.css';
 export default function AdminLogin() {
   const navigate = useNavigate();
   const { login } = useAdminAuth();
+  const { showToast } = useToast();
 
   const [form, setForm] = useState({
     email: '',
@@ -16,9 +18,12 @@ export default function AdminLogin() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
+  // Failures are reported as a toast rather than as text above the form. The
+  // server names the exact reason (wrong password, wrong account type, locked,
+  // pending...) and the code labels it, so an inline block that appears and
+  // disappears with every keystroke was both less clear and less readable.
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -26,17 +31,12 @@ export default function AdminLogin() {
       ...prev,
       [name]: value,
     }));
-
-    if (error) {
-      setError('');
-    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     setLoading(true);
-    setError('');
 
     try {
       const data = await login({
@@ -52,7 +52,9 @@ export default function AdminLogin() {
         navigate(`/dashboard/${role}`, { replace: true });
       }
     } catch (err) {
-      setError(getErrorMessage(err.message));
+      // err.code identifies the failure; err.message is the server's full
+      // explanation. Both are shown so the user knows what to change.
+      showToast(`${getLoginErrorTitle(err.code)}: ${err.message}`, 'error', 7000);
     } finally {
       setLoading(false);
     }
@@ -82,12 +84,6 @@ export default function AdminLogin() {
           <h1>Admin Login</h1>
           <p>Sign in to access the administration dashboard.</p>
         </div>
-
-        {error && (
-          <div className={styles.errorMessage}>
-            {error}
-          </div>
-        )}
 
         <form
           onSubmit={handleSubmit}

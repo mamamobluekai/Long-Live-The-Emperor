@@ -10,18 +10,19 @@ const {
   getLoginAttempts,
   incrementLoginAttempts,
   resetLoginAttempts,
-  isAccountLocked,
-  LOCK_TIME_MINUTES,
+  getLockoutState,
 } = require('../utils/loginAttempts');
+const { sendLoginError } = require('../utils/loginErrors');
 const { readMaintenance } = require('../middleware/maintenance');
 const { logSecurityEvent, countRecentEvents, SECURITY_EVENTS, SEVERITY } = require('../utils/securityLogger');
 const tokenStore = require('../utils/tokenStore');
 
-// Anti-enumeration (#8): every failed login returns the *same* generic message
-// and status code regardless of whether the email exists, the password was
-// wrong, the role did not match or the account is pending. Distinguishing these
-// cases would let an attacker harvest valid accounts one request at a time.
-const GENERIC_LOGIN_ERROR = 'Invalid email or password.';
+// Every login failure reason, its wording and its status code live in
+// utils/loginErrors.js, shared with the admin sign-in so both pages behave the
+// same. Distinct wording for "no such account" / "wrong password" / "locked" is
+// what makes the message actionable, and it is what allows someone to probe
+// which emails are registered - so LOGIN_REVEALS_REASON=false restores the
+// single generic message for deployments that need it.
 
 // Thresholds for the behavioural detectors. Exceeding either one marks the
 // attempt as brute-force / credential-stuffing in the telemetry feed so an
@@ -363,7 +364,7 @@ const login = async (req, res) => {
     const { email, password, role } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required.' });
+      return sendLoginError(res, 'MISSING_CREDENTIALS');
     }
 
     // Must match how the address was stored at registration. Looking up the raw
@@ -371,9 +372,9 @@ const login = async (req, res) => {
     // another (e.g. "John.Doe@Gmail.com" is stored as "johndoe@gmail.com").
     const trimmedEmail = normalizeEmail(email);
 
-    // Check lockout before even hitting the DB / comparing password
-    const locked = await isAccountLocked(trimmedEmail);
-    if (locked) {
+    // Check lockout before even hitting the DB / comparing password.
+    const lockout = await getLockoutState(trimmedEmail);
+    if (lockout.locked) {
       await logSecurityEvent({
         type: SECURITY_EVENTS.LOGIN_LOCKED,
         severity: SEVERITY.WARNING,
@@ -381,9 +382,7 @@ const login = async (req, res) => {
         email: trimmedEmail,
         detail: 'Login attempted while account was locked.',
       });
-      // Same generic wording as a normal failure: revealing "this account is
-      // locked" would confirm the account exists (#8).
-      return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
+      return sendLoginError(res, 'ACCOUNT_LOCKED', { minutes: lockout.minutesRemaining });
     }
 
     const result = await pool.query(
@@ -393,20 +392,27 @@ const login = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      // Burn comparable time to a real bcrypt compare, then fail generically.
+      // Burn comparable time to a real bcrypt compare so a missing account is
+      // not measurably faster to probe than a wrong password.
       await dummyCompare();
       await registerFailedLogin(req, trimmedEmail, 'unknown email');
-      return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
+      return sendLoginError(res, 'ACCOUNT_NOT_FOUND');
     }
 
     const user = result.rows[0];
 
-    // Validate role: if a role is requested, the user's account must match it.
-    // Fail with the same generic message so the response cannot be used to
-    // learn that the email exists under a different role (#8).
+    // The account exists but under a different role than the tab that was
+    // clicked. Naming the real role is the whole point: "Invalid email or
+    // password" told a user nothing about switching tabs. See
+    // utils/loginErrors.js for the privacy switch.
     if (role && user.role !== role) {
       await registerFailedLogin(req, trimmedEmail, 'role mismatch');
-      return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
+      return sendLoginError(res, 'WRONG_ROLE_SELECTED', { role: user.role, selected: role }, {
+        // Also sent as data so the form can move the user to the right tab
+        // instead of only telling them which one to click.
+        actualRole: user.role,
+        selectedRole: role,
+      });
     }
 
     let profile = {};
@@ -448,27 +454,24 @@ const login = async (req, res) => {
 
     const match = await comparePassword(password, user.password);
     if (!match) {
-      // Deliberately do NOT return `attemptsRemaining`: it leaks that the email
-      // is real and lets an attacker budget their guesses (#2/#8).
       await registerFailedLogin(req, trimmedEmail, 'bad password');
-      return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
+      return sendLoginError(res, 'WRONG_PASSWORD');
     }
 
     // Account-state failures only surface *after* the password is proven
-    // correct, so they cannot be used to probe which emails exist (#8).
+    // correct, so they cannot be used to probe which emails exist.
     if (user.status === 'pending') {
-      return res.status(403).json({ error: 'Your account is still pending approval.' });
+      return sendLoginError(res, 'ACCOUNT_PENDING');
     }
     if (user.status === 'disapproved') {
-      return res.status(403).json({ error: 'Your account was not approved. Contact your coordinator or admin.' });
+      return sendLoginError(res, 'ACCOUNT_DISAPPROVED_USER');
     }
 
     // Block login outside the active immersion period (except for admins).
     if (user.role !== 'admin') {
       const maintenance = await readMaintenance();
       if (maintenance.enabled) {
-        return res.status(503).json({
-          error: maintenance.message,
+        return sendLoginError(res, 'MAINTENANCE', { detail: maintenance.message }, {
           maintenance: true,
           startedAt: maintenance.startedAt,
           estimatedEnd: maintenance.estimatedEnd,
@@ -477,8 +480,7 @@ const login = async (req, res) => {
 
       const accessBlock = await checkImmersionPeriodAccess(user.role);
       if (accessBlock.blocked) {
-        return res.status(403).json({
-          error: accessBlock.message,
+        return sendLoginError(res, 'PERIOD_CLOSED', { detail: accessBlock.message }, {
           phase: accessBlock.phase,
           startDate: accessBlock.startDate,
           endDate: accessBlock.endDate,
@@ -526,7 +528,7 @@ const login = async (req, res) => {
     });
   } catch (err) {
     console.error('Login error:', err);
-    res.status(500).json({ error: 'Server error during login.' });
+    sendLoginError(res, 'SERVER_ERROR');
   }
 };
 
