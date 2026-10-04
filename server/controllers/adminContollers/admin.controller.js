@@ -500,6 +500,7 @@ const updateUserStatus = async (req, res) => {
     await writeAuditLog(req, action, `Set user ${id} status to ${status}`);
 
     let emailSent = null;
+    let emailError = null;
 
     if (status === 'approved') {
       // getApprovalRecipient is a focused query that includes the stored
@@ -512,7 +513,7 @@ const updateUserStatus = async (req, res) => {
         recipient.first_name = recipient.first_name || user.first_name || '';
         recipient.last_name = recipient.last_name || user.last_name || '';
       }
-      ({ emailSent } = await approvalLink.issueAndEmailApprovalLink(recipient));
+      ({ emailSent, emailError } = await approvalLink.issueAndEmailApprovalLink(recipient));
     } else if (status === 'disapproved') {
       await approvalLink.revokeApprovalTokens(user.id);
     }
@@ -523,9 +524,10 @@ const updateUserStatus = async (req, res) => {
         status === 'approved'
           ? emailSent
             ? `${roleLabel} approved. Approval email sent.`
-            : `${roleLabel} approved, but the email failed to send. Use Resend link to try again.`
+            : `${roleLabel} approved, but the email failed to send. ${emailError || 'Use Resend link to try again.'}`
           : `User status updated to ${status}.`,
       emailSent,
+      emailError,
       user,
     });
   } catch (err) {
@@ -544,7 +546,7 @@ const resendApprovalLink = async (req, res) => {
       return res.status(404).json({ error: 'User not found.' });
     }
 
-    const { emailSent } = await approvalLink.resendApprovalLink(recipient);
+    const { emailSent, emailError } = await approvalLink.resendApprovalLink(recipient);
     await writeAuditLog(
       req,
       'approval_email_resend',
@@ -556,8 +558,9 @@ const resendApprovalLink = async (req, res) => {
     res.json({
       message: emailSent
         ? 'Set-your-password link emailed.'
-        : 'The email failed to send. Check the mail settings and try again.',
+        : `The email failed to send. ${emailError || 'Check the mail settings and try again.'}`,
       emailSent,
+      emailError,
     });
   } catch (err) {
     console.error('Resend approval link error:', err);

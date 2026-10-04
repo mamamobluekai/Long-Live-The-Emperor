@@ -474,8 +474,9 @@
 ========================= */
 
 .modalWide {
-  max-width: 860px;
-  max-height: min(88vh, 760px);
+  max-width: 1180px;
+  max-height: min(92vh, 900px);
+  padding: 28px;
 }
 
 .roleModalTitle {

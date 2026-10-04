@@ -240,8 +240,23 @@ function buildApprovalEmailText(user, token) {
   ].join('\n');
 }
 
-// Best-effort: returns true when the transport accepted the message, so the
-// caller can tell the admin about a delivered mail versus a silently dropped one.
+// Nodemailer accepts almost anything as a recipient address and only fails deep
+// inside the SMTP dialogue, so a blank or malformed address uploaded on a
+// spreadsheet used to look exactly like a Gmail outage. Checked here instead,
+// which lets the admin see "no usable email on this account" instead of a
+// generic send failure.
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function mailConfigError() {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    return `EMAIL_USER and EMAIL_PASS must both be set in the server environment.`;
+  }
+  return null;
+}
+
+// Best-effort: returns { sent, reason }. The caller shows `reason` to the admin,
+// so a missing address, missing server config and a rejected Gmail login stay
+// distinguishable instead of collapsing into one "email failed" toast.
 async function sendApprovalEmail(user, token) {
   const roleLabel = roleLabelFor(user.role);
   // No token means the recipient already has a password, so lead with the news
@@ -250,19 +265,46 @@ async function sendApprovalEmail(user, token) {
     ? `Your Work Immersion ${roleLabel} Account is Approved`
     : `You're approved - sign in to the Work Immersion app`;
 
+  const to = String(user?.email ?? '').trim();
+  if (!to) {
+    const reason = `This account has no email address on file, so there is nowhere to send the approval notice.`;
+    console.error(`Failed to send approval email: ${reason}`);
+    return { sent: false, reason };
+  }
+  if (!EMAIL_REGEX.test(to)) {
+    const reason = `"${to}" is not a valid email address. Correct it on the user's profile, then resend.`;
+    console.error(`Failed to send approval email: ${reason}`);
+    return { sent: false, reason };
+  }
+
+  const configError = mailConfigError();
+  if (configError) {
+    console.error(`Failed to send approval email to ${to}: ${configError}`);
+    return { sent: false, reason: configError };
+  }
+
   try {
     await transporter.sendMail({
       from: `"Work Immersion System" <${process.env.EMAIL_USER}>`,
-      to: user.email,
+      to,
       subject,
       html: buildApprovalEmailHtml(user, token),
       text: buildApprovalEmailText(user, token),
     });
-    console.log(`Approval email sent to ${user.email}`);
-    return true;
+    console.log(`Approval email sent to ${to}`);
+    return { sent: true, reason: null };
   } catch (emailErr) {
-    console.error(`Failed to send approval email to ${user.email}:`, emailErr.message);
-    return false;
+    // Gmail rejects an expired or revoked app password here with
+    // 535 Invalid credentials, and throttles a burst of sends with 421/450.
+    // Keep the code and the text: "failed" alone cannot be acted on.
+    console.error(`Failed to send approval email to ${to} [${emailErr.code || 'no code'}]:`, emailErr.message);
+    return {
+      sent: false,
+      reason:
+        emailErr.code === 'EAUTH'
+          ? `Gmail rejected the sign-in for ${process.env.EMAIL_USER}. Check that EMAIL_PASS is a current app password.`
+          : `Gmail did not accept the message (${emailErr.code || emailErr.message}). Try again in a moment.`,
+    };
   }
 }
 
@@ -275,13 +317,13 @@ async function issueAndEmailApprovalLink(user, client = pool) {
   if (!user || !user.email) {
     // Nothing sensible to mail - an empty address would just throw inside the
     // transport. Report "not sent" so the caller can still respond.
-    return { emailSent: false, token: null, linkSent: false };
+    return { emailSent: false, emailError: 'This account has no email address on file.', token: null, linkSent: false };
   }
 
   const needsLink = needsPasswordSetup(user);
   const token = needsLink ? await issueApprovalToken(user.id, client) : null;
-  const emailSent = await sendApprovalEmail(user, token);
-  return { emailSent, token, linkSent: needsLink };
+  const { sent, reason } = await sendApprovalEmail(user, token);
+  return { emailSent: sent, emailError: reason, token, linkSent: needsLink };
 }
 
 // Mails the approval notice again - the recovery path when the original mail
@@ -289,8 +331,8 @@ async function issueAndEmailApprovalLink(user, client = pool) {
 // token (which also invalidates any earlier link); accounts that already have a
 // password get a plain notice.
 async function resendApprovalLink(user, client = pool) {
-  const { emailSent, linkSent } = await issueAndEmailApprovalLink(user, client);
-  return { emailSent, linkSent };
+  const { emailSent, emailError, linkSent } = await issueAndEmailApprovalLink(user, client);
+  return { emailSent, emailError, linkSent };
 }
 
 // Loads the user row an approval mail needs: id, email, role, the stored
