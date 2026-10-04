@@ -50,19 +50,30 @@ const allowedOrigins = Array.from(
   ),
 );
 
+// Single source of truth for "is this origin one of ours?". Used by the Express
+// CORS middleware below AND by the Socket.IO server (sockets/index.js), which
+// has its own CORS implementation that would otherwise need the list duplicated -
+// and silently drift, which is how the socket kept rejecting preview origins
+// after the REST routes had been fixed.
+function isOriginAllowed(origin) {
+  // No Origin header: same-origin, curl, server-to-server.
+  if (!origin) return true;
+
+  if (allowedOrigins.includes(origin)) return true;
+
+  return originPatterns.some((pattern) => pattern.test(origin));
+}
+
 const corsOptions = {
   origin(origin, callback) {
-    // No Origin header: same-origin, curl, server-to-server -> allow.
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-
-    if (originPatterns.some((pattern) => pattern.test(origin))) {
-      return callback(null, true);
-    }
+    if (isOriginAllowed(origin)) return callback(null, true);
 
     // Reject silently (no CORS headers) rather than throwing, so the browser
     // enforces the block and we avoid leaking which origins are configured.
+    // Logged anyway: a rejected origin is otherwise undiagnosable, because the
+    // browser only reports the missing header and the browser-facing symptom
+    // (a preflight that falls through to a 401) points at the wrong layer.
+    console.warn(`[cors] rejected origin: ${origin}`);
     return callback(null, false);
   },
   credentials: true,
@@ -73,5 +84,15 @@ const corsOptions = {
 };
 
 module.exports = corsOptions;
+module.exports.isOriginAllowed = isOriginAllowed;
 module.exports.allowedOrigins = allowedOrigins;
 module.exports.allowedOriginPatterns = originPatterns.map((p) => p.source);
+
+// Printed at boot so a Render/Vercel misconfiguration is visible in the host's
+// logs instead of only surfacing as a browser CORS error. The most common cause
+// is CLIENT_URL (or ALLOWED_ORIGIN_PATTERNS) simply not being set on the host:
+// a local .env is invisible to the deployed server.
+console.log(`[cors] allowed origins: ${JSON.stringify(allowedOrigins)}`);
+console.log(
+  `[cors] allowed origin patterns: ${originPatterns.length ? originPatterns.map((p) => p.source).join(', ') : '(none - set ALLOWED_ORIGIN_PATTERNS to allow Vercel preview URLs)'}`,
+);

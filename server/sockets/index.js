@@ -1,5 +1,6 @@
 const { Server } = require('socket.io');
 const { verifyAccessToken } = require('../utils/generateToken');
+const { isOriginAllowed } = require('../config/corsOption');
 const pool = require('../db');
 
 let io;
@@ -54,8 +55,19 @@ async function canAccessBatch(batchId, userId, role) {
 function initializeSocket(server) {
   io = new Server(server, {
     cors: {
-      origin: process.env.CLIENT_URL || 'http://localhost:5173',
+      // Must be the same predicate the REST routes use. A literal CLIENT_URL here
+      // made Socket.IO emit an Access-Control-Allow-Origin for the production
+      // domain while the browser was on a preview deployment, which the browser
+      // rejects ("value ... is not equal to the supplied origin").
+      origin: (origin, callback) => {
+        if (isOriginAllowed(origin)) return callback(null, true);
+        console.warn(`[socket.cors] rejected origin: ${origin}`);
+        return callback(null, false);
+      },
       methods: ['GET', 'POST'],
+      // The client authenticates with a JWT in the handshake, and the refresh
+      // cookie is now SameSite=None cross-site in production.
+      credentials: true,
     },
   });
 
