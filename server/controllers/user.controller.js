@@ -1,5 +1,6 @@
 const pool = require('../db');
-const nodemailer = require('nodemailer');
+const mailer = require('../utils/mailer');
+const { escapeHtml } = mailer;
 const { hashPassword, comparePassword } = require('../utils/hashPassword');
 const { validatePassword, validateConfirmation } = require('../utils/passwordPolicy');
 const { normalizeEmail } = require('../utils/normalizeEmail');
@@ -144,40 +145,38 @@ async function checkImmersionPeriodAccess(role) {
   }
 }
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
 function getClientUrl() {
   return process.env.CLIENT_URL || 'http://localhost:5173';
 }
 
 async function sendRegistrationReceivedEmail(user) {
-  try {
-    await transporter.sendMail({
-      from: `"Work Immersion System" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: 'Your Work Immersion Student Registration',
-      html: `
+  // Names arrive from a form but are still interpolated into HTML, so they are
+  // escaped rather than trusted.
+  const name = escapeHtml(`${user.first_name || ''} ${user.last_name || ''}`.trim());
+  const { sent, reason } = await mailer.sendMail({
+    to: user.email,
+    subject: 'Your Work Immersion Student Registration',
+    html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #2a5298;">Registration Received</h2>
-          <p>Hello <strong>${user.first_name} ${user.last_name}</strong>,</p>
+          <p>Hello <strong>${name}</strong>,</p>
           <p>Thanks for registering for the Work Immersion Management System. Your account is <strong>pending approval</strong> from your coordinator.</p>
-          <p><strong>Student ID:</strong> ${user.student_id}</p>
-          <p><strong>Email:</strong> ${user.email}</p>
+          <p><strong>Student ID:</strong> ${escapeHtml(user.student_id)}</p>
+          <p><strong>Email:</strong> ${escapeHtml(user.email)}</p>
           <p style="color: #666; font-size: 12px;">You will receive another email once your account is approved.</p>
           <p style="color: #666; font-size: 12px;">Marinduque National High School - Work Immersion Office</p>
         </div>
       `,
-    });
+    // Gmail filters HTML-only mail into spam far more aggressively, so the
+    // plain-text twin is sent alongside it.
+    text: `Hello ${name},\n\nThanks for registering for the Work Immersion Management System. Your account is pending approval from your coordinator.\n\nStudent ID: ${user.student_id}\nEmail: ${user.email}\n\nYou will receive another email once your account is approved.\n\nMarinduque National High School - Work Immersion Office`,
+  });
+
+  if (sent) {
     console.log(`Registration email sent to ${user.email}`);
-  } catch (emailErr) {
+  } else {
     // Registration should still succeed even if the email fails to send.
-    console.error(`Failed to send registration email to ${user.email}:`, emailErr.message);
+    console.error(`Failed to send registration email to ${user.email}: ${reason}`);
   }
 }
 

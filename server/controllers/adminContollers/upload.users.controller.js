@@ -1,5 +1,4 @@
 const multer = require('multer');
-const nodemailer = require('nodemailer');
 const xlsx = require('xlsx');
 const pool = require('../../db');
 const { NO_PASSWORD_SENTINEL } = require('../../utils/passwordPolicy');
@@ -168,21 +167,11 @@ const downloadUploadTemplate = async (req, res) => {
   }
 };
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-transporter.verify((err) => {
-  if (err) {
-    console.error('Email transporter verification failed:', err.message);
-  } else {
-    console.log('Email transporter ready.');
-  }
-});
+// This file used to build its own Gmail transport and verify it at import time,
+// even though it never sent anything: the approval mail is issued by
+// services/approvalLink.service.js. The dead transport only produced a boot
+// error on hosts with no SMTP credentials. All mail now goes through
+// utils/mailer.js.
 
 const uploadTeachersExcel = async (req, res) => {
   try {

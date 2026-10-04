@@ -1,18 +1,10 @@
 const crypto = require('crypto');
 const pool = require('../db');
-const nodemailer = require('nodemailer');
+const mailer = require('../utils/mailer');
 const { hashPassword } = require('../utils/hashPassword');
 const { normalizeEmail } = require('../utils/normalizeEmail');
 const { LINK_TTL_MINUTES, LINK_TTL_LABEL } = require('../utils/linkExpiry');
 const { validatePassword, validateConfirmation } = require('../utils/passwordPolicy');
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
 
 function getClientUrl() {
   return process.env.CLIENT_URL || 'http://localhost:5173';
@@ -85,18 +77,21 @@ const forgotPassword = async (req, res) => {
       </div>
     `;
 
-    try {
-      await transporter.sendMail({
-        from: `"Work Immersion System" <${process.env.EMAIL_USER}>`,
-        to: trimmedEmail,
-        subject,
-        html,
-      });
+    // Sent through the shared mailer, which picks the HTTPS provider when one
+    // is configured - the host this is deployed on blocks outbound SMTP.
+    const { sent, reason } = await mailer.sendMail({
+      to: trimmedEmail,
+      subject,
+      html,
+      text: `Reset your Work Immersion password: ${resetLink}\n\nThis link is valid for ${LINK_TTL_LABEL} and can be used only once.\n\nIf you did not request a password reset, you can safely ignore this email.`,
+    });
+
+    if (sent) {
       console.log(`Password reset email sent to ${trimmedEmail}`);
-    } catch (emailErr) {
-      console.error(`Failed to send password reset email to ${trimmedEmail}:`, emailErr.message);
+    } else {
       // The token is still created so the API stays consistent, but we don't
       // expose the email delivery failure to the client.
+      console.error(`Failed to send password reset email to ${trimmedEmail}: ${reason}`);
     }
 
     return res.json({

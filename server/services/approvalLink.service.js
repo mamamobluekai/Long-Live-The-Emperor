@@ -8,8 +8,9 @@
 // one-time link and sets and confirms their own password on /set-password?token=.
 // Possession of the link is the only credential they need.
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
 const pool = require('../db');
+const mailer = require('../utils/mailer');
+const { escapeHtml } = mailer;
 const { NO_PASSWORD_SENTINEL } = require('../utils/passwordPolicy');
 const { LINK_TTL_MINUTES, LINK_TTL_LABEL } = require('../utils/linkExpiry');
 
@@ -25,23 +26,10 @@ const ROLE_LABELS = {
   admin: 'Admin',
 };
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-if (process.env.EMAIL_USER) {
-  transporter.verify((err) => {
-    if (err) {
-      console.error('Email transporter verification failed:', err.message);
-    } else {
-      console.log('Email transporter ready.');
-    }
-  });
-}
+// The transport itself is owned by utils/mailer.js, which picks an HTTPS
+// provider when one is configured because the host this app is deployed on
+// blocks outbound SMTP. See that file for the full reason.
+mailer.verifyStartup();
 
 function getClientUrl() {
   return process.env.CLIENT_URL || 'http://localhost:5173';
@@ -52,16 +40,8 @@ function roleLabelFor(role) {
 }
 
 // Names come from Excel imports and typed forms, so escape them before they are
-// interpolated into the HTML body.
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
+// interpolated into the HTML body. Shared with the registration mail - see
+// utils/mailer.js.
 // True when the account still carries the never-set-password sentinel, i.e. it
 // has no usable credential and must go through the emailed link before it can
 // sign in.
@@ -247,15 +227,8 @@ function buildApprovalEmailText(user, token) {
 // generic send failure.
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function mailConfigError() {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    return `EMAIL_USER and EMAIL_PASS must both be set in the server environment.`;
-  }
-  return null;
-}
-
 // Best-effort: returns { sent, reason }. The caller shows `reason` to the admin,
-// so a missing address, missing server config and a rejected Gmail login stay
+// so a missing address, an unconfigured provider and a blocked network path stay
 // distinguishable instead of collapsing into one "email failed" toast.
 async function sendApprovalEmail(user, token) {
   const roleLabel = roleLabelFor(user.role);
@@ -277,35 +250,21 @@ async function sendApprovalEmail(user, token) {
     return { sent: false, reason };
   }
 
-  const configError = mailConfigError();
+  const configError = mailer.mailConfigError();
   if (configError) {
     console.error(`Failed to send approval email to ${to}: ${configError}`);
     return { sent: false, reason: configError };
   }
 
-  try {
-    await transporter.sendMail({
-      from: `"Work Immersion System" <${process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      html: buildApprovalEmailHtml(user, token),
-      text: buildApprovalEmailText(user, token),
-    });
-    console.log(`Approval email sent to ${to}`);
-    return { sent: true, reason: null };
-  } catch (emailErr) {
-    // Gmail rejects an expired or revoked app password here with
-    // 535 Invalid credentials, and throttles a burst of sends with 421/450.
-    // Keep the code and the text: "failed" alone cannot be acted on.
-    console.error(`Failed to send approval email to ${to} [${emailErr.code || 'no code'}]:`, emailErr.message);
-    return {
-      sent: false,
-      reason:
-        emailErr.code === 'EAUTH'
-          ? `Gmail rejected the sign-in for ${process.env.EMAIL_USER}. Check that EMAIL_PASS is a current app password.`
-          : `Gmail did not accept the message (${emailErr.code || emailErr.message}). Try again in a moment.`,
-    };
-  }
+  const { sent, reason } = await mailer.sendMail({
+    to,
+    subject,
+    html: buildApprovalEmailHtml(user, token),
+    text: buildApprovalEmailText(user, token),
+  });
+
+  if (sent) console.log(`Approval email sent to ${to}`);
+  return { sent, reason };
 }
 
 // The single entry point every approve route uses.
