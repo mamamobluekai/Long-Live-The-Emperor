@@ -9,6 +9,8 @@
 //   import { withCsrf } from '../utils/csrf';
 //   fetch(url, { method: 'POST', credentials: 'include', headers: withCsrf({ 'Content-Type': 'application/json' }) })
 
+import { API_BASE } from '../config/api';
+
 export const CSRF_COOKIE = 'csrfToken';
 export const CSRF_HEADER = 'X-CSRF-Token';
 
@@ -29,6 +31,37 @@ function readCookie(name) {
 // double-submit match working in both layouts.
 export function getCsrfToken() {
   return readCookie(CSRF_COOKIE) || localStorage.getItem('wim-csrf') || '';
+}
+
+// A client on a different site from the API (production: vercel.app -> 
+// onrender.com) cannot read the `csrfToken` cookie, and a previous login is the
+// only other thing that fills localStorage. On a fresh browser that leaves no
+// token at all, so the very first POST - login - was rejected with 403. Fetch it
+// from the API once and cache it.
+let inFlightRequest = null;
+
+export async function ensureCsrfToken() {
+  if (getCsrfToken()) return getCsrfToken();
+
+  if (!inFlightRequest) {
+    inFlightRequest = fetch(`${API_BASE}/users/csrf-token`, {
+      credentials: 'include',
+    })
+      .then((res) => (res.ok ? res.json() : {}))
+      .then((data) => {
+        if (data?.csrfToken) {
+          localStorage.setItem('wim-csrf', data.csrfToken);
+          return data.csrfToken;
+        }
+        return '';
+      })
+      .catch(() => '')
+      .finally(() => {
+        inFlightRequest = null;
+      });
+  }
+
+  return inFlightRequest;
 }
 
 // Merge the CSRF header into an existing headers object.

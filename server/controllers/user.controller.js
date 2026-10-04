@@ -2,6 +2,7 @@ const pool = require('../db');
 const nodemailer = require('nodemailer');
 const { hashPassword, comparePassword } = require('../utils/hashPassword');
 const { validatePassword, validateConfirmation } = require('../utils/passwordPolicy');
+const { getRefreshCookieOptions } = require('../utils/refreshCookie');
 const { generateAccessToken, generateRefreshToken } = require('../utils/generateToken');
 const {
   getLoginAttempts,
@@ -498,9 +499,7 @@ const login = async (req, res) => {
     }
 
     res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      ...getRefreshCookieOptions(),
       maxAge: tokenStore.REFRESH_TTL_MS, // 7 days
     });
 
@@ -687,9 +686,7 @@ const refreshAccessToken = async (req, res) => {
     await tokenStore.storeRefreshToken({ userId: user.id, token: newRefresh, jti: newJti, req });
 
     res.cookie('refreshToken', newRefresh, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      ...getRefreshCookieOptions(),
       maxAge: tokenStore.REFRESH_TTL_MS,
     });
 
@@ -722,11 +719,7 @@ const logout = async (req, res) => {
     console.warn('Logout cleanup error:', err.message);
   }
 
-  res.clearCookie('refreshToken', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-  });
+  res.clearCookie('refreshToken', getRefreshCookieOptions());
   const { clearCsrfToken } = require('../middleware/csrfProtection');
   clearCsrfToken(res);
   return res.json({ message: 'Logged out successfully.' });

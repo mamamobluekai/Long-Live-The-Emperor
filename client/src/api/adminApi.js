@@ -1,5 +1,5 @@
 import { mapErrorResponse } from '../utils/errors';
-import { withCsrf, methodNeedsCsrf } from '../utils/csrf';
+import { withCsrf, methodNeedsCsrf, ensureCsrfToken } from '../utils/csrf';
 import { reportMaintenance } from './maintenanceApi';
 import { API_BASE } from '../config/api';
 
@@ -40,9 +40,12 @@ function authHeaders(extra = {}) {
 }
 
 export async function loginAdmin(credentials) {
+  // Same reason as loginUser: a fresh browser has no CSRF token in production,
+  // where the cookie is on the API origin and unreadable from the app origin.
+  await ensureCsrfToken();
   return fetchJsonOrThrow(`${API_BASE}/admin/login`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: withCsrf({ 'Content-Type': 'application/json' }),
     credentials: 'include',
     body: JSON.stringify(credentials),
   });

@@ -25,15 +25,25 @@ function generateCsrfToken() {
 // JS on purpose (not httpOnly) so the SPA can echo it in the header.
 function issueCsrfToken(req, res, next) {
   if (!req.cookies?.[CSRF_COOKIE]) {
+    const isProduction = process.env.NODE_ENV === 'production';
     const token = generateCsrfToken();
     res.cookie(CSRF_COOKIE, token, {
       httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      // The client is a different site in production (vercel.app -> onrender.com).
+      // `strict` means the browser neither sends the cookie nor exposes it to the
+      // SPA, so every POST would fail the double-submit check. `none` + `secure`
+      // keeps the cookie attached on the cross-site request; the value is also
+      // delivered in the response body by GET /api/users/csrf-token, because
+      // script on the client origin cannot read a cookie scoped to the API origin.
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-    req.cookies = req.cookies || {};
-    req.cookies[CSRF_COOKIE] = token;
+    // Only stashed for this request's handler to return. Deliberately NOT written
+    // into req.cookies: csrfProtection distinguishes "no cookie arrived" by
+    // reading req.cookies, and seeding it here made a cookie-less first request
+    // look like it needed a matching header it could not possibly have.
+    res.locals.csrfToken = token;
   }
   next();
 }
@@ -71,12 +81,15 @@ function csrfProtection(req, res, next) {
   return next();
 }
 
-// Clears the CSRF cookie on logout.
+// Attributes must match those used in issueCsrfToken or the browser keeps the
+// original cookie instead of clearing it.
 function clearCsrfToken(res) {
+  const isProduction = process.env.NODE_ENV === 'production';
+
   res.clearCookie(CSRF_COOKIE, {
     httpOnly: false,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
   });
 }
 

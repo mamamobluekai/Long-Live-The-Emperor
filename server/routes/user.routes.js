@@ -1,5 +1,6 @@
 const express = require('express');
 const multer = require('multer');
+const { CSRF_COOKIE } = require('../middleware/csrfProtection');
 
 const {
   registerStudent,
@@ -35,6 +36,19 @@ const upload = multer({ storage: multer.memoryStorage() });
 // per-IP+email cap (credentialLimiter) so both brute force (#2) and credential
 // stuffing (#3) are throttled. The original loginLimiter is kept as a coarse
 // backstop so existing behaviour is preserved.
+// Returns the CSRF token for this browser session. The SPA calls this before its
+// first mutating request (login) because the `csrfToken` cookie is scoped to the
+// API origin and is therefore unreadable from a client on a different site, as
+// in production where the app is on vercel.app and the API on onrender.com.
+// The browser still sends the cookie automatically (SameSite=None; Secure), so
+// the server's double-submit comparison keeps working - the client only needs
+// the value to echo back in X-CSRF-Token.
+router.get('/csrf-token', (req, res) => {
+  const issued = res.locals.csrfToken;
+  const existing = req.cookies?.[CSRF_COOKIE];
+  res.json({ csrfToken: existing || issued || null });
+});
+
 router.post('/register', writeLimiter, registerValidation, handleValidation, registerStudent);
 router.post('/login', authLimiter, credentialLimiter, loginLimiter, loginValidation, handleValidation, login);
 router.post('/refresh', refreshAccessToken);

@@ -11,6 +11,7 @@ const { writeAuditLog } = require('./admin.controller');
 const { getUnreadNotificationCount, ensureAdminTables, ensureCoordinatorRegistrationNotifications } = require('../../services/admin.service');
 const { logSecurityEvent, SECURITY_EVENTS, SEVERITY } = require('../../utils/securityLogger');
 const tokenStore = require('../../utils/tokenStore');
+const { getRefreshCookieOptions } = require('../../utils/refreshCookie');
 
 // Anti-enumeration (#8): the admin login returns the same generic message for a
 // non-existent email, a non-admin email and a wrong password.
@@ -103,9 +104,7 @@ const login = async (req, res) => {
     }
 
     res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      ...getRefreshCookieOptions(),
       maxAge: tokenStore.REFRESH_TTL_MS,
     });
 
@@ -172,11 +171,7 @@ const logout = async (req, res) => {
     console.warn('Admin logout revoke error:', e.message);
   }
 
-  res.clearCookie('refreshToken', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-  });
+  res.clearCookie('refreshToken', getRefreshCookieOptions());
   const { clearCsrfToken } = require('../../middleware/csrfProtection');
   clearCsrfToken(res);
     res.json({ message: 'Logged out successfully.' });

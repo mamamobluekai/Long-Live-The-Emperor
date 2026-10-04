@@ -1,5 +1,6 @@
 import { mapErrorResponse } from '../utils/errors';
 import { reportMaintenance } from './maintenanceApi';
+import { withCsrf, ensureCsrfToken } from '../utils/csrf';
 import { API_BASE } from '../config/api';
 
 
@@ -25,9 +26,13 @@ async function fetchJsonOrThrow(url, options) {
 
 export async function loginUser(credentials) {
   const url = `${API_BASE}/users/login`;
+  // Login is the first mutating request a fresh browser makes, and it may have
+  // no CSRF token yet (the cookie lives on the API origin and cannot be read
+  // cross-site). Fetch one before sending.
+  await ensureCsrfToken();
   return fetchJsonOrThrow(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: withCsrf({ 'Content-Type': 'application/json' }),
     credentials: 'include',
     body: JSON.stringify(credentials),
   });
