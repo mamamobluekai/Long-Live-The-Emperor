@@ -61,6 +61,13 @@ export default function UserManagement() {
   const [bulkStatusModal, setBulkStatusModal] = useState({ open: false, ids: [], next: '' });
   const [bulkDeleteModal, setBulkDeleteModal] = useState({ open: false, ids: [] });
   const [profile, setProfile] = useState(null);
+  // Which row action is in flight, as { kind, id }. Activation has to wait on a
+  // real Gmail round trip and deletion on its cascade, so the affected buttons
+  // spin and stay disabled instead of letting the admin click through a second
+  // identical request.
+  const [busyAction, setBusyAction] = useState(null);
+  // Bulk runs also report their own progress: n of m done.
+  const [bulkProgress, setBulkProgress] = useState(null);
 
   // Role shortcut modal: which role is open, its rows, and its own pagination.
   const [roleCounts, setRoleCounts] = useState({});
@@ -139,6 +146,7 @@ export default function UserManagement() {
   };
 
   const handleStatusChange = async (id, status) => {
+    setBusyAction({ kind: 'status', id });
     try {
       const data = await updateUserStatus(id, status);
       // Approving mails a one-time set-password link. When that mail fails the
@@ -156,17 +164,21 @@ export default function UserManagement() {
       if (roleModal.open) fetchRoleUsers(roleModal.key);
     } catch (err) {
       showToast(err.message, 'error');
+    } finally {
+      setBusyAction(null);
     }
   };
 
+  // ConfirmModal awaits this before closing, which is what keeps the dialog up
+  // (with its spinner) for as long as the activation mail takes.
   const confirmStatusChange = async () => {
     const { id, next } = statusModal;
     await handleStatusChange(id, next);
-    setStatusModal({ open: false, id: null, name: '', next: '' });
   };
 
   const handleDelete = async () => {
     const { id } = deleteModal;
+    setBusyAction({ kind: 'delete', id });
     try {
       await deleteUser(id);
       showToast('User deleted.', 'success');
@@ -177,6 +189,8 @@ export default function UserManagement() {
       if (roleModal.open) fetchRoleUsers(roleModal.key);
     } catch (err) {
       showToast(err.message, 'error');
+    } finally {
+      setBusyAction(null);
     }
   };
 
@@ -201,6 +215,9 @@ export default function UserManagement() {
       } catch {
         failures.push(id);
       }
+      // Re-render after each row so the counter advances while the run is
+      // still going rather than only at the end.
+      setBulkProgress({ done: ids.indexOf(id) + 1, total: ids.length });
     }
     refreshAll();
     return failures;
@@ -208,8 +225,10 @@ export default function UserManagement() {
 
   const handleBulkStatus = async (ids, status) => {
     if (ids.length === 0) return;
+    setBulkProgress({ done: 0, total: ids.length });
     const failures = await runBulk(ids, (id) => updateUserStatus(id, status));
     setBulkStatusModal({ open: false, ids: [], next: '' });
+    setBulkProgress(null);
     if (failures.length > 0) {
       showToast(
         `${status === 'approved' ? 'Activated' : 'Deactivated'} ${ids.length - failures.length} of ${ids.length}. ${failures.length} failed - open each row to retry.`,
@@ -227,8 +246,10 @@ export default function UserManagement() {
   const handleBulkDelete = async () => {
     const { ids } = bulkDeleteModal;
     if (ids.length === 0) return;
+    setBulkProgress({ done: 0, total: ids.length });
     const failures = await runBulk(ids, (id) => deleteUser(id));
     setBulkDeleteModal({ open: false, ids: [] });
+    setBulkProgress(null);
     if (failures.length > 0) {
       showToast(
         `Deleted ${ids.length - failures.length} of ${ids.length}. ${failures.length} failed - try again one by one.`,
@@ -252,6 +273,12 @@ export default function UserManagement() {
   const actions = (row) => {
     const isActive = row.status === 'approved';
     const nextStatus = isActive ? 'disapproved' : 'approved';
+    // While this row's action is in flight its own button spins; while any row
+    // is busy every other row is disabled so a second mail cannot be queued by
+    // accident.
+    const statusBusy = busyAction?.kind === 'status' && busyAction.id === row.id;
+    const deleteBusy = busyAction?.kind === 'delete' && busyAction.id === row.id;
+    const otherBusy = Boolean(busyAction) && !statusBusy && !deleteBusy;
 
     return (
       <div className={styles.rowActions}>
@@ -261,6 +288,7 @@ export default function UserManagement() {
           onClick={() => setProfile(row)}
           title="View details"
           aria-label={`View details for ${fullName(row)}`}
+          disabled={Boolean(busyAction)}
         >
           <Eye size={16} strokeWidth={1.9} />
         </button>
@@ -271,8 +299,16 @@ export default function UserManagement() {
           onClick={() => setStatusModal({ open: true, id: row.id, name: fullName(row), next: nextStatus })}
           title={isActive ? 'Deactivate account' : 'Activate account'}
           aria-label={`${isActive ? 'Deactivate' : 'Activate'} account for ${fullName(row)}`}
+          disabled={otherBusy}
+          aria-busy={statusBusy}
         >
-          {isActive ? <PowerOff size={16} strokeWidth={1.9} /> : <Power size={16} strokeWidth={1.9} />}
+          {statusBusy ? (
+            <span className={styles.rowSpinner} aria-hidden="true" />
+          ) : isActive ? (
+            <PowerOff size={16} strokeWidth={1.9} />
+          ) : (
+            <Power size={16} strokeWidth={1.9} />
+          )}
         </button>
 
         <button
@@ -281,8 +317,14 @@ export default function UserManagement() {
           onClick={() => setDeleteModal({ open: true, id: row.id, name: fullName(row) })}
           title="Delete account"
           aria-label={`Delete account for ${fullName(row)}`}
+          disabled={otherBusy}
+          aria-busy={deleteBusy}
         >
-          <Trash2 size={16} strokeWidth={1.9} />
+          {deleteBusy ? (
+            <span className={styles.rowSpinner} aria-hidden="true" />
+          ) : (
+            <Trash2 size={16} strokeWidth={1.9} />
+          )}
         </button>
       </div>
     );
@@ -373,6 +415,7 @@ export default function UserManagement() {
         title="Delete User"
         message={`Are you sure you want to delete "${deleteModal.name}"? This action cannot be undone.`}
         confirmLabel="Delete"
+        loadingLabel="Deleting..."
         isDestructive
         onConfirm={handleDelete}
         onClose={() => setDeleteModal({ open: false, id: null, name: '' })}
@@ -384,6 +427,8 @@ export default function UserManagement() {
         total={roleTotal}
         loading={roleLoading}
         actions={actions}
+        busyAction={busyAction}
+        bulkProgress={bulkProgress}
         onBulkStatus={(ids, status) => setBulkStatusModal({ open: true, ids, next: status })}
         onBulkDelete={(ids) => setBulkDeleteModal({ open: true, ids })}
         onClose={() => setRoleModal((m) => ({ ...m, open: false }))}
@@ -393,10 +438,15 @@ export default function UserManagement() {
         title={statusModal.next === 'approved' ? 'Activate Account' : 'Deactivate Account'}
         message={
           statusModal.next === 'approved'
-            ? `Activate "${statusModal.name}"? The user will be able to sign in and use the system.`
+            ? `Activate "${statusModal.name}"? The user will be able to sign in and use the system, and an approval email will be sent to their address.`
             : `Deactivate "${statusModal.name}"? The user will no longer be able to sign in.`
         }
         confirmLabel={statusModal.next === 'approved' ? 'Activate' : 'Deactivate'}
+        // Activation only answers once Gmail has accepted the message, so the
+        // dialog stays open with a spinner instead of vanishing straight away.
+        loadingLabel={
+          statusModal.next === 'approved' ? 'Activating, sending email...' : 'Deactivating...'
+        }
         isDestructive={statusModal.next !== 'approved'}
         onConfirm={confirmStatusChange}
         onClose={() => setStatusModal({ open: false, id: null, name: '', next: '' })}
@@ -418,6 +468,11 @@ export default function UserManagement() {
             : `Deactivate ${bulkStatusModal.ids.length} selected account(s)? They will no longer be able to sign in.`
         }
         confirmLabel={bulkStatusModal.next === 'approved' ? 'Activate All' : 'Deactivate All'}
+        loadingLabel={
+          bulkProgress
+            ? `Activating ${bulkProgress.done} of ${bulkProgress.total}, sending email...`
+            : undefined
+        }
         isDestructive={bulkStatusModal.next !== 'approved'}
         onConfirm={() => handleBulkStatus(bulkStatusModal.ids, bulkStatusModal.next)}
         onClose={() => setBulkStatusModal({ open: false, ids: [], next: '' })}
@@ -427,6 +482,11 @@ export default function UserManagement() {
         title="Delete Accounts"
         message={`Are you sure you want to delete ${bulkDeleteModal.ids.length} selected account(s)? This action cannot be undone.`}
         confirmLabel="Delete All"
+        loadingLabel={
+          bulkProgress
+            ? `Deleting ${bulkProgress.done} of ${bulkProgress.total}...`
+            : undefined
+        }
         isDestructive
         onConfirm={handleBulkDelete}
         onClose={() => setBulkDeleteModal({ open: false, ids: [] })}
@@ -444,6 +504,8 @@ function RoleUsersModal({
   total,
   loading,
   actions,
+  busyAction,
+  bulkProgress,
   onBulkStatus,
   onBulkDelete,
   onClose,
@@ -592,6 +654,7 @@ function RoleUsersModal({
                 className={`${styles.bulkButton} ${styles.bulkButtonGood}`}
                 onClick={() => onBulkStatus(selected, 'approved')}
                 title="Activate every selected account"
+                disabled={Boolean(busyAction)}
               >
                 <CircleCheck size={15} strokeWidth={2} />
                 Activate
@@ -601,6 +664,7 @@ function RoleUsersModal({
                 className={`${styles.bulkButton} ${styles.bulkButtonWarn}`}
                 onClick={() => onBulkStatus(selected, 'disapproved')}
                 title="Deactivate every selected account"
+                disabled={Boolean(busyAction)}
               >
                 <PowerOff size={15} strokeWidth={2} />
                 Deactivate
@@ -610,6 +674,7 @@ function RoleUsersModal({
                 className={`${styles.bulkButton} ${styles.bulkButtonDanger}`}
                 onClick={() => onBulkDelete(selected)}
                 title="Delete every selected account"
+                disabled={Boolean(busyAction)}
               >
                 <Trash2 size={15} strokeWidth={2} />
                 Delete
@@ -619,11 +684,22 @@ function RoleUsersModal({
                 className={styles.bulkButton}
                 onClick={clearSelection}
                 title="Clear the selection"
+                disabled={Boolean(busyAction)}
               >
                 <X size={15} strokeWidth={2} />
                 Clear
               </button>
             </div>
+          </div>
+        ) : null}
+
+        {/* Live progress for a bulk run. Each approved row is one Gmail message,
+            so a run of twenty accounts takes a while and an unlabelled wait reads
+            as a hang. */}
+        {bulkProgress ? (
+          <div className={styles.bulkProgress} role="status" aria-live="polite">
+            <span className={styles.spinner} aria-hidden="true" />
+            Working on {bulkProgress.done} of {bulkProgress.total} - keep this window open.
           </div>
         ) : null}
 

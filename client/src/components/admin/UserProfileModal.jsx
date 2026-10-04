@@ -282,7 +282,9 @@ export default function UserProfileModal({ user, onClose, onUpdated }) {
               disabled={saving}
             >
               <CircleCheck size={16} strokeWidth={2} />
-              {saving ? 'Saving…' : 'Activate account'}
+              {/* Activation only answers once Gmail has accepted the message, so
+                  say what is happening instead of a vague "Saving". */}
+              {saving ? 'Activating, sending email…' : 'Activate account'}
             </button>
           )}
           {/* Only for an approved account: the recovery path when the approval

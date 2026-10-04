@@ -60,6 +60,9 @@
 }
 
 .confirmBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   background: #2a5298;
   color: #ffffff;
   border: none;
@@ -75,6 +78,9 @@
 }
 
 .destructiveBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   background: #dc2626;
   color: #ffffff;
   border: none;
@@ -87,4 +93,55 @@
 
 .destructiveBtn:hover {
   background: #b91c1c;
+}
+
+/* Held while an action is in flight. The hover tints are suppressed so a
+   running action does not look clickable. */
+.cancelBtn:disabled,
+.confirmBtn:disabled,
+.destructiveBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.cancelBtn:disabled:hover {
+  background: #f1f5f9;
+}
+
+.confirmBtn:disabled:hover {
+  background: #2a5298;
+}
+
+.destructiveBtn:disabled:hover {
+  background: #dc2626;
+}
+
+/* Explanatory line under the message, e.g. why the dialog is still open. */
+.loadingNote {
+  margin: -12px 0 20px;
+  color: #64748b;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: confirmSpin 0.7s linear infinite;
+}
+
+@keyframes confirmSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2s;
+  }
 }

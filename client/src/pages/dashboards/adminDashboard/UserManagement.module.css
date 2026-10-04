@@ -473,9 +473,15 @@
    ROLE USERS MODAL
 ========================= */
 
+/* align-self, not a transform: the modalIn keyframes own `transform`, so a
+   translateY offset here would be wiped out by the animation's final frame.
+   Anchoring to the top of the overlay and offsetting with a margin puts the
+   toolbar, bulk-action bar and first rows above the fold. */
 .modalWide {
-  max-width: 1180px;
-  max-height: min(92vh, 900px);
+  align-self: flex-start;
+  max-width: 1320px;
+  max-height: min(86vh, 880px);
+  margin-top: 3vh;
   padding: 28px;
 }
 
@@ -519,7 +525,7 @@
   border: 1px solid #e6dfe2;
   border-radius: 12px;
   /* Long role lists stay inside the dialog; the body scrolls this table. */
-  max-height: min(58vh, 520px);
+  max-height: min(64vh, 660px);
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -554,13 +560,13 @@
 }
 
 .modalTable th {
-  height: 40px;
-  padding: 0 14px;
+  height: 44px;
+  padding: 0 16px;
   border-bottom: 1px solid #ecdfe2;
   background: #fff7f8;
   color: #8b1e2d;
   text-align: left;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 750;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -568,10 +574,10 @@
 }
 
 .modalTable td {
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-bottom: 1px solid #ecdfe2;
   color: #475d6e;
-  font-size: 0.82rem;
+  font-size: 0.88rem;
   vertical-align: middle;
   white-space: nowrap;
 }
@@ -586,7 +592,7 @@
 
 .modalTableDate {
   color: #8490a1;
-  font-size: 0.78rem;
+  font-size: 0.84rem;
   white-space: nowrap;
 }
 
@@ -1000,6 +1006,74 @@
   border-color: #f0b7c2;
   background: #fde3e8;
   color: #b4233b;
+}
+
+/* A row whose activate/delete call is still in flight. Held dimmed rather than
+   hidden so the row does not reflow mid-click, and every hover tint is
+   suppressed so it does not read as available. */
+.rowAction:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.rowAction:disabled:hover {
+  border-color: #dcc9cf;
+  background: #fff;
+  color: #758195;
+}
+
+.rowActionGood:disabled:hover {
+  border-color: #dcc9cf;
+  background: #fff;
+  color: #15803d;
+}
+
+.rowActionWarn:disabled:hover {
+  border-color: #dcc9cf;
+  background: #fff;
+  color: #9a5b10;
+}
+
+.rowActionDanger:disabled:hover {
+  border-color: #dcc9cf;
+  background: #fff;
+  color: #b4233b;
+}
+
+.rowSpinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: rowSpin 0.7s linear infinite;
+}
+
+@keyframes rowSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Bulk-run progress strip under the selection bar. */
+.bulkProgress {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px solid #ecdfe2;
+  border-radius: 10px;
+  background: #fff7f8;
+  color: #8b1e2d;
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rowSpinner {
+    animation-duration: 2s;
+  }
 }
 
 /* =========================
