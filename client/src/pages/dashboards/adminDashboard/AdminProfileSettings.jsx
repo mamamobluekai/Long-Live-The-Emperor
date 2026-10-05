@@ -12,6 +12,9 @@ import {
   KeyRound,
   ChevronRight,
   X,
+  Sun,
+  Moon,
+  Settings,
 } from 'lucide-react';
 
 import {
@@ -23,6 +26,7 @@ import {
 
 import { useToast } from '../../../components/admin/toastContext';
 import { useAuth } from '../../../context/AuthContext';
+import { useTheme } from '../../../context/themeContextValue';
 import { getPasswordFormProblem } from '../../../utils/passwordPolicy';
 import styles from './AdminProfileSettings.module.css';
 
@@ -39,6 +43,7 @@ const roleLabels = {
 export default function AdminProfileSettings() {
   const { showToast } = useToast();
   const { user, updateUser } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -614,6 +619,82 @@ export default function AdminProfileSettings() {
           </form>
         </section>
       </div>
+
+      {/* ADDITIONAL SETTINGS */}
+      <section className={styles.additionalCard}>
+        <div className={styles.cardHeader}>
+          <div className={styles.cardIcon}>
+            <Settings size={18} />
+          </div>
+
+          <div>
+            <h3>Additional Settings</h3>
+            <p>Customize your experience.</p>
+          </div>
+        </div>
+
+        <div className={styles.form}>
+          <div className={styles.field}>
+            <label>Theme</label>
+            <div className={styles.inputWrapper} style={{ height: 'auto', minHeight: '43px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                <Sun size={17} style={{ color: theme === 'light' ? '#8b1e2d' : '#3d4552', flexShrink: 0 }} />
+                <button
+                  type="button"
+                  className={`${styles.themeButton} ${theme === 'light' ? styles.themeButtonActive : ''}`}
+                  onClick={() => setTheme('light')}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '8px 12px',
+                    border: `1px solid ${theme === 'light' ? '#8b1e2d' : '#dcc9cf'}`,
+                    borderRadius: '9px',
+                    background: theme === 'light' ? 'linear-gradient(135deg, #8b1e2d 0%, #a82739 100%)' : '#ffffff',
+                    color: theme === 'light' ? '#ffffff' : '#26313f',
+                    fontFamily: 'inherit',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  Light
+                </button>
+                <Moon size={17} style={{ color: theme === 'dark' ? '#b8394f' : '#3d4552', flexShrink: 0 }} />
+                <button
+                  type="button"
+                  className={`${styles.themeButton} ${theme === 'dark' ? styles.themeButtonActive : ''}`}
+                  onClick={() => setTheme('dark')}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    padding: '8px 12px',
+                    border: `1px solid ${theme === 'dark' ? '#b8394f' : '#dcc9cf'}`,
+                    borderRadius: '9px',
+                    background: theme === 'dark' ? 'linear-gradient(135deg, #b8394f 0%, #8b1e2d 100%)' : '#ffffff',
+                    color: theme === 'dark' ? '#ffffff' : '#26313f',
+                    fontFamily: 'inherit',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  Dark
+                </button>
+              </div>
+            </div>
+            <small className={styles.helperText}>
+              Choose your preferred color scheme. Changes apply immediately.
+            </small>
+          </div>
+        </div>
+      </section>
 
       <section className={styles.accountCard}>
         <div className={styles.accountItem}>

@@ -1299,3 +1299,27 @@ padding: 20px;
     animation-duration: 0.01ms;
   }
 }
+
+/* =========================================================
+   THEME TOGGLE BUTTONS
+   ========================================================= */
+
+.themeButton {
+  transition: all 0.15s ease;
+}
+
+.themeButton:hover:not(.themeButtonActive) {
+  border-color: #b8394f !important;
+  background: #fffafb !important;
+  color: #8b1e2d !important;
+  transform: translateY(-1px);
+}
+
+.themeButtonActive {
+  box-shadow: 0 4px 12px -4px rgba(139, 30, 45, 0.4);
+}
+
+.themeButtonActive:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -4px rgba(139, 30, 45, 0.5);
+}

@@ -940,3 +940,130 @@
     height: 42px;
   }
 }
+
+/* =========================================================
+   ADDITIONAL SETTINGS
+   ========================================================= */
+
+.additionalCard {
+  margin-top: 22px;
+  padding: 21px 22px;
+  border: 1px solid #e2c9cf;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fffdfd 0%, #ffffff 40%);
+  box-shadow: 0 12px 32px -28px rgba(80, 20, 32, 0.4);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.additionalCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 22px;
+  left: 22px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, rgba(139, 30, 45, 0.75), rgba(184, 57, 79, 0.35), rgba(190, 140, 63, 0.55));
+}
+
+.additionalCard:hover {
+  border-color: #dcc9cf;
+  box-shadow: 0 18px 40px -30px rgba(80, 20, 32, 0.5);
+}
+
+.additionalHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0e3e6;
+}
+
+.additionalIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: linear-gradient(140deg, #8b1e2d, #b8394f);
+  color: #fff;
+  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
+}
+
+.additionalTitle {
+  margin: 0;
+  color: #172033;
+  font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+}
+
+.additionalSubtitle {
+  margin: 6px 0 0;
+  max-width: 62ch;
+  color: #8490a1;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.additionalContent {
+  padding-top: 4px;
+}
+
+.themeField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.themeLabel {
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.themeButtons {
+  display: flex;
+  gap: 12px;
+}
+
+.themeButton {
+  transition: all 0.15s ease;
+}
+
+.themeButton:hover:not(.themeButtonActive) {
+  border-color: #b8394f !important;
+  background: #fffafb !important;
+  color: #8b1e2d !important;
+  transform: translateY(-1px);
+}
+
+.themeButtonActive {
+  box-shadow: 0 4px 12px -4px rgba(139, 30, 45, 0.4);
+}
+
+.themeButtonActive:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -4px rgba(139, 30, 45, 0.5);
+}
+
+.themeHint {
+  margin: 0;
+  color: #8490a1;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+  .themeButtons {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

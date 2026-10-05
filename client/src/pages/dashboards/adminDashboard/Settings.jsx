@@ -17,11 +17,14 @@ import {
   TriangleAlert,
   Wrench,
   X,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { useToast } from '../../../components/admin/toastContext';
 import ConfirmModal from '../../../components/admin/ConfirmModal';
 import { setMaintenanceMode } from '../../../api/maintenanceApi';
 import { useMaintenance } from '../../../context/maintenanceContextValue';
+import { useTheme } from '../../../context/themeContextValue';
 import styles from './Settings.module.css';
 
 const ACADEMIC_YEAR_OPTIONS = ['2025-2026', '2026-2027', '2027-2028'];
@@ -56,6 +59,7 @@ function toLocalInput(value) {
 export default function SettingsPage() {
   const { showToast } = useToast();
   const { status: maintenance, report: reportMaintenance } = useMaintenance();
+  const { theme, setTheme } = useTheme();
   const [maintenanceSaving, setMaintenanceSaving] = useState(false);
   const [maintenanceForm, setMaintenanceForm] = useState({ message: '', estimatedEnd: '' });
   const [maintenanceModal, setMaintenanceModal] = useState(false);
@@ -408,6 +412,76 @@ export default function SettingsPage() {
               </>
             )}
           </button>
+        </div>
+      </section>
+
+      {/* ADDITIONAL SETTINGS */}
+      <section className={styles.additionalCard}>
+        <div className={styles.additionalHeader}>
+          <div className={styles.additionalIcon}>
+            <SettingsIcon size={19} strokeWidth={1.9} />
+          </div>
+          <div>
+            <h2 className={styles.additionalTitle}>Additional Settings</h2>
+            <p className={styles.additionalSubtitle}>
+              Customize your experience.
+            </p>
+          </div>
+        </div>
+
+        <div className={styles.additionalContent}>
+          <div className={styles.themeField}>
+            <label className={styles.themeLabel}>Theme</label>
+            <div className={styles.themeButtons}>
+              <button
+                type="button"
+                className={`${styles.themeButton} ${theme === 'light' ? styles.themeButtonActive : ''}`}
+                onClick={() => setTheme('light')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 16px',
+                  border: `1px solid ${theme === 'light' ? '#8b1e2d' : '#e6dfe2'}`,
+                  borderRadius: '9px',
+                  background: theme === 'light' ? 'linear-gradient(135deg, #8b1e2d 0%, #a82739 100%)' : '#fffdfd',
+                  color: theme === 'light' ? '#fff' : '#26313f',
+                  fontFamily: 'inherit',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <Sun size={15} strokeWidth={2} />
+                Light
+              </button>
+              <button
+                type="button"
+                className={`${styles.themeButton} ${theme === 'dark' ? styles.themeButtonActive : ''}`}
+                onClick={() => setTheme('dark')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 16px',
+                  border: `1px solid ${theme === 'dark' ? '#b8394f' : '#e6dfe2'}`,
+                  borderRadius: '9px',
+                  background: theme === 'dark' ? 'linear-gradient(135deg, #b8394f 0%, #8b1e2d 100%)' : '#fffdfd',
+                  color: theme === 'dark' ? '#fff' : '#26313f',
+                  fontFamily: 'inherit',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <Moon size={15} strokeWidth={2} />
+                Dark
+              </button>
+            </div>
+            <p className={styles.themeHint}>Choose your preferred color scheme. Changes apply immediately.</p>
+          </div>
         </div>
       </section>
 

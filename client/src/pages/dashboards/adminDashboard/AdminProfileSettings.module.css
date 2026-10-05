@@ -873,3 +873,58 @@
     margin-left: 16px;
   }
 }
+
+/* =========================================================
+   ADDITIONAL SETTINGS CARD
+   ========================================================= */
+
+.additionalCard {
+  margin-top: 22px;
+  background: linear-gradient(180deg, #fffdfd 0%, #ffffff 40%);
+  border: 1px solid #e6dfe2;
+  border-radius: 18px;
+  box-shadow: 0 12px 32px -28px rgba(80, 20, 32, 0.4);
+}
+
+.additionalCard .cardHeader {
+  padding: 21px 22px 18px;
+  border-bottom: 1px solid #ecdfe2;
+}
+
+.additionalCard .form {
+  padding: 22px;
+}
+
+.additionalCard .field {
+  margin: 0;
+}
+
+/* =========================================================
+   THEME TOGGLE BUTTONS
+   ========================================================= */
+
+.themeButton {
+  transition: all 0.15s ease;
+}
+
+.themeButton:hover:not(.themeButtonActive) {
+  border-color: #b8394f !important;
+  background: #fffafb !important;
+  color: #8b1e2d !important;
+  transform: translateY(-1px);
+}
+
+.themeButtonActive {
+  box-shadow: 0 4px 12px -4px rgba(139, 30, 45, 0.4);
+}
+
+.themeButtonActive:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -4px rgba(139, 30, 45, 0.5);
+}
+
+@media (max-width: 600px) {
+  .additionalCard {
+    border-radius: 15px;
+  }
+}
