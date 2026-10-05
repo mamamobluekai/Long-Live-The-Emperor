@@ -1,0 +1,190 @@
+/* =========================================================
+   OVERLAY
+   ========================================================= */
+
+/* Above the mobile sidebar drawer (99998) and the logout dialog's portal layer
+   (100000) so the sheet is never buried by the drawer that opened it. */
+.overlay {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 100001;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  background: rgba(15, 23, 42, 0.55);
+}
+
+
+/* =========================================================
+   SHEET
+   ========================================================= */
+
+/* Slides up from the bottom edge, following the shape of the existing
+   Attendance .modalDrawer sheet. */
+.sheet {
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+  max-width: 560px;
+
+  /* Leaves room for the header when the keyboard is open. dvh tracks the
+     shrinking visual viewport. */
+  max-height: 92dvh;
+
+  border-radius: 18px 18px 0 0;
+
+  background: #ffffff;
+
+  box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.28);
+
+  animation: sheetIn 0.24s ease-out;
+}
+
+@keyframes sheetIn {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.header {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 16px 16px 14px;
+
+  border-bottom: 1px solid #ece5e7;
+
+  /* Doubles as the grab handle area. */
+  position: relative;
+}
+
+.header::before {
+  content: '';
+
+  position: absolute;
+  top: 7px;
+  left: 50%;
+
+  width: 38px;
+  height: 4px;
+
+  border-radius: 999px;
+
+  background: #ded4d7;
+
+  transform: translateX(-50%);
+}
+
+.title {
+  margin: 6px 0 0;
+
+  color: #0f172a;
+
+  font-size: 1.05rem;
+  font-weight: 700;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.closeButton {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 38px;
+  height: 38px;
+
+  margin: 6px 0 0;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #f4f1f2;
+
+  color: #475569;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.closeButton:hover {
+  background: #eadfe2;
+  color: #7f0d2b;
+}
+
+.closeButton:focus-visible {
+  outline: 3px solid rgba(157, 35, 57, 0.24);
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   BODY
+   ========================================================= */
+
+.body {
+  flex: 1;
+
+  /* min-height:0 lets this shrink and scroll instead of stretching the sheet. */
+  min-height: 0;
+
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+
+  padding: 16px;
+
+  /* Room for the on-screen keyboard when a field is focused. */
+  padding-bottom: calc(24px + var(--keyboard-inset, 0px));
+}
+
+/* The shared profile page brings its own max-width and desktop gutters. Inside the
+   sheet it should just fill the available width. */
+.body > * {
+  max-width: none;
+}
+
+
+/* =========================================================
+   SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 380px) {
+  .body {
+    padding: 12px;
+  }
+
+  .title {
+    font-size: 1rem;
+  }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet {
+    animation-duration: 0.01ms;
+  }
+}

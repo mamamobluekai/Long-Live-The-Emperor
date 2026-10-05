@@ -17,19 +17,24 @@ function useLogoutHandler() {
 // On mobile the sidebar drawer is a fixed overlay at z-index 99998, which would
 // bury the dialog. Rendering it into a layer above the drawer keeps the dialog
 // usable from either the sidebar button or the top-nav menu.
+//
+// The dependency list is deliberately empty. Listing `host` here makes the effect
+// re-run on its own state write, and React fires the previous cleanup first - which
+// detached the very node being stored, leaving `host` pointing at an orphaned
+// element. The portal then rendered into a detached node and the dialog never
+// appeared. With an empty list the node is created once and removed only on
+// unmount.
 function usePortalLayer() {
   const [host, setHost] = useState(null);
 
   useEffect(() => {
-    if (host) return undefined;
-
     const node = document.createElement('div');
     node.className = styles.portalLayer;
     document.body.appendChild(node);
     setHost(node);
 
     return () => node.remove();
-  }, [host]);
+  }, []);
 
   return host;
 }

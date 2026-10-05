@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 
 import DashboardSidebar from '../sharedSidebar/DashboardSidebar';
+import UserProfileSettings from '../UserProfileSettings';
 
 
 const links = [
@@ -73,6 +74,10 @@ const links = [
     to: '/dashboard/student/profile',
     label: 'Settings',
     icon: UserRound,
+    // Phone only: opens in a slide-up sheet instead of navigating. Desktop
+    // still navigates to the route above.
+    sheet: UserProfileSettings,
+    sheetTitle: 'Settings',
   },
 ];
 

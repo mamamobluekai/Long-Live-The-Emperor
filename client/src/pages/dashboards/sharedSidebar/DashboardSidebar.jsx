@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { X } from 'lucide-react';
 import SidebarLogoutButton from './SidebarLogoutButton';
+import MobileSheet from './MobileSheet';
+import { useIsMobile } from '../../../hooks/useIsMobile';
 import styles from './DashboardSidebar.module.css';
 
 function DashboardSidebar({
@@ -11,6 +14,29 @@ function DashboardSidebar({
   onClose = () => {},
   aboveNav = null,
 }) {
+  const isMobile = useIsMobile();
+
+  // Holds the link whose `sheet` component should be shown in a phone-only sheet.
+  const [sheetLink, setSheetLink] = useState(null);
+
+  // On a phone a nav item carrying `sheet` opens in a slide-up sheet rather than
+  // navigating. Desktop keeps the normal NavLink navigation, so wide screens are
+  // unaffected.
+  const handleLinkClick = (event, link) => {
+    if (link.sheet && isMobile) {
+      event.preventDefault();
+      // The sheet is portalled to <body>, so collapsing the drawer it was opened
+      // from does not unmount it and leaves no double-panel stack behind.
+      onClose();
+      setSheetLink(link);
+      return;
+    }
+
+    onClose();
+  };
+
+  const SheetContent = sheetLink?.sheet;
+
   return (
     <>
       {/* =========================================
@@ -101,7 +127,7 @@ function DashboardSidebar({
                   <NavLink
                     to={link.to}
                     end={link.end}
-                    onClick={onClose}
+                    onClick={(event) => handleLinkClick(event, link)}
                     className={({ isActive }) =>
                       `${styles.navLink} ${
                         isActive
@@ -157,6 +183,21 @@ function DashboardSidebar({
         <div className={styles.footer}>
           <SidebarLogoutButton onLoggedOut={onClose} />
         </div>
+
+      {/* =========================================
+            PHONE-ONLY SHEET
+            Rendered for a link that declared `sheet`, and only while the
+            viewport is phone-sized.
+        ========================================= */}
+        {SheetContent && (
+          <MobileSheet
+            isOpen={isMobile}
+            title={sheetLink.sheetTitle || sheetLink.label}
+            onClose={() => setSheetLink(null)}
+          >
+            <SheetContent />
+          </MobileSheet>
+        )}
 
       </aside>
     </>

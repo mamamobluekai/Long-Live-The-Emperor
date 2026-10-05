@@ -1,5 +1,6 @@
 import DashboardSidebar from '../sharedSidebar/DashboardSidebar';
 import TeacherSidebarBatchSwitcher from './TeacherSidebarBatchSwitcher';
+import UserProfileSettings from '../UserProfileSettings';
 
 import {
   ChartNoAxesColumn,
@@ -67,15 +68,24 @@ const links = [
     to: '/dashboard/teacher/profile',
     label: 'Settings',
     icon: User,
+    // Phone only: opens in a slide-up sheet instead of navigating. Desktop
+    // still navigates to the route above.
+    sheet: UserProfileSettings,
+    sheetTitle: 'Settings',
   },
 ];
 
-function TeacherSidebar() {
+// isOpen/onClose are injected by DashboardLayout. They were previously dropped,
+// which left the teacher drawer permanently off-canvas on phones. Forwarded now so
+// the mobile nav - and the Settings sheet opened from it - can actually be reached.
+function TeacherSidebar({ isOpen, onClose }) {
   return (
     <DashboardSidebar
       title="Teacher"
       subtitle="Work Immersion"
       links={links}
+      isOpen={isOpen}
+      onClose={onClose}
       aboveNav={<TeacherSidebarBatchSwitcher />}
     />
   );

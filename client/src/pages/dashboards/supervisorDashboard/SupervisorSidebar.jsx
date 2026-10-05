@@ -1,4 +1,5 @@
 import DashboardSidebar from '../sharedSidebar/DashboardSidebar';
+import UserProfileSettings from '../UserProfileSettings';
 
 import {
   ChartNoAxesColumn,
@@ -71,6 +72,10 @@ const links = [
     to: '/dashboard/supervisor/profile',
     label: 'Settings',
     icon: User,
+    // Phone only: opens in a slide-up sheet instead of navigating. Desktop
+    // still navigates to the route above.
+    sheet: UserProfileSettings,
+    sheetTitle: 'Settings',
   },
 ];
 
