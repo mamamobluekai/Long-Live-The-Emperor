@@ -1,0 +1,139 @@
+/* =========================================================
+   LOGOUT FOOTER
+   ========================================================= */
+
+.logoutButton {
+  width: 100%;
+
+  min-height: 46px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 14px;
+
+  padding: 0 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.06);
+
+  color: rgba(255, 255, 255, 0.88);
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.logoutButton:hover {
+  background: rgba(220, 38, 38, 0.22);
+
+  border-color: rgba(255, 255, 255, 0.24);
+
+  color: #ffffff;
+
+  transform: translateX(2px);
+}
+
+.logoutButton:active {
+  transform: scale(0.98);
+}
+
+.logoutButton:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   ICON
+   ========================================================= */
+
+.logoutIcon {
+  width: 24px;
+
+  height: 24px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  color: rgba(255, 255, 255, 0.92);
+
+  transition:
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.logoutButton:hover .logoutIcon {
+  color: #ffffff;
+
+  transform: scale(1.05);
+}
+
+
+/* =========================================================
+   LABEL
+   ========================================================= */
+
+.logoutLabel {
+  flex: 1;
+
+  min-width: 0;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1024px) {
+
+  .logoutButton {
+    font-size: 13px;
+
+    gap: 12px;
+
+    padding: 0 12px;
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE DRAWER
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+  .logoutButton {
+    min-height: 48px;
+
+    padding: 0 14px;
+
+    font-size: 14px;
+  }
+
+}

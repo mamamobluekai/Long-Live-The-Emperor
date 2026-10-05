@@ -11,13 +11,21 @@ export function AdminAuthProvider({ children }) {
     return data;
   };
 
+  // Role-aware so a single logout entry point can serve every dashboard: only a
+  // real admin revokes through /admin/logout, everyone else goes through the
+  // base context, which clears state and revokes /users/logout itself.
   const adminLogout = async () => {
+    if (auth.user?.role !== 'admin') {
+      await auth.logout();
+      return;
+    }
+
     try {
       await logoutAdmin();
     } catch (e) {
       console.error('Admin logout error:', e.message);
     }
-    auth.logout();
+    await auth.logout();
   };
 
   const value = {

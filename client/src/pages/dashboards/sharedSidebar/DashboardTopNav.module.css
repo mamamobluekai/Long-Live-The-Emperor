@@ -8,7 +8,9 @@
   align-items: center;
   justify-content: space-between;
 
-  padding: 0 26px;
+  /* Generous horizontal padding so nothing touches the edge, and so content
+     cannot visually collide with the sidebar on the left. */
+  padding: 0 32px;
 
   background: #ffffff;
 
@@ -17,7 +19,7 @@
   box-sizing: border-box;
 
   position: relative;
-  z-index: 100;
+  z-index: 20;
 }
 
 
@@ -25,6 +27,8 @@
   display: flex;
   align-items: center;
 
+  /* min-width:0 lets the page title shrink/ellipsize instead of forcing the
+     right-hand controls off the topbar. */
   min-width: 0;
 }
 
@@ -61,23 +65,9 @@
 
 
 
-.brand {
-  display: flex;
-  align-items: center;
-
-  gap: 11px;
-
-  padding: 0;
-
-  border: 0;
-  background: transparent;
-
-  cursor: pointer;
-
-  text-align: left;
-}
-
-.brand:focus-visible,
+/* The logo/system name now live in the sidebar branding block. The topbar only
+   needs focus styling for its own controls, so the old .brand rules are gone and
+   the page title takes their place. */
 .menuButton:focus-visible,
 .profileBtn:focus-visible,
 .profileMenu button:focus-visible {
@@ -86,75 +76,9 @@
 }
 
 
-/* LOGO */
-
-.brandLogo {
-  width: 60px;
-  height: 60px;
-
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 11px;
-
-  background: linear-gradient(
-    135deg,
-    #7f0d2b 0%,
-    #a7193d 100%
-  );
-
-  color: #ffffff;
-
-  box-shadow:
-    0 4px 10px rgba(127, 13, 43, 0.16);
-}
-
-.brandLogo span {
-  font-size: 12px;
-  font-weight: 800;
-
-  letter-spacing: -0.3px;
-}
-
-
-/* BRAND TEXT */
-
-.brandText {
-  display: flex;
-  flex-direction: column;
-
-  justify-content: center;
-
-  line-height: 1;
-}
-
-.brandName {
-  color: #7f0d2b;
-
-  font-size: 24px;
-  font-weight: 750;
-
-  letter-spacing: -0.2px;
-}
-
-.brandSubtitle {
-  margin-top: 5px;
-
-  color: #98a2b3;
-
-  font-size: 10px;
-  font-weight: 500;
-
-  letter-spacing: 0.3px;
-}
-
-
 /* =========================================
    PAGE TITLE
-========================================= */
+   ========================================= */
 
 .breadcrumbDivider {
   width: 1px;
@@ -166,10 +90,14 @@
 }
 
 .pageTitle {
+  overflow: hidden;
+
   color: #667085;
 
   font-size: 13px;
   font-weight: 500;
+
+  text-overflow: ellipsis;
 
   white-space: nowrap;
 }
@@ -184,6 +112,9 @@
   align-items: center;
 
   gap: 12px;
+
+  /* Never squeezed by a long page title. */
+  flex-shrink: 0;
 }
 
 
@@ -522,17 +453,6 @@
     padding: 0 14px;
   }
 
-  .brandText {
-    display: flex;
-  }
-
-  .brandLogo {
-    width: 38px;
-    height: 38px;
-
-    border-radius: 10px;
-  }
-
   .notificationButton {
     width: 36px;
     height: 36px;
@@ -553,14 +473,6 @@
   }
 
   .user {
-    display: none;
-  }
-
-  .brandName {
-    font-size: 16px;
-  }
-
-  .brandSubtitle {
     display: none;
   }
 
@@ -594,6 +506,4 @@
 
     margin-right: 7px;
   }
-
-  .brandName { font-size: 15px; }
 }

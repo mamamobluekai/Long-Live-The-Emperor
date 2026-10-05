@@ -1,37 +1,71 @@
 .topnav {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-  height: 64px;
+  justify-content: flex-end;
+
+  /* Generous horizontal padding so controls never touch the edges. */
+  padding: 0 32px;
+
+  height: 72px;
+
   background: #ffffff;
   border-bottom: 1px solid rgba(15, 23, 42, 0.06);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.brandIcon {
-  font-size: 1.2rem;
-}
-
-.brandName {
-  display: none;
+  /* The topbar lives inside the main column, to the right of the sidebar, so it
+     needs no sticky offset or z-index of its own to stay clear of it. */
+  position: relative;
+  flex-shrink: 0;
 }
 
 .right {
   display: flex;
   align-items: center;
   gap: 16px;
+
+  flex-shrink: 0;
+}
+
+/* Hamburger is hidden on desktop, where the sidebar is permanently visible. */
+.menuButton {
+  display: none;
+
+  width: 40px;
+  height: 40px;
+
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #e3e6eb;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  color: #344054;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.menuButton:hover {
+  background: #faf7f8;
+  border-color: #d7a8b5;
+  color: #7f0d2b;
+}
+
+.menuButton:focus-visible {
+  outline: 3px solid rgba(157, 35, 57, 0.24);
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .menuButton {
+    display: flex;
+  }
 }
 
 .notificationWrapper {
@@ -387,14 +421,9 @@
   background: #dc2626;
 }
 
-@media (min-width: 768px) {
-  .brandName {
-    display: inline;
-  }
-}
-
 @media (max-width: 640px) {
   .topnav {
+    height: 64px;
     padding: 0 16px;
   }
 

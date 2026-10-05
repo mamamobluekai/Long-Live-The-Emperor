@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { logoutUser } from '../api/userApi';
 
 const AuthContext = createContext(null);
 
@@ -48,11 +49,27 @@ export function AuthProvider({ children }) {
     setCsrfToken(authData?.csrfToken || '');
   };
 
-  const logout = () => {
+  // Clears local state first and revokes the session on the server after, so a
+  // failed request (offline, expired token) can never strand the user in a
+  // half-logged-in state. Admins revoke through /admin/logout via
+  // AdminAuthContext, so their token is skipped here.
+  const logout = useCallback(async () => {
+    const isAdmin = user?.role === 'admin';
+
     setUser(null);
     setToken('');
     setCsrfToken('');
-  };
+
+    if (isAdmin) return;
+
+    try {
+      await logoutUser();
+    } catch (e) {
+      // The local session is already gone, so a revoke failure is not worth
+      // blocking the user on; the server expires the token on its own.
+      console.error('Logout revoke error:', e.message);
+    }
+  }, [user]);
 
   const updateUser = (partial) => {
     setUser((prev) => (prev ? { ...prev, ...partial } : null));
@@ -60,7 +77,7 @@ export function AuthProvider({ children }) {
 
   const value = useMemo(
     () => ({ user, token, login, logout, updateUser, isAuthenticated: Boolean(user) }),
-    [user, token]
+    [user, token, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

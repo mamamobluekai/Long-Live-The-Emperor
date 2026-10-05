@@ -7,11 +7,13 @@ import {
   UserRound,
 } from 'lucide-react';
 import styles from './DashboardTopNav.module.css';
+import LogoutConfirmDialog from './LogoutConfirmDialog';
 import NotificationBell from '../../../components/common/NotificationBell';
 import GroupChatButton from '../../../components/common/GroupChatButton';
 
 function DashboardTopNav({
   user,
+  title,
   onLogout,
   onMenuClick,
   hideProfileOnMobile = false,
@@ -20,6 +22,7 @@ function DashboardTopNav({
   const location = useLocation();
   const profileRef = useRef(null);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
 
   const displayName =
     user?.first_name || user?.last_name
@@ -32,7 +35,6 @@ function DashboardTopNav({
       : '';
 
   const profilePath = `/dashboard/${user?.role?.toLowerCase()}/profile`;
-  const dashboardPath = `/dashboard/${user?.role?.toLowerCase()}`;
 
   useEffect(() => {
     setProfileOpen(false);
@@ -75,26 +77,22 @@ function DashboardTopNav({
           <Menu size={21} strokeWidth={1.8} />
         </button>
 
-        {/* BRAND */}
-        <button
-          type="button"
-          className={styles.brand}
-          onClick={() => navigate(dashboardPath)}
-          aria-label={`Go to ${role || 'dashboard'} dashboard`}
-        >
-          <div className={styles.brandLogo}>
-            <img
-                src="/logo.png"
-                alt="Work Immersion Monitoring System"
-              />
-          </div>
-
-          <div className={styles.brandText}>
-            <span className={styles.brandName}>e-MMERSION</span>
-          </div>
-        </button>
-
-        
+        {/* PAGE TITLE
+            Renders the `title` prop the dashboards already pass ("Admin
+            Dashboard", "Student Dashboard", ...). The logo and system name
+            moved to the sidebar branding block, so this is what identifies the
+            page in the topbar. */}
+        {title && (
+          <>
+            <span
+              className={styles.breadcrumbDivider}
+              aria-hidden="true"
+            />
+            <span className={styles.pageTitle}>
+              {title}
+            </span>
+          </>
+        )}
 
       </div>
 
@@ -170,7 +168,15 @@ function DashboardTopNav({
                 <Settings size={16} /> Profile settings
               </button>
               {onLogout && (
-                <button type="button" role="menuitem" className={styles.menuLogout} onClick={onLogout}>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={styles.menuLogout}
+                  onClick={() => {
+                    setProfileOpen(false);
+                    setLogoutOpen(true);
+                  }}
+                >
                   <LogOut size={16} /> Log out
                 </button>
               )}
@@ -178,8 +184,14 @@ function DashboardTopNav({
           )}
         </div>
 
+</div>
 
-      </div>
+      {onLogout && (
+        <LogoutConfirmDialog
+          isOpen={logoutOpen}
+          onClose={() => setLogoutOpen(false)}
+        />
+      )}
 
     </header>
   );

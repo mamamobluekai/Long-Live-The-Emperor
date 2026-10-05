@@ -12,10 +12,13 @@
 
   width: var(--sidebar-width);
 
-  height: calc(100vh - 64px);
+  /* Full viewport height. The old value subtracted the topbar height because
+     the topbar used to span the full width above the sidebar; the topbar now
+     occupies only the main column, so the sidebar owns the whole height. */
+  height: 100%;
 
   position: sticky;
-  top: 64px;
+  top: 0;
 
   flex-shrink: 0;
 
@@ -31,7 +34,10 @@
 
   color: #ffffff;
 
-  overflow-y: auto;
+  /* The branding, nav and logout footer are stacked in this column. Only the
+     nav list scrolls, so the logo stays put at the top and the logout button
+     stays put at the bottom. */
+  overflow: hidden;
   overflow-x: hidden;
 
   z-index: 30;
@@ -61,6 +67,120 @@
   border-radius: 999px;
 }
 
+/* The nav list is the only scrolling region, so it carries the scrollbar
+   styling that used to sit on the whole sidebar. */
+.navigation::-webkit-scrollbar {
+  width: 5px;
+}
+
+.navigation::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.navigation::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+}
+
+
+/* =========================================================
+   BRANDING
+   ========================================================= */
+
+/* In normal flow at the top of the sidebar column — no fixed positioning and no
+   negative margins, so it cannot escape the sidebar or ride over the topbar. */
+.branding {
+  position: relative;
+
+  flex-shrink: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  /* Horizontal padding keeps the logo clear of the sidebar edges. */
+  padding: 26px 18px 22px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   LOGO
+   ========================================================= */
+
+.logoWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* A soft light plate behind the mark so the logo reads clearly against the
+     dark gradient without touching the sidebar edges. */
+  width: 92px;
+  height: 92px;
+
+  padding: 8px;
+
+  border-radius: 18px;
+
+  background: rgba(255, 255, 255, 0.96);
+
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.22);
+}
+
+.logo {
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  display: block;
+}
+
+
+/* =========================================================
+   SYSTEM NAME
+   ========================================================= */
+
+.systemName {
+  margin-top: 14px;
+
+  color: #ffffff;
+
+  font-size: 19px;
+  font-weight: 800;
+
+  letter-spacing: 0.4px;
+
+  /* Long names wrap instead of pushing past the sidebar width. */
+  max-width: 100%;
+
+  overflow-wrap: break-word;
+}
+
+
+/* =========================================================
+   PANEL / ROLE LABEL
+   ========================================================= */
+
+.panelName {
+  margin-top: 6px;
+
+  max-width: 100%;
+
+  color: rgba(255, 255, 255, 0.72);
+
+  font-size: 11px;
+  font-weight: 600;
+
+  letter-spacing: 0.2px;
+
+  overflow-wrap: break-word;
+}
+
 
 /* =========================================================
    HEADER
@@ -74,6 +194,16 @@
 
 .navigation {
   flex: 1;
+
+  /* min-height:0 is required on a flex child that must scroll rather than
+     stretch its parent. */
+  min-height: 0;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
 
   padding: 18px 10px 24px;
 }
@@ -276,52 +406,12 @@
    BURGER BUTTON
 ========================================================= */
 
+/* Dead rule: the hamburger is rendered by the topnav (DashboardTopNav), never by
+   this component. It used to be pinned to the viewport at z-index 9999, which
+   risked painting over the sidebar branding. Kept as a display:none guard so a
+   future re-use cannot reintroduce a viewport-fixed burger over the logo. */
 .menuButton {
   display: none;
-
-  position: fixed;
-
-  top: 76px;
-
-  left: 14px;
-
-  width: 44px;
-
-  height: 44px;
-
-  align-items: center;
-
-  justify-content: center;
-
-  border: 1px solid #e2e8f0;
-
-  border-radius: 10px;
-
-  background: #ffffff;
-
-  color: var(--maroon);
-
-  cursor: pointer;
-
-  z-index: 9999;
-
-  box-shadow:
-    0 4px 14px rgba(15, 23, 42, 0.15);
-
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease;
-}
-
-.menuButton:hover {
-  transform: translateY(-1px);
-
-  box-shadow:
-    0 6px 18px rgba(15, 23, 42, 0.2);
-}
-
-.menuButton:active {
-  transform: scale(0.96);
 }
 
 
@@ -332,8 +422,14 @@
 .closeButton {
   display: none;
 
-  width: 38px;
+  /* Anchored to the branding block's top-right corner. .branding is the
+     positioned ancestor, so this stays inside the sidebar no matter how long
+     the system name wraps. */
+  position: absolute;
+  top: 18px;
+  right: 16px;
 
+  width: 38px;
   height: 38px;
 
   align-items: center;
@@ -386,8 +482,25 @@
 
 
 /* =========================================================
+   FOOTER (LOGOUT)
+   ========================================================= */
+
+/* Pinned to the bottom of the flex column so the logout action stays put while
+   the nav list scrolls, instead of riding along with long link lists. */
+.footer {
+  flex-shrink: 0;
+
+  padding: 12px 10px 18px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  margin-top: auto;
+}
+
+
+/* =========================================================
    TABLET
-========================================================= */
+   ========================================================= */
 
 @media (max-width: 1024px) {
 
@@ -403,9 +516,17 @@
     padding: 0 12px;
   }
 
-  .header {
-    padding-left: 18px;
-    padding-right: 18px;
+  .branding {
+    padding: 22px 14px 18px;
+  }
+
+  .logoWrap {
+    width: 78px;
+    height: 78px;
+  }
+
+  .systemName {
+    font-size: 17px;
   }
 
 }
@@ -416,15 +537,6 @@
 ========================================================= */
 
 @media (max-width: 768px) {
-
-  /* -----------------------------------------
-     BURGER
-  ----------------------------------------- */
-
-  .menuButton {
-    display: flex !important;
-  }
-
 
   /* -----------------------------------------
      SIDEBAR
@@ -472,16 +584,29 @@
 
 
   /* -----------------------------------------
-     HEADER
+     BRANDING
   ----------------------------------------- */
 
-  .header {
-    min-height: 90px;
-
+  .branding {
     padding:
-      24px
-      18px
-      20px;
+      22px
+      16px
+      18px;
+  }
+
+  .logoWrap {
+    width: 72px;
+    height: 72px;
+
+    padding: 7px;
+
+    border-radius: 15px;
+  }
+
+  .systemName {
+    margin-top: 12px;
+
+    font-size: 16px;
   }
 
 
@@ -550,11 +675,11 @@
   }
 
 
-  .header {
+  .branding {
     padding:
-      22px
-      16px
-      18px;
+      20px
+      14px
+      16px;
   }
 
 
@@ -587,7 +712,7 @@
     width: 255px !important;
   }
 
-  .title {
+  .systemName {
     font-size: 17px;
   }
 
@@ -601,35 +726,10 @@
 }
 
 /* =========================================
-   MOBILE BURGER - FORCE VISIBLE
-========================================= */
+   MOBILE DRAWER - OFF-CANVAS
+   ========================================= */
 
 @media screen and (max-width: 768px) {
-  .menuButton {
-    display: flex !important;
-    position: fixed !important;
-
-    top: 75px !important;
-    left: 15px !important;
-
-    width: 44px !important;
-    height: 44px !important;
-
-    background: #ffffff !important;
-    color: #7f1026 !important;
-
-    border: 1px solid #e2e8f0 !important;
-    border-radius: 10px !important;
-
-    align-items: center !important;
-    justify-content: center !important;
-
-    z-index: 99999 !important;
-
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-
   .sidebar {
     position: fixed !important;
 

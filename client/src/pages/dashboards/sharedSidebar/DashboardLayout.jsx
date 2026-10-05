@@ -30,29 +30,32 @@ function DashboardLayout({
   });
   
 
+  // Two-part shell: the sidebar is its own fixed-width column and the topbar
+  // sits inside the main column, so the topbar can never extend underneath the
+  // sidebar (and the sidebar logo can never be covered by it).
   return (
     <div className={styles.shell}>
 
       {/* =====================================
-          TOP NAVIGATION
+          SIDEBAR — occupies its own layout space
       ===================================== */}
 
-      <div className={styles.topNav}>
-        {topNavWithProps}
+      <div className={styles.sidebar}>
+
+        {sidebarWithProps}
+
       </div>
 
-
       {/* =====================================
-          MAIN LAYOUT
+          MAIN COLUMN — TOPBAR + CONTENT
       ===================================== */}
 
-      <div className={styles.layout}>
+      <div className={styles.main}>
 
-        {/* SIDEBAR */}
+        {/* TOP NAVIGATION */}
 
-        <div className={styles.sidebar}>
-
-          {sidebarWithProps}
+        <div className={styles.topNav}>
+          {topNavWithProps}
         </div>
 
 

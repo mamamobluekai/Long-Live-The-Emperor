@@ -30,6 +30,13 @@ export async function getUserProfile() {
   return apiFetch('/profile');
 }
 
+// Revokes the refresh cookie and the access token server-side. Without this the
+// token only disappears from localStorage, leaving a usable session alive until
+// it expires on its own.
+export async function logoutUser() {
+  return apiFetch('/logout', { method: 'POST' });
+}
+
 export async function updateUserProfile(profile) {
   return apiFetch('/profile', {
     method: 'PUT',

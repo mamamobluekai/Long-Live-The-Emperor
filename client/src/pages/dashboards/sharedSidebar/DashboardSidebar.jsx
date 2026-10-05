@@ -1,9 +1,11 @@
 import { NavLink } from 'react-router-dom';
 import { X } from 'lucide-react';
+import SidebarLogoutButton from './SidebarLogoutButton';
 import styles from './DashboardSidebar.module.css';
 
 function DashboardSidebar({
-
+  title,
+  subtitle,
   links,
   isOpen = false,
   onClose = () => {},
@@ -32,11 +34,12 @@ function DashboardSidebar({
       >
 
         {/* =========================================
-            HEADER
+            BRANDING
+            Sits inside the sidebar's own flow at the very top, so it can
+            never be overlapped by the topbar (which now starts to the right
+            of this column).
         ========================================= */}
-        <div className={styles.header}>
-
-          
+        <div className={styles.branding}>
 
           {/* Mobile close button */}
           <button
@@ -50,6 +53,24 @@ function DashboardSidebar({
               strokeWidth={2}
             />
           </button>
+
+          <div className={styles.logoWrap}>
+            <img
+              src="/logo.png"
+              alt="Work Immersion Monitoring System"
+              className={styles.logo}
+            />
+          </div>
+
+          <span className={styles.systemName}>
+            e-MMERSION
+          </span>
+
+          {(title || subtitle) && (
+            <span className={styles.panelName}>
+              {subtitle ? `${title} · ${subtitle}` : title}
+            </span>
+          )}
 
         </div>
 
@@ -129,6 +150,13 @@ function DashboardSidebar({
 
           </ul>
         </nav>
+
+        {/* =========================================
+            LOGOUT
+            ========================================= */}
+        <div className={styles.footer}>
+          <SidebarLogoutButton onLoggedOut={onClose} />
+        </div>
 
       </aside>
     </>

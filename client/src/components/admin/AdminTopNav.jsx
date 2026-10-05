@@ -4,6 +4,7 @@ import {
   Bell,
   ChevronDown,
   LogOut,
+  Menu,
   Settings,
   UserRound,
   CheckCheck,
@@ -18,6 +19,7 @@ import {
 } from '../../api/adminApi';
 import { isGroupChatNotification } from '../../utils/notificationFilters';
 import styles from './AdminTopNav.module.css';
+import LogoutConfirmDialog from '../../pages/dashboards/sharedSidebar/LogoutConfirmDialog';
 
 function formatTime(date) {
   const d = new Date(date);
@@ -30,7 +32,7 @@ function formatTime(date) {
   return d.toLocaleDateString();
 }
 
-export default function AdminTopNav({ user, onLogout }) {
+export default function AdminTopNav({ user, onLogout, onMenuClick }) {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [unread, setUnread] = useState(0);
@@ -40,6 +42,7 @@ export default function AdminTopNav({ user, onLogout }) {
   const profileRef = useRef(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [confirmClearAll, setConfirmClearAll] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -138,12 +141,21 @@ export default function AdminTopNav({ user, onLogout }) {
 
   return (
     <div className={styles.topnav}>
-      <div className={styles.brand}>
-        <span className={styles.brandIcon}>⚙️</span>
-        <span className={styles.brandName}>Admin Panel</span>
-      </div>
-
+      {/* The gear/"Admin Panel" branding moved to the sidebar branding block, where
+        every role's logo and system name now live. The topbar starts at the
+        sidebar's right edge and carries only the controls. */}
       <div className={styles.right}>
+        {/* Hamburger: only the mobile/tablet drawer needs it, so the CSS hides
+            it on desktop where the sidebar is always visible. */}
+        <button
+          type="button"
+          className={styles.menuButton}
+          onClick={onMenuClick}
+          aria-label="Open navigation menu"
+        >
+          <Menu size={21} strokeWidth={1.8} />
+        </button>
+
         <div className={styles.notificationWrapper} ref={dropdownRef}>
           <button
             type="button"
@@ -262,11 +274,18 @@ export default function AdminTopNav({ user, onLogout }) {
               <div className={styles.profileMenuHeader}><strong>{displayName}</strong><span>{user?.email || 'Administrator'}</span></div>
               <button type="button" role="menuitem" onClick={() => navigate('/dashboard/admin/profile')}><UserRound size={16} /> View profile</button>
               <button type="button" role="menuitem" onClick={() => navigate('/dashboard/admin/settings')}><Settings size={16} /> Settings</button>
-              {onLogout && <button type="button" role="menuitem" className={styles.menuLogout} onClick={onLogout}><LogOut size={16} /> Log out</button>}
+              {onLogout && <button type="button" role="menuitem" className={styles.menuLogout} onClick={() => { setProfileOpen(false); setLogoutOpen(true); }}><LogOut size={16} /> Log out</button>}
             </div>
           )}
         </div>
       </div>
+
+      {onLogout && (
+        <LogoutConfirmDialog
+          isOpen={logoutOpen}
+          onClose={() => setLogoutOpen(false)}
+        />
+      )}
     </div>
   );
 }
