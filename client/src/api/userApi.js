@@ -37,6 +37,14 @@ export async function logoutUser() {
   return apiFetch('/logout', { method: 'POST' });
 }
 
+// Records the user's one-time acceptance of the Terms and Agreement.
+export async function acceptTermsAgreement() {
+  return apiFetch('/terms/accept', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
 export async function updateUserProfile(profile) {
   return apiFetch('/profile', {
     method: 'PUT',

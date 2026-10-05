@@ -797,35 +797,48 @@
     padding: 16px;
   }
 
+  /* The hero stacks into a single centred column on phones: avatar, then name,
+     then role/email, then Change Photo. Stacking is what makes centring
+     possible - side-by-side there is no free space to centre within. */
   .profileHero {
-    min-height: 275px;
+    min-height: 0;
   }
 
+  /* The maroon band has to cover the avatar and the name, since the name is
+     white, but must stop before the role/email line, which is dark text on
+     white. Tuned to sit between the two: avatar 116 + padding 26 + gap 14 +
+     name line ~31 ends near 187, and the meta line starts near 197. */
   .heroBackground {
-    height: 155px;
+    height: 192px;
   }
 
   .profileContent {
-    flex-wrap: wrap;
-    align-items: flex-start;
-    min-height: 275px;
-    padding: 28px 22px 20px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 0;
+    padding: 26px 20px 22px;
+
+    text-align: center;
   }
 
   .avatarWrapper {
-    width: 120px;
-    height: 120px;
-    margin-right: 15px;
+    width: 116px;
+    height: 116px;
+
+    /* Was a right margin for the side-by-side layout. */
+    margin: 0 0 14px;
   }
 
   .avatar,
   .avatarPlaceholder {
-    width: 120px;
-    height: 120px;
+    width: 116px;
+    height: 116px;
   }
 
   .avatarPlaceholder {
-    font-size: 32px;
+    font-size: 30px;
   }
 
   .cameraButton {
@@ -834,21 +847,44 @@
   }
 
   .profileIdentity {
-    padding-top: 24px;
+    /* Was padded down to align with the tall desktop avatar. */
+    flex: 0 1 auto;
+    padding-top: 0;
+
+    width: 100%;
+
+    text-align: center;
   }
 
   .profileIdentity h2 {
-    font-size: 22px;
+    /* Scales with the viewport so the name never overflows on small phones or
+       looks undersized on large ones. */
+    font-size: clamp(20px, 5.6vw, 26px);
+    letter-spacing: -0.2px;
+
+    margin-bottom: 10px;
   }
 
   .profileMeta {
-    font-size: 12px;
+    justify-content: center;
+    gap: 7px;
+
+    font-size: 13px;
+
+    /* A long address must wrap rather than push the layout sideways. */
+    overflow-wrap: anywhere;
   }
 
   .photoButton {
-    width: 100%;
+    width: auto;
+    min-width: 0;
+
+    /* Widths a phone-sized pill instead of a full-bleed row. */
+    padding: 0 20px;
+    height: 44px;
+
+    align-self: center;
     margin: 18px 0 0;
-    align-self: auto;
   }
 
   .formGrid {
@@ -888,26 +924,34 @@
 
   .profileHero {
     border-radius: 16px;
-    min-height: 275px;
+    min-height: 0;
+  }
+
+  /* Shorter avatar on small phones, so the band shrinks to match. Tuned the same
+     way: the name ends near 163 and the meta line starts near 169, so the band
+     sits at 166 to cover the name without clipping the meta text. */
+  .heroBackground {
+    height: 166px;
   }
 
   .profileContent {
-    padding: 25px 17px 18px;
+    padding: 22px 16px 18px;
   }
 
   .avatarWrapper {
-    width: 110px;
-    height: 110px;
+    width: 100px;
+    height: 100px;
+    margin: 0 0 12px;
   }
 
   .avatar,
   .avatarPlaceholder {
-    width: 110px;
-    height: 110px;
+    width: 100px;
+    height: 100px;
   }
 
   .avatarPlaceholder {
-    font-size: 30px;
+    font-size: 27px;
   }
 
   .cameraButton {
@@ -985,7 +1029,9 @@
     transition: 0.15s ease;
   }
 
-  .switcherButton svg {
+.switcherButton svg {
+    flex-shrink: 0;
+
     background: transparent;
     color: currentColor;
   }
@@ -997,16 +1043,12 @@
     box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
   }
 
+/* On a phone the two switcher buttons above are the only controls, and each
+     one opens its section in a modal. The forms therefore stay out of the page
+     entirely, leaving the hero plus the two buttons. The hero is kept so the
+     identity and Change Photo stay reachable without opening anything. */
   .contentGrid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .contentGrid .card {
     display: none;
-  }
-
-  .contentGrid .cardActiveMobile {
-    display: block;
   }
 }
 
@@ -1052,9 +1094,9 @@
     border-top: 0;
   }
 
-  .profileHero {
-    padding: 24px 18px;
-  }
+/* .profileHero padding removed: the stacked phone layout spaces itself via
+     .profileContent, and padding here would double the inset and shrink the
+     full-bleed maroon band. */
 
   .primaryButton,
   .secondaryButton {
@@ -1062,7 +1104,29 @@
   }
 }
 
-/* Balanced inner spacing for cards */
+/* Very narrow phones: "Account Security" no longer fits on one line at the
+   default size and wrapped under its own icon. Tightening the type, padding and
+     gap keeps both labels on a single line down to ~320px. */
+@media (max-width: 380px) {
+
+  .sectionSwitcher {
+    gap: 7px;
+  }
+
+  .switcherButton {
+    gap: 6px;
+
+    padding: 0 8px;
+
+    font-size: 0.74rem;
+    white-space: nowrap;
+  }
+
+}
+
+/* =========================================================
+   BALANCED INNER SPACING FOR CARDS
+   ========================================================= */
 .card > .cardHeader {
   padding: 21px 22px 18px;
 }
@@ -1207,8 +1271,12 @@ padding: 20px;
 
 /* The reused page grid is always phone-shaped inside the modal, so the existing
    "one column, active card only" mobile rules are restated here rather than
-   relying on the page-level media query matching. */
+   relying on the page-level media query matching.
+   `display: grid` is set explicitly because the page-level rule above hides
+   .contentGrid on phones, and this higher-specificity selector has to win for
+   the modal's copy. */
 .sectionModalBody .contentGrid {
+  display: grid;
   grid-template-columns: minmax(0, 1fr);
 }
 

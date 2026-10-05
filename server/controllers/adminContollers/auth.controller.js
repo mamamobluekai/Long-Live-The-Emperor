@@ -38,7 +38,7 @@ const login = async (req, res) => {
     }
 
     const result = await pool.query(
-      `SELECT id, email, password, role, status FROM users WHERE email = $1`,
+      `SELECT id, email, password, role, status, terms_accepted FROM users WHERE email = $1`,
       [trimmedEmail]
     );
 
@@ -118,6 +118,9 @@ const login = async (req, res) => {
       employee_id: profile.employee_id || null,
       department: profile.department || null,
       photo_url: profile.photo_url || null,
+      // Drives the one-time Terms and Agreement prompt the client shows before
+      // the admin reaches the dashboard.
+      terms_accepted: Boolean(user.terms_accepted),
     };
 
     req.user = { id: user.id, role: user.role, email: user.email };

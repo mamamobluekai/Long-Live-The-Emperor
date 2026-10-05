@@ -386,7 +386,7 @@ const login = async (req, res) => {
     }
 
     const result = await pool.query(
-      `SELECT id, email, password, role, status
+      `SELECT id, email, password, role, status, terms_accepted
        FROM users WHERE email = $1`,
       [trimmedEmail]
     );
@@ -518,6 +518,11 @@ const login = async (req, res) => {
 
     delete user.password;
 
+    // Normalised so the client gets a real boolean, not whatever PostgreSQL
+    // handed back, and so the field is always present on the login payload even
+    // if the column was added after this row was written.
+    user.terms_accepted = Boolean(user.terms_accepted);
+
     // The CSRF cookie is issued globally by middleware; echo it so the SPA can
     // begin sending the X-CSRF-Token header immediately after login.
     res.json({
@@ -536,7 +541,7 @@ const login = async (req, res) => {
 const getMe = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT u.id, u.email, u.role, u.status, u.phone
+      `SELECT u.id, u.email, u.role, u.status, u.phone, u.terms_accepted
        FROM users u
        WHERE u.id = $1`,
       [req.user.id]
@@ -587,7 +592,7 @@ const getMe = async (req, res) => {
       roleData = coordinatorResult.rows[0] || {};
     }
     
-    res.json({ user: { ...user, ...roleData } });
+    res.json({ user: { ...user, terms_accepted: Boolean(user.terms_accepted), ...roleData } });
   } catch (err) {
     console.error('Get me error:', err);
     res.status(500).json({ error: 'Server error.' });

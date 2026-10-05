@@ -33,6 +33,18 @@ export function getCsrfToken() {
   return readCookie(CSRF_COOKIE) || localStorage.getItem('wim-csrf') || '';
 }
 
+// Drops the cached copy so the next read cannot return the stale value. The
+// cookie itself is left alone - the browser owns it and the server is the
+// authority on its current contents.
+export function dropCsrfToken() {
+  try {
+    localStorage.removeItem('wim-csrf');
+  } catch {
+    // Private-mode storage failures must not break the request.
+  }
+  inFlightRequest = null;
+}
+
 // A client on a different site from the API (production: vercel.app -> 
 // onrender.com) cannot read the `csrfToken` cookie, and a previous login is the
 // only other thing that fills localStorage. On a fresh browser that leaves no
@@ -40,8 +52,11 @@ export function getCsrfToken() {
 // from the API once and cache it.
 let inFlightRequest = null;
 
-export async function ensureCsrfToken() {
-  if (getCsrfToken()) return getCsrfToken();
+// `force` re-reads the value even when one is already cached. Needed for the
+// 403 recovery path in the interceptor: a cached token that was rejected is
+// worse than no token at all, and a plain cache hit would keep sending it.
+export async function ensureCsrfToken({ force = false } = {}) {
+  if (!force && getCsrfToken()) return getCsrfToken();
 
   if (!inFlightRequest) {
     inFlightRequest = fetch(`${API_BASE}/users/csrf-token`, {
@@ -87,7 +102,7 @@ export function installFetchCsrfInterceptor() {
 
   const originalFetch = window.fetch.bind(window);
 
-  const patchedFetch = (input, init = {}) => {
+  const patchedFetch = async (input, init = {}) => {
     const method = String(init.method || input?.method || 'GET').toUpperCase();
     if (!methodNeedsCsrf(method)) return originalFetch(input, init);
 
@@ -99,15 +114,30 @@ export function installFetchCsrfInterceptor() {
       return originalFetch(input, { ...init, headers });
     };
 
-    const token = getCsrfToken();
-    if (token) return send(token);
-
     // No token yet - on a fresh browser that happens before the user has ever
     // logged in. Sending the mutation now would omit X-CSRF-Token and come back
     // 403, so fetch one first rather than letting the request fail. This is what
     // previously broke /users/forgot-password, /users/register and
     // /users/reset-password, since only the login helpers warmed the token.
-    return ensureCsrfToken().then(send);
+    const token = getCsrfToken() || (await ensureCsrfToken());
+
+    const response = await send(token);
+
+    // A CSRF 403 is recoverable, unlike a 401: the session is live, but the
+    // token we echoed no longer matches the cookie the server compares it
+    // against. The cookie is rotated on logout and re-issued whenever it is
+    // absent, while our cached copy can outlive that rotation. Once the two
+    // drift apart every mutating request 403s and the page is stuck, because
+    // nothing ever re-read the token. So on a 403 we discard the cached copy,
+    // ask the API for the cookie's current value, and replay once.
+    //
+    // Only safe verbs are skipped here anyway, so this cannot mask a real
+    // authorisation failure. `__csrfRetried` bounds the replay so a genuinely
+    // rejected request still surfaces its 403 instead of looping.
+    if (response.status !== 403 || init.__csrfRetried) return response;
+
+    dropCsrfToken();
+    return send(await ensureCsrfToken({ force: true }));
   };
 
   patchedFetch.__csrfPatched = true;

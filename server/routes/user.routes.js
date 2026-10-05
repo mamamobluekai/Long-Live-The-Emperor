@@ -28,6 +28,7 @@ const {
   changeMyPassword,
   uploadMyProfilePicture,
 } = require('../controllers/userProfile.controller');
+const { acceptTerms } = require('../controllers/terms.controller');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -60,6 +61,10 @@ router.post('/reset-password', authLimiter, resetValidation, handleValidation, r
 router.post('/verify-reset-token', authLimiter, verifyTokenValidation, handleValidation, verifyResetToken);
 
 router.use(authenticate);
+
+// One-time acceptance of the Terms and Agreement. Available to every signed-in
+// role, not just students, because every account has to agree once.
+router.post('/terms/accept', acceptTerms);
 
 router.get('/profile', getMyProfile);
 router.put('/profile', updateMyProfile);
