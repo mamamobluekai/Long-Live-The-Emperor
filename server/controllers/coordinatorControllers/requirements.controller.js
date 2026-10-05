@@ -251,6 +251,46 @@ const reviewSubmission = async (req, res) => {
   }
 };
 
+const bulkReviewSubmissions = async (req, res) => {
+  const { submission_ids, status, remarks } = req.body;
+  const allowed = ['Under Review', 'Approved', 'Rejected', 'Needs Revision'];
+  if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid review status.' });
+  if (!Array.isArray(submission_ids) || submission_ids.length === 0) {
+    return res.status(400).json({ error: 'No submission IDs provided.' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await client.query(
+      `UPDATE student_requirement_submissions
+       SET status = $1, coordinator_feedback = $2, reviewed_by = $3, reviewed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+       WHERE id = ANY($4) RETURNING id`,
+      [status, remarks || null, req.user.id, submission_ids],
+    );
+    if (result.rows.length) {
+      // One log row per reviewed submission, tied to the submission the update
+      // actually touched (not merely every id the caller sent).
+      await client.query(
+        `INSERT INTO submission_logs (submission_id, actor_id, action, remarks)
+         SELECT id, $2, $3, $4 FROM student_requirement_submissions WHERE id = ANY($1)`,
+        [result.rows.map((r) => r.id), req.user.id, status, remarks || null],
+      );
+    }
+    await client.query('COMMIT');
+    res.json({
+      message: `${result.rows.length} submission(s) marked ${status.toLowerCase()}.`,
+      updated: result.rows.length,
+    });
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch (_) {}
+    console.error('bulkReviewSubmissions error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  } finally {
+    client.release();
+  }
+};
+
 const verifyDocument = async (req, res) => {
   try {
     const { status, remarks } = req.body;
@@ -446,6 +486,7 @@ module.exports = {
   deleteDocument,
   listSubmissions,
   reviewSubmission,
+  bulkReviewSubmissions,
   verifyDocument,
   listDocumentTypes,
   createDocumentType,

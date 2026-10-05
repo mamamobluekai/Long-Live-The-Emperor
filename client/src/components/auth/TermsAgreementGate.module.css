@@ -1,5 +1,10 @@
-/* Full-screen, non-dismissible prompt. The highest layer in the app: it covers
-   every dashboard, drawer and dialog that might sit at 11000 underneath. */
+/* =========================================================
+   TERMS AND AGREEMENT
+   Lexend + the RequirementsReview maroon palette (#8b1e2d).
+   Full-screen, non-dismissible prompt: the highest layer in the
+   app, covering every dashboard, drawer and dialog underneath.
+   ========================================================= */
+
 .overlay {
   position: fixed;
   inset: 0;
@@ -8,23 +13,50 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(15, 23, 42, 0.62);
+  /* Warm maroon wash instead of the default cool slate so the prompt reads
+     as part of the maroon product before the modal even paints. */
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(139, 30, 45, 0.32) 0%, rgba(139, 30, 45, 0) 55%),
+    radial-gradient(120% 140% at 100% 100%, rgba(190, 140, 63, 0.2) 0%, rgba(190, 140, 63, 0) 55%),
+    rgba(38, 12, 18, 0.66);
   backdrop-filter: blur(3px);
   animation: termsFadeIn 0.18s ease-out;
 }
 
 .modal {
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: 760px;
   max-height: min(92vh, 900px);
+  /* dvh (not vh) so on phones the shrinking URL bar / on-screen keyboard never
+     pushes the accept buttons below the fold. vh stays as the fallback. */
+  max-height: min(92dvh, 900px);
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e8d2d8;
   border-radius: 20px;
-  background: #ffffff;
-  box-shadow: 0 24px 60px -18px rgba(15, 23, 42, 0.5);
+  background: linear-gradient(180deg, #fffdfd 0%, #ffffff 45%);
+  box-shadow: 0 24px 60px -18px rgba(80, 20, 32, 0.5);
+  /* Lexend matches every other maroon surface in the app. */
+  font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #26313f;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   animation: termsModalIn 0.2s ease-out;
+}
+
+/* Thin maroon-to-gold cap across the top of the card, mirroring the accent
+   bar used by the other maroon modals (e.g. UserProfileModal). */
+.modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  height: 4px;
+  background: linear-gradient(90deg, #8b1e2d 0%, #b8394f 55%, #be8c3f 100%);
 }
 
 .header {
@@ -32,47 +64,59 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 22px 26px 16px;
-  border-bottom: 1px solid #e2e8f0;
-  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  flex-shrink: 0;
+  padding: 24px 26px 16px;
+  border-bottom: 1px solid #f0e3e6;
+  background:
+    radial-gradient(130% 160% at 0% 0%, rgba(139, 30, 45, 0.1) 0%, rgba(139, 30, 45, 0) 58%),
+    radial-gradient(120% 150% at 100% 120%, rgba(190, 140, 63, 0.16) 0%, rgba(190, 140, 63, 0) 55%),
+    linear-gradient(120deg, #ffffff 0%, #fdf3f5 58%, #f9e8ec 100%);
 }
 
 .title {
   margin: 0;
   font-size: 1.3rem;
-  font-weight: 700;
-  color: #0f172a;
+  font-weight: 780;
+  letter-spacing: -0.03em;
+  color: #8b1e2d;
 }
 
 .subtitle {
   margin: 4px 0 0;
   font-size: 0.85rem;
-  color: #64748b;
+  font-weight: 500;
+  color: #596579;
 }
 
+/* Small gold "stamp" pill in the header - decorative only (hidden on phones),
+   it reinforces the maroon/gold identity used elsewhere in the product. */
 .stamp {
   flex-shrink: 0;
   padding: 4px 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #ecd9c0;
   border-radius: 999px;
-  background: #ffffff;
+  background: #fdf6ec;
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.02em;
-  color: #64748b;
+  color: #96702f;
   white-space: nowrap;
 }
 
 .scrollArea {
   flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   padding: 22px 26px;
+  background: #ffffff;
   /* Grows the scroll target on touch so momentum scrolling works on the text. */
   -webkit-overflow-scrolling: touch;
+  /* Stops the page behind from scroll-chaining once the text hits either end. */
+  overscroll-behavior: contain;
 }
 
 .scrollArea:focus-visible {
-  outline: 2px solid #2a5298;
+  outline: 2px solid #8b1e2d;
   outline-offset: -2px;
 }
 
@@ -85,17 +129,31 @@
 }
 
 .sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0 0 6px;
   font-size: 0.98rem;
-  font-weight: 700;
-  color: #1e293b;
+  font-weight: 750;
+  color: #8b1e2d;
+}
+
+/* Gold tick that prefixes each heading, matching the maroon/gold heading
+   style used on the dashboards. */
+.sectionTitle::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #be8c3f;
 }
 
 .paragraph {
   margin: 0 0 8px;
   font-size: 0.9rem;
   line-height: 1.65;
-  color: #475569;
+  color: #4a5567;
 }
 
 .paragraph:last-child {
@@ -111,20 +169,27 @@
   margin-bottom: 6px;
   font-size: 0.9rem;
   line-height: 1.6;
-  color: #475569;
+  color: #4a5567;
+}
+
+.listItem::marker {
+  color: #8b1e2d;
 }
 
 .footer {
   flex-shrink: 0;
   padding: 16px 26px 22px;
-  border-top: 1px solid #e2e8f0;
-  background: #f8fafc;
+  border-top: 1px solid #f0e3e6;
+  background: #fdfafb;
+  /* Room for the iPhone home-indicator bar; harmless where unsupported. */
+  padding-bottom: calc(22px + env(safe-area-inset-bottom, 0px));
 }
 
 .hint {
   margin: 0 0 10px;
   font-size: 0.8rem;
-  color: #b45309;
+  font-weight: 600;
+  color: #a16207;
 }
 
 .checkRow {
@@ -132,7 +197,7 @@
   align-items: flex-start;
   gap: 10px;
   padding: 11px 14px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #e2cdd2;
   border-radius: 12px;
   background: #ffffff;
   cursor: pointer;
@@ -140,8 +205,8 @@
 }
 
 .checkRowChecked {
-  border-color: #2a5298;
-  background: #f5f8ff;
+  border-color: #8b1e2d;
+  background: #fdf1f3;
 }
 
 .checkbox {
@@ -149,14 +214,14 @@
   height: 17px;
   margin: 1px 0 0;
   flex-shrink: 0;
-  accent-color: #2a5298;
+  accent-color: #8b1e2d;
   cursor: pointer;
 }
 
 .checkLabel {
   font-size: 0.88rem;
   line-height: 1.5;
-  color: #1e293b;
+  color: #26313f;
 }
 
 .actions {
@@ -170,32 +235,38 @@
 .agreeBtn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   border-radius: 12px;
   padding: 10px 20px;
-  font-weight: 600;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s ease, opacity 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
 }
 
 .cancelBtn {
-  background: #f1f5f9;
-  color: #334155;
-  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #5b6472;
+  border: 1px solid #e2d3d7;
 }
 
 .cancelBtn:hover:not(:disabled) {
-  background: #e2e8f0;
+  border-color: #d8b9c0;
+  background: #fff7f8;
+  color: #8b1e2d;
 }
 
 .agreeBtn {
-  background: #2a5298;
+  background: #8b1e2d;
   color: #ffffff;
-  border: none;
+  border: 1px solid #8b1e2d;
 }
 
 .agreeBtn:hover:not(:disabled) {
-  background: #1e3a7a;
+  background: #74161f;
+  border-color: #74161f;
 }
 
 .cancelBtn:disabled,
@@ -205,11 +276,123 @@
 }
 
 .agreeBtn:disabled:hover {
-  background: #2a5298;
+  background: #8b1e2d;
+  border-color: #8b1e2d;
 }
 
 .cancelBtn:disabled:hover {
-  background: #f1f5f9;
+  background: #ffffff;
+}
+
+/* ---------------------------------------------------------
+   PHONE
+   Tightens spacing, stacks the actions full-width and grows
+   the tap targets so the agreement is comfortable one-handed.
+   --------------------------------------------------------- */
+@media (max-width: 560px) {
+  .overlay {
+    padding: 10px;
+  }
+
+  .modal {
+    border-radius: 16px;
+  }
+
+  .header {
+    padding: 20px 16px 14px;
+  }
+
+  .title {
+    font-size: 1.15rem;
+  }
+
+  .scrollArea {
+    padding: 18px 16px;
+  }
+
+  .footer {
+    padding: 14px 16px 18px;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Decorative pill would just crowd the title on a narrow screen. */
+  .stamp {
+    display: none;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .cancelBtn,
+  .agreeBtn {
+    width: 100%;
+    /* 48px is the minimum comfortable touch-target size. */
+    min-height: 48px;
+    padding: 12px 20px;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Full-bleed sheet: no side gutters, so the text gets the whole width. */
+  .overlay {
+    padding: 0;
+  }
+
+  .modal {
+    max-width: none;
+    height: 100%;
+    max-height: 100%;
+    border: none;
+    border-radius: 0;
+  }
+
+  .header {
+    /* Stacks the gold stamp under the title if a narrow phone keeps it. */
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px 14px 12px;
+  }
+
+  .title {
+    font-size: 1.05rem;
+  }
+
+  .subtitle {
+    font-size: 0.78rem;
+  }
+
+  .scrollArea {
+    padding: 16px 14px;
+  }
+
+  .section {
+    margin-bottom: 18px;
+  }
+
+  .sectionTitle {
+    font-size: 0.94rem;
+  }
+
+  .paragraph,
+  .listItem {
+    font-size: 0.88rem;
+  }
+
+  .footer {
+    padding: 12px 14px 16px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .checkRow {
+    padding: 12px;
+  }
+
+  .checkLabel {
+    font-size: 0.85rem;
+  }
 }
 
 @keyframes termsFadeIn {
@@ -229,33 +412,6 @@
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
-  }
-}
-
-@media (max-width: 560px) {
-  .overlay {
-    padding: 10px;
-  }
-
-  .header,
-  .scrollArea,
-  .footer {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-
-  .stamp {
-    display: none;
-  }
-
-  .actions {
-    flex-direction: column-reverse;
-  }
-
-  .cancelBtn,
-  .agreeBtn {
-    justify-content: center;
-    width: 100%;
   }
 }
 

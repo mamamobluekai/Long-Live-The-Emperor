@@ -2,6 +2,7 @@
 import {
   listSubmissions,
   reviewSubmission,
+  bulkReviewSubmissions,
   verifyDocument,
   getRequirements,
   getDocumentTypes,
@@ -27,6 +28,10 @@ import {
   Settings2,
   AlertCircle,
   CheckCircle,
+  CheckSquare,
+  Square,
+  ThumbsUp,
+  ThumbsDown,
 } from 'lucide-react';
 import styles from './RequirementsReview.module.css';
 
@@ -181,6 +186,10 @@ function RequirementsReview() {
   const [saving, setSaving] = useState(false);
   const [docLoading, setDocLoading] = useState(false);
 
+  // Bulk selection for quick approve/reject from the table.
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkLoading, setBulkLoading] = useState(false);
+
   // Editable requirements configuration
   const [docTypes, setDocTypes] = useState(FALLBACK_DOC_TYPES);
   const [editingDocType, setEditingDocType] = useState(null);
@@ -214,6 +223,13 @@ function RequirementsReview() {
 
     return () => clearTimeout(timer);
   }, [search]);
+
+  // Selection is tied to the visible rows, so any change to what is shown
+  // (filter or search) drops it to avoid acting on rows that are no longer
+  // on screen.
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [statusFilter, debouncedSearch]);
 
   useEffect(() => {
     let mounted = true;
@@ -304,6 +320,41 @@ function RequirementsReview() {
       showError(err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.length === submissions.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(submissions.map((s) => s.id));
+    }
+  };
+
+  const handleSelectOne = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
+  // Quick approve/reject straight from the table - skips opening each
+  // student's review panel when the coordinator only needs to flip statuses.
+  const handleBulkReview = async (status) => {
+    if (selectedIds.length === 0) {
+      showError('Select at least one submission first.');
+      return;
+    }
+
+    setBulkLoading(true);
+    try {
+      const data = await bulkReviewSubmissions(selectedIds, { status });
+      showSuccess(data.message || `${selectedIds.length} submission(s) marked ${status.toLowerCase()}.`);
+      setSelectedIds([]);
+      await loadSubmissions();
+    } catch (err) {
+      showError(err.message);
+    } finally {
+      setBulkLoading(false);
     }
   };
 
@@ -621,6 +672,46 @@ function RequirementsReview() {
 
         </div>
 
+        {/* BULK APPROVE / REJECT */}
+        {selectedIds.length > 0 && (
+          <div className={styles.bulkBar}>
+            <div className={styles.bulkActions}>
+              <button
+                type="button"
+                className={styles.bulkApproveBtn}
+                onClick={() => handleBulkReview('Approved')}
+                disabled={bulkLoading}
+              >
+                <ThumbsUp size={14} />
+                {bulkLoading ? 'Working...' : 'Approve Selected'}
+              </button>
+
+              <button
+                type="button"
+                className={styles.bulkRejectBtn}
+                onClick={() => handleBulkReview('Rejected')}
+                disabled={bulkLoading}
+              >
+                <ThumbsDown size={14} />
+                {bulkLoading ? 'Working...' : 'Reject Selected'}
+              </button>
+            </div>
+
+            <span className={styles.bulkCount}>
+              {selectedIds.length} selected
+            </span>
+
+            <button
+              type="button"
+              className={styles.bulkClearBtn}
+              onClick={() => setSelectedIds([])}
+              disabled={bulkLoading}
+            >
+              Clear
+            </button>
+          </div>
+        )}
+
         {/* TABLE */}
         {loading && initialLoad ? (
           <div className={styles.loading}>
@@ -643,6 +734,21 @@ function RequirementsReview() {
 
                <thead>
                  <tr>
+                   <th className={styles.checkboxHeader}>
+                     <button
+                       className={styles.checkbox}
+                       type="button"
+                       onClick={handleSelectAll}
+                       aria-label="Select all submissions"
+                     >
+                       {selectedIds.length === submissions.length &&
+                       submissions.length > 0 ? (
+                         <CheckSquare size={16} />
+                       ) : (
+                         <Square size={16} />
+                       )}
+                     </button>
+                   </th>
                    <th>Student</th>
                    <th>Email</th>
                    <th>Strand</th>
@@ -657,6 +763,22 @@ function RequirementsReview() {
                  {submissions.map((student) => (
 
                   <tr key={student.id}>
+
+                    <td className={styles.checkboxCell}>
+                      <button
+                        className={styles.checkbox}
+                        type="button"
+                        onClick={() => handleSelectOne(student.id)}
+                        aria-label={`Select ${student.first_name} ${student.last_name}`}
+                        aria-pressed={selectedIds.includes(student.id)}
+                      >
+                        {selectedIds.includes(student.id) ? (
+                          <CheckSquare size={16} />
+                        ) : (
+                          <Square size={16} />
+                        )}
+                      </button>
+                    </td>
 
                     <td>
                       <div className={styles.studentCell}>

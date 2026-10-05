@@ -20,6 +20,7 @@ const {
   deleteDocument,
   listSubmissions,
   reviewSubmission,
+  bulkReviewSubmissions,
   verifyDocument,
   listDocumentTypes,
   createDocumentType,
@@ -81,6 +82,9 @@ router.post('/documents/upload', authorize('student', 'coordinator', 'admin'), u
 router.delete('/documents/:id', authorize('student', 'coordinator', 'admin'), deleteDocument);
 
 router.get('/submissions', authorize('coordinator', 'admin'), listSubmissions);
+// Registered before '/submissions/:id/review' so the literal segment wins over
+// the parametric one.
+router.post('/submissions/bulk-review', authorize('coordinator', 'admin'), bulkReviewSubmissions);
 router.post('/submissions/:id/review', authorize('coordinator', 'admin'), reviewSubmission);
 router.put('/documents/:id/verify', authorize('coordinator', 'admin'), verifyDocument);
 

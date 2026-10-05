@@ -1,0 +1,184 @@
+/* ============================================================================
+   WIMS — CENTRALIZED THEME (light + dark)
+
+   One theme system shared by every role (teacher, supervisor, coordinator,
+   student, admin). Pure styling only — no API/auth/logic is touched.
+
+   How it works
+   ------------
+   1. ThemeContext sets <html data-theme="light|dark"> and persists the choice
+      to localStorage (key: wim-theme).
+   2. :root carries the light palette; [data-theme='dark'] re-declares it.
+   3. The GLOBAL DARK OVERRIDES section lower in this file restyles the
+      elements every page shares (inputs, selects, buttons, dialogs, ...).
+   4. styles/dark.css (generated, loaded last) restyles individual module
+      classes (cards, tables, badges, ...) for dark mode.
+
+   Cascade notes
+   -------------
+   - Module rules use hashed class names (0,1,0) and many carry !important,
+     so token re-declarations alone cannot override them; sections 3 and 4
+     exist for exactly that reason.
+   - html[data-theme='dark'] ... beats plain class selectors but still loses
+     to any !important, so a page's own !important declaration still wins.
+   - Nothing is layered (@layer), so file order is the tie-breaker.
+   ========================================================================= */
+
+:root {
+  color-scheme: light;
+
+  /* ---- Brand (maroon) — the visual identity, kept in both themes ---- */
+  --wim-brand: #8b1e2d;
+  --wim-brand-strong: #7f0d2b;
+  --wim-brand-dark: #581725;
+  --wim-brand-deep: #6d1e30;
+  --wim-brand-soft: #b4233b;
+  --wim-brand-light: #b8394f;
+  --wim-brand-tint: #fdf3f5;
+  --wim-brand-tint-strong: #fde3e8;
+
+  /* ---- Surfaces ---- */
+  --wim-bg-page: #e6e6e6;
+  --wim-bg-surface: #ffffff;
+  --wim-bg-raised: #ffffff;
+  --wim-bg-sunken: #f6f7f9;
+  --wim-bg-hover: #faf7f8;
+  --wim-bg-active: #f4f1f2;
+  --wim-bg-input: #ffffff;
+  --wim-bg-code: #f8fafc;
+
+  /* ---- Text ---- */
+  --wim-text: #172033;
+  --wim-text-strong: #0f172a;
+  --wim-text-body: #26313f;
+  --wim-text-secondary: #596579;
+  --wim-text-muted: #758195;
+  --wim-text-faint: #8490a1;
+  --wim-text-inverse: #ffffff;
+  --wim-text-disabled: #a9b0bd;
+
+  /* ---- Borders ---- */
+  --wim-border: #e2e8f0;
+  --wim-border-soft: #ece5e7;
+  --wim-border-strong: #d7dbe2;
+  --wim-border-maroon: #ecdfe2;
+  --wim-border-input: #d0d5dd;
+
+  /* ---- Status (semantic) ---- */
+  --wim-success: #15803d;
+  --wim-success-text: #166534;
+  --wim-success-bg: #eaf8ef;
+  --wim-success-border: #bfe6cc;
+  --wim-warning: #b45309;
+  --wim-warning-text: #92400e;
+  --wim-warning-bg: #fffbeb;
+  --wim-warning-border: #fde68a;
+  --wim-danger: #dc2626;
+  --wim-danger-text: #b42318;
+  --wim-danger-bg: #fef2f2;
+  --wim-danger-border: #fecaca;
+  --wim-info: #3b82f6;
+  --wim-info-text: #1e40af;
+  --wim-info-bg: #eff6ff;
+  --wim-info-border: #bfdbfe;
+
+  /* ---- Charts (also read from JS) ---- */
+  --wim-chart-grid: #f1f5f9;
+  --wim-chart-axis: #e2e8f0;
+  --wim-chart-tick: #64748b;
+  --wim-chart-tooltip-bg: #ffffff;
+  --wim-chart-tooltip-border: #e2e8f0;
+  --wim-chart-tooltip-text: #172033;
+  --wim-chart-legend-text: #475569;
+  --wim-chart-empty: #94a3b8;
+
+
+/* ============================================================================
+   DARK THEME TOKENS
+   ========================================================================= */
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* Brand stays maroon — slightly lifted so it remains legible on dark. */
+  --wim-brand: #b8394f;
+  --wim-brand-strong: #c71f3e;
+  --wim-brand-dark: #8b1e2d;
+  --wim-brand-deep: #9c2438;
+  --wim-brand-soft: #d14b63;
+  --wim-brand-light: #d96a7f;
+  --wim-brand-tint: rgba(184, 57, 79, 0.14);
+  --wim-brand-tint-strong: rgba(184, 57, 79, 0.24);
+
+  /* Surfaces: page < card < raised; sunken mirrors light mode's inset. */
+  --wim-bg-page: #111418;
+  --wim-bg-surface: #1a1e24;
+  --wim-bg-raised: #22272e;
+  --wim-bg-sunken: #15181d;
+  --wim-bg-hover: #262c34;
+  --wim-bg-active: #2d343d;
+  --wim-bg-input: #15181d;
+  --wim-bg-code: #15181d;
+
+  /* Text: primary near-white, secondary muted, disabled dimmed but visible. */
+  --wim-text: #e6e9ee;
+  --wim-text-strong: #f5f7fa;
+  --wim-text-body: #d7dce3;
+  --wim-text-secondary: #a7b0bd;
+  --wim-text-muted: #97a1b0;
+  --wim-text-faint: #7f8a9a;
+  --wim-text-inverse: #111418;
+  --wim-text-disabled: #5c6675;
+
+  /* Borders: subtle light-gray lines on dark, never pure white. */
+  --wim-border: #2d343d;
+  --wim-border-soft: #262c34;
+  --wim-border-strong: #3a424d;
+  --wim-border-maroon: rgba(184, 57, 79, 0.35);
+  --wim-border-input: #3a424d;
+
+  /* Status: darker backgrounds, lightened text for contrast. */
+  --wim-success: #4ade80;
+  --wim-success-text: #86efac;
+  --wim-success-bg: rgba(34, 197, 94, 0.12);
+  --wim-success-border: rgba(34, 197, 94, 0.35);
+  --wim-warning: #fbbf24;
+  --wim-warning-text: #fcd34d;
+  --wim-warning-bg: rgba(245, 158, 11, 0.12);
+  --wim-warning-border: rgba(245, 158, 11, 0.35);
+  --wim-danger: #f87171;
+  --wim-danger-text: #fca5a5;
+  --wim-danger-bg: rgba(239, 68, 68, 0.12);
+  --wim-danger-border: rgba(239, 68, 68, 0.35);
+  --wim-info: #60a5fa;
+  --wim-info-text: #93c5fd;
+  --wim-info-bg: rgba(59, 130, 246, 0.12);
+  --wim-info-border: rgba(59, 130, 246, 0.35);
+
+  /* Charts. */
+  --wim-chart-grid: #2d343d;
+  --wim-chart-axis: #3a424d;
+  --wim-chart-tick: #97a1b0;
+  --wim-chart-tooltip-bg: #22272e;
+  --wim-chart-tooltip-border: #3a424d;
+  --wim-chart-tooltip-text: #e6e9ee;
+  --wim-chart-legend-text: #a7b0bd;
+  --wim-chart-empty: #6b7280;
+
+  /* Chrome. */
+  --wim-topbar-bg: #1a1e24;
+  --wim-topbar-border: #2d343d;
+  --wim-scrollbar-thumb: rgba(255, 255, 255, 0.22);
+  --wim-scrollbar-track: transparent;
+  --wim-overlay: rgba(0, 0, 0, 0.66);
+  --wim-shadow-color: 0, 0, 0;
+}
+
+  /* ---- Chrome ---- */
+  --wim-topbar-bg: #ffffff;
+  --wim-topbar-border: #9a9b9e;
+  --wim-scrollbar-thumb: rgba(15, 23, 42, 0.25);
+  --wim-scrollbar-track: transparent;
+  --wim-overlay: rgba(15, 23, 42, 0.55);
+  --wim-shadow-color: 15, 23, 42;
+}

@@ -109,6 +109,10 @@ export async function reviewSubmission(id, { status, remarks }) {
   return apiFetch(`/submissions/${id}/review`, jsonBody({ status, remarks }));
 }
 
+export async function bulkReviewSubmissions(submissionIds, { status, remarks }) {
+  return apiFetch('/submissions/bulk-review', jsonBody({ submission_ids: submissionIds, status, remarks }));
+}
+
 export async function getRequirements(studentId) {
   return apiFetch(`/requirements/${studentId}`);
 }

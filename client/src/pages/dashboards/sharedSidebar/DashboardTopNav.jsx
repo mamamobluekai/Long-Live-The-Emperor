@@ -13,7 +13,10 @@ import GroupChatButton from '../../../components/common/GroupChatButton';
 
 function DashboardTopNav({
   user,
-  title,
+  // NOTE: the `title` prop each dashboard passes ("Coordinator Dashboard",
+  // "Teacher Dashboard", ...) is intentionally NOT destructured and NOT
+  // rendered — the page title was removed from the topbar by request. It
+  // stays in each caller's props with no effect.
   onLogout,
   onMenuClick,
   hideProfileOnMobile = false,
@@ -77,22 +80,10 @@ function DashboardTopNav({
           <Menu size={21} strokeWidth={1.8} />
         </button>
 
-        {/* PAGE TITLE
-            Renders the `title` prop the dashboards already pass ("Admin
-            Dashboard", "Student Dashboard", ...). The logo and system name
-            moved to the sidebar branding block, so this is what identifies the
-            page in the topbar. */}
-        {title && (
-          <>
-            <span
-              className={styles.breadcrumbDivider}
-              aria-hidden="true"
-            />
-            <span className={styles.pageTitle}>
-              {title}
-            </span>
-          </>
-        )}
+        {/* PAGE TITLE — removed by request. The `title` prop each dashboard
+            still passes is intentionally not rendered, so the topbar no longer
+            shows "Coordinator Dashboard" / "Teacher Dashboard" / etc. The logo
+            and system name live in the sidebar branding block. */}
 
       </div>
 

@@ -8,6 +8,7 @@ import { AdminAuthProvider } from './context/AdminAuthContext';
 import { ToastProvider } from './components/admin/ToastContainer';
 import { NotificationProvider } from './context/NotificationContext.jsx';
 import { MaintenanceProvider } from './context/MaintenanceContext.jsx';
+import { ThemeProvider } from './context/ThemeContext.jsx';
 import { installFetchCsrfInterceptor, ensureCsrfToken } from './utils/csrf';
 import { installFetchAuthInterceptor } from './utils/authRefresh';
 // Imported for its side effect: registers the axios CSRF interceptor on the
@@ -36,7 +37,11 @@ createRoot(document.getElementById('root')).render(
           <NotificationProvider>
             {/* Above App so the login routes and guards can both read the flag. */}
             <MaintenanceProvider>
-              <App />
+              {/* Outermost-ish so every route (login included) renders with the
+                  stored light/dark preference already applied to <html>. */}
+              <ThemeProvider>
+                <App />
+              </ThemeProvider>
             </MaintenanceProvider>
           </NotificationProvider>
         </ToastProvider>
