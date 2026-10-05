@@ -1112,54 +1112,48 @@
   inset: 0;
   z-index: 100001;
   display: flex;
-  align-items: flex-end;
+
+  /* Centred, matching the ConfirmModal dialog used elsewhere in the app. */
+  align-items: center;
   justify-content: center;
+
+  padding: 24px;
+
   background: rgba(15, 23, 42, 0.55);
 }
 
 .sectionModal {
   display: flex;
   flex-direction: column;
+
   width: 100%;
   max-width: 560px;
 
   /* Leaves room for the header when the on-screen keyboard opens. dvh tracks
      the shrinking visual viewport. */
-  max-height: 92dvh;
+  max-height: 88dvh;
 
-  border-radius: 18px 18px 0 0;
+  border-radius: 20px;
   background: #ffffff;
-  box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.28);
-  animation: sectionModalIn 0.24s ease-out;
+  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.25);
+  animation: sectionModalIn 0.2s ease-out;
 }
 
+/* Scales in from slightly small rather than sliding, since the dialog is now
+   centred instead of anchored to the bottom edge. */
 @keyframes sectionModalIn {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .sectionModalHeader {
   flex-shrink: 0;
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 22px 16px 14px;
+  padding: 20px 20px 14px;
   border-bottom: 1px solid #ece5e7;
-}
-
-/* Grab handle, matching the sheet shape. */
-.sectionModalHeader::before {
-  content: '';
-  position: absolute;
-  top: 8px;
-  left: 50%;
-  width: 38px;
-  height: 4px;
-  border-radius: 999px;
-  background: #ded4d7;
-  transform: translateX(-50%);
 }
 
 .sectionModalTitle {
@@ -1205,7 +1199,7 @@
 
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 16px;
+padding: 20px;
 
   /* Room for the on-screen keyboard when a field is focused. */
   padding-bottom: calc(24px + var(--keyboard-inset, 0px));

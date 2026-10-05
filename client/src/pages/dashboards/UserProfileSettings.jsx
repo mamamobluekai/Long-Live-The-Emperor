@@ -620,7 +620,7 @@ export default function UserProfileSettings() {
             </div>
 
             <div className={styles.passwordHint}>
-              <span className={styles.checkCircle}>âœ“</span>
+              <span className={styles.checkCircle}>✓</span>
               Password must contain at least 8 characters.
             </div>
 
@@ -696,7 +696,7 @@ export default function UserProfileSettings() {
                 {roleLabels[user?.role] || user?.role}
               </span>
 
-              <span className={styles.dot}>â€¢</span>
+              <span className={styles.dot}>•</span>
 
               <span>{profile?.email}</span>
             </div>
@@ -744,52 +744,6 @@ export default function UserProfileSettings() {
       {/* Hidden while a section is open in a modal, so the page behind the
           overlay does not show a second copy of the same form. */}
       {!modalSection && contentGrid}
-
-      {/* ACCOUNT INFORMATION */}
-      <section className={styles.accountCard}>
-
-        <div className={styles.accountItem}>
-          <div className={styles.accountItemIcon}>
-            <User size={18} />
-          </div>
-
-          <div className={styles.accountItemText}>
-            <span>Account Type</span>
-            <strong>
-              {roleLabels[user?.role] || user?.role}
-            </strong>
-          </div>
-        </div>
-
-        <div className={styles.accountDivider} />
-
-        <div className={styles.accountItem}>
-          <div className={styles.accountItemIcon}>
-            <ShieldCheck size={18} />
-          </div>
-
-          <div className={styles.accountItemText}>
-            <span>Account Status</span>
-            <strong className={styles.activeStatus}>
-              Active
-            </strong>
-          </div>
-        </div>
-
-        <div className={styles.accountDivider} />
-
-        <div className={styles.accountItem}>
-          <div className={styles.accountItemIcon}>
-            <Mail size={18} />
-          </div>
-
-          <div className={styles.accountItemText}>
-            <span>Email</span>
-            <strong>{profile?.email || 'Not provided'}</strong>
-          </div>
-        </div>
-
-      </section>
 
       {/* =========================================
           PHONE SECTION MODAL

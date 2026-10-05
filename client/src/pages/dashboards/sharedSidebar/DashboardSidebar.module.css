@@ -553,9 +553,16 @@
 
     max-width: 85vw;
 
+    /* vh is kept first as the fallback; dvh is what phones actually need.
+       100vh measures the viewport including the strip behind the browser URL
+       bar, so on a real device the drawer was taller than the visible area and
+       its last element - the logout button - fell below the fold where it could
+       not be tapped. dvh tracks the shrinking visual viewport instead. */
     height: 100vh !important;
+    height: 100dvh !important;
 
     min-height: 100vh;
+    min-height: 100dvh;
 
     transform: translateX(-105%) !important;
 
@@ -738,6 +745,7 @@
 
     width: 280px !important;
     height: 100vh !important;
+    height: 100dvh !important;
 
     transform: translateX(-100%) !important;
 
