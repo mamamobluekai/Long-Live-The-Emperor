@@ -1,11 +1,10 @@
 import { useAuth } from '../../../context/AuthContext';
 import { useTheme } from '../../../context/themeContextValue';
-import { Sun, Moon } from 'lucide-react';
 import styles from './TeacherSettings.module.css';
 
 function TeacherSettings() {
   const { user } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   return (
     <div className={styles.page}>
       <h2 className={styles.title}>Settings</h2>
@@ -28,55 +27,55 @@ function TeacherSettings() {
         <h3 className={styles.section}>Additional Settings</h3>
         <div className={styles.themeToggle}>
           <label className={styles.themeLabel}>Theme</label>
-          <div className={styles.themeButtons}>
-            <button
-              type="button"
-              className={`${styles.themeButton} ${theme === 'light' ? styles.themeButtonActive : ''}`}
-              onClick={() => setTheme('light')}
+          <button
+            type="button"
+            className={styles.themeToggleBtn}
+            onClick={toggleTheme}
+            aria-pressed={theme === 'dark'}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '10px',
+              padding: '10px 16px',
+              border: '1px solid #e8dcdf',
+              borderRadius: '10px',
+              background: '#ffffff',
+              color: '#3d3034',
+              fontFamily: 'inherit',
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+              minWidth: '140px',
+            }}
+          >
+            <span>{theme === 'dark' ? 'Dark' : 'Light'}</span>
+            <span
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '10px 16px',
-                border: `1px solid ${theme === 'light' ? '#581725' : '#e8dcdf'}`,
-                borderRadius: '10px',
-                background: theme === 'light' ? 'linear-gradient(135deg, #581725 0%, #6d1e30 100%)' : '#ffffff',
-                color: theme === 'light' ? '#ffffff' : '#3d3034',
-                fontFamily: 'inherit',
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
+                width: '38px',
+                height: '20px',
+                borderRadius: '999px',
+                background: theme === 'dark' ? '#8b1e2d' : '#dcc9cf',
+                position: 'relative',
+                transition: 'background 0.15s ease',
+                flexShrink: 0,
               }}
             >
-              <Sun size={16} />
-              Light
-            </button>
-            <button
-              type="button"
-              className={`${styles.themeButton} ${theme === 'dark' ? styles.themeButtonActive : ''}`}
-              onClick={() => setTheme('dark')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '10px 16px',
-                border: `1px solid ${theme === 'dark' ? '#8b1e2d' : '#e8dcdf'}`,
-                borderRadius: '10px',
-                background: theme === 'dark' ? 'linear-gradient(135deg, #8b1e2d 0%, #6d1e30 100%)' : '#ffffff',
-                color: theme === 'dark' ? '#ffffff' : '#3d3034',
-                fontFamily: 'inherit',
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              <Moon size={16} />
-              Dark
-            </button>
-          </div>
-          <p className={styles.themeHint}>Choose your preferred color scheme. Changes apply immediately.</p>
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '2px',
+                  left: theme === 'dark' ? '20px' : '2px',
+                  width: '16px',
+                  height: '16px',
+                  borderRadius: '50%',
+                  background: '#ffffff',
+                  transition: 'left 0.15s ease',
+                }}
+              />
+            </span>
+          </button>
         </div>
       </div>
     </div>

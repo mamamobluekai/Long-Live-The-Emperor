@@ -7,20 +7,16 @@ import { ThemeContext } from './themeContextValue';
 const STORAGE_KEY = 'wim-theme';
 
 // Documented fallback only: the stored value always wins when present.
-const DARK_MEDIA = '(prefers-color-scheme: dark)';
+// Defaults to light so dark mode is opt-in only.
 
 function readStoredTheme() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === 'light' || stored === 'dark') return stored;
   } catch {
-    // Private mode / disabled storage: fall through to the media query.
+    // Private mode / disabled storage: fall through to light default.
   }
-  try {
-    return window.matchMedia(DARK_MEDIA).matches ? 'dark' : 'light';
-  } catch {
-    return 'light';
-  }
+  return 'light';
 }
 
 // Applies the theme to <html> so every stylesheet can key off

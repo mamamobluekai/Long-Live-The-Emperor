@@ -17,8 +17,6 @@ import {
   TriangleAlert,
   Wrench,
   X,
-  Sun,
-  Moon,
 } from 'lucide-react';
 import { useToast } from '../../../components/admin/toastContext';
 import ConfirmModal from '../../../components/admin/ConfirmModal';
@@ -59,7 +57,7 @@ function toLocalInput(value) {
 export default function SettingsPage() {
   const { showToast } = useToast();
   const { status: maintenance, report: reportMaintenance } = useMaintenance();
-  const { theme, setTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const [maintenanceSaving, setMaintenanceSaving] = useState(false);
   const [maintenanceForm, setMaintenanceForm] = useState({ message: '', estimatedEnd: '' });
   const [maintenanceModal, setMaintenanceModal] = useState(false);
@@ -432,55 +430,55 @@ export default function SettingsPage() {
         <div className={styles.additionalContent}>
           <div className={styles.themeField}>
             <label className={styles.themeLabel}>Theme</label>
-            <div className={styles.themeButtons}>
-              <button
-                type="button"
-                className={`${styles.themeButton} ${theme === 'light' ? styles.themeButtonActive : ''}`}
-                onClick={() => setTheme('light')}
+            <button
+              type="button"
+              className={styles.themeButton}
+              onClick={toggleTheme}
+              aria-pressed={theme === 'dark'}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '10px',
+                padding: '10px 16px',
+                border: '1px solid #e6dfe2',
+                borderRadius: '9px',
+                background: '#fffdfd',
+                color: '#26313f',
+                fontFamily: 'inherit',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                minWidth: '150px',
+              }}
+            >
+              <span>{theme === 'dark' ? 'Dark' : 'Light'}</span>
+              <span
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '10px 16px',
-                  border: `1px solid ${theme === 'light' ? '#8b1e2d' : '#e6dfe2'}`,
-                  borderRadius: '9px',
-                  background: theme === 'light' ? 'linear-gradient(135deg, #8b1e2d 0%, #a82739 100%)' : '#fffdfd',
-                  color: theme === 'light' ? '#fff' : '#26313f',
-                  fontFamily: 'inherit',
-                  fontSize: '0.82rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
+                  width: '38px',
+                  height: '20px',
+                  borderRadius: '999px',
+                  background: theme === 'dark' ? '#8b1e2d' : '#dcc9cf',
+                  position: 'relative',
+                  transition: 'background 0.15s ease',
+                  flexShrink: 0,
                 }}
               >
-                <Sun size={15} strokeWidth={2} />
-                Light
-              </button>
-              <button
-                type="button"
-                className={`${styles.themeButton} ${theme === 'dark' ? styles.themeButtonActive : ''}`}
-                onClick={() => setTheme('dark')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '10px 16px',
-                  border: `1px solid ${theme === 'dark' ? '#b8394f' : '#e6dfe2'}`,
-                  borderRadius: '9px',
-                  background: theme === 'dark' ? 'linear-gradient(135deg, #b8394f 0%, #8b1e2d 100%)' : '#fffdfd',
-                  color: theme === 'dark' ? '#fff' : '#26313f',
-                  fontFamily: 'inherit',
-                  fontSize: '0.82rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                <Moon size={15} strokeWidth={2} />
-                Dark
-              </button>
-            </div>
-            <p className={styles.themeHint}>Choose your preferred color scheme. Changes apply immediately.</p>
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: '2px',
+                    left: theme === 'dark' ? '20px' : '2px',
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '50%',
+                    background: '#ffffff',
+                    transition: 'left 0.15s ease',
+                  }}
+                />
+              </span>
+            </button>
           </div>
         </div>
       </section>
