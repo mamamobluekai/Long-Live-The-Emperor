@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+﻿import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Camera,
   User,
@@ -105,6 +106,45 @@ export default function UserProfileSettings() {
 
   const fileInputRef = useRef(null);
   const [activeSection, setActiveSection] = useState('profile');
+
+  // Which section, if any, is open as a modal. Only the Profile Info / Account
+  // Security buttons set this, and the stylesheet hides those buttons on desktop
+  // (.sectionSwitcher is display:none above 900px), so no viewport detection is
+  // needed: on a wide screen the buttons do not exist and the cards stay inline.
+  const [modalSection, setModalSection] = useState(null);
+
+  const closeModal = useCallback(() => setModalSection(null), []);
+
+  // Escape closes the modal, matching the other dialogs in the app.
+  useEffect(() => {
+    if (!modalSection) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setModalSection(null);
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [modalSection]);
+
+  // Stops the page behind the modal scrolling while it is open. Restores the
+  // previous inline value rather than clearing it.
+  useEffect(() => {
+    if (!modalSection) return undefined;
+
+    const { body } = document;
+    const previousOverflow = body.style.overflow;
+    body.style.overflow = 'hidden';
+
+    return () => {
+      body.style.overflow = previousOverflow;
+    };
+  }, [modalSection]);
+
+  const openSectionModal = (section) => {
+    setActiveSection(section);
+    setModalSection(section);
+  };
 
   useEffect(() => {
     if (!window.visualViewport) return undefined;
@@ -326,101 +366,11 @@ export default function UserProfileSettings() {
 
   const roleFields = ROLE_FIELDS[user?.role] || [];
 
-  return (
-    <div className={styles.page}>
-
-     
-
-      {/* PROFILE HERO */}
-      <section className={styles.profileHero}>
-
-        <div className={styles.heroBackground} />
-
-        <div className={styles.profileContent}>
-
-          <div className={styles.avatarWrapper}>
-            {profile?.photo_url ? (
-              <img
-                src={profile.photo_url}
-                alt="Profile"
-                className={styles.avatar}
-              />
-            ) : (
-              <div className={styles.avatarPlaceholder}>
-                {initials}
-              </div>
-            )}
-
-            <button
-              type="button"
-              className={styles.cameraButton}
-              onClick={() => fileInputRef.current?.click()}
-              disabled={pictureUploading}
-              title="Change profile picture"
-            >
-              <Camera size={16} />
-            </button>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handlePictureUpload}
-              className={styles.hiddenInput}
-            />
-          </div>
-
-          <div className={styles.profileIdentity}>
-            <h2>{displayName}</h2>
-
-            <div className={styles.profileMeta}>
-              <span>
-                {roleLabels[user?.role] || user?.role}
-              </span>
-
-              <span className={styles.dot}>•</span>
-
-              <span>{profile?.email}</span>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className={styles.photoButton}
-            onClick={() => fileInputRef.current?.click()}
-            disabled={pictureUploading}
-          >
-            <Camera size={16} />
-
-            {pictureUploading
-              ? 'Uploading...'
-              : 'Change Photo'}
-          </button>
-
-        </div>
-      </section>
-
-      {/* MOBILE SECTION SWITCHER */}
-      <div className={styles.sectionSwitcher}>
-        <button
-          type="button"
-          className={`${styles.switcherButton} ${activeSection === 'profile' ? styles.switcherButtonActive : ''}`}
-          onClick={() => setActiveSection('profile')}
-        >
-          <User size={16} />
-          Profile Info
-        </button>
-        <button
-          type="button"
-          className={`${styles.switcherButton} ${activeSection === 'security' ? styles.switcherButtonActive : ''}`}
-          onClick={() => setActiveSection('security')}
-        >
-          <ShieldCheck size={16} />
-          Account Security
-        </button>
-      </div>
-
-      {/* CONTENT GRID */}
+  // The two section cards, rendered either inline in the page (desktop) or inside
+  // the phone-only modal. Defined once and mounted in a single place at a time, so
+  // there is never a duplicate copy of these forms in the DOM - the shared input
+  // ids and the single fileInputRef stay valid.
+  const contentGrid = (
       <div className={styles.contentGrid}>
 
         {/* PROFILE INFORMATION */}
@@ -670,7 +620,7 @@ export default function UserProfileSettings() {
             </div>
 
             <div className={styles.passwordHint}>
-              <span className={styles.checkCircle}>✓</span>
+              <span className={styles.checkCircle}>âœ“</span>
               Password must contain at least 8 characters.
             </div>
 
@@ -692,6 +642,108 @@ export default function UserProfileSettings() {
         </section>
 
       </div>
+  );
+
+  return (
+    <div className={styles.page}>
+
+     
+
+      {/* PROFILE HERO */}
+      <section className={styles.profileHero}>
+
+        <div className={styles.heroBackground} />
+
+        <div className={styles.profileContent}>
+
+          <div className={styles.avatarWrapper}>
+            {profile?.photo_url ? (
+              <img
+                src={profile.photo_url}
+                alt="Profile"
+                className={styles.avatar}
+              />
+            ) : (
+              <div className={styles.avatarPlaceholder}>
+                {initials}
+              </div>
+            )}
+
+            <button
+              type="button"
+              className={styles.cameraButton}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={pictureUploading}
+              title="Change profile picture"
+            >
+              <Camera size={16} />
+            </button>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handlePictureUpload}
+              className={styles.hiddenInput}
+            />
+          </div>
+
+          <div className={styles.profileIdentity}>
+            <h2>{displayName}</h2>
+
+            <div className={styles.profileMeta}>
+              <span>
+                {roleLabels[user?.role] || user?.role}
+              </span>
+
+              <span className={styles.dot}>â€¢</span>
+
+              <span>{profile?.email}</span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className={styles.photoButton}
+            onClick={() => fileInputRef.current?.click()}
+            disabled={pictureUploading}
+          >
+            <Camera size={16} />
+
+            {pictureUploading
+              ? 'Uploading...'
+              : 'Change Photo'}
+          </button>
+
+        </div>
+      </section>
+
+      {/* MOBILE SECTION SWITCHER
+          Hidden by the stylesheet on desktop, so on a phone each button opens
+          its section as a modal. */}
+      <div className={styles.sectionSwitcher}>
+        <button
+          type="button"
+          className={`${styles.switcherButton} ${activeSection === 'profile' ? styles.switcherButtonActive : ''}`}
+          onClick={() => openSectionModal('profile')}
+        >
+          <User size={16} />
+          Profile Info
+        </button>
+        <button
+          type="button"
+          className={`${styles.switcherButton} ${activeSection === 'security' ? styles.switcherButtonActive : ''}`}
+          onClick={() => openSectionModal('security')}
+        >
+          <ShieldCheck size={16} />
+          Account Security
+        </button>
+      </div>
+
+      {/* CONTENT GRID */}
+      {/* Hidden while a section is open in a modal, so the page behind the
+          overlay does not show a second copy of the same form. */}
+      {!modalSection && contentGrid}
 
       {/* ACCOUNT INFORMATION */}
       <section className={styles.accountCard}>
@@ -738,6 +790,49 @@ export default function UserProfileSettings() {
         </div>
 
       </section>
+
+      {/* =========================================
+          PHONE SECTION MODAL
+          Portalled to <body> so it is not clipped by .page or trapped behind the
+          dashboard sidebar. Only mounts on phones, from the two switcher buttons.
+      ========================================= */}
+      {modalSection
+        && createPortal(
+          <div
+            className={styles.sectionModalOverlay}
+            onClick={closeModal}
+            role="presentation"
+          >
+            <div
+              className={styles.sectionModal}
+              role="dialog"
+              aria-modal="true"
+              aria-label={modalSection === 'profile' ? 'Profile Information' : 'Account Security'}
+              // Clicks inside must not reach the overlay's dismiss handler.
+              onClick={(event) => event.stopPropagation()}
+            >
+              <header className={styles.sectionModalHeader}>
+                <h2 className={styles.sectionModalTitle}>
+                  {modalSection === 'profile' ? 'Profile Information' : 'Account Security'}
+                </h2>
+
+                <button
+                  type="button"
+                  className={styles.sectionModalClose}
+                  onClick={closeModal}
+                  aria-label="Close"
+                >
+                  <X size={20} />
+                </button>
+              </header>
+
+              <div className={styles.sectionModalBody}>
+                {contentGrid}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
 
     </div>
   );
