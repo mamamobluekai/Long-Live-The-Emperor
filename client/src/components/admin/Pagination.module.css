@@ -39,3 +39,29 @@
   color: #8490a1;
   font-weight: 600;
 }
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .pageBtn {
+  background: var(--wim-bg-surface);
+  border-color: var(--wim-border);
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .pageBtn:hover:not(:disabled) {
+  background: var(--wim-bg-hover);
+  border-color: var(--wim-brand-light);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .pageBtn.active {
+  background: var(--wim-brand);
+  color: var(--wim-text-inverse);
+  border-color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .ellipsis {
+  color: var(--wim-text-muted);
+}

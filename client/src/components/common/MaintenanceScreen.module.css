@@ -154,3 +154,50 @@
     text-align: left;
   }
 }
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .screen {
+  color: var(--wim-text-body);
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(184, 57, 79, 0.12) 0%, rgba(184, 57, 79, 0) 55%),
+    radial-gradient(120% 140% at 100% 100%, rgba(190, 140, 63, 0.1) 0%, rgba(190, 140, 63, 0) 55%),
+    linear-gradient(180deg, #111418 0%, #1a1e24 100%);
+}
+
+html[data-theme='dark'] .panel {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-raised);
+  box-shadow: 0 24px 60px -22px rgba(0, 0, 0, 0.6);
+}
+
+html[data-theme='dark'] .eyebrow {
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .title {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .message {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .details {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .detail dt {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .detail dd {
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .note {
+  color: var(--wim-text-muted);
+}

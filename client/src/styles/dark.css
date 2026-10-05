@@ -1,0 +1,441 @@
+/* ============================================================================
+   WIMS — DARK MODE OVERRIDES (global)
+
+   Loaded last (see App.jsx): after theme.css so the [data-theme='dark']
+   token re-declarations win the cascade for global (non-module) rules.
+
+   Two purposes:
+   1. Re-declare surface/text/border tokens on the body and major layout
+      shells so every role's dashboard shell dark-switches automatically.
+   2. Target the hashed CSS-module class names that carry !important or
+      inline-looking colors so the cascade still flips in dark mode.
+
+   The token definitions themselves live in styles/theme.css. This file only
+   maps components/pages onto those tokens (or dark variants of their brand
+   colors) for the [data-theme='dark'] context.
+
+   Cascade notes
+   -------------
+   - Module rules use hashed class names (e.g. .card_0u1o2b). Some carry
+     !important, so plain token re-declarations cannot override them.
+   - We therefore use [data-theme='dark'] · .hashedClass selectors, which
+     beat module base rules, plus !important where a module used !important.
+   - File order is the tie-breaker (no @layer), so this file always loads
+     after the module styles it overrides.
+   ========================================================================= */
+
+/* =========================================================================
+   GLOBAL SURFACES & CHROME
+   ========================================================================= */
+
+html[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+html[data-theme='dark'] body {
+  background: var(--wim-bg-page);
+  color: var(--wim-text);
+}
+
+html[data-theme='dark'] body::selection {
+  background: rgba(184, 57, 79, 0.35);
+  color: inherit;
+}
+
+html[data-theme='dark'] ::selection {
+  background: rgba(184, 57, 79, 0.35);
+  color: inherit;
+}
+
+/* =========================================================================
+   SHARED LAYOUT SHELLS
+   ========================================================================= */
+
+/* DashboardLayout shells */
+html[data-theme='dark'] .dashboardShell,
+html[data-theme='dark'] .layoutShell {
+  background: var(--wim-bg-page);
+}
+
+html[data-theme='dark'] .dashboardContent,
+html[data-theme='dark'] .layoutContent {
+  background: var(--wim-bg-page);
+}
+
+/* =========================================================================
+   DASHBOARDTOPNAV
+   ========================================================================= */
+
+html[data-theme='dark'] .topnav {
+  background: var(--wim-topbar-bg);
+  border-bottom-color: var(--wim-topbar-border);
+}
+
+html[data-theme='dark'] .topnav .notificationButton {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .topnav .notificationButton:hover {
+  background: var(--wim-bg-hover);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .topnav .notificationDot {
+  background: var(--wim-danger);
+  border-color: var(--wim-bg-page);
+}
+
+html[data-theme='dark'] .topnav .verticalDivider {
+  background: var(--wim-border-strong);
+}
+
+html[data-theme='dark'] .topnav .profileBtn:hover {
+  background: var(--wim-bg-hover);
+}
+
+html[data-theme='dark'] .topnav .profileMenu {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-raised);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.45);
+}
+
+html[data-theme='dark'] .topnav .profileMenuHeader {
+  border-bottom-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .topnav .profileMenuHeader strong {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .topnav .profileMenuHeader span {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .topnav .profileMenu button {
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .topnav .profileMenu button:hover {
+  background: var(--wim-bg-hover);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .topnav .profileMenu .menuLogout {
+  border-top-color: var(--wim-border);
+  color: var(--wim-danger);
+}
+
+html[data-theme='dark'] .topnav .avatarPlaceholder {
+  background: var(--wim-bg-raised);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .topnav .userName {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .topnav .userRole {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .topnav .breadcrumbDivider {
+  background: var(--wim-border-strong);
+}
+
+html[data-theme='dark'] .topnav .pageTitle {
+  color: var(--wim-text-secondary);
+}
+
+/* =========================================================================
+   DASHBOARDBARS / SIDEBARS (student, teacher, coordinator, admin)
+   The sidebar gradient is intentionally kept maroon — it is the brand
+   panel and reads fine in both themes.
+   ========================================================================= */
+
+html[data-theme='dark'] .scrim {
+  background: var(--wim-overlay);
+}
+
+html[data-theme='dark'] .closeButton,
+html[data-theme='dark'] .menuButton {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+html[data-theme='dark'] .closeButton:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+html[data-theme='dark'] .avatarPlaceholder {
+  background: var(--wim-bg-raised);
+  color: var(--wim-text-inverse);
+}
+
+/* =========================================================================
+   COMMON COMPONENT PATTERNS
+   These selectors are broad enough to match card/table/form patterns
+   regardless of which module CSS file generated the hashed class name.
+   Where a module used a very specific color we can't guess, the component
+   falls back to the CSS variables declared in theme.css.
+   ========================================================================= */
+
+/* Generic card surfaces */
+html[data-theme='dark'] .card,
+html[data-theme='dark'] .pageCard,
+html[data-theme='dark'] [class*='Card'] {
+  background: var(--wim-bg-surface);
+  border-color: var(--wim-border);
+  color: var(--wim-text-body);
+}
+
+/* Card header accent borders */
+html[data-theme='dark'] .cardHeader,
+html[data-theme='dark'] [class*='cardHeader'] {
+  border-bottom-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .cardHeader h3,
+html[data-theme='dark'] .cardHeader h2,
+html[data-theme='dark'] [class*='cardHeader'] h3 {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .cardHeader p {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .cardTitle,
+html[data-theme='dark'] [class*='cardTitle'] {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .cardSubtitle,
+html[data-theme='dark'] [class*='cardSubtitle'] {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .cardEyebrow,
+html[data-theme='dark'] [class*='Eyebrow'] {
+  color: var(--wim-brand);
+}
+
+/* Tables */
+html[data-theme='dark'] table,
+html[data-theme='dark'] [class*='table'] {
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-body);
+  border-color: var(--wim-border);
+}
+
+html[data-theme='dark'] th,
+html[data-theme='dark'] [class*='Header'] {
+  background: var(--wim-bg-sunken);
+  color: var(--wim-text-strong);
+  border-color: var(--wim-border);
+}
+
+html[data-theme='dark'] td {
+  border-color: var(--wim-border-strong);
+}
+
+html[data-theme='dark'] tr {
+  border-color: var(--wim-border);
+}
+
+/* Form inputs */
+html[data-theme='dark'] input,
+html[data-theme='dark'] textarea,
+html[data-theme='dark'] select {
+  background: var(--wim-bg-input);
+  color: var(--wim-text);
+  border-color: var(--wim-border-input);
+}
+
+html[data-theme='dark'] input::placeholder,
+html[data-theme='dark'] textarea::placeholder {
+  color: var(--wim-text-disabled);
+}
+
+html[data-theme='dark'] input:focus,
+html[data-theme='dark'] textarea:focus,
+html[data-theme='dark'] select:focus {
+  border-color: var(--wim-brand);
+  box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.15);
+}
+
+/* Buttons */
+html[data-theme='dark'] button {
+  color: inherit;
+}
+
+/* Modals */
+html[data-theme='dark'] .modalOverlay,
+html[data-theme='dark'] [class*='modalOverlay'] {
+  background: var(--wim-overlay);
+}
+
+html[data-theme='dark'] .modal,
+html[data-theme='dark'] [class*='modal'] {
+  background: var(--wim-bg-raised);
+  border-color: var(--wim-border);
+  box-shadow: 0 24px 60px -18px rgba(0, 0, 0, 0.6);
+}
+
+html[data-theme='dark'] .modalHeader,
+html[data-theme='dark'] [class*='modalHeader'] {
+  border-bottom-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .modalHeader h3 {
+  color: var(--wim-text-strong);
+}
+
+/* Pagination */
+html[data-theme='dark'] .paginationBtn,
+html[data-theme='dark'] [class*='pagination'] {
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-body);
+  border-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .paginationBtn:hover {
+  background: var(--wim-bg-hover);
+}
+
+html[data-theme='dark'] .paginationBtnActive {
+  background: var(--wim-brand);
+  color: var(--wim-text-inverse);
+}
+
+/* Status badges */
+html[data-theme='dark'] .badge {
+  background: var(--wim-bg-raised);
+  color: var(--wim-text-secondary);
+  border-color: var(--wim-border);
+}
+
+/* Empty states */
+html[data-theme='dark'] .emptyState,
+html[data-theme='dark'] .emptyPeriods,
+html[data-theme='dark'] [class*='empty'] {
+  color: var(--wim-text-secondary);
+}
+
+/* Loading states */
+html[data-theme='dark'] .loading,
+html[data-theme='dark'] .loadingPage,
+html[data-theme='dark'] .loadingSpinner {
+  color: var(--wim-text-secondary);
+}
+
+/* Error states */
+html[data-theme='dark'] .errorState,
+html[data-theme='dark'] .errorAlert,
+html[data-theme='dark'] [class*='error'] {
+  color: var(--wim-danger-text);
+}
+
+/* Text hierarchy */
+html[data-theme='dark'] h1 { color: var(--wim-text-strong); }
+html[data-theme='dark'] h2 { color: var(--wim-text-strong); }
+html[data-theme='dark'] h3 { color: var(--wim-text-strong); }
+html[data-theme='dark'] h4 { color: var(--wim-text-strong); }
+html[data-theme='dark'] p { color: var(--wim-text-body); }
+html[data-theme='dark'] span { color: inherit; }
+html[data-theme='dark'] small { color: var(--wim-text-secondary); }
+html[data-theme='dark'] strong { color: var(--wim-text-strong); }
+html[data-theme='dark'] a { color: var(--wim-info); }
+
+/* =========================================================================
+   CHART TOKENS
+   The chart components read CSS variables, so they auto-flip. This block
+   is a safety net for any hardcoded chart backgrounds.
+   ========================================================================= */
+
+html[data-theme='dark'] .chartWrapper,
+html[data-theme='dark'] [class*='chart'] {
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-body);
+}
+
+/* =========================================================================
+   TOASTS
+   ========================================================================= */
+
+html[data-theme='dark'] .toast,
+html[data-theme='dark'] [class*='Toast'] {
+  background: var(--wim-bg-raised);
+  color: var(--wim-text-body);
+  border-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .toast-success {
+  background: var(--wim-success-bg);
+  color: var(--wim-success-text);
+  border-color: var(--wim-success-border);
+}
+
+html[data-theme='dark'] .toast-error {
+  background: var(--wim-danger-bg);
+  color: var(--wim-danger-text);
+  border-color: var(--wim-danger-border);
+}
+
+html[data-theme='dark'] .toast-warning {
+  background: var(--wim-warning-bg);
+  color: var(--wim-warning-text);
+  border-color: var(--wim-warning-border);
+}
+
+html[data-theme='dark'] .toast-info {
+  background: var(--wim-info-bg);
+  color: var(--wim-info-text);
+  border-color: var(--wim-info-border);
+}
+
+/* =========================================================================
+   TOOLTIPS
+   ========================================================================= */
+
+html[data-theme='dark'] .tooltip,
+html[data-theme='dark'] [class*='tooltip'] {
+  background: var(--wim-bg-raised);
+  color: var(--wim-text);
+  border-color: var(--wim-border);
+}
+
+/* =========================================================================
+   DROPDOWNS / SELECT
+   ========================================================================= */
+
+html[data-theme='dark'] select {
+  background: var(--wim-bg-input);
+  color: var(--wim-text);
+  border-color: var(--wim-border-input);
+}
+
+html[data-theme='dark'] option {
+  background: var(--wim-bg-input);
+  color: var(--wim-text);
+}
+
+/* =========================================================================
+   SCROLLBAR
+   ========================================================================= */
+
+html[data-theme='dark'] ::-webkit-scrollbar-thumb {
+  background: var(--wim-scrollbar-thumb);
+}
+
+html[data-theme='dark'] ::-webkit-scrollbar-track {
+  background: var(--wim-scrollbar-track);
+}
+
+/* =========================================================================
+   OVERLAY BACKDROPS
+   ========================================================================= */
+
+html[data-theme='dark'] .overlay,
+html[data-theme='dark'] [class*='overlay'] {
+  background: var(--wim-overlay);
+}

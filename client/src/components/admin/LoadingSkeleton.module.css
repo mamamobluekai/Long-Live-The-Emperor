@@ -43,3 +43,14 @@
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .skeletonHeader,
+html[data-theme='dark'] .skeletonRow,
+html[data-theme='dark'] .cardSkeleton {
+  background: linear-gradient(90deg, #1a1e24 25%, #22272e 50%, #1a1e24 75%);
+  background-size: 200% 100%;
+}

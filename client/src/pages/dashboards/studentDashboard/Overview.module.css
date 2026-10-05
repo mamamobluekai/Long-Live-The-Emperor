@@ -909,5 +909,98 @@
   }
 }
 
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .dashboard {
+  color: var(--wim-text);
+}
+
+html[data-theme='dark'] .greeting {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  box-shadow: 0 14px 32px -28px rgba(0, 0, 0, 0.4);
+}
+
+html[data-theme='dark'] .greeting h1 {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .greetingText {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .loadingCard,
+html[data-theme='dark'] .errorState {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .errorState {
+  background: var(--wim-danger-bg);
+  border-color: var(--wim-danger-border);
+  color: var(--wim-danger-text);
+}
+
+html[data-theme='dark'] .card {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .cardHeader h2 {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .dayCell {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .dayRest {
+  background: var(--wim-bg-sunken);
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .progressTrack {
+  background: var(--wim-bg-sunken);
+}
+
+html[data-theme='dark'] .detailRow {
+  border-top-color: var(--wim-border);
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .detailRow span {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .detailRow strong {
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .emptyState {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .legendItem {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .calendarNav button {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .calendarNav button:hover {
+  border-color: var(--wim-border-strong);
+  background: var(--wim-bg-hover);
+  color: var(--wim-brand);
+}
+
 
 

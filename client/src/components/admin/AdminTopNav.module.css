@@ -440,3 +440,156 @@
     right: -4px;
   }
 }
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .topnav {
+  background: var(--wim-topbar-bg);
+  border-bottom-color: var(--wim-topbar-border);
+}
+
+html[data-theme='dark'] .menuButton {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .menuButton:hover {
+  background: var(--wim-bg-hover);
+  border-color: var(--wim-border-strong);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .notifBtn {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .notifBtn:hover {
+  background: var(--wim-bg-hover);
+  color: var(--wim-info);
+}
+
+html[data-theme='dark'] .dropdown {
+  background: var(--wim-bg-raised);
+  border-color: var(--wim-border);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme='dark'] .dropdownHeader {
+  background: var(--wim-bg-surface);
+  border-bottom-color: var(--wim-border);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .headerAction {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .headerAction:hover {
+  background: var(--wim-bg-hover);
+  border-color: var(--wim-border-strong);
+}
+
+html[data-theme='dark'] .headerActionDanger {
+  color: var(--wim-danger);
+  border-color: var(--wim-danger-border);
+}
+
+html[data-theme='dark'] .headerActionDanger:hover {
+  background: var(--wim-danger-bg);
+  border-color: var(--wim-danger-border);
+}
+
+html[data-theme='dark'] .notifDelete {
+  border-color: var(--wim-danger-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-danger);
+}
+
+html[data-theme='dark'] .dropdownItem {
+  border-bottom-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .dropdownItem:hover {
+  background: var(--wim-bg-hover);
+}
+
+html[data-theme='dark'] .dropdownBody::-webkit-scrollbar-thumb {
+  background: var(--wim-border-strong);
+}
+
+html[data-theme='dark'] .dropdownItem.unread {
+  background: var(--wim-brand-tint);
+}
+
+html[data-theme='dark'] .notifTitle {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .notifMsg {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .notifTime {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .userName {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .userRole {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .profileBtn {
+  background: var(--wim-bg-surface);
+  border-color: var(--wim-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+html[data-theme='dark'] .profileMenu {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-raised);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.45);
+}
+
+html[data-theme='dark'] .profileMenuHeader {
+  border-bottom-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .profileMenuHeader strong {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .profileMenuHeader span {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .profileMenu button {
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .profileMenu button:hover {
+  background: var(--wim-bg-hover);
+  color: var(--wim-info);
+}
+
+html[data-theme='dark'] .profileMenu .menuLogout {
+  border-top-color: var(--wim-border);
+  color: var(--wim-danger);
+}
+
+html[data-theme='dark'] .avatar {
+  border-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .avatarPlaceholder {
+  background: var(--wim-bg-sunken);
+  border-color: var(--wim-border-strong);
+  color: var(--wim-text-secondary);
+}

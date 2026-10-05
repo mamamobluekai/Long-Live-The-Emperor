@@ -905,3 +905,95 @@
     width: 100%;
   }
 }
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .page {
+  color: var(--wim-text);
+}
+
+html[data-theme='dark'] .pageHeader {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  box-shadow: 0 14px 32px -28px rgba(0, 0, 0, 0.4);
+}
+
+html[data-theme='dark'] .pageHeader h1 {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .pageHeader p {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .statCard {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-raised);
+}
+
+html[data-theme='dark'] .statCard strong {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .statCard small {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .statLabel {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .statAction {
+  background: var(--wim-bg-raised);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .card {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .cardHeader h2 {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .cardHeader p {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .batchChip {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .batchChip:hover {
+  border-color: var(--wim-border-strong);
+  background: var(--wim-bg-hover);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .quickAction {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .quickAction strong {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .quickAction span {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .docStat {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .emptyState {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}

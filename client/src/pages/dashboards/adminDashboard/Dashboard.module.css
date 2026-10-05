@@ -609,3 +609,155 @@
   }
 }
 
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .dashboard {
+  color: var(--wim-text);
+}
+
+html[data-theme='dark'] .pageHeader {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  box-shadow: 0 14px 32px -28px rgba(0, 0, 0, 0.4);
+}
+
+html[data-theme='dark'] .pageHeader h1 {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .headerText {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .errorState {
+  border-color: var(--wim-danger-border);
+  background: var(--wim-danger-bg);
+  color: var(--wim-danger-text);
+}
+
+html[data-theme='dark'] .statCard {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-raised);
+}
+
+html[data-theme='dark'] .statCard:hover {
+  border-color: var(--wim-border-strong);
+}
+
+html[data-theme='dark'] .statLabel {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .statValue {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .sectionHeader h2 {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .cardEyebrow {
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .sectionSub {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .yearPickerLabel {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .yearSelect {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-input);
+  color: var(--wim-text);
+}
+
+html[data-theme='dark'] .yearSelect:hover {
+  border-color: var(--wim-border-strong);
+}
+
+html[data-theme='dark'] .yearSelect:focus {
+  border-color: var(--wim-brand);
+  box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.15);
+}
+
+html[data-theme='dark'] .toggle {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .toggleBtn {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .toggleBtn:hover {
+  background: var(--wim-bg-hover);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .toggleBtnActive {
+  background: var(--wim-brand);
+  color: #fff;
+}
+
+html[data-theme='dark'] .chartCard,
+html[data-theme='dark'] .tableCard {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .chartTitle {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .emptyState {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .emptyState h3 {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .emptyState p {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .totalBadge {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-raised);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .table th {
+  border-bottom-color: var(--wim-border);
+  background: var(--wim-bg-sunken);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .table td {
+  border-bottom-color: var(--wim-border);
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .table tbody tr:hover {
+  background: var(--wim-bg-hover);
+}
+
+html[data-theme='dark'] .table td strong {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .tableSub {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .skeletonCard {
+  border-color: var(--wim-border);
+  background: linear-gradient(90deg, var(--wim-bg-sunken) 25%, var(--wim-bg-raised) 50%, var(--wim-bg-sunken) 75%);
+}
+

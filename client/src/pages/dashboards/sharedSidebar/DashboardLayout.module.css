@@ -182,3 +182,21 @@
     font-size: 16px;
   }
 }
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .shell {
+  --bg-page: #111418;
+  color: var(--wim-text);
+}
+
+html[data-theme='dark'] .topNav {
+  background: var(--wim-topbar-bg);
+  border-bottom-color: var(--wim-topbar-border);
+}
+
+html[data-theme='dark'] .content {
+  background: var(--wim-bg-surface);
+}

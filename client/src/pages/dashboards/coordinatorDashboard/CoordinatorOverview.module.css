@@ -888,3 +888,182 @@
     padding: 17px;
   }
 }
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .dashboard {
+  color: var(--wim-text);
+}
+
+html[data-theme='dark'] .greeting {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  box-shadow: 0 14px 32px -28px rgba(0, 0, 0, 0.4);
+}
+
+html[data-theme='dark'] .greeting h1 {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .greetingText {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .loadingCard,
+html[data-theme='dark'] .errorState {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .errorState {
+  border-color: var(--wim-danger-border);
+  background: var(--wim-danger-bg);
+  color: var(--wim-danger-text);
+}
+
+html[data-theme='dark'] .metricCard {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-raised);
+}
+
+html[data-theme='dark'] .metricCard:hover {
+  border-color: var(--wim-border-strong);
+}
+
+html[data-theme='dark'] .metricCopy span {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .metricCopy strong {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .metricCopy small {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .card {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .cardHeader h2 {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .cardEyebrow {
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .cardFooterLink {
+  border-top-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .attentionItem {
+  border-top-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .attentionCopy strong {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .attentionCopy p {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .actionLink {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .actionLink:hover {
+  border-color: var(--wim-border-strong);
+  background: var(--wim-bg-hover);
+}
+
+html[data-theme='dark'] .donut::before {
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .donut strong {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .donut span {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .legendRow {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .legendRow strong {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .requestRow {
+  border-top-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .requestCopy strong {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .requestCopy p {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .requestTime {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .emptyState {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .emptyState p {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .capacityNumber strong {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .capacityNumber span {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .capacityBar {
+  background: var(--wim-bg-sunken);
+}
+
+html[data-theme='dark'] .capacityFacts {
+  border-top-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .capacityFacts > div {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .capacityFacts strong {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .capacityFacts span {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .quickItem {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .quickItem:hover {
+  border-color: var(--wim-border-strong);
+  background: var(--wim-bg-hover);
+}

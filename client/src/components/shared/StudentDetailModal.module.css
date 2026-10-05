@@ -374,3 +374,71 @@
     animation: none;
   }
 }
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .overlay {
+  background: var(--wim-overlay);
+}
+
+html[data-theme='dark'] .modal {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-raised);
+  box-shadow: 0 32px 70px -30px rgba(0, 0, 0, 0.6);
+}
+
+html[data-theme='dark'] .header {
+  border-bottom-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .eyebrow {
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .header h2 {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .header p {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .closeButton {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .closeButton:hover {
+  border-color: var(--wim-border-strong);
+  background: var(--wim-bg-hover);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .detailSection h3 {
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .detailSection h3::before {
+  background: linear-gradient(180deg, var(--wim-brand), var(--wim-brand-light));
+}
+
+html[data-theme='dark'] .detailItem {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .detailItem span {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .detailItem strong {
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .modalDrawer {
+  box-shadow: -24px 0 60px -30px rgba(0, 0, 0, 0.6);
+}

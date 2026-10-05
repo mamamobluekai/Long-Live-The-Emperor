@@ -52,3 +52,20 @@
 .homeBtn:hover {
   background: #1e3a7a;
 }
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .icon {
+  background: var(--wim-danger-bg);
+  color: var(--wim-danger);
+}
+
+html[data-theme='dark'] .title {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .message {
+  color: var(--wim-text-secondary);
+}

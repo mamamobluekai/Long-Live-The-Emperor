@@ -1957,3 +1957,392 @@
   scroll-behavior: smooth;
   overscroll-behavior: contain;
 }
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .container {
+  color: var(--wim-text-body);
+  background: var(--wim-bg-page);
+}
+
+html[data-theme='dark'] .modalMode {
+  background: var(--wim-bg-page);
+}
+
+html[data-theme='dark'] .layout {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  box-shadow: 0 12px 32px -28px rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme='dark'] .sidebar {
+  border-right-color: var(--wim-border);
+  background: var(--wim-bg-sunken);
+}
+
+html[data-theme='dark'] .sidebarTitle {
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .loading,
+html[data-theme='dark'] .emptySidebar {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .batchList::-webkit-scrollbar-thumb {
+  background: var(--wim-border-strong);
+}
+
+html[data-theme='dark'] .batchItem {
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .batchItem:hover {
+  border-color: var(--wim-border-strong);
+  background: var(--wim-bg-hover);
+}
+
+html[data-theme='dark'] .batchItemActive {
+  border-color: var(--wim-brand);
+  background: var(--wim-brand-tint);
+  box-shadow: 0 5px 15px rgba(139, 30, 45, 0.12);
+}
+
+html[data-theme='dark'] .batchLabel {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .batchMeta {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .chatArea {
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .chatHeader {
+  border-bottom-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .messages {
+  background: var(--wim-bg-page);
+}
+
+html[data-theme='dark'] .messages::-webkit-scrollbar-thumb {
+  background: var(--wim-border-strong);
+}
+
+html[data-theme='dark'] .messages::-webkit-scrollbar-thumb:hover {
+  background: var(--wim-brand);
+}
+
+html[data-theme='dark'] .messageBubble {
+  border-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .messageBubbleOther {
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .messageBubbleMe {
+  color: #ffffff;
+}
+
+html[data-theme='dark'] .messageContent {
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .messageBubbleMe .messageContent {
+  color: #ffffff;
+}
+
+html[data-theme='dark'] .messageAuthor {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .messageBubbleMe .messageAuthor {
+  color: #ffffff;
+}
+
+html[data-theme='dark'] .roleBadge {
+  background: var(--wim-bg-sunken);
+  color: var(--wim-brand-light);
+  border-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .messageBubbleMe .roleBadge {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+html[data-theme='dark'] .messageTime {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .messageBubbleMe .messageTime {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+html[data-theme='dark'] .actionBtn,
+html[data-theme='dark'] .reactionBtn {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .actionBtn:hover,
+html[data-theme='dark'] .reactionBtn:hover {
+  background: var(--wim-bg-hover);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .messageBubbleMe .actionBtn,
+html[data-theme='dark'] .messageBubbleMe .reactionBtn {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+html[data-theme='dark'] .messageBubbleMe .actionBtn:hover,
+html[data-theme='dark'] .messageBubbleMe .reactionBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+html[data-theme='dark'] .reactionBadge {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-brand-light);
+}
+
+html[data-theme='dark'] .messageBubbleMe .reactionBadge {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+html[data-theme='dark'] .messageMenu {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-raised);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+html[data-theme='dark'] .menuItem {
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .menuItem:hover {
+  background: var(--wim-bg-hover);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .menuItemDanger {
+  color: var(--wim-danger);
+}
+
+html[data-theme='dark'] .menuItemDanger:hover {
+  background: var(--wim-danger-bg);
+  color: var(--wim-danger-text);
+}
+
+html[data-theme='dark'] .repliesContainer {
+  border-left-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .hiddenMessage {
+  background: var(--wim-bg-sunken);
+}
+
+html[data-theme='dark'] .hiddenText {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .emptyMessages p {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .error {
+  background: var(--wim-danger-bg);
+  border-color: var(--wim-danger-border);
+  color: var(--wim-danger-text);
+}
+
+html[data-theme='dark'] .replyBanner {
+  border-top-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .replyLabel {
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .replyText {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .replyCancel {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .replyCancel:hover {
+  background: var(--wim-bg-hover);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .inputArea {
+  border-top-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .input {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-input);
+  color: var(--wim-text);
+}
+
+html[data-theme='dark'] .input:focus {
+  border-color: var(--wim-brand);
+  background: var(--wim-bg-surface);
+  box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.15);
+}
+
+html[data-theme='dark'] .input::placeholder {
+  color: var(--wim-text-disabled);
+}
+
+html[data-theme='dark'] .emptyChat {
+  background: var(--wim-bg-page);
+}
+
+html[data-theme='dark'] .emptyChat p {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .drawerOverlay {
+  background: var(--wim-overlay);
+}
+
+html[data-theme='dark'] .batchesDrawer {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-raised);
+  box-shadow: 0 24px 60px -18px rgba(0, 0, 0, 0.6);
+}
+
+html[data-theme='dark'] .drawerHeader {
+  border-bottom-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .drawerEyebrow {
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .drawerHeader h3 {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .drawerClose {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .drawerClose:hover {
+  border-color: var(--wim-border-strong);
+  background: var(--wim-bg-hover);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .membersBlock {
+  border-top-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .membersTitle {
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .memberItem {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .memberItem:hover {
+  border-color: var(--wim-border-strong);
+  background: var(--wim-bg-hover);
+}
+
+html[data-theme='dark'] .memberName em {
+  color: var(--wim-brand-light);
+}
+
+html[data-theme='dark'] .memberId {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .youBadge {
+  background: var(--wim-brand-tint);
+  color: var(--wim-brand-light);
+  border-color: var(--wim-border-maroon);
+}
+
+html[data-theme='dark'] .replyContext {
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .replyContext strong {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .dayDivider {
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .dayDivider::before,
+html[data-theme='dark'] .dayDivider::after,
+html[data-theme='dark'] .timeDivider::before,
+html[data-theme='dark'] .timeDivider::after {
+  background: var(--wim-border);
+}
+
+html[data-theme='dark'] .chatToolbarDivider {
+  background: linear-gradient(90deg, transparent, var(--wim-border) 20%, var(--wim-border) 80%, transparent);
+}
+
+html[data-theme='dark'] .messageActionsBar {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .messageActionsBar .actionBtn {
+  background: var(--wim-bg-sunken);
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .messageActionsBar .actionBtn:hover {
+  background: var(--wim-brand-tint);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .messageActionsBar .actionBtnDanger {
+  background: var(--wim-danger-bg);
+  color: var(--wim-danger);
+}
+
+html[data-theme='dark'] .messageActionsBar .actionBtnDanger:hover {
+  background: var(--wim-danger-bg);
+  color: var(--wim-danger-text);
+}
+
+html[data-theme='dark'] .messageActionsBar .reactionBtn:hover {
+  background: var(--wim-bg-hover);
+}
+
+html[data-theme='dark'] .messageAvatar {
+  background: linear-gradient(140deg, var(--wim-brand), var(--wim-brand-strong));
+  color: #ffffff;
+}

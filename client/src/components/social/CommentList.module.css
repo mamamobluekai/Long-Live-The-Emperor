@@ -682,3 +682,111 @@
     padding: 0 11px;
   }
 }
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .commentSection {
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .ownComment {
+  background: var(--wim-bg-surface);
+  box-shadow: inset 3px 0 0 var(--wim-brand);
+}
+
+html[data-theme='dark'] .youBadge {
+  background: var(--wim-brand-tint);
+  color: var(--wim-brand-light);
+  border-color: var(--wim-border-maroon);
+}
+
+html[data-theme='dark'] .commentAuthor {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .commentRole {
+  background: var(--wim-brand-tint);
+  color: var(--wim-brand-light);
+  border-color: var(--wim-border-maroon);
+}
+
+html[data-theme='dark'] .commentTime {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .commentText {
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .commentAction {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .commentAction:hover {
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .commentActionDanger {
+  color: var(--wim-danger);
+}
+
+html[data-theme='dark'] .commentActionDanger:hover {
+  color: var(--wim-danger-text);
+}
+
+html[data-theme='dark'] .repliesList::before {
+  background: linear-gradient(180deg, var(--wim-border-strong), var(--wim-border));
+}
+
+html[data-theme='dark'] .replyForm {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .replyInput {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-input);
+  color: var(--wim-text);
+}
+
+html[data-theme='dark'] .replyInput:focus {
+  border-color: var(--wim-brand);
+  background: var(--wim-bg-surface);
+  box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.15);
+}
+
+html[data-theme='dark'] .replyInput::placeholder {
+  color: var(--wim-text-disabled);
+}
+
+html[data-theme='dark'] .cancelReplyBtn {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .cancelReplyBtn:hover {
+  border-color: var(--wim-border-strong);
+  background: var(--wim-bg-hover);
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .empty {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .commentForm {
+  border-top-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .commentSection::-webkit-scrollbar-thumb {
+  background: var(--wim-border-strong);
+}
+
+html[data-theme='dark'] .commentSection::-webkit-scrollbar-thumb:hover {
+  background: var(--wim-brand);
+}

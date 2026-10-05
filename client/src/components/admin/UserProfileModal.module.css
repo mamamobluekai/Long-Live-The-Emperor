@@ -378,3 +378,139 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .overlay {
+  background: var(--wim-overlay);
+}
+
+html[data-theme='dark'] .modal {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-raised);
+  box-shadow: 0 24px 60px -18px rgba(0, 0, 0, 0.6);
+}
+
+html[data-theme='dark'] .header {
+  border-bottom-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .headerSkeleton {
+  background: linear-gradient(90deg, #1a1e24 25%, #22272e 50%, #1a1e24 75%);
+  background-size: 200% 100%;
+}
+
+html[data-theme='dark'] .eyebrow {
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .name {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .roleBadge {
+  background: var(--wim-brand-tint);
+  color: var(--wim-brand-light);
+  border-color: var(--wim-border-maroon);
+}
+
+html[data-theme='dark'] .statusBadge.approved {
+  background: var(--wim-success-bg);
+  color: var(--wim-success-text);
+  border-color: var(--wim-success-border);
+}
+
+html[data-theme='dark'] .statusBadge.pending {
+  background: var(--wim-warning-bg);
+  color: var(--wim-warning-text);
+  border-color: var(--wim-warning-border);
+}
+
+html[data-theme='dark'] .statusBadge.disapproved {
+  background: var(--wim-danger-bg);
+  color: var(--wim-danger-text);
+  border-color: var(--wim-danger-border);
+}
+
+html[data-theme='dark'] .closeBtn {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .closeBtn:hover {
+  border-color: var(--wim-border-strong);
+  background: var(--wim-bg-hover);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .body::-webkit-scrollbar-thumb {
+  background: var(--wim-border-strong);
+}
+
+html[data-theme='dark'] .section + .section {
+  border-top-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .sectionTitle {
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .cell {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .cellLabel {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .cellValue {
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .cellValueMuted {
+  color: var(--wim-text-disabled);
+}
+
+html[data-theme='dark'] .updatedNote {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .loading {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .spinner {
+  border-color: var(--wim-border);
+  border-top-color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .actions {
+  border-top-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .dangerBtn {
+  border-color: var(--wim-danger-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-danger);
+}
+
+html[data-theme='dark'] .dangerBtn:hover:not(:disabled) {
+  background: var(--wim-danger-bg);
+}
+
+html[data-theme='dark'] .secondaryBtn {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .secondaryBtn:hover:not(:disabled) {
+  border-color: var(--wim-border-strong);
+  background: var(--wim-bg-hover);
+  color: var(--wim-brand);
+}

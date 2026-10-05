@@ -145,3 +145,42 @@
     animation-duration: 2s;
   }
 }
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .overlay {
+  background: var(--wim-overlay);
+}
+
+html[data-theme='dark'] .modal {
+  background: var(--wim-bg-raised);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
+}
+
+html[data-theme='dark'] .title {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .message {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .cancelBtn {
+  background: var(--wim-bg-sunken);
+  color: var(--wim-text-body);
+  border-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .cancelBtn:hover {
+  background: var(--wim-bg-hover);
+}
+
+html[data-theme='dark'] .cancelBtn:disabled:hover {
+  background: var(--wim-bg-sunken);
+}
+
+html[data-theme='dark'] .loadingNote {
+  color: var(--wim-text-muted);
+}

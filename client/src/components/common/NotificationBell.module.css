@@ -140,3 +140,55 @@
   font-size: 13px;
   text-align: center;
 }
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .button {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .button:hover {
+  background: var(--wim-bg-hover);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .panel {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-raised);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
+}
+
+html[data-theme='dark'] .header {
+  border-bottom-color: var(--wim-border);
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .item {
+  border-bottom-color: var(--wim-border);
+  background: var(--wim-bg-raised);
+}
+
+html[data-theme='dark'] .item:hover,
+html[data-theme='dark'] .unread {
+  background: var(--wim-bg-hover);
+}
+
+html[data-theme='dark'] .itemTitle {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .itemMessage {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .itemTime {
+  color: var(--wim-text-muted);
+}
+
+html[data-theme='dark'] .empty {
+  color: var(--wim-text-secondary);
+}

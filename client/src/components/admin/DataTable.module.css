@@ -68,3 +68,35 @@
   color: #8490a1;
   font-style: italic;
 }
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .tableWrapper {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  box-shadow: 0 12px 32px -28px rgba(0, 0, 0, 0.6);
+}
+
+html[data-theme='dark'] .table th,
+html[data-theme='dark'] .table td {
+  border-bottom-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .table thead th {
+  background: var(--wim-bg-sunken);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .table tbody tr:hover {
+  background: var(--wim-bg-hover);
+}
+
+html[data-theme='dark'] .sortable:hover {
+  color: var(--wim-brand-light);
+}
+
+html[data-theme='dark'] .empty {
+  color: var(--wim-text-muted);
+}

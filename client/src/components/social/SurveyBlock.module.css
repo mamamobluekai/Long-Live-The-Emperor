@@ -470,3 +470,66 @@
     transition: none;
   }
 }
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .surveyCard {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+html[data-theme='dark'] .surveyHeader {
+  border-bottom-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .surveyLabel {
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .optionCard {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .optionCard:hover {
+  border-color: var(--wim-border-strong);
+  background: var(--wim-bg-hover);
+}
+
+html[data-theme='dark'] .optionCardSelected {
+  border-color: var(--wim-brand);
+  background: var(--wim-brand-tint);
+  box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.15);
+}
+
+html[data-theme='dark'] .optionText {
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .resultLabel {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .resultBar {
+  background: var(--wim-bg-sunken);
+}
+
+html[data-theme='dark'] .resultCount {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .totalVotes {
+  border-top-color: var(--wim-border);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .surveyCard:not(:has(.surveyHeader)) {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .resultsTitle {
+  color: var(--wim-brand);
+}

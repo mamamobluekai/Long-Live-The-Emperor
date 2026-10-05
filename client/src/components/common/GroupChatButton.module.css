@@ -141,3 +141,44 @@
     height: 36px;
   }
 }
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .iconButton {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .iconButton:hover {
+  background: var(--wim-bg-hover);
+  border-color: var(--wim-border-strong);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .modalContent {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-page);
+}
+
+html[data-theme='dark'] .modalHeader {
+  border-bottom-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .modalTitle {
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .closeButton {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .closeButton:hover {
+  background: var(--wim-bg-hover);
+  color: var(--wim-brand-light);
+}

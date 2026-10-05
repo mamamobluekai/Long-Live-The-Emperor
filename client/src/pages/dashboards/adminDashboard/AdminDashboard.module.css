@@ -37,3 +37,25 @@
     padding: 20px;
   }
 }
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .card {
+  background: var(--wim-bg-surface);
+  border-color: var(--wim-border);
+  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme='dark'] .card:hover {
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4);
+}
+
+html[data-theme='dark'] .card h3 {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .card p {
+  color: var(--wim-text-secondary);
+}

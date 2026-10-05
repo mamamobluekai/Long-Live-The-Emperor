@@ -421,3 +421,82 @@
     animation: none;
   }
 }
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .modal {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-raised);
+  box-shadow: 0 24px 60px -18px rgba(0, 0, 0, 0.6);
+}
+
+html[data-theme='dark'] .header {
+  border-bottom-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .title {
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .subtitle {
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .scrollArea {
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .sectionTitle {
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .sectionTitle::before {
+  background: var(--wim-brand);
+}
+
+html[data-theme='dark'] .paragraph,
+html[data-theme='dark'] .listItem {
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .listItem::marker {
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .footer {
+  border-top-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .checkRow {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .checkRowChecked {
+  border-color: var(--wim-brand);
+  background: var(--wim-brand-tint);
+}
+
+html[data-theme='dark'] .checkLabel {
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .cancelBtn {
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-body);
+  border-color: var(--wim-border);
+}
+
+html[data-theme='dark'] .cancelBtn:hover:not(:disabled) {
+  border-color: var(--wim-border-strong);
+  background: var(--wim-bg-hover);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .cancelBtn:disabled:hover {
+  background: var(--wim-bg-surface);
+}

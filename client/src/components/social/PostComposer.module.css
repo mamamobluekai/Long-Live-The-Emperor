@@ -731,3 +731,97 @@
     padding: 15px;
   }
 }
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme='dark'] .composer {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+html[data-theme='dark'] .composer:hover {
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+}
+
+html[data-theme='dark'] .authorName {
+  color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .roleBadge {
+  background: var(--wim-brand-tint);
+  color: var(--wim-brand-light);
+}
+
+html[data-theme='dark'] .typeTab {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-secondary);
+}
+
+html[data-theme='dark'] .typeTab:hover {
+  border-color: var(--wim-border-strong);
+  background: var(--wim-bg-hover);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .typeTabActive {
+  border-color: var(--wim-brand) !important;
+  background: var(--wim-brand-tint) !important;
+  color: var(--wim-brand) !important;
+}
+
+html[data-theme='dark'] .titleInput,
+html[data-theme='dark'] .contentInput,
+html[data-theme='dark'] .surveyInput,
+html[data-theme='dark'] .linkInput {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-input);
+  color: var(--wim-text);
+}
+
+html[data-theme='dark'] .titleInput:focus,
+html[data-theme='dark'] .contentInput:focus,
+html[data-theme='dark'] .surveyInput:focus,
+html[data-theme='dark'] .linkInput:focus {
+  border-color: var(--wim-brand);
+  background: var(--wim-bg-surface);
+  box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.15);
+}
+
+html[data-theme='dark'] .titleInput::placeholder,
+html[data-theme='dark'] .contentInput::placeholder,
+html[data-theme='dark'] .surveyInput::placeholder,
+html[data-theme='dark'] .linkInput::placeholder {
+  color: var(--wim-text-disabled);
+}
+
+html[data-theme='dark'] .imagePreview {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-sunken);
+}
+
+html[data-theme='dark'] .surveyBuilder {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
+
+html[data-theme='dark'] .surveyLabel {
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .attachBtn,
+html[data-theme='dark'] .audienceSelect {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-text-body);
+}
+
+html[data-theme='dark'] .attachBtn:hover,
+html[data-theme='dark'] .audienceSelect:hover {
+  border-color: var(--wim-border-strong);
+  background: var(--wim-bg-hover);
+  color: var(--wim-brand);
+}
