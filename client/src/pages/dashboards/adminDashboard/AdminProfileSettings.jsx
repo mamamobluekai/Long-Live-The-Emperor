@@ -50,6 +50,7 @@ export default function AdminProfileSettings() {
   const [pictureUploading, setPictureUploading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [activeSection, setActiveSection] = useState('profile');
+  const [skipSplashScreen, setSkipSplashScreen] = useState(true);
 
   const [form, setForm] = useState({
     first_name: '',
@@ -105,6 +106,7 @@ export default function AdminProfileSettings() {
 
       setForm(initialForm);
       setOriginalForm(initialForm);
+      setSkipSplashScreen(data.user.skip_splash_screen !== false);
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
@@ -687,6 +689,74 @@ export default function AdminProfileSettings() {
             </div>
             <small className={styles.helperText}>
               Theme
+            </small>
+          </div>
+          <div className={styles.field}>
+            <label>Skip Splash Screen</label>
+            <div className={styles.inputWrapper} style={{ height: 'auto', minHeight: '43px' }}>
+              <button
+                type="button"
+                onClick={async () => {
+                  const next = !skipSplashScreen;
+                  setSkipSplashScreen(next);
+                  localStorage.setItem('wim-skip-splash-screen', String(next));
+                  try {
+                    await updateAdminProfile({ skip_splash_screen: next });
+                    updateUser({ skip_splash_screen: next });
+                  } catch (err) {
+                    setSkipSplashScreen(!next);
+                    localStorage.setItem('wim-skip-splash-screen', String(!next));
+                    showToast(err.message, 'error');
+                  }
+                }}
+                aria-pressed={skipSplashScreen}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '10px',
+                  width: '100%',
+                  padding: '10px 16px',
+                  border: '1px solid #dcc9cf',
+                  borderRadius: '9px',
+                  background: '#ffffff',
+                  color: '#26313f',
+                  fontFamily: 'inherit',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <span>{skipSplashScreen ? 'ON' : 'OFF'}</span>
+                <span
+                  style={{
+                    width: '38px',
+                    height: '20px',
+                    borderRadius: '999px',
+                    background: skipSplashScreen ? '#8b1e2d' : '#dcc9cf',
+                    position: 'relative',
+                    transition: 'background 0.15s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '2px',
+                      left: skipSplashScreen ? '20px' : '2px',
+                      width: '16px',
+                      height: '16px',
+                      borderRadius: '50%',
+                      background: '#ffffff',
+                      transition: 'left 0.15s ease',
+                    }}
+                  />
+                </span>
+              </button>
+            </div>
+            <small className={styles.helperText}>
+              Skip the splash screen when opening the system.
             </small>
           </div>
         </div>

@@ -90,9 +90,18 @@ useEffect(() => {
 
   const roleCopy = ROLE_COPY[role] || ROLE_COPY.student;
 
-  return (
-    <SplashScreen variant="user">
-      <div className="auth-shell">
+  const storedSkipSplash = (() => {
+    try {
+      const val = localStorage.getItem('wim-skip-splash-screen');
+      if (val === null) return true;
+      return val !== 'false';
+    } catch {
+      return true;
+    }
+  })();
+
+  const content = (
+    <div className="auth-shell">
         <div className="auth-layout">
           {/* ================= BRAND SIDE ================= */}
           <aside className="brand-panel">
@@ -556,6 +565,10 @@ useEffect(() => {
           </section>
         </div>
       </div>
+    );
+  return storedSkipSplash ? content : (
+    <SplashScreen variant="user">
+      {content}
     </SplashScreen>
   );
 }

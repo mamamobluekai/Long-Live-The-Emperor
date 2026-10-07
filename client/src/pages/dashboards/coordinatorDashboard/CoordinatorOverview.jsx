@@ -227,13 +227,6 @@ function CoordinatorOverview() {
   );
 
 
-  const quickActions = [
-    { id: 'students', icon: Users, label: 'Approve student accounts', to: ROUTES.students },
-    { id: 'requirements', icon: ClipboardCheck, label: 'Review requirements', to: ROUTES.requirements },
-    { id: 'batches', icon: Layers3, label: 'Manage teacher batches', to: ROUTES.batches },
-    { id: 'supervisors', icon: UserCheck, label: 'View supervisors', to: ROUTES.supervisors },
-  ];
-
   return (
     <div className={styles.dashboard}>
       <section className={styles.greeting}>
@@ -365,19 +358,6 @@ function CoordinatorOverview() {
                   <div><strong>{batches.withoutSupervisor || 0}</strong><span>Need supervisor</span></div>
                 </div>
                 <Link className={styles.cardFooterLink} to={ROUTES.batches}>Manage batches<ArrowRight size={14} /></Link>
-              </section>
-
-              <section className={styles.card}>
-                <div className={styles.cardHeader}><div><p className={styles.cardEyebrow}>SHORTCUTS</p><h2>Quick Actions</h2></div></div>
-                <div className={styles.quickList}>
-                  {quickActions.map((action) => (
-                    <Link className={styles.quickItem} key={action.id} to={action.to}>
-                      <div className={styles.quickIcon}><action.icon size={16} /></div>
-                      <span>{action.label}</span>
-                      <ArrowRight className={styles.quickArrow} size={15} />
-                    </Link>
-                  ))}
-                </div>
               </section>
             </aside>
           </div>

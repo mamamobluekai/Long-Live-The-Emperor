@@ -118,9 +118,8 @@ const login = async (req, res) => {
       employee_id: profile.employee_id || null,
       department: profile.department || null,
       photo_url: profile.photo_url || null,
-      // Drives the one-time Terms and Agreement prompt the client shows before
-      // the admin reaches the dashboard.
       terms_accepted: Boolean(user.terms_accepted),
+      skip_splash_screen: Boolean(user.skip_splash_screen),
     };
 
     req.user = { id: user.id, role: user.role, email: user.email };
@@ -174,7 +173,7 @@ const logout = async (req, res) => {
 const updateProfile = async (req, res) => {
   const client = await pool.connect();
   try {
-    const { first_name, last_name, email, phone, department } = req.body;
+    const { first_name, last_name, email, phone, department, skip_splash_screen } = req.body;
     await client.query('BEGIN');
 
     let newEmail = null;
@@ -194,16 +193,17 @@ const updateProfile = async (req, res) => {
       }
     }
 
-    if (email !== undefined || phone !== undefined) {
+    if (email !== undefined || phone !== undefined || skip_splash_screen !== undefined) {
       const userFields = [];
       const userValues = [];
       let i = 1;
       if (email !== undefined && email !== null && String(email).trim() !== '') { userFields.push(`email = $${i}`); userValues.push(newEmail); i++; }
       if (phone !== undefined) { userFields.push(`phone = $${i}`); userValues.push(phone); i++; }
+      if (skip_splash_screen !== undefined) { userFields.push(`skip_splash_screen = $${i}`); userValues.push(Boolean(skip_splash_screen)); i++; }
       if (userFields.length > 0) {
         userFields.push(`updated_at = CURRENT_TIMESTAMP`);
         userValues.push(req.user.id);
-        await client.query(`UPDATE users SET ${userFields.join(', ')} WHERE id = ${i}`, userValues);
+        await client.query(`UPDATE users SET ${userFields.join(', ')} WHERE id = $${i}`, userValues);
       }
     }
 
@@ -228,7 +228,7 @@ const updateProfile = async (req, res) => {
     );
 
     const result = await pool.query(
-      `SELECT u.id, u.email, u.role, u.status, u.phone, u.created_at, u.updated_at,
+      `SELECT u.id, u.email, u.role, u.status, u.phone, u.created_at, u.updated_at, u.skip_splash_screen,
               a.first_name, a.last_name, a.employee_id, a.department, a.photo_url
        FROM users u JOIN admins a ON u.id = a.user_id
        WHERE u.id = $1`,
@@ -257,7 +257,7 @@ const updateProfile = async (req, res) => {
 const profile = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT u.id, u.email, u.role, u.status, u.phone, u.created_at, u.updated_at
+      `SELECT u.id, u.email, u.role, u.status, u.phone, u.created_at, u.updated_at, u.skip_splash_screen
        FROM users u WHERE u.id = $1`,
       [req.user.id]
     );

@@ -44,9 +44,10 @@ export function AuthProvider({ children }) {
     const nextUser = authData?.user || null;
     setUser(nextUser);
     setToken(authData?.accessToken || '');
-    // Persist the CSRF token issued at login so subsequent mutating requests
-    // can echo it in the X-CSRF-Token header (#6 CSRF).
     setCsrfToken(authData?.csrfToken || '');
+    if (typeof nextUser?.skip_splash_screen === 'boolean') {
+      localStorage.setItem('wim-skip-splash-screen', String(nextUser.skip_splash_screen));
+    }
   };
 
   // Clears local state first and revokes the session on the server after, so a

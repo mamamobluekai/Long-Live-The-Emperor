@@ -60,8 +60,17 @@ export default function AdminLogin() {
     }
   };
 
-  return (
-    <SplashScreen variant="admin">
+  const storedSkipSplash = (() => {
+    try {
+      const val = localStorage.getItem('wim-skip-splash-screen');
+      if (val === null) return true;
+      return val !== 'false';
+    } catch {
+      return true;
+    }
+  })();
+
+  const content = (
     <div className={styles.shell}>
       <div className={styles.overlay} />
 
@@ -260,6 +269,10 @@ export default function AdminLogin() {
         </div>
       </div>
     </div>
+  );
+  return storedSkipSplash ? content : (
+    <SplashScreen variant="admin">
+      {content}
     </SplashScreen>
   );
 }

@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   LogOut,
   Menu,
-  Settings,
   UserRound,
 } from 'lucide-react';
 import styles from './DashboardTopNav.module.css';
@@ -155,9 +154,7 @@ function DashboardTopNav({
               <button type="button" role="menuitem" onClick={() => navigate(profilePath)}>
                 <UserRound size={16} /> View profile
               </button>
-              <button type="button" role="menuitem" onClick={() => navigate(profilePath)}>
-                <Settings size={16} /> Profile settings
-              </button>
+              
               {onLogout && (
                 <button
                   type="button"

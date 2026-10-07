@@ -45,7 +45,7 @@ const validateEmail = (value) => {
 const getMyProfile = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT u.id, u.email, u.role, u.status, u.phone, u.created_at, u.updated_at
+      `SELECT u.id, u.email, u.role, u.status, u.phone, u.created_at, u.updated_at, u.skip_splash_screen
        FROM users u
        WHERE u.id = $1`,
       [req.user.id]
@@ -110,6 +110,11 @@ const updateMyProfile = async (req, res) => {
       userValues.push(body.phone);
       ui++;
     }
+    if (body.skip_splash_screen !== undefined) {
+      userFields.push(`skip_splash_screen = $${ui}`);
+      userValues.push(Boolean(body.skip_splash_screen));
+      ui++;
+    }
     if (userFields.length > 0) {
       userFields.push(`updated_at = CURRENT_TIMESTAMP`);
       userValues.push(req.user.id);
@@ -154,7 +159,7 @@ const updateMyProfile = async (req, res) => {
     await client.query('COMMIT');
 
     const result = await pool.query(
-      `SELECT u.id, u.email, u.role, u.status, u.phone, u.created_at, u.updated_at,
+      `SELECT u.id, u.email, u.role, u.status, u.phone, u.created_at, u.updated_at, u.skip_splash_screen,
               p.*
        FROM users u
        JOIN ${roleTable} p ON u.id = p.user_id
