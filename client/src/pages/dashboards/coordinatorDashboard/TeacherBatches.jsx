@@ -23,6 +23,7 @@ function TeacherBatches() {
 
   const [form, setForm] = useState({ teacher_id: '', batch_label: '', max_students: '', supervisor_id: '' });
   const [creating, setCreating] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const [assigning, setAssigning] = useState(null); // batch being assigned to
   const [selectedStudents, setSelectedStudents] = useState([]);
@@ -111,6 +112,7 @@ function TeacherBatches() {
       });
       setMessage('Batch created.');
       setForm({ teacher_id: '', batch_label: '', max_students: '', supervisor_id: '' });
+      setShowCreateModal(false);
       loadAll();
     } catch (err) {
       setError(err.message);
@@ -167,14 +169,15 @@ function TeacherBatches() {
     }
   };
 
-  // Close the open modal on Escape and stop the page behind it scrolling.
-  const modalOpen = Boolean(assigning || editing);
+// Close the open modal on Escape and stop the page behind it scrolling.
+  const modalOpen = Boolean(assigning || editing || showCreateModal);
   useEffect(() => {
     if (!modalOpen) return undefined;
     const onKey = (e) => {
       if (e.key !== 'Escape') return;
       setAssigning(null);
       setEditing(null);
+      setShowCreateModal(false);
     };
     document.addEventListener('keydown', onKey);
     const prevOverflow = document.body.style.overflow;
@@ -199,11 +202,13 @@ function TeacherBatches() {
   const openEdit = (batch) => {
     setEditing(batch);
     setEditError('');
+    // Handle teacher_id - could be direct property or nested in teacher object
+    const teacherId = batch.teacher_id || (batch.teacher && batch.teacher.id) || '';
     setEditForm({ 
       batch_label: batch.batch_label, 
       max_students: batch.max_students, 
       supervisor_id: batch.supervisor_id || '',
-      teacher_id: batch.teacher_id || ''
+      teacher_id: String(teacherId)
     });
   };
 
@@ -236,56 +241,12 @@ function TeacherBatches() {
       {error && <div className={styles.error}>{error}</div>}
 
       <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Create Deployment Batch</h3>
-        <form onSubmit={handleCreate} className={styles.row}>
-          <select
-            className={styles.select}
-            value={form.teacher_id}
-            onChange={(e) => setForm({ ...form, teacher_id: e.target.value })}
-            required
-          >
-            <option value="">Select Teacher</option>
-            {teachers.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.first_name} {t.last_name} ({t.employee_id})
-              </option>
-            ))}
-          </select>
-          <select
-            className={styles.select}
-            value={form.supervisor_id}
-            onChange={(e) => setForm({ ...form, supervisor_id: e.target.value })}
-          >
-            <option value="">No Supervisor</option>
-            {supervisors.map((s) => {
-              const taken = isSupervisorTakenForCreate(s.id);
-              return (
-                <option key={s.id} value={s.id} disabled={taken}>
-                  {s.first_name} {s.last_name} ({s.company_name}){taken ? ' — already assigned to a batch' : ''}
-                </option>
-              );
-            })}
-          </select>
-          <input
-            className={styles.input}
-            placeholder="Batch label"
-            value={form.batch_label}
-            onChange={(e) => setForm({ ...form, batch_label: e.target.value })}
-            required
-          />
-          <input
-            className={styles.input}
-            type="number"
-            min="1"
-            placeholder="Max students"
-            value={form.max_students}
-            onChange={(e) => setForm({ ...form, max_students: e.target.value })}
-            required
-          />
-          <button className={styles.btn} disabled={creating} type="submit">
-            {creating ? 'Creating...' : 'Create'}
+        <div className={styles.sectionHeader}>
+          <h3 className={styles.sectionTitle}>Deployment Batches</h3>
+          <button className={styles.btn} onClick={() => setShowCreateModal(true)}>
+            Create batch
           </button>
-        </form>
+        </div>
       </div>
 
       <div className={styles.section}>
@@ -309,7 +270,7 @@ function TeacherBatches() {
               </div>
                 <div className={styles.actions}>
                   <button className={styles.btnGhost} onClick={() => openAssign(b)}>
-                    Deploy
+                    Deploy students
                   </button>
                   <button className={styles.btnIcon} onClick={() => openEdit(b)} title="Edit batch">
                     <Pencil size={16} />
@@ -333,6 +294,117 @@ function TeacherBatches() {
         )}
       </div>
 
+      {/* Create Batch Modal */}
+      {showCreateModal && (
+        <div
+          className={styles.modalOverlay}
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setShowCreateModal(false);
+          }}
+        >
+          <div
+            className={`${styles.modal} ${styles.modalNarrow}`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="create-batch-title"
+          >
+            <div className={styles.modalHeader}>
+              <div>
+                <h3 className={styles.modalTitle} id="create-batch-title">
+                  Create Deployment Batch
+                </h3>
+                <p className={styles.modalSubtitle}>
+                  Fill in the details to create a new deployment batch
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.modalClose}
+                onClick={() => setShowCreateModal(false)}
+                aria-label="Close"
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreate} className={styles.modalForm}>
+              {error && <div className={styles.modalError}>{error}</div>}
+
+              <label className={styles.field}>
+                <span className={styles.fieldLabel}>Teacher</span>
+                <select
+                  className={styles.select}
+                  value={form.teacher_id}
+                  onChange={(e) => setForm({ ...form, teacher_id: e.target.value })}
+                  required
+                >
+                  <option value="">Select Teacher</option>
+                  {teachers.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.first_name} {t.last_name} ({t.employee_id})
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className={styles.field}>
+                <span className={styles.fieldLabel}>Supervisor</span>
+                <select
+                  className={styles.select}
+                  value={form.supervisor_id}
+                  onChange={(e) => setForm({ ...form, supervisor_id: e.target.value })}
+                >
+                  <option value="">No Supervisor</option>
+                  {supervisors.map((s) => {
+                    const taken = isSupervisorTakenForCreate(s.id);
+                    return (
+                      <option key={s.id} value={s.id} disabled={taken}>
+                        {s.first_name} {s.last_name} ({s.company_name}){taken ? ' — already assigned to a batch' : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+              </label>
+
+              <label className={styles.field}>
+                <span className={styles.fieldLabel}>Batch label</span>
+                <input
+                  className={styles.input}
+                  placeholder="Batch label"
+                  value={form.batch_label}
+                  onChange={(e) => setForm({ ...form, batch_label: e.target.value })}
+                  required
+                />
+              </label>
+
+              <label className={styles.field}>
+                <span className={styles.fieldLabel}>Max students</span>
+                <input
+                  className={styles.input}
+                  type="number"
+                  min="1"
+                  placeholder="Max students"
+                  value={form.max_students}
+                  onChange={(e) => setForm({ ...form, max_students: e.target.value })}
+                  required
+                />
+              </label>
+
+              <div className={styles.modalFooter}>
+                <button className={styles.btnSecondary} type="button" onClick={() => setShowCreateModal(false)}>
+                  Cancel
+                </button>
+                <button className={styles.btn} disabled={creating} type="submit">
+                  {creating ? 'Creating...' : 'Create batch'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {assigning && (
         <div
           className={styles.modalOverlay}
@@ -350,7 +422,7 @@ function TeacherBatches() {
             <div className={styles.modalHeader}>
               <div>
                 <h3 className={styles.modalTitle} id="assign-students-title">
-                  Deploy Students
+                  Deploy students
                 </h3>
                 <p className={styles.modalSubtitle}>
                   {assigning.batch_label} · {assigning.teacher?.first_name} {assigning.teacher?.last_name}
@@ -404,16 +476,26 @@ function TeacherBatches() {
                     ))}
                   </select>
                 </div>
-                <div className={styles.filterGroup}>
+                <div className={styles.filterGroup} style={{flex: '1 1 300px'}}>
                   <label htmlFor="search-filter" className={styles.filterLabel}>Search</label>
-                  <input
-                    id="search-filter"
-                    type="text"
-                    className={styles.filterInput}
-                    placeholder="Search by name, ID, or email..."
-                    value={searchFilter}
-                    onChange={(e) => setSearchFilter(e.target.value)}
-                  />
+                  <div className={styles.searchWrapper}>
+                    <input
+                      id="search-filter"
+                      type="text"
+                      className={styles.filterInput}
+                      placeholder="Search by name, ID, or email..."
+                      value={searchFilter}
+                      onChange={(e) => setSearchFilter(e.target.value)}
+                    />
+                    <button 
+                      type="button" 
+                      className={styles.searchBtn}
+                      onClick={() => {}}
+                      title="Search"
+                    >
+                      🔍
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -496,7 +578,7 @@ function TeacherBatches() {
                 Cancel
               </button>
               <button className={styles.btn} disabled={savingAssign} onClick={handleAssign}>
-                {savingAssign ? 'Saving...' : 'Save Assignment'}
+                {savingAssign ? 'Deploying...' : 'Deploy'}
               </button>
             </div>
           </div>

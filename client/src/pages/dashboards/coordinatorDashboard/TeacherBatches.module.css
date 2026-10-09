@@ -231,6 +231,30 @@
 
 
 /* =========================================================
+   SECTION HEADER
+   ========================================================= */
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 18px;
+
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.sectionHeader .sectionTitle {
+  margin: 0;
+}
+
+.sectionHeader .btn {
+  flex-shrink: 0;
+}
+
+
+/* =========================================================
    ROW
    ========================================================= */
 
@@ -1144,6 +1168,11 @@
   min-width: 180px;
 }
 
+.filterGroup:last-child {
+  flex: 1;
+  min-width: 250px;
+}
+
 .filterLabel {
   color: var(--text-secondary);
 
@@ -1195,11 +1224,79 @@
 
 .filterSelect {
   min-width: 160px;
+  width: 100%;
 }
 
 .filterInput {
-  min-width: 220px;
+  width: 100%;
   flex: 1;
+}
+
+.searchWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.searchWrapper .filterInput {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  flex: 1;
+}
+
+.searchBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 38px;
+  width: 44px;
+
+  padding: 0 8px;
+
+  border: 1px solid var(--border);
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+
+  background:
+    linear-gradient(
+      140deg,
+      var(--maroon-700),
+      var(--maroon-600)
+    );
+
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 0.9rem;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 7px 16px -10px rgba(139, 30, 45, 0.75);
+
+  transition:
+    background 180ms ease,
+    transform 150ms ease,
+    box-shadow 180ms ease;
+}
+
+.searchBtn:hover {
+  background:
+    linear-gradient(
+      140deg,
+      #7a1725,
+      #a72b43
+    );
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 10px 20px -10px rgba(139, 30, 45, 0.8);
+}
+
+.searchBtn:active {
+  transform: translateY(0);
 }
 
 .modalBody .tableWrap {
@@ -1413,6 +1510,42 @@
 
   .tableWrap {
     margin-top: 12px;
+  }
+
+  .filterControls {
+    padding: 12px 16px 8px;
+    gap: 12px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filterGroup {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .filterGroup:last-child {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .filterSelect,
+  .filterInput {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .searchWrapper {
+    width: 100%;
+  }
+
+  .searchWrapper .filterInput {
+    border-radius: 8px 0 0 8px;
+  }
+
+  .searchBtn {
+    border-radius: 0 8px 8px 0;
+    width: 48px;
   }
 }
 
