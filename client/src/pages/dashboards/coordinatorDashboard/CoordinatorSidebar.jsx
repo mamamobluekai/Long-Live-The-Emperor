@@ -30,7 +30,7 @@ const links = [
   },
   {
     to: '/dashboard/coordinator/batches',
-    label: 'Teacher Batches',
+    label: 'Deployment',
     icon: Library,
   },
   {

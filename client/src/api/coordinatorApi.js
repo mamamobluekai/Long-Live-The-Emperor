@@ -167,8 +167,8 @@ export async function createTeacherBatch({ teacher_id, batch_label, max_students
   return apiFetch('/teacher-batches', jsonBody({ teacher_id, batch_label, max_students, supervisor_id }));
 }
 
-export async function updateTeacherBatch(batchId, { batch_label, max_students, supervisor_id }) {
-  return apiFetch(`/teacher-batches/${batchId}`, jsonBody({ batch_label, max_students, supervisor_id }, 'PUT'));
+export async function updateTeacherBatch(batchId, { batch_label, max_students, supervisor_id, teacher_id }) {
+  return apiFetch(`/teacher-batches/${batchId}`, jsonBody({ batch_label, max_students, supervisor_id, teacher_id }, 'PUT'));
 }
 
 export async function deleteTeacherBatch(batchId) {

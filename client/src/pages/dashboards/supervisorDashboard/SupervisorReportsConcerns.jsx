@@ -97,6 +97,7 @@ function SupervisorReportsConcerns() {
               studentNumber: student.student_number || '',
               batchId: batch.request_id,
               batchSource: batch.source,
+              batchLabel: batch.batch_label || '',
             };
             const existing = byStudent.get(entry.studentId);
             if (!existing || (existing.batchSource !== 'teacher' && entry.batchSource === 'teacher')) {
@@ -363,10 +364,11 @@ function SupervisorReportsConcerns() {
                     >
                       <option value="">Select a student</option>
                       {students.map((student) => (
-                        <option key={student.studentId} value={student.studentId}>
-                          {student.name || `Student ${student.studentId}`}
-                          {student.studentNumber ? ` (${student.studentNumber})` : ''}
-                        </option>
+                       <option key={student.studentId} value={student.studentId}>
+                         {student.name || `Student ${student.studentId}`}
+                         {student.studentNumber ? ` (${student.studentNumber})` : ''}
+                         {student.batchLabel ? ` — ${student.batchLabel}` : ''}
+                       </option>
                       ))}
                     </select>
                   </label>

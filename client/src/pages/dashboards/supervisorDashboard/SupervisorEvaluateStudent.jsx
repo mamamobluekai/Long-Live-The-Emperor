@@ -480,6 +480,7 @@ function SupervisorEvaluateStudent() {
                     <th>Student ID</th>
                     <th>Name</th>
                     <th>Batch</th>
+                    <th>Attendance Days</th>
                     <th>Overall Rating</th>
                     <th>Date Evaluated</th>
                     <th>Status</th>
@@ -498,8 +499,8 @@ function SupervisorEvaluateStudent() {
                       <tr
                         key={s.student_id}
                         className={s.student_id === activeStudentId ? styles.rowActive : ''}
-                        onClick={() => openEvaluation(s.student_id)}
-                        title={`Evaluate ${s.first_name} ${s.last_name}`}
+                        onClick={() => (s.attendance_days >= 10 ? openEvaluation(s.student_id) : undefined)}
+                        title={(s.attendance_days || 0) >= 10 ? `Evaluate ${s.first_name} ${s.last_name}` : 'Student must complete 10 days of work immersion before evaluation.'}
                       >
                         <td>{s.student_number}</td>
                         <td>
@@ -518,6 +519,7 @@ function SupervisorEvaluateStudent() {
                           </span>
                         </td>
                         <td>{s.batch_label}</td>
+                        <td>{s.attendance_days ?? '-'}</td>
                         <td>
                           {percentage ? (
                             <>
@@ -575,12 +577,15 @@ function SupervisorEvaluateStudent() {
                         <div className={styles.studentCardName}>
                           {s.first_name} {s.last_name}
                         </div>
-                        <div className={styles.studentCardMeta}>
-                          {s.student_number} · {s.batch_label} · Grade {s.grade_level || '-'}
-                        </div>
-                        <div className={styles.studentCardMeta}>
-                          {s.track_strand || '-'} · {s.email}
-                        </div>
+                    <div className={styles.studentCardMeta}>
+                      {s.student_number} · {s.batch_label} · Grade {s.grade_level || '-'}
+                    </div>
+                    <div className={styles.studentCardMeta}>
+                      {s.track_strand || '-'} · {s.email}
+                    </div>
+                    <div className={styles.studentCardMeta}>
+                      Attendance days: {s.attendance_days ?? '-'}
+                    </div>
                       </div>
                       {s.evaluation && (
                         <span className={`${styles.badge} ${styles.badgeApproved}`}>
@@ -595,6 +600,8 @@ function SupervisorEvaluateStudent() {
                       type="button"
                       className={styles.btn}
                       onClick={() => openEvaluation(s.student_id)}
+                      disabled={(s.attendance_days || 0) < 10}
+                      title={(s.attendance_days || 0) < 10 ? 'Student must complete 10 days of work immersion before evaluation.' : `Evaluate ${s.first_name} ${s.last_name}`}
                     >
                       {s.evaluation ? 'Re-evaluate' : 'Evaluate'}
                     </button>
@@ -631,6 +638,11 @@ function SupervisorEvaluateStudent() {
                   {activeStudent.grade_level || '-'} · {activeStudent.track_strand || '-'} ·{' '}
                   {activeStudent.email}
                 </p>
+                {(activeStudent.attendance_days || 0) < 10 && (
+                  <p style={{ color: '#b45309', marginTop: 6, fontSize: 13 }}>
+                    This student has not yet completed the required 10-day work immersion (current: {activeStudent.attendance_days || 0} days).
+                  </p>
+                )}
               </div>
               <button
                 type="button"

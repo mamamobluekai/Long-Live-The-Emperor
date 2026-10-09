@@ -651,6 +651,11 @@ function SupervisorCertifications() {
     setTemplate((prev) => ({ ...prev, [field]: value }));
   };
 
+  const sanitizeText = (value) => {
+    if (typeof value !== 'string') return value;
+    return value.replace(/<[^>]*>/g, '').trim();
+  };
+
   const handleSaveTemplate = async (e) => {
     e.preventDefault();
     setSavingTemplate(true);
@@ -658,10 +663,16 @@ function SupervisorCertifications() {
     setMessage('');
     try {
       const teacherBatchId = designScope === 'default' ? null : Number(designScope);
-      const saved = await supervisorSaveCertificateTemplate({
-        ...template,
+      const payload = {
+        school_name: sanitizeText(template.school_name),
+        company_name: sanitizeText(template.company_name),
+        program_name: sanitizeText(template.program_name),
+        footer_text: sanitizeText(template.footer_text),
+        border_color: sanitizeText(template.border_color),
+        title_text: sanitizeText(template.title_text),
         teacher_batch_id: teacherBatchId,
-      });
+      };
+      const saved = await supervisorSaveCertificateTemplate(payload);
       setTemplatesByBatch((prev) =>
         teacherBatchId == null
           ? prev

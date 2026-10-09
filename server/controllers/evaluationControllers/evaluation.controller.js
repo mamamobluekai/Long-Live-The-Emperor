@@ -174,6 +174,17 @@ async function submitEvaluation(req, res) {
       return res.status(400).json({ error: 'studentId and categoryScores are required.' });
     }
 
+    const attendanceResult = await client.query(
+      `SELECT COUNT(DISTINCT date)::int AS days
+       FROM student_attendance
+       WHERE student_id = $1 AND check_in_time IS NOT NULL AND check_out_time IS NOT NULL`,
+      [studentId]
+    );
+    const attendanceDays = Number(attendanceResult.rows[0]?.days || 0);
+    if (attendanceDays < 10) {
+      return res.status(400).json({ error: `This student has not yet completed the required 10-day work immersion. Current attendance days: ${attendanceDays}.` });
+    }
+
     const criteriaResult = await client.query(
       'SELECT id, category_name, indicators FROM evaluation_criteria ORDER BY sort_order ASC, id ASC'
     );
@@ -324,10 +335,17 @@ async function listMyStudents(req, res) {
           'SELECT id, overall_score, overall_percentage, created_at FROM student_evaluations WHERE student_id = $1 AND evaluator_id = $2 LIMIT 1',
           [s.student_id, supervisorUserId]
         );
+        const attendanceResult = await pool.query(
+          `SELECT COUNT(DISTINCT date)::int AS days
+           FROM student_attendance
+           WHERE student_id = $1 AND check_in_time IS NOT NULL AND check_out_time IS NOT NULL`,
+          [s.student_id]
+        );
         enriched.push({
           ...s,
           batch_id: b.request_id,
           batch_label: b.batch_label,
+          attendance_days: Number(attendanceResult.rows[0]?.days || 0),
           evaluation: evResult.rows[0] || null,
         });
       }

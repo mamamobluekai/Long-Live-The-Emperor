@@ -28,6 +28,10 @@ function TeacherBatches() {
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [savingAssign, setSavingAssign] = useState(false);
   const [assignError, setAssignError] = useState('');
+  
+  // Filter states for the assign modal
+  const [strandFilter, setStrandFilter] = useState('');
+  const [searchFilter, setSearchFilter] = useState('');
 
   const [editing, setEditing] = useState(null);
   const [editForm, setEditForm] = useState({ batch_label: '', max_students: '', supervisor_id: '' });
@@ -119,6 +123,8 @@ function TeacherBatches() {
     setAssigning(batch);
     setAssignError('');
     setSelectedStudents((batch.students || []).map((s) => s.student_id || s.id));
+    setStrandFilter('');
+    setSearchFilter('');
   };
 
   const toggleStudent = (id) => {
@@ -193,7 +199,12 @@ function TeacherBatches() {
   const openEdit = (batch) => {
     setEditing(batch);
     setEditError('');
-    setEditForm({ batch_label: batch.batch_label, max_students: batch.max_students, supervisor_id: batch.supervisor_id || '' });
+    setEditForm({ 
+      batch_label: batch.batch_label, 
+      max_students: batch.max_students, 
+      supervisor_id: batch.supervisor_id || '',
+      teacher_id: batch.teacher_id || ''
+    });
   };
 
   const handleEdit = async (e) => {
@@ -204,6 +215,7 @@ function TeacherBatches() {
         batch_label: editForm.batch_label,
         max_students: Number(editForm.max_students),
         supervisor_id: editForm.supervisor_id ? Number(editForm.supervisor_id) : null,
+        teacher_id: editForm.teacher_id ? Number(editForm.teacher_id) : null,
       });
       setMessage('Batch updated.');
       setEditing(null);
@@ -216,7 +228,7 @@ function TeacherBatches() {
   return (
     <div>
       <div className={styles.pageHeader}>
-        <h2>Teacher Batches</h2>
+        <h2>Deployment</h2>
         <p>Create batches, assign students with completed requirements, and manage teachers.</p>
       </div>
 
@@ -224,7 +236,7 @@ function TeacherBatches() {
       {error && <div className={styles.error}>{error}</div>}
 
       <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Create Batch</h3>
+        <h3 className={styles.sectionTitle}>Create Deployment Batch</h3>
         <form onSubmit={handleCreate} className={styles.row}>
           <select
             className={styles.select}
@@ -277,7 +289,7 @@ function TeacherBatches() {
       </div>
 
       <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Batches ({batches.length})</h3>
+        <h3 className={styles.sectionTitle}>Deployment Batches ({batches.length})</h3>
         {loading ? (
           <p className={styles.loading}>Loading...</p>
         ) : batches.length === 0 ? (
@@ -297,7 +309,7 @@ function TeacherBatches() {
               </div>
                 <div className={styles.actions}>
                   <button className={styles.btnGhost} onClick={() => openAssign(b)}>
-                    Assign Students
+                    Deploy
                   </button>
                   <button className={styles.btnIcon} onClick={() => openEdit(b)} title="Edit batch">
                     <Pencil size={16} />
@@ -338,7 +350,7 @@ function TeacherBatches() {
             <div className={styles.modalHeader}>
               <div>
                 <h3 className={styles.modalTitle} id="assign-students-title">
-                  Assign Students
+                  Deploy Students
                 </h3>
                 <p className={styles.modalSubtitle}>
                   {assigning.batch_label} · {assigning.teacher?.first_name} {assigning.teacher?.last_name}
@@ -368,6 +380,43 @@ function TeacherBatches() {
             {assignError && <div className={styles.modalError}>{assignError}</div>}
 
             <div className={styles.modalBody}>
+              {/* Filter Controls */}
+              <div className={styles.filterControls}>
+                <div className={styles.filterGroup}>
+                  <label htmlFor="strand-filter" className={styles.filterLabel}>Strand</label>
+                  <select
+                    id="strand-filter"
+                    className={styles.filterSelect}
+                    value={strandFilter}
+                    onChange={(e) => setStrandFilter(e.target.value)}
+                  >
+                    <option value="">All Strands</option>
+                    {[
+                      'STEM',
+                      'ABM',
+                      'HUMSS',
+                      'GAS',
+                      'TVL',
+                      'Arts and Design',
+                      'Sports'
+                    ].map((strand) => (
+                      <option key={strand} value={strand}>{strand}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className={styles.filterGroup}>
+                  <label htmlFor="search-filter" className={styles.filterLabel}>Search</label>
+                  <input
+                    id="search-filter"
+                    type="text"
+                    className={styles.filterInput}
+                    placeholder="Search by name, ID, or email..."
+                    value={searchFilter}
+                    onChange={(e) => setSearchFilter(e.target.value)}
+                  />
+                </div>
+              </div>
+
               <div className={styles.tableWrap}>
                 <table className={styles.table}>
                   <thead>
@@ -380,15 +429,30 @@ function TeacherBatches() {
                       <th>Batch Status</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {completed.length === 0 && (
-                      <tr>
-                        <td colSpan="6" className={styles.empty}>
-                          No students with completed requirements.
-                        </td>
-                      </tr>
-                    )}
-                    {completed.map((s) => {
+<tbody>
+                      {completed.length === 0 && (
+                        <tr>
+                          <td colSpan="6" className={styles.empty}>
+                            No students with completed requirements.
+                          </td>
+                        </tr>
+                      )}
+                      {/* Filter students based on strand and search */}
+                      {completed
+                        .filter((s) => {
+                          // Strand filter
+                          if (strandFilter && s.strand !== strandFilter) return false;
+                          // Search filter
+                          if (searchFilter) {
+                            const searchLower = searchFilter.toLowerCase();
+                            const matchesName = `${s.first_name} ${s.last_name}`.toLowerCase().includes(searchLower);
+                            const matchesId = (s.student_id || '').toLowerCase().includes(searchLower);
+                            const matchesEmail = (s.email || '').toLowerCase().includes(searchLower);
+                            if (!matchesName && !matchesId && !matchesEmail) return false;
+                          }
+                          return true;
+                        })
+                        .map((s) => {
                       const assignmentId = s.student_id || s.id;
                       const locked = isLockedStudent(s);
                       return (
@@ -484,6 +548,22 @@ function TeacherBatches() {
                   onChange={(e) => setEditForm({ ...editForm, batch_label: e.target.value })}
                   required
                 />
+              </label>
+
+              <label className={styles.field}>
+                <span className={styles.fieldLabel}>Teacher</span>
+                <select
+                  className={styles.select}
+                  value={editForm.teacher_id}
+                  onChange={(e) => setEditForm({ ...editForm, teacher_id: e.target.value })}
+                  required
+                >
+                  {teachers.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.first_name} {t.last_name} ({t.employee_id})
+                    </option>
+                  ))}
+                </select>
               </label>
 
               <label className={styles.field}>
