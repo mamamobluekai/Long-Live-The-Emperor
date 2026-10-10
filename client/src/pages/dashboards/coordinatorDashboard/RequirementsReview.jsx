@@ -1,10 +1,11 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import {
   listSubmissions,
   reviewSubmission,
   bulkReviewSubmissions,
   verifyDocument,
   getRequirements,
+  getStudentStrands,
   getDocumentTypes,
   createDocumentType,
   updateDocumentType,
@@ -156,8 +157,28 @@ const FALLBACK_DOC_TYPES = [
 function RequirementsReview() {
   const [submissions, setSubmissions] = useState([]);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [strandFilter, setStrandFilter] = useState('');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Strands come from the students table itself, so the dropdown never has to
+  // be updated when a new strand is introduced.
+  const [strands, setStrands] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+    getStudentStrands()
+      .then((data) => {
+        if (mounted) setStrands(data.strands || []);
+      })
+      .catch(() => {
+        // The strand filter simply stays empty if this fails; the rest of the
+        // page keeps working.
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const [loading, setLoading] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
@@ -183,6 +204,18 @@ function RequirementsReview() {
   const [reviewStatus, setReviewStatus] = useState('');
   const [remarks, setRemarks] = useState('');
 
+  // Keeps the feedback textarea sized to its content.
+  const feedbackRef = useRef(null);
+
+  // Re-fits the feedback box whenever its text changes, and again when the
+  // panel is (re)opened so a fresh panel always starts at one line.
+  useEffect(() => {
+    const el = feedbackRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [remarks, selected]);
+
   const [saving, setSaving] = useState(false);
   const [docLoading, setDocLoading] = useState(false);
 
@@ -203,6 +236,7 @@ function RequirementsReview() {
     try {
       const data = await listSubmissions({
         status: statusFilter,
+        strand: strandFilter,
         search,
       });
 
@@ -229,7 +263,7 @@ function RequirementsReview() {
   // on screen.
   useEffect(() => {
     setSelectedIds([]);
-  }, [statusFilter, debouncedSearch]);
+  }, [statusFilter, strandFilter, debouncedSearch]);
 
   useEffect(() => {
     let mounted = true;
@@ -240,6 +274,7 @@ function RequirementsReview() {
         const [subData, typesData] = await Promise.all([
           listSubmissions({
             status: statusFilter,
+            strand: strandFilter,
             search: debouncedSearch,
           }),
           getDocumentTypes({ all: true }).catch(() => null),
@@ -276,7 +311,7 @@ function RequirementsReview() {
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, debouncedSearch]);
+  }, [statusFilter, strandFilter, debouncedSearch]);
 
   const openSubmission = async (sub) => {
     setSelected(sub);
@@ -621,7 +656,7 @@ function RequirementsReview() {
             <Search size={18} />
 
             <input
-              placeholder="Search student, email, ID..."
+              placeholder="Search student, email, ID, strand..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -670,47 +705,24 @@ function RequirementsReview() {
             </option>
           </select>
 
+          <select
+            className={styles.filter}
+            value={strandFilter}
+            onChange={(e) => setStrandFilter(e.target.value)}
+            aria-label="Filter by strand"
+          >
+            <option value="">
+              All Strands
+            </option>
+
+            {strands.map((strand) => (
+              <option key={strand} value={strand}>
+                {strand}
+              </option>
+            ))}
+          </select>
+
         </div>
-
-        {/* BULK APPROVE / REJECT */}
-        {selectedIds.length > 0 && (
-          <div className={styles.bulkBar}>
-            <div className={styles.bulkActions}>
-              <button
-                type="button"
-                className={styles.bulkApproveBtn}
-                onClick={() => handleBulkReview('Approved')}
-                disabled={bulkLoading}
-              >
-                <ThumbsUp size={14} />
-                {bulkLoading ? 'Working...' : 'Approve Selected'}
-              </button>
-
-              <button
-                type="button"
-                className={styles.bulkRejectBtn}
-                onClick={() => handleBulkReview('Rejected')}
-                disabled={bulkLoading}
-              >
-                <ThumbsDown size={14} />
-                {bulkLoading ? 'Working...' : 'Reject Selected'}
-              </button>
-            </div>
-
-            <span className={styles.bulkCount}>
-              {selectedIds.length} selected
-            </span>
-
-            <button
-              type="button"
-              className={styles.bulkClearBtn}
-              onClick={() => setSelectedIds([])}
-              disabled={bulkLoading}
-            >
-              Clear
-            </button>
-          </div>
-        )}
 
         {/* TABLE */}
         {loading && initialLoad ? (
@@ -871,6 +883,47 @@ function RequirementsReview() {
         )}
 
       </div>
+
+      {/* BULK APPROVE / REJECT — floats at the bottom-right while rows are
+          selected so it stays reachable no matter how far the table is scrolled. */}
+      {selectedIds.length > 0 && (
+        <div className={styles.bulkBar}>
+          <div className={styles.bulkActions}>
+            <button
+              type="button"
+              className={styles.bulkApproveBtn}
+              onClick={() => handleBulkReview('Approved')}
+              disabled={bulkLoading}
+            >
+              <ThumbsUp size={17} />
+              {bulkLoading ? 'Working...' : 'Approve Selected'}
+            </button>
+
+            <button
+              type="button"
+              className={styles.bulkRejectBtn}
+              onClick={() => handleBulkReview('Rejected')}
+              disabled={bulkLoading}
+            >
+              <ThumbsDown size={17} />
+              {bulkLoading ? 'Working...' : 'Reject Selected'}
+            </button>
+          </div>
+
+          <span className={styles.bulkCount}>
+            {selectedIds.length} selected
+          </span>
+
+          <button
+            type="button"
+            className={styles.bulkClearBtn}
+            onClick={() => setSelectedIds([])}
+            disabled={bulkLoading}
+          >
+            Clear
+          </button>
+        </div>
+      )}
 
       {/* MANAGE REQUIREMENTS MODAL */}
       {showReqModal && (
@@ -1080,7 +1133,7 @@ function RequirementsReview() {
 
                   <p>
                     {selected.student_number}
-                    {' Ã‚Â· '}
+                    {' · '}
                     {selected.email}
                   </p>
                 </div>
@@ -1157,13 +1210,12 @@ function RequirementsReview() {
                       </label>
 
                       <textarea
+                        ref={feedbackRef}
                         value={remarks}
-                        onChange={(e) =>
-                          setRemarks(e.target.value)
-                        }
+                        rows={1}
                         placeholder="Write feedback for the student..."
-                        className={styles.formInput}
-                        rows={3}
+                        className={`${styles.formInput} ${styles.autoGrowTextarea}`}
+                        onChange={(e) => setRemarks(e.target.value)}
                       />
                     </div>
 
@@ -1415,17 +1467,17 @@ function RequirementsReview() {
                                       {fmtSize(
                                         doc.file_size
                                       ) &&
-                                        ` Ã‚Â· ${fmtSize(
+                                        ` · ${fmtSize(
                                           doc.file_size
                                         )}`}
 
                                       {doc.mime_type &&
-                                        ` Ã‚Â· ${getFileType(
+                                        ` · ${getFileType(
                                           doc.mime_type
                                         )}`}
 
                                       {doc.uploaded_date &&
-                                        ` Ã‚Â· ${new Date(
+                                        ` · ${new Date(
                                           doc.uploaded_date
                                         ).toLocaleDateString()}`}
                                     </span>

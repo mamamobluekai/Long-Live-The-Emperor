@@ -738,7 +738,7 @@
 }
 
 .studentsList {
-  max-height: 46vh;
+  max-height: 58vh;
 
   margin: 0;
   padding: 0;
@@ -764,28 +764,238 @@
   border-bottom: none;
 }
 
+.studentCheck {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  min-width: 0;
+
+  cursor: pointer;
+}
+
+.studentCheck input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+
+  flex-shrink: 0;
+
+  accent-color: var(--maroon-700);
+
+  cursor: pointer;
+}
+
 .studentName {
   color: var(--text-dark);
 
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
-.studentId {
+.studentRemove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 30px;
+  height: 30px;
+
+  flex-shrink: 0;
+
+  border: 1px solid var(--border);
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  color: var(--danger);
+
+  cursor: pointer;
+
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 150ms ease;
+}
+
+.studentRemove:hover:not(:disabled) {
+  background: var(--danger-soft);
+
+  border-color: #e6aaa5;
+
+  transform: translateY(-1px);
+}
+
+.studentRemove:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+}
+
+.strandTag {
   flex-shrink: 0;
 
   padding: 3px 9px;
 
+  border: 1px solid var(--border-soft);
   border-radius: 999px;
 
-  background: var(--maroon-soft);
+  background: #fbf7f8;
 
-  color: var(--maroon-700);
+  color: var(--text-secondary);
 
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
 
   white-space: nowrap;
+}
+
+.addIntro {
+  margin: 0 0 14px;
+
+  color: var(--text-secondary);
+
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+/* Wide variant used by the batch students modal. */
+.modalWide {
+  width: min(96vw, 1080px);
+  max-width: none;
+}
+
+
+/* =========================================================
+   DELETE CONFIRMATION MODAL
+   ========================================================= */
+
+.deleteModal {
+  max-width: 460px;
+}
+
+.deleteIconWrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  min-width: 0;
+}
+
+.deleteIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+
+  flex-shrink: 0;
+
+  border: 1px solid #f2cbd2;
+  border-radius: 12px;
+
+  background: var(--danger-soft);
+
+  color: var(--danger);
+}
+
+.deleteBody {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  padding: 18px 22px 6px;
+}
+
+.deleteWarning {
+  margin: 0;
+
+  color: var(--text);
+
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.deleteWarning strong {
+  color: var(--maroon-800);
+}
+
+.deleteNote {
+  margin: 0;
+
+  color: var(--muted);
+
+  font-size: 0.76rem;
+}
+
+.spinner {
+  display: inline-block;
+
+  width: 14px;
+  height: 14px;
+
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #ffffff;
+
+  border-radius: 50%;
+
+  animation: spin 0.7s linear infinite;
+}
+
+.btnDanger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  min-height: 40px;
+
+  padding: 0 15px;
+
+  border: 1px solid #9f1239;
+  border-radius: 9px;
+
+  background:
+    linear-gradient(
+      140deg,
+      #be123c,
+      #9f1239
+    );
+
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 0.79rem;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 7px 16px -10px rgba(190, 18, 60, 0.8);
+
+  transition:
+    background 180ms ease,
+    transform 150ms ease,
+    box-shadow 180ms ease;
+}
+
+.btnDanger:hover:not(:disabled) {
+  background:
+    linear-gradient(
+      140deg,
+      #9f1239,
+      #881337
+    );
+
+  transform: translateY(-1px);
+}
+
+.btnDanger:disabled,
+.btnSecondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 

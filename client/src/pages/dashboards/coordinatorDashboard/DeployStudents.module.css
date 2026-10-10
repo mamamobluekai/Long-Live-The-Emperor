@@ -37,6 +37,10 @@
   min-height: 40px;
   padding: 0 15px;
   flex-shrink: 0;
+
+  /* Pushed to the trailing edge of the header. */
+  margin-left: auto;
+
   border: 1px solid #dfc6cd;
   border-radius: 9px;
   background: #fff8fa;
@@ -356,10 +360,14 @@
   z-index: 400;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 10px;
   width: 100%;
   max-width: 520px;
-  margin: 0 auto;
+
+  /* Right-aligned: auto on the left, none on the right. */
+  margin: 0 0 0 auto;
+
   padding: 10px;
   border: 1px solid #e6dfe2;
   border-radius: 16px;
@@ -437,7 +445,7 @@
   }
 
   .btnBack {
-    align-self: flex-start;
+    align-self: flex-end;
   }
 
   .filters {

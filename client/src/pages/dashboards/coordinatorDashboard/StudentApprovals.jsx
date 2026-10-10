@@ -397,9 +397,23 @@ function StudentApprovals() {
           </button>
         </div>
 
-        <div className={styles.uploadHint}>
-          <span>ⓘ</span>
-          Required columns: Student ID, First Name, Last Name, and Email.
+        <div className={styles.uploadHints}>
+          <div className={styles.uploadHint}>
+            <span className={styles.hintIcon}>ⓘ</span>
+            <span>
+              <strong>Required columns</strong> (the upload is rejected if any
+              are missing): Student ID, First Name, Last Name, Email.
+            </span>
+          </div>
+
+          <div className={styles.uploadHint}>
+            <span className={styles.hintIcon}>ⓘ</span>
+            <span>
+              <strong>Optional columns</strong> (used when present, otherwise
+              left blank): Middle Name, Section, Strand, School, Contact Number,
+              Gender.
+            </span>
+          </div>
         </div>
 
         {uploadMessage && (

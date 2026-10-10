@@ -359,16 +359,30 @@
   cursor: not-allowed;
 }
 
+/* Groups the required/optional column notes under the upload box. */
+.uploadHints {
+  padding: 0 24px 20px;
+}
+
 .uploadHint {
   display: flex;
   align-items: center;
   gap: 7px;
-  padding: 0 24px 20px;
   color: #8490a1;
   font-size: 11px;
 }
 
-.uploadHint span {
+.uploadHint + .uploadHint {
+  margin-top: 6px;
+}
+
+/* The "ⓘ" marker only — the descriptive text keeps the muted label colour. */
+.uploadHint .hintIcon {
+  color: #8b1e2d;
+  font-weight: 700;
+}
+
+.uploadHint strong {
   color: #8b1e2d;
   font-weight: 700;
 }
@@ -605,7 +619,13 @@
 
 .tableContainer {
   width: 100%;
-  overflow-x: auto;
+
+  /* Caps the list at roughly ten rows so a large upload scrolls inside the
+     card instead of stretching the page. */
+  max-height: 560px;
+
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .table {
@@ -627,6 +647,11 @@
   letter-spacing: 0.8px;
   text-align: left;
   white-space: nowrap;
+
+  /* Stays pinned to the top of .tableContainer while rows scroll. */
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .table td {

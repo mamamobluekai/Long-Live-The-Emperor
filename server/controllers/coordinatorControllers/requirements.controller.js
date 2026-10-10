@@ -197,7 +197,7 @@ const deleteDocument = async (req, res) => {
 
 const listSubmissions = async (req, res) => {
   try {
-    const { status = null, search = null } = req.query;
+    const { status = null, search = null, strand = null } = req.query;
     const result = await pool.query(
       `SELECT s.*, st.student_number, st.first_name, st.last_name, st.email, st.grade_level, st.track_strand,
          COUNT(sd.id) AS uploaded_documents,
@@ -207,10 +207,11 @@ const listSubmissions = async (req, res) => {
         LEFT JOIN student_documents sd ON sd.submission_id = s.id
         LEFT JOIN document_types dt ON dt.id = sd.document_type_id
         WHERE ($1::text IS NULL OR s.status = $1)
-          AND ($2::text IS NULL OR LOWER(st.student_number || ' ' || st.first_name || ' ' || st.last_name || ' ' || COALESCE(st.email,'')) LIKE LOWER('%' || $2 || '%'))
+          AND ($2::text IS NULL OR LOWER(st.student_number || ' ' || st.first_name || ' ' || st.last_name || ' ' || COALESCE(st.email,'') || ' ' || COALESCE(st.track_strand,'')) LIKE LOWER('%' || $2 || '%'))
+          AND ($3::text IS NULL OR st.track_strand = $3)
         GROUP BY s.id, st.id
         ORDER BY s.updated_at DESC`,
-      [status === 'all' ? null : status, search || null]
+      [status === 'all' ? null : status, search || null, strand || null]
     );
     res.json({ submissions: result.rows });
   } catch (err) {

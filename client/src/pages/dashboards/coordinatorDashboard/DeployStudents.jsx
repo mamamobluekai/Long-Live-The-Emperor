@@ -144,9 +144,6 @@ function DeployStudents() {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <button className={styles.btnBack} onClick={handleBack}>
-          <ArrowLeft size={18} /> Back
-        </button>
         <div className={styles.headerText}>
           <h1 className={styles.title}>Deploy students</h1>
           <p className={styles.subtitle}>
@@ -157,6 +154,9 @@ function DeployStudents() {
             {batch.supervisor ? ` · Supervisor: ${batch.supervisor.first_name} ${batch.supervisor.last_name}` : ''}
           </p>
         </div>
+        <button className={styles.btnBack} onClick={handleBack}>
+          <ArrowLeft size={18} /> Back
+        </button>
       </div>
 
       {message && <div className={styles.message}>{message}</div>}

@@ -232,9 +232,6 @@ function DeploymentRequests() {
 
       <div className={styles.pageHeader}>
         <div className={styles.headerLeft}>
-          <div className={styles.headerIcon}>
-            <Send size={23} />
-          </div>
           <div>
             <div className={styles.eyebrow}>Work Immersion Office</div>
             <h1>Deployment Requests</h1>
@@ -242,6 +239,12 @@ function DeploymentRequests() {
               Supervisors request students; you name the batch, pick who goes in, and assign the
               teacher. The supervisor is then attached to that batch.
             </p>
+          </div>
+          {/* Sits at the trailing edge of the header. The inline margin is used
+              instead of a shared .headerLeft change so the supervisor's
+              CreateDeploymentRequest header keeps its original layout. */}
+          <div className={styles.headerIcon} style={{ marginLeft: 'auto' }} aria-hidden="true">
+            <Send size={23} />
           </div>
         </div>
       </div>

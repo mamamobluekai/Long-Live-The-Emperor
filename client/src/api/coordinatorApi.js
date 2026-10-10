@@ -97,10 +97,11 @@ export async function uploadStudentsExcel(file) {
 }
 
 /* ---------------- Requirements / submissions ---------------- */
-export async function listSubmissions({ status = 'all', search = '' } = {}) {
+export async function listSubmissions({ status = 'all', search = '', strand = '' } = {}) {
   const params = new URLSearchParams();
   if (status && status !== 'all') params.set('status', status);
   if (search) params.set('search', search);
+  if (strand) params.set('strand', strand);
   const qs = params.toString();
   return apiFetch(`/submissions${qs ? `?${qs}` : ''}`);
 }

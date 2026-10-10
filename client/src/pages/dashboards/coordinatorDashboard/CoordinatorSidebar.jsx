@@ -40,7 +40,7 @@ const links = [
   },
   {
     to: '/dashboard/coordinator/deployment',
-    label: 'Deployment',
+    label: 'Deployment Requests',
     icon: Send,
   },
   {
