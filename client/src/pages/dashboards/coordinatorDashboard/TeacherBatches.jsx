@@ -1,21 +1,20 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   getTeachers,
   getBatches,
-  getCompletedStudents,
   getSupervisors,
   createTeacherBatch,
   updateTeacherBatch,
   deleteTeacherBatch,
-  assignStudentsToBatch,
 } from '../../../api/coordinatorApi';
 import { Pencil, Trash2, X } from 'lucide-react';
 import styles from './TeacherBatches.module.css';
 
 function TeacherBatches() {
+  const navigate = useNavigate();
   const [teachers, setTeachers] = useState([]);
   const [batches, setBatches] = useState([]);
-  const [completed, setCompleted] = useState([]);
   const [supervisors, setSupervisors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
@@ -25,27 +24,21 @@ function TeacherBatches() {
   const [creating, setCreating] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const [assigning, setAssigning] = useState(null); // batch being assigned to
-  const [selectedStudents, setSelectedStudents] = useState([]);
-  const [savingAssign, setSavingAssign] = useState(false);
-  const [assignError, setAssignError] = useState('');
-  
-  // Filter states for the assign modal
-  const [strandFilter, setStrandFilter] = useState('');
-  const [searchFilter, setSearchFilter] = useState('');
-
   const [editing, setEditing] = useState(null);
-  const [editForm, setEditForm] = useState({ batch_label: '', max_students: '', supervisor_id: '' });
+  const [editForm, setEditForm] = useState({ batch_label: '', max_students: '', supervisor_id: '', teacher_id: '' });
   const [editError, setEditError] = useState('');
+
+  // Students are no longer rendered inline on the card — clicking the card
+  // opens this modal so long lists can scroll instead of stretching the page.
+  const [viewing, setViewing] = useState(null);
 
   const loadAll = async () => {
     setLoading(true);
     setError('');
     try {
-      const [t, b, c, s] = await Promise.all([getTeachers(), getBatches(), getCompletedStudents(), getSupervisors()]);
+      const [t, b, s] = await Promise.all([getTeachers(), getBatches(), getSupervisors()]);
       setTeachers(t.teachers || []);
       setBatches(b.batches || []);
-      setCompleted(c.students || []);
       setSupervisors(s.supervisors || []);
     } catch (err) {
       setError(err.message);
@@ -60,11 +53,10 @@ function TeacherBatches() {
       setLoading(true);
       setError('');
       try {
-        const [t, b, c, s] = await Promise.all([getTeachers(), getBatches(), getCompletedStudents(), getSupervisors()]);
+        const [t, b, s] = await Promise.all([getTeachers(), getBatches(), getSupervisors()]);
         if (!mounted) return;
         setTeachers(t.teachers || []);
         setBatches(b.batches || []);
-        setCompleted(c.students || []);
         setSupervisors(s.supervisors || []);
       } catch (err) {
         if (mounted) setError(err.message);
@@ -121,61 +113,21 @@ function TeacherBatches() {
     }
   };
 
+  // Deploying students is a full page so long student lists can scroll freely
+  // instead of being trapped inside a modal.
   const openAssign = (batch) => {
-    setAssigning(batch);
-    setAssignError('');
-    setSelectedStudents((batch.students || []).map((s) => s.student_id || s.id));
-    setStrandFilter('');
-    setSearchFilter('');
+    navigate(`/dashboard/coordinator/batches/deploy/${batch.id}`);
   };
 
-  const toggleStudent = (id) => {
-    setSelectedStudents((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
+  const openViewStudents = (batch) => setViewing(batch);
 
-  // A student already assigned to a different batch is locked — the server
-  // rejects reassigning them, so prevent selecting them here too. Students who
-  // are already in THIS batch stay editable/selectable.
-  const isLockedStudent = (student) => {
-    if (!assigning) return false;
-    if (!student.assigned_batch_id) return false;
-    if (Number(student.assigned_batch_id) === Number(assigning.id)) return false;
-    return true;
-  };
-
-  const handleAssign = async () => {
-    if (!assigning) return;
-    setAssignError('');
-    if (selectedStudents.length > assigning.max_students) {
-      setAssignError(`Selected ${selectedStudents.length} exceeds max ${assigning.max_students}.`);
-      return;
-    }
-    setSavingAssign(true);
-    setError('');
-    try {
-      await assignStudentsToBatch(
-        assigning.id,
-        selectedStudents.map((id) => Number(id))
-      );
-      setMessage('Students assigned to batch.');
-      setAssigning(null);
-      loadAll();
-    } catch (err) {
-      setAssignError(err.message);
-    } finally {
-      setSavingAssign(false);
-    }
-  };
-
-// Close the open modal on Escape and stop the page behind it scrolling.
-  const modalOpen = Boolean(assigning || editing || showCreateModal);
+  // Close the open modal on Escape and stop the page behind it scrolling.
+  const modalOpen = Boolean(viewing || editing || showCreateModal);
   useEffect(() => {
     if (!modalOpen) return undefined;
     const onKey = (e) => {
       if (e.key !== 'Escape') return;
-      setAssigning(null);
+      setViewing(null);
       setEditing(null);
       setShowCreateModal(false);
     };
@@ -202,13 +154,25 @@ function TeacherBatches() {
   const openEdit = (batch) => {
     setEditing(batch);
     setEditError('');
-    // Handle teacher_id - could be direct property or nested in teacher object
-    const teacherId = batch.teacher_id || (batch.teacher && batch.teacher.id) || '';
-    setEditForm({ 
-      batch_label: batch.batch_label, 
-      max_students: batch.max_students, 
+    // The teacher <select> is keyed by teachers' USER ids, but the batch
+    // payload carries the internal teachers.id. Resolve it back to the user id
+    // so the current teacher is preselected — otherwise changing it silently
+    // sent the wrong teacher. Fall back to matching the stored teacher object.
+    const teacherUser =
+      batch.teacher_user_id ||
+      (batch.teacher && batch.teacher.user_id) ||
+      teachers.find(
+        (t) =>
+          batch.teacher &&
+          t.first_name === batch.teacher.first_name &&
+          t.last_name === batch.teacher.last_name
+      )?.id ||
+      '';
+    setEditForm({
+      batch_label: batch.batch_label,
+      max_students: batch.max_students,
       supervisor_id: batch.supervisor_id || '',
-      teacher_id: String(teacherId)
+      teacher_id: String(teacherUser),
     });
   };
 
@@ -257,18 +221,36 @@ function TeacherBatches() {
           <p className={styles.empty}>No batches yet.</p>
         ) : (
           batches.map((b) => (
-            <div key={b.id} className={styles.listItem}>
+            <div
+              key={b.id}
+              className={styles.listItem}
+              role="button"
+              tabIndex={0}
+              title="View students"
+              aria-label={`View students in ${b.batch_label}`}
+              onClick={() => openViewStudents(b)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  openViewStudents(b);
+                }
+              }}
+            >
               <div className={styles.row}>
               <div>
                 <h4>
                   {b.batch_label} — {b.teacher?.first_name} {b.teacher?.last_name}
                 </h4>
                 <p className={styles.muted}>
-                  {b.students.length}/{b.max_students} students assigned
+                  {(b.students || []).length}/{b.max_students} students assigned
                   {b.supervisor ? ` · Supervisor: ${b.supervisor.first_name} ${b.supervisor.last_name}` : ''}
                 </p>
               </div>
-                <div className={styles.actions}>
+                <div
+                  className={styles.actions}
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                >
                   <button className={styles.btnGhost} onClick={() => openAssign(b)}>
                     Deploy students
                   </button>
@@ -280,19 +262,93 @@ function TeacherBatches() {
                   </button>
                 </div>
               </div>
-              {b.students.length > 0 && (
-                <ul className={styles.muted} style={{ marginTop: 8 }}>
-                  {b.students.map((s) => (
-                    <li key={s.id}>
-                      {s.first_name} {s.last_name} ({s.student_id})
-                    </li>
-                  ))}
-                </ul>
+              {(b.students || []).length === 0 && (
+                <p className={styles.viewHint}>No students yet — click to view</p>
               )}
             </div>
           ))
         )}
       </div>
+
+      {/* Batch Students Modal — opened by clicking the batch card */}
+      {viewing && (
+        <div
+          className={styles.modalOverlay}
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setViewing(null);
+          }}
+        >
+          <div
+            className={`${styles.modal} ${styles.modalNarrow}`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="view-students-title"
+          >
+            <div className={styles.modalHeader}>
+              <div>
+                <h3 className={styles.modalTitle} id="view-students-title">
+                  {viewing.batch_label}
+                </h3>
+                <p className={styles.modalSubtitle}>
+                  {viewing.teacher?.first_name} {viewing.teacher?.last_name}
+                  {viewing.supervisor
+                    ? ` · Supervisor: ${viewing.supervisor.first_name} ${viewing.supervisor.last_name}`
+                    : ''}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.modalClose}
+                onClick={() => setViewing(null)}
+                aria-label="Close"
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className={styles.modalMeta}>
+              <span className={styles.modalCount}>
+                <strong>{(viewing.students || []).length}</strong> of {viewing.max_students} students
+              </span>
+            </div>
+
+            <div className={styles.modalBody}>
+              {(viewing.students || []).length === 0 ? (
+                <p className={styles.empty}>No students deployed in this batch yet.</p>
+              ) : (
+                <ul className={styles.studentsList}>
+                  {(viewing.students || []).map((s) => (
+                    <li key={s.id} className={styles.studentRow}>
+                      <span className={styles.studentName}>
+                        {s.first_name} {s.last_name}
+                      </span>
+                      <span className={styles.studentId}>{s.student_id}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className={styles.modalFooter}>
+              <button className={styles.btnSecondary} type="button" onClick={() => setViewing(null)}>
+                Close
+              </button>
+              <button
+                className={styles.btn}
+                type="button"
+                onClick={() => {
+                  setViewing(null);
+                  openAssign(viewing);
+                }}
+              >
+                Deploy students
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Create Batch Modal */}
       {showCreateModal && (
@@ -405,184 +461,6 @@ function TeacherBatches() {
         </div>
       )}
 
-      {assigning && (
-        <div
-          className={styles.modalOverlay}
-          role="presentation"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) setAssigning(null);
-          }}
-        >
-          <div
-            className={styles.modal}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="assign-students-title"
-          >
-            <div className={styles.modalHeader}>
-              <div>
-                <h3 className={styles.modalTitle} id="assign-students-title">
-                  Deploy students
-                </h3>
-                <p className={styles.modalSubtitle}>
-                  {assigning.batch_label} · {assigning.teacher?.first_name} {assigning.teacher?.last_name}
-                </p>
-              </div>
-              <button
-                type="button"
-                className={styles.modalClose}
-                onClick={() => setAssigning(null)}
-                aria-label="Close"
-                title="Close"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className={styles.modalMeta}>
-              <span className={styles.modalCount}>
-                <strong>{selectedStudents.length}</strong> of max {assigning.max_students} selected
-              </span>
-              <span className={styles.modalHint}>
-                Only students with completed requirements are listed. Students already assigned to
-                another batch are locked.
-              </span>
-            </div>
-
-            {assignError && <div className={styles.modalError}>{assignError}</div>}
-
-            <div className={styles.modalBody}>
-              {/* Filter Controls */}
-              <div className={styles.filterControls}>
-                <div className={styles.filterGroup}>
-                  <label htmlFor="strand-filter" className={styles.filterLabel}>Strand</label>
-                  <select
-                    id="strand-filter"
-                    className={styles.filterSelect}
-                    value={strandFilter}
-                    onChange={(e) => setStrandFilter(e.target.value)}
-                  >
-                    <option value="">All Strands</option>
-                    {[
-                      'STEM',
-                      'ABM',
-                      'HUMSS',
-                      'GAS',
-                      'TVL',
-                      'Arts and Design',
-                      'Sports'
-                    ].map((strand) => (
-                      <option key={strand} value={strand}>{strand}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className={styles.filterGroup} style={{flex: '1 1 300px'}}>
-                  <label htmlFor="search-filter" className={styles.filterLabel}>Search</label>
-                  <div className={styles.searchWrapper}>
-                    <input
-                      id="search-filter"
-                      type="text"
-                      className={styles.filterInput}
-                      placeholder="Search by name, ID, or email..."
-                      value={searchFilter}
-                      onChange={(e) => setSearchFilter(e.target.value)}
-                    />
-                    <button 
-                      type="button" 
-                      className={styles.searchBtn}
-                      onClick={() => {}}
-                    >
-                      Search
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className={styles.tableWrap}>
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th></th>
-                      <th>Student ID</th>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Strand</th>
-                      <th>Batch Status</th>
-                    </tr>
-                  </thead>
-<tbody>
-                      {completed.length === 0 && (
-                        <tr>
-                          <td colSpan="6" className={styles.empty}>
-                            No students with completed requirements.
-                          </td>
-                        </tr>
-                      )}
-                      {/* Filter students based on strand and search */}
-                      {completed
-                        .filter((s) => {
-                          // Strand filter
-                          if (strandFilter && s.strand !== strandFilter) return false;
-                          // Search filter
-                          if (searchFilter) {
-                            const searchLower = searchFilter.toLowerCase();
-                            const matchesName = `${s.first_name} ${s.last_name}`.toLowerCase().includes(searchLower);
-                            const matchesId = (s.student_id || '').toLowerCase().includes(searchLower);
-                            const matchesEmail = (s.email || '').toLowerCase().includes(searchLower);
-                            if (!matchesName && !matchesId && !matchesEmail) return false;
-                          }
-                          return true;
-                        })
-                        .map((s) => {
-                      const assignmentId = s.student_id || s.id;
-                      const locked = isLockedStudent(s);
-                      return (
-                        <tr key={assignmentId} className={locked ? styles.rowLocked : undefined}>
-                          <td>
-                            <input
-                              type="checkbox"
-                              checked={selectedStudents.includes(assignmentId)}
-                              onChange={() => toggleStudent(assignmentId)}
-                              disabled={locked}
-                              title={locked ? `Already assigned to ${s.assigned_batch_label || 'another batch'}` : undefined}
-                            />
-                          </td>
-                          <td>{s.student_id}</td>
-                          <td>
-                            {s.first_name} {s.last_name}
-                          </td>
-                          <td>{s.email}</td>
-                          <td>{s.strand || '-'}</td>
-                          <td>
-                            {locked ? (
-                              <span className={styles.lockBadge} title={`Assigned to ${s.assigned_batch_label || 'another batch'}`}>
-                                Assigned · {s.assigned_batch_label || 'another batch'}
-                              </span>
-                            ) : s.assigned_batch_id ? (
-                              <span className={styles.currentBadge}>In this batch</span>
-                            ) : (
-                              <span className={styles.availableBadge}>Available</span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className={styles.modalFooter}>
-              <button className={styles.btnSecondary} type="button" onClick={() => setAssigning(null)}>
-                Cancel
-              </button>
-              <button className={styles.btn} disabled={savingAssign} onClick={handleAssign}>
-                {savingAssign ? 'Deploying...' : 'Deploy'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {editing && (
         <div
@@ -639,6 +517,7 @@ function TeacherBatches() {
                   onChange={(e) => setEditForm({ ...editForm, teacher_id: e.target.value })}
                   required
                 >
+                  <option value="">Select Teacher</option>
                   {teachers.map((t) => (
                     <option key={t.id} value={t.id}>
                       {t.first_name} {t.last_name} ({t.employee_id})

@@ -32,6 +32,7 @@ const {
   assignApprovedStudentsToBatch,
   getMyTeacherBatches,
   getTeacherBatchStudents,
+  getTeacherBatchById,
   getTeachersListForCoordinator,
   getSupervisorsListForCoordinator,
   getCoordinatorsForSupervisor,
@@ -98,6 +99,7 @@ router.put('/teacher-batches/:batchId', authorize('coordinator', 'admin'), updat
 router.delete('/teacher-batches/:batchId', authorize('coordinator', 'admin'), deleteTeacherBatch);
 router.post('/teacher-batches/:batchId/assign', authorize('coordinator', 'admin'), assignApprovedStudentsToBatch);
 router.get('/teacher-batches/me', authorize('teacher', 'coordinator', 'admin'), getMyTeacherBatches);
+router.get('/teacher-batches/:batchId', authorize('coordinator', 'admin'), getTeacherBatchById);
 router.get('/teacher-batches/:batchId/students', authorize('teacher', 'coordinator', 'admin'), getTeacherBatchStudents);
 router.get('/teacher/reports-concerns', authorize('teacher', 'coordinator', 'admin'), getTeacherReportsConcerns);
 router.patch('/teacher/reports-concerns/:reportId/confirm', authorize('teacher', 'coordinator', 'admin'), confirmReportConcern);

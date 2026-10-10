@@ -5,6 +5,7 @@ import CoordinatorSidebar from './CoordinatorSidebar';
 import StudentApprovals from './StudentApprovals';
 import RequirementsReview from './RequirementsReview';
 import TeacherBatches from './TeacherBatches';
+import DeployStudents from './DeployStudents';
 import Supervisors from './Supervisors';
 import DeploymentRequests from './DeploymentRequests';
 import UserProfileSettings from '../UserProfileSettings';
@@ -24,6 +25,7 @@ function CoordinatorDashboard({ user, onLogout }) {
          <Route path="requirements" element={<RequirementsReview />} />
          <Route path="announcements" element={<Announcements user={user} />} />
          <Route path="batches" element={<TeacherBatches />} />
+         <Route path="batches/deploy/:batchId" element={<DeployStudents />} />
          <Route path="supervisors" element={<Supervisors />} />
          <Route path="deployment" element={<DeploymentRequests />} />
 

@@ -159,6 +159,12 @@ export async function getBatches() {
   return apiFetch('/batches/assigned');
 }
 
+// Loads a single batch (with its students) so the deploy page works when the
+// URL is opened or refreshed directly, without the list from the parent page.
+export async function getTeacherBatch(batchId) {
+  return apiFetch(`/teacher-batches/${batchId}`);
+}
+
 export async function getCompletedStudents() {
   return apiFetch('/students/completed');
 }

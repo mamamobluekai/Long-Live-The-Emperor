@@ -101,10 +101,10 @@ const updateTeacherBatch = async (req, res) => {
       return res.status(400).json({ error: 'Coordinator profile not found.' });
     }
     const { batchId } = req.params;
-    const { max_students, batch_label, supervisor_id } = req.body;
+    const { max_students, batch_label, supervisor_id, teacher_id } = req.body;
 
-    if (!max_students && !batch_label && supervisor_id === undefined) {
-      return res.status(400).json({ error: 'max_students, batch_label, or supervisor_id is required.' });
+    if (!max_students && !batch_label && supervisor_id === undefined && teacher_id === undefined) {
+      return res.status(400).json({ error: 'max_students, batch_label, supervisor_id, or teacher_id is required.' });
     }
 
     const fields = [];
@@ -160,6 +160,31 @@ const updateTeacherBatch = async (req, res) => {
 
       fields.push(`supervisor_id = $${idx++}`);
       values.push(sup);
+    }
+
+    // A teacher may handle MULTIPLE batches, so there is no uniqueness check
+    // here — we only validate the teacher exists and map their user id to the
+    // internal teachers.id expected by teacher_batches.teacher_id.
+    if (teacher_id !== undefined) {
+      if (!teacher_id) {
+        return res.status(400).json({ error: 'teacher_id cannot be empty.' });
+      }
+
+      const teacherRow = await client.query(
+        "SELECT id FROM teachers WHERE user_id = $1",
+        [Number(teacher_id)]
+      );
+      const teachersId = teacherRow.rows[0]?.id;
+      if (!teachersId) {
+        return res.status(400).json({ error: 'Invalid teacher_id.' });
+      }
+
+      fields.push(`teacher_id = $${idx++}`);
+      values.push(teachersId);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'No updatable fields provided.' });
     }
 
     const sql = `
@@ -386,6 +411,98 @@ const getRequirementCompletedStudentsForCoordinator = async (req, res) => {
   }
 };
 
+const getTeacherBatchById = async (req, res) => {
+  try {
+    const coordinatorUserId = req.user.id;
+
+    const coordinatorRow = await pool.query(
+      "SELECT id FROM coordinators WHERE user_id = $1",
+      [coordinatorUserId]
+    );
+    const coordinatorId = coordinatorRow.rows[0]?.id;
+    if (!coordinatorId) {
+      return res.status(400).json({ error: 'Coordinator profile not found.' });
+    }
+
+    const batchResult = await pool.query(
+      `SELECT
+         tb.id AS batch_id,
+         tb.batch_label,
+         tb.max_students,
+         tb.supervisor_id,
+         tb.teacher_id,
+         t.first_name,
+         t.last_name,
+         t.employee_id,
+         t.user_id AS teacher_user_id,
+         sv.first_name AS supervisor_first_name,
+         sv.last_name AS supervisor_last_name,
+         tb.created_at,
+         tb.updated_at
+       FROM teacher_batches tb
+       JOIN teachers t ON t.id = tb.teacher_id
+       LEFT JOIN supervisors sv ON sv.user_id = tb.supervisor_id
+       WHERE tb.id = $1 AND tb.coordinator_id = $2`,
+      [req.params.batchId, coordinatorId]
+    );
+
+    const r = batchResult.rows[0];
+    if (!r) {
+      return res.status(404).json({ error: 'Batch not found or insufficient permissions.' });
+    }
+
+    const studentsResult = await pool.query(
+      `SELECT
+         tbs.student_id,
+         tbs.assigned_at,
+         st.first_name,
+         st.last_name,
+         st.track_strand,
+         u.email
+       FROM teacher_batch_students tbs
+       JOIN students st ON st.id = tbs.student_id
+       JOIN users u ON u.id = st.user_id
+       WHERE tbs.teacher_batch_id = $1
+       ORDER BY tbs.assigned_at DESC`,
+      [r.batch_id]
+    );
+
+    res.json({
+      batch: {
+        id: r.batch_id,
+        batch_label: r.batch_label,
+        max_students: r.max_students,
+        supervisor_id: r.supervisor_id,
+        teacher_user_id: r.teacher_user_id,
+        teacher: {
+          id: r.teacher_id,
+          user_id: r.teacher_user_id,
+          first_name: r.first_name,
+          last_name: r.last_name,
+          employee_id: r.employee_id,
+        },
+        supervisor: r.supervisor_id
+          ? { first_name: r.supervisor_first_name, last_name: r.supervisor_last_name }
+          : null,
+        students: studentsResult.rows.map((s) => ({
+          id: s.student_id,
+          student_id: s.student_id,
+          first_name: s.first_name,
+          last_name: s.last_name,
+          email: s.email,
+          strand: s.track_strand,
+          assigned_at: s.assigned_at,
+        })),
+        created_at: r.created_at,
+        updated_at: r.updated_at,
+      },
+    });
+  } catch (err) {
+    console.error('getTeacherBatchById error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
 const getMyTeacherBatches = async (req, res) => {
   try {
     const teacherUserId = req.user.id;
@@ -558,6 +675,7 @@ const getCoordinatorBatchesWithAssignedStudents = async (req, res) => {
           t.first_name,
           t.last_name,
           t.employee_id,
+          t.user_id AS teacher_user_id,
           sv.first_name AS supervisor_first_name,
           sv.last_name AS supervisor_last_name,
           tb.created_at,
@@ -577,8 +695,8 @@ const getCoordinatorBatchesWithAssignedStudents = async (req, res) => {
         LEFT JOIN users su ON su.id = st.user_id
         WHERE tb.coordinator_id = $1
        ORDER BY tb.created_at DESC, tbs.assigned_at DESC`,
-        [coordinatorId]
-      );
+       [coordinatorId]
+    );
 
     const batchesMap = new Map();
 
@@ -594,10 +712,12 @@ const getCoordinatorBatchesWithAssignedStudents = async (req, res) => {
             : null,
           teacher: {
             id: r.teacher_id,
+            user_id: r.teacher_user_id,
             first_name: r.first_name,
             last_name: r.last_name,
             employee_id: r.employee_id,
           },
+          teacher_user_id: r.teacher_user_id,
           students: [],
           created_at: r.created_at,
           updated_at: r.updated_at,
@@ -634,4 +754,5 @@ module.exports = {
   getTeachersListForCoordinator,
   getCoordinatorBatchesWithAssignedStudents,
   getRequirementCompletedStudentsForCoordinator,
+  getTeacherBatchById,
 };

@@ -612,10 +612,17 @@
 
   box-shadow: var(--shadow-sm);
 
+  cursor: pointer;
+
   transition:
     border-color 180ms ease,
     box-shadow 180ms ease,
     transform 180ms ease;
+}
+
+.listItem:focus-visible {
+  outline: 2px solid var(--maroon-700);
+  outline-offset: 2px;
 }
 
 .listItem:last-child {
@@ -718,8 +725,73 @@
 
 
 /* =========================================================
-   LOADING
+   VIEW HINT / STUDENTS LIST (view-students modal)
    ========================================================= */
+
+.viewHint {
+  margin: 10px 0 0;
+
+  color: var(--muted);
+
+  font-size: 0.74rem;
+  font-style: italic;
+}
+
+.studentsList {
+  max-height: 46vh;
+
+  margin: 0;
+  padding: 0;
+
+  list-style: none;
+
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.studentRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 11px 4px;
+
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.studentRow:last-child {
+  border-bottom: none;
+}
+
+.studentName {
+  color: var(--text-dark);
+
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.studentId {
+  flex-shrink: 0;
+
+  padding: 3px 9px;
+
+  border-radius: 999px;
+
+  background: var(--maroon-soft);
+
+  color: var(--maroon-700);
+
+  font-size: 0.7rem;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+    LOADING
+    ========================================================= */
 
 .loading {
   display: flex;
