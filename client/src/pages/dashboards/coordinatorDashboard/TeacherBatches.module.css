@@ -1250,9 +1250,7 @@
   justify-content: center;
 
   min-height: 38px;
-  width: 44px;
-
-  padding: 0 8px;
+  padding: 0 16px;
 
   border: 1px solid var(--border);
   border-left: none;
@@ -1268,7 +1266,8 @@
   color: #ffffff;
 
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 650;
 
   cursor: pointer;
 
@@ -1545,7 +1544,8 @@
 
   .searchBtn {
     border-radius: 0 8px 8px 0;
-    width: 48px;
+    padding: 0 12px;
+    font-size: 0.75rem;
   }
 }
 

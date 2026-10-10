@@ -304,7 +304,7 @@ function TeacherBatches() {
           }}
         >
           <div
-            className={`${styles.modal} ${styles.modalNarrow}`}
+            className={styles.modal}
             role="dialog"
             aria-modal="true"
             aria-labelledby="create-batch-title"
@@ -491,9 +491,8 @@ function TeacherBatches() {
                       type="button" 
                       className={styles.searchBtn}
                       onClick={() => {}}
-                      title="Search"
                     >
-                      🔍
+                      Search
                     </button>
                   </div>
                 </div>
