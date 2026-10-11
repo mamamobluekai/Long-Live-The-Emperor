@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   getTeachers,
@@ -12,12 +12,52 @@ import {
 import { Pencil, Search, Trash2, X } from 'lucide-react';
 import styles from './TeacherBatches.module.css';
 
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+// "2026-09-01" -> "September 1, 2026". Parsed by hand rather than with
+// `new Date(iso)` so the string can never be shifted a day by the browser's
+// timezone (a bare ISO date parses as UTC midnight).
+function formatFullDate(iso) {
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return '';
+  return `${MONTHS[Number(m[2]) - 1]} ${Number(m[3])}, ${m[1]}`;
+}
+
+// "September 1, 2026 to September 11, 2026" — the shape the coordinator reads
+// at a glance. A single-day schedule collapses to just that one date, and a
+// range within one month drops the repeated month.
+function formatScheduleRange(startIso, endIso) {
+  const start = formatFullDate(startIso);
+  const end = formatFullDate(endIso);
+  if (!start && !end) return '';
+  if (!end || end === start) return start;
+  return `${start} to ${end}`;
+}
+
+// The status vocabulary is produced by the server (teacherBatch.controller.js
+// `summarizeSchedule`) and must stay in step with it. Labels and meanings are
+// defined once here so the legend and the badges can never disagree.
+const SCHEDULE_STATUS_META = {
+  none: { label: 'Not scheduled', meaning: 'No schedule has been set for this batch yet.' },
+  upcoming: { label: 'Upcoming', meaning: 'The schedule has not started yet.' },
+  ongoing: { label: 'Ongoing', meaning: 'The schedule is currently in progress.' },
+  completed: { label: 'Completed', meaning: 'The schedule has finished.' },
+};
+
+function scheduleStatusMeta(status) {
+  return SCHEDULE_STATUS_META[status] || SCHEDULE_STATUS_META.none;
+}
+
 function TeacherBatches() {
   const navigate = useNavigate();
   const [teachers, setTeachers] = useState([]);
   const [batches, setBatches] = useState([]);
   const [supervisors, setSupervisors] = useState([]);
+  // `loading` is the first-paint state that replaces the list; `refreshing`
+  // covers every reload triggered by an action, so the list stays on screen
+  // with a "Refreshing…" indicator instead of flashing blank.
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -32,6 +72,7 @@ function TeacherBatches() {
   const [editing, setEditing] = useState(null);
   const [editForm, setEditForm] = useState({ batch_label: '', max_students: '', supervisor_id: '', teacher_id: '' });
   const [editError, setEditError] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
 
   // Students are no longer rendered inline on the card — clicking the card
   // opens this modal, where they can be viewed or removed. Adding students is
@@ -47,9 +88,14 @@ function TeacherBatches() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
 
-  const loadAll = async () => {
-    setLoading(true);
+  // Single source of truth for loading the page data. `background` keeps the
+  // current list on screen (used after create/edit/delete) so the coordinator
+  // never sees the list flash blank; without it the list is replaced by the
+  // loading state (used on first paint).
+  const loadAll = useCallback(async ({ background = false } = {}) => {
     setError('');
+    if (background) setRefreshing(true);
+    else setLoading(true);
     try {
       const [t, b, s] = await Promise.all([getTeachers(), getBatches(), getSupervisors()]);
       setTeachers(t.teachers || []);
@@ -58,32 +104,14 @@ function TeacherBatches() {
     } catch (err) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      if (background) setRefreshing(false);
+      else setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    let mounted = true;
-    const fetchData = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const [t, b, s] = await Promise.all([getTeachers(), getBatches(), getSupervisors()]);
-        if (!mounted) return;
-        setTeachers(t.teachers || []);
-        setBatches(b.batches || []);
-        setSupervisors(s.supervisors || []);
-      } catch (err) {
-        if (mounted) setError(err.message);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-    fetchData();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    loadAll();
+  }, [loadAll]);
 
   // A supervisor can only be assigned to ONE batch. Build a lookup of
   // supervisor user IDs that already supervise a batch so the UI can block
@@ -120,7 +148,7 @@ function TeacherBatches() {
       setMessage('Batch created.');
       setForm({ teacher_id: '', batch_label: '', max_students: '', supervisor_id: '' });
       setShowCreateModal(false);
-      loadAll();
+      loadAll({ background: true });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -145,8 +173,10 @@ function TeacherBatches() {
   };
 
   // Reloads the batches list and swaps the open modal onto the fresh copy so
-  // the counts on the cards and in the modal stay correct after an edit.
+  // the counts on the cards and in the modal stay correct after an edit. Runs
+  // in the background so the list never disappears while it refreshes.
   const refreshBatches = async () => {
+    setRefreshing(true);
     try {
       const b = await getBatches();
       const list = b.batches || [];
@@ -154,11 +184,14 @@ function TeacherBatches() {
       setViewing((current) => (current ? list.find((x) => x.id === current.id) || null : null));
     } catch (err) {
       setBatchActionError(err.message);
+    } finally {
+      setRefreshing(false);
     }
   };
 
   // The assign endpoint replaces the whole roster, so removing a student means
-  // resending every remaining id.
+  // resending every remaining id. Every row's remove button is disabled while
+  // one removal is in flight — two concurrent replaces would clobber each other.
   const handleRemoveStudent = async (student) => {
     if (!viewing) return;
     setBatchActionError('');
@@ -214,7 +247,7 @@ function TeacherBatches() {
     try {
       await deleteTeacherBatch(deleting.id);
       setDeleting(null);
-      await loadAll();
+      await loadAll({ background: true });
     } catch (err) {
       // Kept inside the modal so the coordinator can retry.
       setDeleteError(err.message);
@@ -251,6 +284,7 @@ function TeacherBatches() {
   const handleEdit = async (e) => {
     e.preventDefault();
     setEditError('');
+    setSavingEdit(true);
     try {
       await updateTeacherBatch(editing.id, {
         batch_label: editForm.batch_label,
@@ -260,9 +294,11 @@ function TeacherBatches() {
       });
       setMessage('Batch updated.');
       setEditing(null);
-      loadAll();
+      await loadAll({ background: true });
     } catch (err) {
       setEditError(err.message);
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -309,6 +345,14 @@ function TeacherBatches() {
           <h3 className={styles.sectionTitle}>
             Deployment Batches ({filteredBatches.length}
             {batchSearch.trim() ? ` of ${batches.length}` : ''})
+            {/* Shown while a background reload is in flight so the coordinator
+                can tell the list is being refreshed. */}
+            {refreshing && (
+              <span className={styles.refreshingTag} role="status">
+                <span className={styles.spinnerDark} aria-hidden="true" />
+                Refreshing…
+              </span>
+            )}
           </h3>
           {/* Sits on the right of the title line; filters as you type. */}
           <form
@@ -330,8 +374,31 @@ function TeacherBatches() {
             </button>
           </form>
         </div>
+
+        {/* Status legend — explains what each schedule badge on the cards means.
+            Driven by the same metadata the badges use, so the two can never
+            disagree. */}
+        <div className={styles.statusLegend}>
+          <span className={styles.statusLegendTitle}>Schedule status</span>
+          <dl className={styles.statusLegendList}>
+            {Object.entries(SCHEDULE_STATUS_META).map(([key, meta]) => (
+              <div key={key} className={styles.statusLegendItem}>
+                <dt>
+                  <span
+                    className={`${styles.statusBadge} ${styles[`status_${key}`]}`}
+                    title={meta.meaning}
+                  >
+                    {meta.label}
+                  </span>
+                </dt>
+                <dd>{meta.meaning}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
         {loading ? (
-          <p className={styles.loading}>Loading...</p>
+          <p className={styles.loading}>Loading batches…</p>
         ) : batches.length === 0 ? (
           <p className={styles.empty}>No batches yet.</p>
         ) : filteredBatches.length === 0 ? (
@@ -345,6 +412,7 @@ function TeacherBatches() {
               tabIndex={0}
               title="View students"
               aria-label={`View students in ${b.batch_label}`}
+              aria-busy={refreshing}
               onClick={() => openViewStudents(b)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -362,15 +430,37 @@ function TeacherBatches() {
                   {(b.students || []).length}/{b.max_students} students assigned
                   {b.supervisor ? ` · Supervisor: ${b.supervisor.first_name} ${b.supervisor.last_name}` : ''}
                 </p>
+                {/* Schedule status comes from the API, so it reflects the
+                    supervisor's saved schedule and the server's "today". */}
+                <p className={styles.scheduleLine}>
+                  <span
+                    className={`${styles.statusBadge} ${styles[`status_${b.schedule?.status || 'none'}`]}`}
+                    title={scheduleStatusMeta(b.schedule?.status).meaning}
+                  >
+                    {scheduleStatusMeta(b.schedule?.status).label}
+                  </span>
+                  {b.schedule?.has_schedule && b.schedule.start_date ? (
+                    <span className={styles.scheduleRange}>
+                      {formatScheduleRange(b.schedule.start_date, b.schedule.end_date)}
+                    </span>
+                  ) : (
+                    <span className={styles.scheduleRangeMuted}>No schedule yet</span>
+                  )}
+                </p>
               </div>
                 <div
                   className={styles.actions}
                   onClick={(e) => e.stopPropagation()}
                   onKeyDown={(e) => e.stopPropagation()}
                 >
-                  <button className={styles.btnGhost} onClick={() => openAssign(b)}>
-                    Deploy students
-                  </button>
+                  {/* Once students are deployed the deploy action lives in the
+                      modal ("+ Add student") — hiding it here keeps a single,
+                      unambiguous entry point. */}
+                  {(b.students || []).length === 0 && (
+                    <button className={styles.btnGhost} onClick={() => openAssign(b)}>
+                      Deploy students
+                    </button>
+                  )}
                   <button className={styles.btnIcon} onClick={() => openEdit(b)} title="Edit batch">
                     <Pencil size={16} />
                   </button>
@@ -450,9 +540,60 @@ function TeacherBatches() {
               </button>
             </div>
 
+            {/* Work immersion schedule for this batch, as set by its supervisor. */}
+            <div className={styles.schedulePanel}>
+              <div className={styles.schedulePanelHead}>
+                <span className={styles.schedulePanelLabel}>Work immersion schedule</span>
+                <span
+                  className={`${styles.statusBadge} ${styles[`status_${viewing.schedule?.status || 'none'}`]}`}
+                  title={scheduleStatusMeta(viewing.schedule?.status).meaning}
+                >
+                  {scheduleStatusMeta(viewing.schedule?.status).label}
+                </span>
+              </div>
+              {viewing.schedule?.has_schedule && viewing.schedule.start_date ? (
+                <>
+                  <p className={styles.schedulePanelRange}>
+                    {formatScheduleRange(viewing.schedule.start_date, viewing.schedule.end_date)}
+                  </p>
+                  <dl className={styles.scheduleFacts}>
+                    <div>
+                      <dt>Duration</dt>
+                      <dd>
+                        {viewing.schedule.total_days} day{viewing.schedule.total_days === 1 ? '' : 's'}
+                        {viewing.schedule.duration_type === 'hours'
+                          ? ` (${viewing.schedule.duration_value} hours)`
+                          : ''}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Scheduled by</dt>
+                      <dd>
+                        {viewing.schedule.supervisor_name
+                          || (viewing.supervisor
+                            ? `${viewing.supervisor.first_name} ${viewing.supervisor.last_name}`
+                            : 'Supervisor')}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Status meaning</dt>
+                      <dd>{scheduleStatusMeta(viewing.schedule?.status).meaning}</dd>
+                    </div>
+                  </dl>
+                </>
+              ) : (
+                <p className={styles.schedulePanelEmpty}>
+                  No schedule has been set for this batch yet. The supervisor sets the work
+                  immersion schedule from their Schedule page.
+                </p>
+              )}
+            </div>
+
             {batchActionError && <div className={styles.modalError}>{batchActionError}</div>}
 
-            <div className={styles.modalBody}>
+            {/* Removing a student replaces the whole roster, so every row's
+                button is locked while one removal is in flight. */}
+            <div className={styles.modalBody} aria-busy={removingId !== null}>
               {(viewing.students || []).length === 0 ? (
                 <p className={styles.empty}>No students deployed in this batch yet.</p>
               ) : (
@@ -499,11 +640,15 @@ function TeacherBatches() {
                               type="button"
                               className={styles.studentRemove}
                               onClick={() => handleRemoveStudent(s)}
-                              disabled={removingId === s.id}
+                              disabled={removingId !== null}
                               title={`Remove ${s.first_name} ${s.last_name} from this batch`}
                               aria-label={`Remove ${s.first_name} ${s.last_name}`}
                             >
-                              {removingId === s.id ? '···' : <X size={16} />}
+                              {removingId === s.id ? (
+                                <span className={styles.spinnerDark} aria-hidden="true" />
+                              ) : (
+                                <X size={16} />
+                              )}
                             </button>
                           </td>
                         </tr>
@@ -518,17 +663,21 @@ function TeacherBatches() {
               <button className={styles.btnSecondary} type="button" onClick={closeViewStudents}>
                 Close
               </button>
-              <button
-                className={styles.btn}
-                type="button"
-                onClick={() => {
-                  const target = viewing;
-                  closeViewStudents();
-                  openAssign(target);
-                }}
-              >
-                Deploy students
-              </button>
+              {/* Once students are in, adding happens here too — the deploy
+                  entry point stays singular and unambiguous. */}
+              {(viewing.students || []).length === 0 && (
+                <button
+                  className={styles.btn}
+                  type="button"
+                  onClick={() => {
+                    const target = viewing;
+                    closeViewStudents();
+                    openAssign(target);
+                  }}
+                >
+                  Deploy students
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -633,11 +782,18 @@ function TeacherBatches() {
               </label>
 
               <div className={styles.modalFooter}>
-                <button className={styles.btnSecondary} type="button" onClick={() => setShowCreateModal(false)}>
+                <button className={styles.btnSecondary} type="button" onClick={() => setShowCreateModal(false)} disabled={creating}>
                   Cancel
                 </button>
                 <button className={styles.btn} disabled={creating} type="submit">
-                  {creating ? 'Creating...' : 'Create batch'}
+                  {creating ? (
+                    <>
+                      <span className={styles.spinner} aria-hidden="true" />
+                      Creating...
+                    </>
+                  ) : (
+                    'Create batch'
+                  )}
                 </button>
               </div>
             </form>
@@ -824,11 +980,18 @@ function TeacherBatches() {
               </label>
 
               <div className={styles.modalFooter}>
-                <button className={styles.btnSecondary} type="button" onClick={() => setEditing(null)}>
+                <button className={styles.btnSecondary} type="button" onClick={() => setEditing(null)} disabled={savingEdit}>
                   Cancel
                 </button>
-                <button className={styles.btn} type="submit">
-                  Save Changes
+                <button className={styles.btn} type="submit" disabled={savingEdit}>
+                  {savingEdit ? (
+                    <>
+                      <span className={styles.spinner} aria-hidden="true" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
                 </button>
               </div>
             </form>

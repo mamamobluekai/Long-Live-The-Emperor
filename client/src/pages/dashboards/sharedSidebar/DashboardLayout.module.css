@@ -67,8 +67,21 @@
    ========================================================= */
 
 /* Lives inside .main, so its left edge is exactly the sidebar's right edge. It
-   scrolls away with the page instead of floating over the content. */
+   scrolls away with the page instead of floating over the content.
+
+   `backdrop-filter` makes this element its own stacking context, which would
+   otherwise trap the topbar's dropdowns (the profile menu and the
+   notifications panel) at whatever layer this wrapper sits on. Since it is
+   static with z-index:auto it painted in tree order — before .content — so the
+   content area covered the open dropdowns. Positioning it with an explicit
+   z-index lets it compete properly: above every page-content layer (which tops
+   out at 900) and below the overlay tier that starts at 1000 (page modals,
+   toasts, popovers), so those still dim and cover the topbar as they should.
+   The mobile sidebar drawer at 99998 stays above it. */
 .topNav {
+  position: relative;
+  z-index: 950;
+
   flex-shrink: 0;
 
   background: rgba(255, 255, 255, 0.85);

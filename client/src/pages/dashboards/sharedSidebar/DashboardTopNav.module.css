@@ -19,7 +19,15 @@
   box-sizing: border-box;
 
   position: relative;
-  z-index: 20;
+  /* Must clear every page-content layer so the open dropdowns (the profile
+     menu at 220 and the notifications panel at 200) are never painted over by
+     them. This creates the topbar's stacking context, so those inner z-indexes
+     only stack against each other — against the page the whole topbar paints
+     at this value. Page content tops out at 900 (the bulk-approve bar and the
+     mobile bottom nav), so 950 sits in the gap above it and below the overlay
+     tier, which starts at 1000 (page modals, toasts, popovers) — those must
+     still cover the topbar. The mobile sidebar drawer at 99998 stays on top. */
+  z-index: 950;
 }
 
 

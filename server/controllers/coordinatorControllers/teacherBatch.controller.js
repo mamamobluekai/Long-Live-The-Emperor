@@ -1,4 +1,71 @@
 const pool = require('../../db/');
+const { nowInManilaDateOnly } = require('../../utils/manilaDate');
+const { buildImmersionDateList, loadExcludedDates } = require('../../utils/immersionDays');
+
+// Schedule status vocabulary shared by the API and the UI. Kept here so the
+// coordinator's batch list and the supervisor's own schedule page can never
+// drift apart on what "upcoming" vs "ongoing" means.
+const SCHEDULE_STATUSES = ['none', 'upcoming', 'ongoing', 'completed'];
+
+/**
+ * Resolve a stored schedule row into the batch-level summary the coordinator
+ * sees: the real first/last immersion day plus a status derived from today.
+ *
+ * `start_date` is the anchor the supervisor picked, but weekends, Philippine
+ * holidays and supervisor-blocked dates do not count, so the first and last
+ * ACTUAL immersion days can differ from start_date and from a naive
+ * start + duration calculation. The same shared builder the student, teacher
+ * and supervisor views use is applied here so all four agree.
+ */
+function summarizeSchedule(row, blockedDates) {
+  if (!row) {
+    return {
+      has_schedule: false,
+      status: 'none',
+      start_date: null,
+      end_date: null,
+      duration_type: null,
+      duration_value: null,
+      total_days: 0,
+      supervisor_id: null,
+      supervisor_name: null,
+    };
+  }
+
+  const dates = buildImmersionDateList(
+    row.start_date,
+    row.duration_type,
+    row.duration_value,
+    { blockedDates: blockedDates || new Set() }
+  );
+
+  // Prefer the computed list; fall back to the stored columns for legacy rows
+  // whose duration resolved to zero days.
+  const start = row.start_date ? String(row.start_date).slice(0, 10) : null;
+  const end = dates.length ? dates[dates.length - 1] : (row.end_date ? String(row.end_date).slice(0, 10) : null);
+
+  const today = nowInManilaDateOnly();
+  let status = 'ongoing';
+  if (!start) status = 'none';
+  else if (end && today > end) status = 'completed';
+  else if (today < start) status = 'upcoming';
+
+  const supervisorName = row.supervisor_first_name || row.supervisor_last_name
+    ? `${row.supervisor_first_name || ''} ${row.supervisor_last_name || ''}`.trim()
+    : null;
+
+  return {
+    has_schedule: true,
+    status,
+    start_date: start,
+    end_date: end,
+    duration_type: row.duration_type,
+    duration_value: row.duration_value,
+    total_days: dates.length || Number(row.duration_value) || 0,
+    supervisor_id: row.supervisor_id ?? null,
+    supervisor_name: supervisorName,
+  };
+}
 
 const createTeacherBatch = async (req, res) => {
   const client = await pool.connect();
@@ -735,6 +802,64 @@ const getCoordinatorBatchesWithAssignedStudents = async (req, res) => {
           assigned_at: r.assigned_at,
         });
       }
+    }
+
+    // A batch can carry one schedule per supervisor (the schema is keyed on
+    // (teacher_batch_id, supervisor_id)), so this is a separate query rather
+    // than a join on the students query above - joining there would fan the
+    // student rows out. The batch-level row (supervisor_id IS NULL) is the
+    // fallback when the batch's supervisor has not set their own yet.
+    //
+    // Guarded: this project has no migration runner, so on a database that has
+    // never had a schedule saved the table may not exist yet. A schedule is
+    // supplementary to the batch list, so it must never fail the whole request.
+    let scheduleRows = { rows: [] };
+    try {
+      scheduleRows = await pool.query(
+        `SELECT wis.teacher_batch_id, wis.supervisor_id,
+                wis.duration_type, wis.duration_value,
+                to_char(wis.start_date, 'YYYY-MM-DD') AS start_date,
+                to_char(wis.end_date, 'YYYY-MM-DD') AS end_date,
+                sv.first_name AS supervisor_first_name,
+                sv.last_name AS supervisor_last_name
+           FROM work_immersion_schedules wis
+           LEFT JOIN supervisors sv ON sv.user_id = wis.supervisor_id
+          WHERE wis.teacher_batch_id = ANY($1::int[])`,
+        [Array.from(batchesMap.keys())]
+      );
+    } catch (scheduleErr) {
+      if (scheduleErr.code !== '42P01') throw scheduleErr;
+      scheduleRows = { rows: [] };
+    }
+
+    // One schedule per batch: prefer the row belonging to the batch's own
+    // supervisor (that is the one governing their students), then the
+    // batch-level row, then whichever is earliest.
+    const scheduleByBatch = new Map();
+    for (const row of scheduleRows.rows || []) {
+      const current = scheduleByBatch.get(row.teacher_batch_id);
+      if (!current) {
+        scheduleByBatch.set(row.teacher_batch_id, row);
+        continue;
+      }
+      const isScoped = (r) => r.supervisor_id !== null && r.supervisor_id !== undefined;
+      const rank = (r) => (isScoped(r) ? 0 : 1);
+      if (rank(row) < rank(current)) scheduleByBatch.set(row.teacher_batch_id, row);
+    }
+
+    for (const [batchId, scheduleRow] of scheduleByBatch.entries()) {
+      const batch = batchesMap.get(batchId);
+      if (!batch) continue;
+      // Weekends, holidays and supervisor-blocked dates must be excluded, so the
+      // real first/last immersion day (and therefore the status) matches what
+      // the supervisor, teacher and student views all show.
+      const { blocked } = await loadExcludedDates(batchId, scheduleRow?.supervisor_id ?? null);
+      batch.schedule = summarizeSchedule(scheduleRow, blocked);
+    }
+
+    // Every batch gets a schedule key, so the client never has to guard on it.
+    for (const batch of batchesMap.values()) {
+      if (!batch.schedule) batch.schedule = summarizeSchedule(null, new Set());
     }
 
     res.json({ batches: Array.from(batchesMap.values()) });
