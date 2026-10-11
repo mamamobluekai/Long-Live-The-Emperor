@@ -9,7 +9,7 @@ import {
   deleteTeacherBatch,
   assignStudentsToBatch,
 } from '../../../api/coordinatorApi';
-import { Pencil, Search, Trash2, X } from 'lucide-react';
+import { Pencil, Plus, Search, Trash2, UserRound, Users, X } from 'lucide-react';
 import styles from './TeacherBatches.module.css';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -46,6 +46,14 @@ const SCHEDULE_STATUS_META = {
 
 function scheduleStatusMeta(status) {
   return SCHEDULE_STATUS_META[status] || SCHEDULE_STATUS_META.none;
+}
+
+// How full a batch is, as a whole percentage. Clamped so a batch that is
+// somehow over capacity still renders a sane bar instead of overflowing.
+function capacityPercent(studentCount, maxStudents) {
+  const max = Number(maxStudents) || 0;
+  if (max <= 0) return 0;
+  return Math.min(100, Math.round(((Number(studentCount) || 0) / max) * 100));
 }
 
 function TeacherBatches() {
@@ -321,63 +329,99 @@ function TeacherBatches() {
     });
   }, [batches, batchSearch]);
 
+  // Headline numbers for the page header, so the coordinator can size up the
+  // whole programme without counting cards.
+  const summary = useMemo(() => {
+    const students = batches.reduce((sum, b) => sum + (b.students || []).length, 0);
+    const capacity = batches.reduce((sum, b) => sum + (Number(b.max_students) || 0), 0);
+    return {
+      batches: batches.length,
+      students,
+      capacity,
+      unscheduled: batches.filter((b) => !b.schedule?.has_schedule).length,
+    };
+  }, [batches]);
+
   return (
     <div>
       <div className={styles.pageHeader}>
-        <h2>Deployment</h2>
-        <p>Create batches, assign students with completed requirements, and manage teachers.</p>
+        <div className={styles.pageHeaderText}>
+          <p className={styles.pageEyebrow}>Work immersion</p>
+          <h2>Deployment</h2>
+          <p>
+            Create batches, assign students with completed requirements, and track each
+            batch&rsquo;s work immersion schedule.
+          </p>
+        </div>
+        {/* At-a-glance totals. Purely informational — the numbers below the
+            header stay the source of truth for the filtered list. */}
+        <dl className={styles.summaryStats}>
+          <div>
+            <dt>Batches</dt>
+            <dd>{summary.batches}</dd>
+          </div>
+          <div>
+            <dt>Students</dt>
+            <dd>{summary.students}</dd>
+          </div>
+          <div>
+            <dt>Capacity</dt>
+            <dd>{summary.capacity}</dd>
+          </div>
+        </dl>
       </div>
 
       {message && <div className={styles.message}>{message}</div>}
       {error && <div className={styles.error}>{error}</div>}
 
       <div className={styles.section}>
+        {/* Title, live count, search and the primary action share one balanced
+            line, so there is a single place to look for each. */}
         <div className={styles.sectionHeader}>
-          <h3 className={styles.sectionTitle}>Deployment Batches</h3>
-          <button className={styles.btn} onClick={() => setShowCreateModal(true)}>
-            Create batch
-          </button>
-        </div>
-      </div>
-
-      <div className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <h3 className={styles.sectionTitle}>
-            Deployment Batches ({filteredBatches.length}
-            {batchSearch.trim() ? ` of ${batches.length}` : ''})
-            {/* Shown while a background reload is in flight so the coordinator
-                can tell the list is being refreshed. */}
-            {refreshing && (
-              <span className={styles.refreshingTag} role="status">
-                <span className={styles.spinnerDark} aria-hidden="true" />
-                Refreshing…
-              </span>
-            )}
-          </h3>
-          {/* Sits on the right of the title line; filters as you type. */}
-          <form
-            className={styles.searchWrapper}
-            role="search"
-            onSubmit={(e) => e.preventDefault()}
-          >
-            <input
-              id="batch-search"
-              type="text"
-              className={styles.filterInput}
-              placeholder="Search batch, teacher, or supervisor..."
-              value={batchSearch}
-              onChange={(e) => setBatchSearch(e.target.value)}
-              aria-label="Search batches by batch name, teacher, or supervisor"
-            />
-            <button type="submit" className={styles.searchBtn} aria-label="Search">
-              <Search size={16} />
+          <div className={styles.sectionHeading}>
+            <h3 className={styles.sectionTitle}>
+              Deployment Batches ({filteredBatches.length}
+              {batchSearch.trim() ? ` of ${batches.length}` : ''})
+              {/* Shown while a background reload is in flight so the coordinator
+                  can tell the list is being refreshed. */}
+              {refreshing && (
+                <span className={styles.refreshingTag} role="status">
+                  <span className={styles.spinnerDark} aria-hidden="true" />
+                  Refreshing…
+                </span>
+              )}
+            </h3>
+            <p className={styles.sectionHint}>Click a batch to view its students and schedule</p>
+          </div>
+          <div className={styles.headerTools}>
+            {/* Sits on the right of the title line; filters as you type. */}
+            <form
+              className={styles.searchWrapper}
+              role="search"
+              onSubmit={(e) => e.preventDefault()}
+            >
+              <input
+                id="batch-search"
+                type="text"
+                className={styles.filterInput}
+                placeholder="Search batch, teacher, or supervisor..."
+                value={batchSearch}
+                onChange={(e) => setBatchSearch(e.target.value)}
+                aria-label="Search batches by batch name, teacher, or supervisor"
+              />
+              <button type="submit" className={styles.searchBtn} aria-label="Search">
+                <Search size={16} />
+              </button>
+            </form>
+            <button className={styles.btn} onClick={() => setShowCreateModal(true)}>
+              <Plus size={16} /> Create batch
             </button>
-          </form>
+          </div>
         </div>
 
         {/* Status legend — explains what each schedule badge on the cards means.
             Driven by the same metadata the badges use, so the two can never
-            disagree. */}
+            disagree. Sits on one wrapping line so it never dominates the list. */}
         <div className={styles.statusLegend}>
           <span className={styles.statusLegendTitle}>Schedule status</span>
           <dl className={styles.statusLegendList}>
@@ -400,54 +444,123 @@ function TeacherBatches() {
         {loading ? (
           <p className={styles.loading}>Loading batches…</p>
         ) : batches.length === 0 ? (
-          <p className={styles.empty}>No batches yet.</p>
+          /* Empty state offers the way forward instead of just stating the fact. */
+          <div className={styles.emptyState}>
+            <span className={styles.emptyStateIcon}>
+              <Users size={22} />
+            </span>
+            <h4>No batches yet</h4>
+            <p>
+              Create a batch to group students under a teacher and supervisor, then deploy
+              students with completed requirements into it.
+            </p>
+            <button className={styles.btn} onClick={() => setShowCreateModal(true)}>
+              <Plus size={16} /> Create your first batch
+            </button>
+          </div>
         ) : filteredBatches.length === 0 ? (
-          <p className={styles.empty}>No batches match your search.</p>
+          <div className={styles.emptyState}>
+            <span className={styles.emptyStateIcon}>
+              <Search size={22} />
+            </span>
+            <h4>No batches match your search</h4>
+            <p>
+              Nothing matched &ldquo;{batchSearch.trim()}&rdquo;. Try a different batch name,
+              teacher, or supervisor.
+            </p>
+            <button className={styles.btnSecondary} onClick={() => setBatchSearch('')}>
+              Clear search
+            </button>
+          </div>
         ) : (
-          filteredBatches.map((b) => (
-            <div
-              key={b.id}
-              className={styles.listItem}
-              role="button"
-              tabIndex={0}
-              title="View students"
-              aria-label={`View students in ${b.batch_label}`}
-              aria-busy={refreshing}
-              onClick={() => openViewStudents(b)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  openViewStudents(b);
-                }
-              }}
-            >
-              <div className={styles.row}>
-              <div>
-                <h4>
-                  {b.batch_label} — {b.teacher?.first_name} {b.teacher?.last_name}
-                </h4>
-                <p className={styles.muted}>
-                  {(b.students || []).length}/{b.max_students} students assigned
-                  {b.supervisor ? ` · Supervisor: ${b.supervisor.first_name} ${b.supervisor.last_name}` : ''}
-                </p>
-                {/* Schedule status comes from the API, so it reflects the
-                    supervisor's saved schedule and the server's "today". */}
-                <p className={styles.scheduleLine}>
-                  <span
-                    className={`${styles.statusBadge} ${styles[`status_${b.schedule?.status || 'none'}`]}`}
-                    title={scheduleStatusMeta(b.schedule?.status).meaning}
-                  >
-                    {scheduleStatusMeta(b.schedule?.status).label}
-                  </span>
-                  {b.schedule?.has_schedule && b.schedule.start_date ? (
-                    <span className={styles.scheduleRange}>
-                      {formatScheduleRange(b.schedule.start_date, b.schedule.end_date)}
+          filteredBatches.map((b) => {
+            const studentCount = (b.students || []).length;
+            const maxStudents = Number(b.max_students) || 0;
+            const percent = capacityPercent(studentCount, maxStudents);
+            const slotsFree = Math.max(0, maxStudents - studentCount);
+            const isFull = maxStudents > 0 && studentCount >= maxStudents;
+            const meta = scheduleStatusMeta(b.schedule?.status);
+
+            return (
+              <div
+                key={b.id}
+                className={styles.listItem}
+                role="button"
+                tabIndex={0}
+                aria-label={`View students in ${b.batch_label}`}
+                aria-busy={refreshing}
+                onClick={() => openViewStudents(b)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openViewStudents(b);
+                  }
+                }}
+              >
+                <div className={styles.row}>
+                  <div className={styles.batchInfo}>
+                    {/* Batch label is the primary line; the people attached to it
+                        sit underneath with icons so they scan without reading. */}
+                    <h4>{b.batch_label}</h4>
+                    <p className={styles.batchPeople}>
+                      <span className={styles.personChip} title={`Teacher: ${b.teacher?.first_name || ''} ${b.teacher?.last_name || ''}`.trim()}>
+                        <UserRound size={13} aria-hidden="true" />
+                        {b.teacher?.first_name} {b.teacher?.last_name}
+                      </span>
+                      {b.supervisor ? (
+                        <span
+                          className={styles.personChip}
+                          title={`Supervisor: ${b.supervisor.first_name} ${b.supervisor.last_name}`}
+                        >
+                          <Users size={13} aria-hidden="true" />
+                          {b.supervisor.first_name} {b.supervisor.last_name}
+                        </span>
+                      ) : (
+                        <span className={styles.personChipMuted} title="No supervisor assigned">
+                          <Users size={13} aria-hidden="true" />
+                          No supervisor
+                        </span>
+                      )}
+                    </p>
+
+                    {/* Capacity bar: how full the batch is at a glance, with the
+                        exact numbers beside it for precision. */}
+                    <div className={styles.capacity}>
+                      <div className={styles.capacityTrack}>
+                        <div
+                          className={`${styles.capacityFill} ${isFull ? styles.capacityFull : ''}`}
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                      <span className={styles.capacityLabel}>
+                        <strong>{studentCount}</strong>/{maxStudents} students
+                        {' · '}
+                        <span className={styles.muted}>
+                          {isFull ? 'full' : `${slotsFree} free`}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Schedule status comes from the API, so it reflects the
+                      supervisor's saved schedule and the server's "today". */}
+                  <div className={styles.scheduleBlock}>
+                    <span
+                      className={`${styles.statusBadge} ${styles[`status_${b.schedule?.status || 'none'}`]}`}
+                      title={meta.meaning}
+                    >
+                      {meta.label}
                     </span>
-                  ) : (
-                    <span className={styles.scheduleRangeMuted}>No schedule yet</span>
-                  )}
-                </p>
-              </div>
+                    {b.schedule?.has_schedule && b.schedule.start_date ? (
+                      <span className={styles.scheduleRange}>
+                        {formatScheduleRange(b.schedule.start_date, b.schedule.end_date)}
+                      </span>
+                    ) : (
+                      <span className={styles.scheduleRangeMuted}>No schedule yet</span>
+                    )}
+                  </div>
+                </div>
+
                 <div
                   className={styles.actions}
                   onClick={(e) => e.stopPropagation()}
@@ -469,11 +582,8 @@ function TeacherBatches() {
                   </button>
                 </div>
               </div>
-              {(b.students || []).length === 0 && (
-                <p className={styles.viewHint}>No students yet — click to view</p>
-              )}
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -574,10 +684,6 @@ function TeacherBatches() {
                             ? `${viewing.supervisor.first_name} ${viewing.supervisor.last_name}`
                             : 'Supervisor')}
                       </dd>
-                    </div>
-                    <div>
-                      <dt>Status meaning</dt>
-                      <dd>{scheduleStatusMeta(viewing.schedule?.status).meaning}</dd>
                     </div>
                   </dl>
                 </>
