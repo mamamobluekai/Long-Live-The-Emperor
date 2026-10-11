@@ -1699,6 +1699,12 @@
     grid-template-columns: 1fr 1fr;
   }
 
+  /* With the deploy button hidden on a non-empty batch only "Close" is left,
+     so let it span the full footer instead of sitting in a half-width cell. */
+  .modalFooter button:only-child {
+    grid-column: 1 / -1;
+  }
+
   .modalFooter button {
     width: 100%;
   }

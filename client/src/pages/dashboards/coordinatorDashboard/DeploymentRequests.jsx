@@ -231,7 +231,12 @@ function DeploymentRequests() {
       </div>
 
       <div className={styles.pageHeader}>
-        <div className={styles.headerLeft}>
+        {/* Both inline styles keep this scoped to this page — .headerLeft is
+            shared with the supervisor's CreateDeploymentRequest header, whose
+            layout must stay as-is. flex:1 makes the row full-width so the
+            icon's margin-left:auto reaches the true trailing edge; without it
+            the wrapper hugs its text and the icon ends up beside the title. */}
+        <div className={styles.headerLeft} style={{ flex: 1 }}>
           <div>
             <div className={styles.eyebrow}>Work Immersion Office</div>
             <h1>Deployment Requests</h1>

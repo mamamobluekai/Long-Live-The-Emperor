@@ -649,78 +649,96 @@ function RequirementsReview() {
       {/* SUBMISSIONS */}
       <div className={styles.card}>
 
-        {/* TOOLBAR */}
+        {/* TOOLBAR — search, status and strand sit on one row. */}
         <div className={styles.toolbar}>
 
-          <div className={styles.searchBox}>
-            <Search size={18} />
+          <div className={styles.toolField}>
+            <label className={styles.toolLabel} htmlFor="req-search">
+              Search
+            </label>
 
-            <input
-              placeholder="Search student, email, ID, strand..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+            <div className={styles.searchBox}>
+              <Search size={18} />
 
-            {search && (
-              <button
-                type="button"
-                className={styles.searchClear}
-                onClick={() => setSearch('')}
-                aria-label="Clear search"
-              >
-                <X size={15} />
-              </button>
-            )}
+              <input
+                id="req-search"
+                placeholder="Search student, email, ID, strand..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+
+              {search && (
+                <button
+                  type="button"
+                  className={styles.searchClear}
+                  onClick={() => setSearch('')}
+                  aria-label="Clear search"
+                >
+                  <X size={15} />
+                </button>
+              )}
+            </div>
           </div>
 
-          <select
-            className={styles.filter}
-            value={statusFilter}
-            onChange={(e) =>
-              setStatusFilter(e.target.value)
-            }
-          >
-            <option value="all">
-              All Statuses
-            </option>
+          <div className={styles.toolField}>
+            <label className={styles.toolLabel} htmlFor="req-status">
+              Status
+            </label>
 
-            <option value="Pending Review">
-              Pending Review
-            </option>
-
-            <option value="Under Review">
-              Under Review
-            </option>
-
-            <option value="Approved">
-              Approved
-            </option>
-
-            <option value="Rejected">
-              Rejected
-            </option>
-
-            <option value="Needs Revision">
-              Needs Revision
-            </option>
-          </select>
-
-          <select
-            className={styles.filter}
-            value={strandFilter}
-            onChange={(e) => setStrandFilter(e.target.value)}
-            aria-label="Filter by strand"
-          >
-            <option value="">
-              All Strands
-            </option>
-
-            {strands.map((strand) => (
-              <option key={strand} value={strand}>
-                {strand}
+            <select
+              id="req-status"
+              className={styles.filter}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">
+                All Statuses
               </option>
-            ))}
-          </select>
+
+              <option value="Pending Review">
+                Pending Review
+              </option>
+
+              <option value="Under Review">
+                Under Review
+              </option>
+
+              <option value="Approved">
+                Approved
+              </option>
+
+              <option value="Rejected">
+                Rejected
+              </option>
+
+              <option value="Needs Revision">
+                Needs Revision
+              </option>
+            </select>
+          </div>
+
+          <div className={styles.toolField}>
+            <label className={styles.toolLabel} htmlFor="req-strand">
+              Strand
+            </label>
+
+            <select
+              id="req-strand"
+              className={styles.filter}
+              value={strandFilter}
+              onChange={(e) => setStrandFilter(e.target.value)}
+            >
+              <option value="">
+                All Strands
+              </option>
+
+              {strands.map((strand) => (
+                <option key={strand} value={strand}>
+                  {strand}
+                </option>
+              ))}
+            </select>
+          </div>
 
         </div>
 

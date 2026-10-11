@@ -4,7 +4,6 @@ import {
   getTeachers,
   getBatches,
   getSupervisors,
-  getCompletedStudents,
   createTeacherBatch,
   updateTeacherBatch,
   deleteTeacherBatch,
@@ -31,15 +30,11 @@ function TeacherBatches() {
   const [editError, setEditError] = useState('');
 
   // Students are no longer rendered inline on the card — clicking the card
-  // opens this modal, where they can also be added or removed.
+  // opens this modal, where they can be viewed or removed. Adding students is
+  // done on the full deploy page (see openAssign) instead of inline here.
   const [viewing, setViewing] = useState(null);
 
-  // Add/remove state for the students modal.
-  const [completedStudents, setCompletedStudents] = useState([]);
-  const [loadingAvailable, setLoadingAvailable] = useState(false);
-  const [adding, setAdding] = useState(false);
-  const [addSelected, setAddSelected] = useState([]);
-  const [savingAdd, setSavingAdd] = useState(false);
+  // Remove state for the students modal.
   const [removingId, setRemovingId] = useState(null);
   const [batchActionError, setBatchActionError] = useState('');
 
@@ -137,15 +132,11 @@ function TeacherBatches() {
 
   const openViewStudents = (batch) => {
     setViewing(batch);
-    setAdding(false);
-    setAddSelected([]);
     setBatchActionError('');
   };
 
   const closeViewStudents = () => {
     setViewing(null);
-    setAdding(false);
-    setAddSelected([]);
     setBatchActionError('');
   };
 
@@ -161,28 +152,6 @@ function TeacherBatches() {
       setBatchActionError(err.message);
     }
   };
-
-  // Loads the pool of students eligible to be added (completed requirements
-  // and not yet placed in any batch) whenever a card is opened.
-  useEffect(() => {
-    if (!viewing) return undefined;
-    let mounted = true;
-    setLoadingAvailable(true);
-    getCompletedStudents()
-      .then((res) => {
-        if (!mounted) return;
-        setCompletedStudents(res.students || []);
-      })
-      .catch((err) => {
-        if (mounted) setBatchActionError(err.message);
-      })
-      .finally(() => {
-        if (mounted) setLoadingAvailable(false);
-      });
-    return () => {
-      mounted = false;
-    };
-  }, [viewing]);
 
   // The assign endpoint replaces the whole roster, so removing a student means
   // resending every remaining id.
@@ -203,38 +172,6 @@ function TeacherBatches() {
       setRemovingId(null);
     }
   };
-
-  const handleAddSelected = async () => {
-    if (!viewing) return;
-    setBatchActionError('');
-    const currentCount = (viewing.students || []).length;
-    if (currentCount + addSelected.length > viewing.max_students) {
-      setBatchActionError(
-        `Adding ${addSelected.length} exceeds max ${viewing.max_students} (${currentCount} already assigned).`
-      );
-      return;
-    }
-    setSavingAdd(true);
-    try {
-      const ids = [
-        ...(viewing.students || []).map((s) => Number(s.id)),
-        ...addSelected.map((id) => Number(id)),
-      ];
-      await assignStudentsToBatch(viewing.id, ids);
-      setMessage('Students added to batch.');
-      setAddSelected([]);
-      setAdding(false);
-      await refreshBatches();
-    } catch (err) {
-      setBatchActionError(err.message);
-    } finally {
-      setSavingAdd(false);
-    }
-  };
-
-  // Students that can still be pulled in: completed requirements and not yet
-  // placed in any batch (students already elsewhere are not addable).
-  const availableStudents = completedStudents.filter((s) => !s.assigned_batch_id);
 
   // Close the open modal on Escape and stop the page behind it scrolling.
   const modalOpen = Boolean(viewing || editing || deleting || showCreateModal);
@@ -382,9 +319,15 @@ function TeacherBatches() {
                   onClick={(e) => e.stopPropagation()}
                   onKeyDown={(e) => e.stopPropagation()}
                 >
-                  <button className={styles.btnGhost} onClick={() => openAssign(b)}>
-                    Deploy students
-                  </button>
+                  {/* Deploying only happens into an empty batch. Once students
+                      are in, the button is hidden so the coordinator manages
+                      the roster from the modal instead of being confused about
+                      where to add more. */}
+                  {(b.students || []).length === 0 && (
+                    <button className={styles.btnGhost} onClick={() => openAssign(b)}>
+                      Deploy students
+                    </button>
+                  )}
                   <button className={styles.btnIcon} onClick={() => openEdit(b)} title="Edit batch">
                     <Pencil size={16} />
                   </button>
@@ -447,27 +390,21 @@ function TeacherBatches() {
                   {Math.max(0, viewing.max_students - (viewing.students || []).length)} slots free
                 </span>
               </span>
-              {!adding ? (
+              {/* Adding students happens on the full deploy page so long
+                  student lists can scroll freely instead of being trapped in
+                  this modal. Only offered while the batch is still empty. */}
+              {(viewing.students || []).length === 0 && (
                 <button
                   type="button"
                   className={styles.btnGhost}
                   onClick={() => {
-                    setAdding(true);
-                    setAddSelected([]);
-                    setBatchActionError('');
+                    const target = viewing;
+                    closeViewStudents();
+                    openAssign(target);
                   }}
-                  disabled={(viewing.students || []).length >= viewing.max_students}
-                  title={
-                    (viewing.students || []).length >= viewing.max_students
-                      ? 'Batch is at full capacity'
-                      : 'Add students to this batch'
-                  }
+                  title="Add students to this batch"
                 >
                   + Add student
-                </button>
-              ) : (
-                <button type="button" className={styles.btnSecondary} onClick={() => setAdding(false)}>
-                  Done
                 </button>
               )}
             </div>
@@ -475,45 +412,7 @@ function TeacherBatches() {
             {batchActionError && <div className={styles.modalError}>{batchActionError}</div>}
 
             <div className={styles.modalBody}>
-              {adding ? (
-                <>
-                  <p className={styles.addIntro}>
-                    Select students to add. Only students with completed requirements who are not yet
-                    assigned to any batch are listed.
-                  </p>
-                  {loadingAvailable ? (
-                    <p className={styles.empty}>Loading available students...</p>
-                  ) : availableStudents.length === 0 ? (
-                    <p className={styles.empty}>No students available to add.</p>
-                  ) : (
-                    <ul className={styles.studentsList}>
-                      {availableStudents.map((s) => {
-                        const id = s.student_id || s.id;
-                        const checked = addSelected.includes(id);
-                        return (
-                          <li key={id} className={styles.studentRow}>
-                            <label className={styles.studentCheck}>
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={() =>
-                                  setAddSelected((prev) =>
-                                    prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-                                  )
-                                }
-                              />
-                              <span className={styles.studentName}>
-                                {s.first_name} {s.last_name}
-                              </span>
-                            </label>
-                            <span className={styles.strandTag}>{s.strand || '—'}</span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </>
-              ) : (viewing.students || []).length === 0 ? (
+              {(viewing.students || []).length === 0 ? (
                 <p className={styles.empty}>No students deployed in this batch yet.</p>
               ) : (
                 <ul className={styles.studentsList}>
@@ -539,39 +438,22 @@ function TeacherBatches() {
             </div>
 
             <div className={styles.modalFooter}>
-              {adding ? (
-                <>
-                  <button type="button" className={styles.btnSecondary} onClick={() => setAdding(false)}>
-                    Cancel
-                  </button>
-                  <button
-                    className={styles.btn}
-                    type="button"
-                    disabled={savingAdd || addSelected.length === 0}
-                    onClick={handleAddSelected}
-                  >
-                    {savingAdd
-                      ? 'Adding...'
-                      : `Add ${addSelected.length} student${addSelected.length === 1 ? '' : 's'}`}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button className={styles.btnSecondary} type="button" onClick={closeViewStudents}>
-                    Close
-                  </button>
-                  <button
-                    className={styles.btn}
-                    type="button"
-                    onClick={() => {
-                      const target = viewing;
-                      closeViewStudents();
-                      openAssign(target);
-                    }}
-                  >
-                    Deploy students
-                  </button>
-                </>
+              <button className={styles.btnSecondary} type="button" onClick={closeViewStudents}>
+                Close
+              </button>
+              {/* Only offered while the batch is still empty (see card note). */}
+              {(viewing.students || []).length === 0 && (
+                <button
+                  className={styles.btn}
+                  type="button"
+                  onClick={() => {
+                    const target = viewing;
+                    closeViewStudents();
+                    openAssign(target);
+                  }}
+                >
+                  Deploy students
+                </button>
               )}
             </div>
           </div>

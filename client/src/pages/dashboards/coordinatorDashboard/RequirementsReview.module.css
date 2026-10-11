@@ -249,11 +249,43 @@
 
 .toolbar {
   display: flex;
-  gap: 9px;
-  align-items: center;
+  gap: 12px;
+  align-items: flex-end;
+
+  /* The three controls share one row and never wrap onto a second line. */
+  flex-wrap: nowrap;
+
   padding: 15px 22px;
   background: #fffafb;
   border-bottom: 1px solid #ecdfe2;
+}
+
+/* Each control is a label-above-input pair so the search box, status dropdown
+   and strand dropdown line up on the same baseline. */
+.toolField {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+/* The search field absorbs the spare width; the dropdowns keep their own. */
+.toolField:first-child {
+  flex: 1 1 260px;
+  max-width: 460px;
+}
+
+.toolField:not(:first-child) {
+  flex: 0 0 auto;
+}
+
+.toolLabel {
+  color: #8b1e2d;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .searchBox {
@@ -262,7 +294,8 @@
   align-items: center;
   gap: 9px;
   flex: 1;
-  max-width: 430px;
+  width: 100%;
+  max-width: none;
   height: 38px;
   padding: 0 38px 0 12px;
   color: #8490a1;
@@ -279,6 +312,11 @@
 
 .searchBox input {
   width: 100%;
+
+  /* min-width:0 lets the input shrink inside the flex row instead of pushing
+     the search box wider than its max-width. */
+  min-width: 0;
+
   border: none;
   outline: none;
   background: transparent;
@@ -1368,6 +1406,14 @@
   .toolbar {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
+  }
+
+  /* Stacked: every control takes the full width. */
+  .toolField,
+  .toolField:first-child {
+    flex: 1 1 auto;
+    max-width: none;
   }
 
   .searchBox {
