@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   getTeachers,
@@ -9,7 +9,7 @@ import {
   deleteTeacherBatch,
   assignStudentsToBatch,
 } from '../../../api/coordinatorApi';
-import { Pencil, Trash2, X } from 'lucide-react';
+import { Pencil, Search, Trash2, X } from 'lucide-react';
 import styles from './TeacherBatches.module.css';
 
 function TeacherBatches() {
@@ -20,6 +20,10 @@ function TeacherBatches() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  // Free-text filter for the batch list. Matches the batch label, the
+  // teacher's name, and the supervisor's name so one box covers all three.
+  const [batchSearch, setBatchSearch] = useState('');
 
   const [form, setForm] = useState({ teacher_id: '', batch_label: '', max_students: '', supervisor_id: '' });
   const [creating, setCreating] = useState(false);
@@ -262,6 +266,25 @@ function TeacherBatches() {
     }
   };
 
+  // One search box filters the list by batch label, teacher name, or
+  // supervisor name — case-insensitive, so partial matches still hit.
+  const filteredBatches = useMemo(() => {
+    const term = batchSearch.trim().toLowerCase();
+    if (!term) return batches;
+    return batches.filter((b) => {
+      const teacherName = `${b.teacher?.first_name || ''} ${b.teacher?.last_name || ''}`.toLowerCase();
+      const supervisorName = b.supervisor
+        ? `${b.supervisor.first_name || ''} ${b.supervisor.last_name || ''}`.toLowerCase()
+        : '';
+      const batchLabel = (b.batch_label || '').toLowerCase();
+      return (
+        batchLabel.includes(term) ||
+        teacherName.includes(term) ||
+        supervisorName.includes(term)
+      );
+    });
+  }, [batches, batchSearch]);
+
   return (
     <div>
       <div className={styles.pageHeader}>
@@ -282,13 +305,39 @@ function TeacherBatches() {
       </div>
 
       <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Deployment Batches ({batches.length})</h3>
+        <div className={styles.sectionHeader}>
+          <h3 className={styles.sectionTitle}>
+            Deployment Batches ({filteredBatches.length}
+            {batchSearch.trim() ? ` of ${batches.length}` : ''})
+          </h3>
+          {/* Sits on the right of the title line; filters as you type. */}
+          <form
+            className={styles.searchWrapper}
+            role="search"
+            onSubmit={(e) => e.preventDefault()}
+          >
+            <input
+              id="batch-search"
+              type="text"
+              className={styles.filterInput}
+              placeholder="Search batch, teacher, or supervisor..."
+              value={batchSearch}
+              onChange={(e) => setBatchSearch(e.target.value)}
+              aria-label="Search batches by batch name, teacher, or supervisor"
+            />
+            <button type="submit" className={styles.searchBtn} aria-label="Search">
+              <Search size={16} />
+            </button>
+          </form>
+        </div>
         {loading ? (
           <p className={styles.loading}>Loading...</p>
         ) : batches.length === 0 ? (
           <p className={styles.empty}>No batches yet.</p>
+        ) : filteredBatches.length === 0 ? (
+          <p className={styles.empty}>No batches match your search.</p>
         ) : (
-          batches.map((b) => (
+          filteredBatches.map((b) => (
             <div
               key={b.id}
               className={styles.listItem}
@@ -319,15 +368,9 @@ function TeacherBatches() {
                   onClick={(e) => e.stopPropagation()}
                   onKeyDown={(e) => e.stopPropagation()}
                 >
-                  {/* Deploying only happens into an empty batch. Once students
-                      are in, the button is hidden so the coordinator manages
-                      the roster from the modal instead of being confused about
-                      where to add more. */}
-                  {(b.students || []).length === 0 && (
-                    <button className={styles.btnGhost} onClick={() => openAssign(b)}>
-                      Deploy students
-                    </button>
-                  )}
+                  <button className={styles.btnGhost} onClick={() => openAssign(b)}>
+                    Deploy students
+                  </button>
                   <button className={styles.btnIcon} onClick={() => openEdit(b)} title="Edit batch">
                     <Pencil size={16} />
                   </button>
@@ -392,21 +435,19 @@ function TeacherBatches() {
               </span>
               {/* Adding students happens on the full deploy page so long
                   student lists can scroll freely instead of being trapped in
-                  this modal. Only offered while the batch is still empty. */}
-              {(viewing.students || []).length === 0 && (
-                <button
-                  type="button"
-                  className={styles.btnGhost}
-                  onClick={() => {
-                    const target = viewing;
-                    closeViewStudents();
-                    openAssign(target);
-                  }}
-                  title="Add students to this batch"
-                >
-                  + Add student
-                </button>
-              )}
+                  this modal. */}
+              <button
+                type="button"
+                className={styles.btnGhost}
+                onClick={() => {
+                  const target = viewing;
+                  closeViewStudents();
+                  openAssign(target);
+                }}
+                title="Add students to this batch"
+              >
+                + Add student
+              </button>
             </div>
 
             {batchActionError && <div className={styles.modalError}>{batchActionError}</div>}
@@ -415,25 +456,61 @@ function TeacherBatches() {
               {(viewing.students || []).length === 0 ? (
                 <p className={styles.empty}>No students deployed in this batch yet.</p>
               ) : (
-                <ul className={styles.studentsList}>
-                  {(viewing.students || []).map((s) => (
-                    <li key={s.id} className={styles.studentRow}>
-                      <span className={styles.studentName}>
-                        {s.first_name} {s.last_name}
-                      </span>
-                      <button
-                        type="button"
-                        className={styles.studentRemove}
-                        onClick={() => handleRemoveStudent(s)}
-                        disabled={removingId === s.id}
-                        title={`Remove ${s.first_name} ${s.last_name} from this batch`}
-                        aria-label={`Remove ${s.first_name} ${s.last_name}`}
-                      >
-                        {removingId === s.id ? '···' : <X size={16} />}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                <div className={styles.studentsTableWrap}>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>Student ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Strand</th>
+                        <th>Deployed</th>
+                        <th className={styles.actionsCol} aria-label="Actions" />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(viewing.students || []).map((s) => (
+                        <tr key={s.id}>
+                          <td>{s.student_id || s.id}</td>
+                          <td>
+                            <span className={styles.studentName}>
+                              {s.first_name} {s.last_name}
+                            </span>
+                          </td>
+                          <td>{s.email || '—'}</td>
+                          <td>
+                            {s.strand ? (
+                              <span className={styles.strandTag}>{s.strand}</span>
+                            ) : (
+                              '—'
+                            )}
+                          </td>
+                          <td>
+                            {s.assigned_at
+                              ? new Date(s.assigned_at).toLocaleDateString(undefined, {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                })
+                              : '—'}
+                          </td>
+                          <td className={styles.actionsCol}>
+                            <button
+                              type="button"
+                              className={styles.studentRemove}
+                              onClick={() => handleRemoveStudent(s)}
+                              disabled={removingId === s.id}
+                              title={`Remove ${s.first_name} ${s.last_name} from this batch`}
+                              aria-label={`Remove ${s.first_name} ${s.last_name}`}
+                            >
+                              {removingId === s.id ? '···' : <X size={16} />}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
 
@@ -441,20 +518,17 @@ function TeacherBatches() {
               <button className={styles.btnSecondary} type="button" onClick={closeViewStudents}>
                 Close
               </button>
-              {/* Only offered while the batch is still empty (see card note). */}
-              {(viewing.students || []).length === 0 && (
-                <button
-                  className={styles.btn}
-                  type="button"
-                  onClick={() => {
-                    const target = viewing;
-                    closeViewStudents();
-                    openAssign(target);
-                  }}
-                >
-                  Deploy students
-                </button>
-              )}
+              <button
+                className={styles.btn}
+                type="button"
+                onClick={() => {
+                  const target = viewing;
+                  closeViewStudents();
+                  openAssign(target);
+                }}
+              >
+                Deploy students
+              </button>
             </div>
           </div>
         </div>
