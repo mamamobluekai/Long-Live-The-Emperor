@@ -68,13 +68,14 @@ router.get('/dashboard', authorize('coordinator', 'admin'), getCoordinatorDashbo
 router.get('/students/pending', authorize('coordinator', 'admin'), getPendingStudents);
 router.get('/students/strands', authorize('coordinator', 'admin'), getStudentStrands);
 router.post('/students/upload', authorize('coordinator', 'admin'), uploadExcel.single('file'), uploadStudentsExcel);
+// Register literal bulk paths before the matching parameterized :id paths.
+router.put('/students/bulk/approve', authorize('coordinator', 'admin'), bulkApproveStudents);
+router.put('/students/bulk/disapprove', authorize('coordinator', 'admin'), bulkDisapproveStudents);
+router.delete('/students/bulk', authorize('coordinator', 'admin'), bulkDeleteStudents);
 router.put('/students/:id/approve', authorize('coordinator', 'admin'), approveStudent);
 router.put('/students/:id/disapprove', authorize('coordinator', 'admin'), disapproveStudent);
 router.post('/students/:id/resend-approval', authorize('coordinator', 'admin'), resendStudentApprovalLink);
 router.delete('/students/:id', authorize('coordinator', 'admin'), deleteStudent);
-router.put('/students/bulk/approve', authorize('coordinator', 'admin'), bulkApproveStudents);
-router.put('/students/bulk/disapprove', authorize('coordinator', 'admin'), bulkDisapproveStudents);
-router.delete('/students/bulk', authorize('coordinator', 'admin'), bulkDeleteStudents);
 
 router.put('/requirements', authorize('student', 'coordinator', 'admin'), upsertRequirements);
 router.post('/requirements/submit', authorize('student', 'coordinator', 'admin'), submitRequirements);

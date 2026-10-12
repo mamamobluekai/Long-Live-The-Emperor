@@ -90,7 +90,7 @@ const approveStudent = async (req, res) => {
       user.last_name = studentResult.rows[0].last_name;
     }
 
-    const { emailSent, linkSent } = await approvalLink.issueAndEmailApprovalLink(user);
+    const { emailSent, emailError, linkSent } = await approvalLink.issueAndEmailApprovalLink(user);
 
     // A student who self-registered already has a password, so they get a plain
     // approval notice. One created by Excel upload has none, so they get the
@@ -104,6 +104,7 @@ const approveStudent = async (req, res) => {
         : 'Student approved, but the email failed to send. Use Resend email on their row.',
       emailSent,
       linkSent,
+      emailError,
       user: approvalLink.publicUser(user),
     });
   } catch (err) {
@@ -122,12 +123,13 @@ const resendStudentApprovalLink = async (req, res) => {
       return res.status(404).json({ error: 'Student not found.' });
     }
 
-    const { emailSent } = await approvalLink.resendApprovalLink(recipient);
+    const { emailSent, emailError } = await approvalLink.resendApprovalLink(recipient);
     res.json({
       message: emailSent
         ? 'Set-your-password link emailed.'
         : 'The email failed to send. Check the mail settings and try again.',
       emailSent,
+      emailError,
     });
   } catch (err) {
     console.error('Resend student approval link error:', err);

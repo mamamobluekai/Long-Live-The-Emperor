@@ -166,7 +166,9 @@ function StudentApprovals() {
               ? 'Student approved. An email with their password setup link was sent.'
               : 'Student approved. They can now sign in with the password they registered with.'),
       );
-      if (emailFailed) setError('Approval email failed to send.');
+      if (emailFailed) {
+        setError(data.emailError || 'Approval email failed to send.');
+      }
 
       await load();
     } catch (err) {
@@ -183,7 +185,7 @@ function StudentApprovals() {
     try {
       const data = await resendStudentApprovalEmail(id);
       if (data?.emailSent === false) {
-        setError('The set-password email failed to send. Please try again.');
+        setError(data.emailError || 'The set-password email failed to send. Please try again.');
       } else {
         setMessage(data?.message || 'Set-your-password link emailed.');
       }
