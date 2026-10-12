@@ -90,7 +90,7 @@
 /* ---------- Popover (portalled to <body>, viewport-anchored) ---------- */
 .popover {
   position: fixed;
-  z-index: 2000;
+  z-index: 3100;
   width: 322px;
   padding: 16px;
   color: #26313f;

@@ -68,7 +68,7 @@ const SQLI_PATTERNS = [
   /(\bor\b|\band\b)\s+['"]?\d+['"]?\s*=\s*['"]?\d+/i,
   /('\s*(or|and)\s)/i,
   /(;\s*(drop|delete|update|insert|alter|truncate)\b)/i,
-  /(--\s|\/\*|\*\/|#)/,
+  /(--\s|\/\*|\*\/|#(?![0-9a-f]{3}(?:[0-9a-f]{3})?\b))/i,
   /(\bxp_cmdshell\b|\binformation_schema\b|\bsleep\s*\(|\bbenchmark\s*\()/i,
   /(\bwaitfor\s+delay\b|\bpg_sleep\b)/i,
 ];

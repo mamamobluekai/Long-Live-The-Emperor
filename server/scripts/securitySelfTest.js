@@ -47,6 +47,16 @@ test('detectInjection flags SQLi payloads', () => {
   assert(findings.some((f) => f.category === 'sqli'), 'expected sqli finding');
 });
 
+test('detectInjection allows CSS hex colors used by certificate designs', () => {
+  const findings = detectInjection({ border_color: '#8b1e2d' });
+  assert(!findings.some((f) => f.category === 'sqli'), 'CSS hex color wrongly flagged as SQLi');
+});
+
+test('detectInjection still flags SQL comment markers', () => {
+  const findings = detectInjection({ input: '# comment' });
+  assert(findings.some((f) => f.category === 'sqli'), 'expected SQL comment finding');
+});
+
 test('detectInjection flags XSS payloads', () => {
   const findings = detectInjection({ note: '<script>alert(1)</script>' });
   assert(findings.some((f) => f.category === 'xss'), 'expected xss finding');
