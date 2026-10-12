@@ -1,0 +1,320 @@
+.page {
+  width: 100%;
+  max-width: 1100px;
+  min-width: 0;
+  margin: 0 auto;
+  color: #26313f;
+  font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.page,
+.page * {
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 22px;
+  padding: 24px;
+  border: 1px solid #e8d2d8;
+  border-radius: 18px;
+  background:
+    radial-gradient(130% 160% at 0% 0%, rgb(139 30 45 / 10%) 0%, transparent 58%),
+    radial-gradient(120% 150% at 100% 120%, rgb(190 140 63 / 16%) 0%, transparent 55%),
+    linear-gradient(120deg, #fff 0%, #fdf3f5 58%, #f9e8ec 100%);
+  box-shadow: 0 14px 32px -28px rgb(80 20 32 / 55%);
+}
+
+.headerIcon,
+.guideTitleIcon,
+.troubleshootingIcon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+}
+
+.headerIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(140deg, #8b1e2d, #b8394f);
+  color: #fff;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: #8b1e2d;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.header h1 {
+  margin: 0;
+  color: #172033;
+  font-size: clamp(1.45rem, 3vw, 1.9rem);
+  font-weight: 780;
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+}
+
+.intro {
+  max-width: 680px;
+  margin: 9px 0 0;
+  color: #596579;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.guideCard {
+  padding: 24px;
+  border: 1px solid #e6dfe2;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fffdfd 0%, #fff 40%);
+  box-shadow: 0 12px 32px -28px rgb(80 20 32 / 40%);
+}
+
+.guideTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #ecdfe2;
+}
+
+.guideTitleIcon,
+.troubleshootingIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #f8e9ec;
+  color: #8b1e2d;
+}
+
+.guideTitle h2,
+.troubleshooting h2 {
+  margin: 0;
+  color: #172033;
+  font-size: 1.05rem;
+  line-height: 1.4;
+}
+
+.guideTitle p {
+  margin: 3px 0 0;
+  color: #758195;
+  font-size: 0.84rem;
+}
+
+.stepList {
+  display: grid;
+  gap: 14px;
+  margin: 20px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 34%);
+  align-items: center;
+  gap: 24px;
+  padding: 20px;
+  border: 1px solid #eee5e7;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.stepTextOnly {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.stepNumber {
+  display: inline-flex;
+  margin-bottom: 8px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #f8e9ec;
+  color: #8b1e2d;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.step h3 {
+  margin: 0 0 10px;
+  color: #172033;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.instructions {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding-left: 22px;
+  color: #475569;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.instructions li {
+  padding-left: 3px;
+}
+
+.instructions li::marker {
+  color: #8b1e2d;
+  font-weight: 700;
+}
+
+.stepFigure {
+  overflow: hidden;
+  margin: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.stepFigure img {
+  display: block;
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+}
+
+.troubleshooting {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  margin-top: 22px;
+  padding: 19px;
+  border: 1px solid #ead8b8;
+  border-radius: 14px;
+  background: #fffaf0;
+}
+
+.troubleshootingIcon {
+  background: #f8edcf;
+  color: #8a5a12;
+}
+
+.troubleshooting h3 {
+  margin: 8px 0;
+  color: #26313f;
+  font-size: 0.92rem;
+}
+
+.troubleshooting ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 20px;
+  color: #596579;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin-top: 14px;
+  padding: 15px 17px;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  background: #f4f8ff;
+  color: #334155;
+}
+
+.note > svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: #315b9a;
+}
+
+.note p {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 640px) {
+  .header {
+    gap: 12px;
+    padding: 19px 17px;
+  }
+
+  .header > div:last-child,
+  .guideTitle > div:last-child {
+    min-width: 0;
+  }
+
+  .headerIcon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .intro {
+    font-size: 0.88rem;
+  }
+
+  .guideCard {
+    padding: 16px;
+  }
+
+  .guideTitle {
+    align-items: flex-start;
+  }
+
+  .step {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 15px;
+    padding: 16px;
+  }
+
+  .stepFigure {
+    width: 100%;
+    max-width: 360px;
+    margin: 0 auto;
+  }
+
+  .stepFigure img {
+    max-height: 330px;
+  }
+
+  .instructions {
+    font-size: 0.86rem;
+  }
+
+  .troubleshooting {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 380px) {
+  .header {
+    gap: 10px;
+    padding: 16px 13px;
+  }
+
+  .headerIcon {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .header h1 {
+    font-size: 1.35rem;
+  }
+
+  .guideCard {
+    padding: 12px;
+  }
+
+  .step {
+    padding: 13px;
+  }
+}

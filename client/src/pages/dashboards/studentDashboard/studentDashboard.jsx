@@ -13,6 +13,7 @@ import Progress from './Progress';
 import StudentEvaluation from './StudentEvaluation';
 import BatchChat from '../../../components/social/BatchChat';
 import UserProfileSettings from '../UserProfileSettings';
+import Guide from './Guide';
 
 function StudentDashboard({ user, onLogout }) {
   return (
@@ -39,6 +40,7 @@ function StudentDashboard({ user, onLogout }) {
         <Route path="attendance" element={<Attendance />} />
         <Route path="daily-documentation" element={<DailyDocumentation />} />
         <Route path="group-chat" element={<BatchChat user={user} />} />
+        <Route path="guide" element={<Guide />} />
         <Route path="profile" element={<UserProfileSettings />} />
         <Route path="*" element={<Navigate to="overview" replace />} />
       </Routes>

@@ -9,6 +9,7 @@ import {
   MessageCircle,
   UserRound,
   NotebookPen,
+  BookOpen,
 } from 'lucide-react';
 
 import DashboardSidebar from '../sharedSidebar/DashboardSidebar';
@@ -62,6 +63,12 @@ const links = [
     to: '/dashboard/student/announcements',
     label: 'Announcements',
     icon: Megaphone,
+  },
+
+  {
+    to: '/dashboard/student/guide',
+    label: 'Guide',
+    icon: BookOpen,
   },
 
   {

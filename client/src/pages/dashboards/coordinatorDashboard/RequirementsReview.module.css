@@ -376,9 +376,10 @@
 
   /* Long student lists scroll inside the card instead of stretching the page
      for hundreds of rows. The header stays visible while scrolling. */
-  max-height: 62vh;
+  max-height: min(62vh, 640px);
 
   overflow: auto;
+  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
 

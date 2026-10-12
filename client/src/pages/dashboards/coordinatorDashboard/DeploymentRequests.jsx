@@ -238,7 +238,6 @@ function DeploymentRequests() {
             the wrapper hugs its text and the icon ends up beside the title. */}
         <div className={styles.headerLeft} style={{ flex: 1 }}>
           <div>
-            <div className={styles.eyebrow}>Work Immersion Office</div>
             <h1>Deployment Requests</h1>
             <p>
               Supervisors request students; you name the batch, pick who goes in, and assign the
@@ -628,7 +627,6 @@ function DeploymentRequests() {
 }
 
 export default DeploymentRequests;
-
 
 
 

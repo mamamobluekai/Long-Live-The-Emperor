@@ -173,9 +173,9 @@ function getDayStatus(
 
   if (day.date === todayDate) {
     if (timedOut) return 'present';
+    if (canTimeOut) return 'can_time_out';
     if (timedIn) return 'checked_in';
     if (canTimeIn) return 'can_time_in';
-    if (canTimeOut) return 'can_time_out';
     if (open) return 'open';
 
     // The attendance window has fully elapsed and the student never clocked
@@ -448,6 +448,12 @@ function Attendance() {
     useState(null);
 
   const watchIdRef = useRef(null);
+
+  useEffect(() => {
+    if (access?.date && today?.check_in_time && !today?.check_out_time) {
+      setExpandedDay(access.date);
+    }
+  }, [access?.date, today?.check_in_time, today?.check_out_time]);
 
   const refresh = useCallback(async () => {
     try {
@@ -798,12 +804,13 @@ function Attendance() {
         token
       );
 
+      stopWatch();
+
       flash(
         'success',
         'Timed out successfully. Location sharing stopped.'
       );
 
-      stopWatch();
       refresh();
     } catch (err) {
       flash(
@@ -1701,14 +1708,24 @@ const openAppeal = (
                                   </button>
                                 )}
 
-                                {isToday && dayStatus === 'can_time_out' && (
-                                  <button
-                                    className={styles.smallSecondaryBtn}
-                                    onClick={doCheckOut}
-                                    disabled={busy}
-                                  >
-                                    Time Out
-                                  </button>
+                                {isToday && timedIn && !timedOut && (
+                                  <>
+                                    <button
+                                      className={styles.smallSecondaryBtn}
+                                      onClick={doCheckOut}
+                                      disabled={busy || !canTimeOut}
+                                      title={canTimeOut
+                                        ? 'Time Out is available now.'
+                                        : `Time Out opens at ${formatTime12(schedule?.time_out?.open)}.`}
+                                    >
+                                      Time Out
+                                    </button>
+                                    {!canTimeOut && schedule?.time_out?.open && (
+                                      <span className={styles.appealLockedHint}>
+                                        Opens at {formatTime12(schedule.time_out.open)}
+                                      </span>
+                                    )}
+                                  </>
                                 )}
 
                                 {/* Appeals are offered only for the event that
