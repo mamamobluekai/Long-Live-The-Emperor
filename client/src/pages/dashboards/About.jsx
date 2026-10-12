@@ -12,7 +12,7 @@ import {
   UsersRound,
 } from 'lucide-react';
 import styles from './About.module.css';
-import schoolMark from '../../assets/hero.png';
+const emmersionLogo = '/logo.png';
 
 const features = [
   {
@@ -120,9 +120,9 @@ function About({ user }) {
             Explore Features <ArrowRight size={17} aria-hidden="true" />
           </button>
         </div>
-        <div className={styles.heroVisual} aria-hidden="true">
-          <div className={styles.visualAccent} />
-          <img src={schoolMark} alt="" />
+        <div className={styles.heroVisual}>
+          <div className={styles.visualAccent} aria-hidden="true" />
+          <img src={emmersionLogo} alt="e-mmersion logo" />
           <span>Connecting learning to real-world experience</span>
         </div>
       </section>
@@ -227,7 +227,7 @@ function About({ user }) {
 
       <footer className={styles.footer}>
         <div className={styles.footerBrand}>
-          <img src={schoolMark} alt="" />
+          <img src={emmersionLogo} alt="e-mmersion logo" />
           <div>
             <strong>e-mmersion</strong>
             <span>Connecting Learning to Real-World Experience.</span>

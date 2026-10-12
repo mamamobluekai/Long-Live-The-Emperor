@@ -1,3 +1,4 @@
+
 import DashboardSidebar from '../sharedSidebar/DashboardSidebar';
 
 import {
@@ -24,6 +25,21 @@ const links = [
     icon: Users,
   },
   {
+    to: '/dashboard/admin/upload-users',
+    label: 'Upload Users',
+    icon: Upload,
+  },
+  {
+    to: '/dashboard/admin/archives',
+    label: 'Archived Periods',
+    icon: Archive,
+  },
+  {
+    to: '/dashboard/admin/access-logs',
+    label: 'Access Logs',
+    icon: Search,
+  },
+  {
     to: '/dashboard/admin/settings',
     label: 'System Settings',
     icon: Settings,
@@ -37,21 +53,6 @@ const links = [
     to: '/dashboard/admin/about',
     label: 'About',
     icon: Info,
-  },
-  {
-    to: '/dashboard/admin/access-logs',
-    label: 'Access Logs',
-    icon: Search,
-  },
-  {
-    to: '/dashboard/admin/upload-users',
-    label: 'Upload Users',
-    icon: Upload,
-  },
-  {
-    to: '/dashboard/admin/archives',
-    label: 'Archived Periods',
-    icon: Archive,
   },
 ];
 
