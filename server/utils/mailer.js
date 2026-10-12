@@ -12,8 +12,7 @@
 //   GMAIL_REFRESH_TOKEN -> Gmail REST API over HTTPS on 443. Preferred: it is
 //                          this project's own Gmail account, and HTTPS is
 //                          unaffected by the SMTP block. See utils/gmailApi.js.
-//   RESEND_API_KEY      -> Resend's HTTPS API. Used as a fallback if Gmail's
-//                          refresh token is revoked or expires.
+//   RESEND_API_KEY      -> Resend's HTTPS API. Kept as an optional provider.
 //   otherwise           -> Gmail over SMTP, correct on a laptop and on any host
 //                          that permits SMTP.
 //
@@ -202,19 +201,7 @@ async function sendViaGmail({ to, subject, html, text }) {
 // same reason on failure.
 async function sendMail({ to, subject, html, text }) {
   const active = resolveProvider();
-  if (active === 'gmail-api') {
-    const result = await gmailApi.sendMail({ to, subject, html, text });
-    if (!result.sent && result.code === 'invalid_grant' && process.env.RESEND_API_KEY) {
-      console.warn('Mail: Gmail refresh token is invalid; trying configured Resend fallback.');
-      const fallback = await sendViaResend({ to, subject, html, text });
-      if (fallback.sent) return fallback;
-      return {
-        sent: false,
-        reason: `${result.reason} Resend fallback also failed: ${fallback.reason}`,
-      };
-    }
-    return result;
-  }
+  if (active === 'gmail-api') return gmailApi.sendMail({ to, subject, html, text });
   if (active === 'resend') return sendViaResend({ to, subject, html, text });
   if (active === 'gmail') return sendViaGmail({ to, subject, html, text });
   return { sent: false, reason: mailConfigError() };
