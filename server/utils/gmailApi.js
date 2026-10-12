@@ -139,6 +139,7 @@ async function sendMail({ to, subject, html, text }) {
     if (/invalid_grant|unauthorized_client|invalid_client/i.test(err.code || '')) {
       return {
         sent: false,
+        code: err.code,
         reason: `Gmail rejected the refresh token (${err.code}: ${err.message}). Re-run "npm run mail:auth" to authorise the account again.`,
       };
     }
