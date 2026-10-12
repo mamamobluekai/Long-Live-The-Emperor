@@ -1043,10 +1043,15 @@
     box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
   }
 
-/* On a phone the two switcher buttons above are the only controls, and each
-     one opens its section in a modal. The forms therefore stay out of the page
-     entirely, leaving the hero plus the two buttons. The hero is kept so the
-     identity and Change Photo stay reachable without opening anything. */
+  .switcherButton:last-child {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: calc(50% - 4px);
+  }
+
+  /* On a phone the switcher buttons are the only controls, and each opens its
+     section in a modal. The forms stay out of the page, leaving the hero and
+     the switcher visible. */
   .contentGrid {
     display: none;
   }
@@ -1120,6 +1125,10 @@
 
     font-size: 0.74rem;
     white-space: nowrap;
+  }
+
+  .switcherButton:last-child {
+    width: 100%;
   }
 
 }

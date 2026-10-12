@@ -359,52 +359,159 @@
   cursor: not-allowed;
 }
 
-/* Groups the required/optional column notes under the upload box. */
-.uploadHints {
+.uploadExample {
   padding: 0 24px 20px;
 }
 
-.uploadHint {
+.uploadExampleHeader {
   display: flex;
   align-items: center;
-  gap: 7px;
-  color: #8490a1;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 9px;
+  color: #596579;
   font-size: 11px;
 }
 
-.uploadHint + .uploadHint {
-  margin-top: 6px;
-}
-
-/* The "ⓘ" marker only — the descriptive text keeps the muted label colour. */
-.uploadHint .hintIcon {
+.uploadExampleHeader strong {
   color: #8b1e2d;
-  font-weight: 700;
+  font-weight: 750;
 }
 
-.uploadHint strong {
-  color: #8b1e2d;
-  font-weight: 700;
+.uploadExampleHeader span {
+  color: #8490a1;
+  white-space: nowrap;
 }
 
-.smallAlert {
-  margin: 0 24px 20px;
-  padding: 10px 12px;
-  border-radius: 9px;
-  font-size: 12px;
-  font-weight: 600;
+.uploadExampleTableWrap {
+  overflow-x: auto;
+  border: 1px solid #ecdfe2;
+  border-radius: 10px;
 }
 
-.smallSuccess {
+.uploadExampleTable {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  font-size: 11px;
+  text-align: left;
+}
+
+.uploadExampleTable th,
+.uploadExampleTable td {
+  padding: 9px 11px;
+  border-right: 1px solid #f0e7e9;
+  white-space: nowrap;
+}
+
+.uploadExampleTable th:last-child,
+.uploadExampleTable td:last-child {
+  border-right: 0;
+}
+
+.uploadExampleTable th {
+  background: #fbf4f5;
+  color: #6e2632;
+  font-weight: 750;
+}
+
+.uploadExampleTable th[data-required="true"]::after {
+  content: ' *';
+  color: #b4233b;
+}
+
+.uploadExampleTable td {
+  border-top: 1px solid #f0e7e9;
+  color: #596579;
+}
+
+.uploadResultOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(23, 32, 51, 0.5);
+  backdrop-filter: blur(3px);
+}
+
+.uploadResultModal {
+  width: min(440px, 100%);
+  padding: 30px;
+  border: 1px solid #ecdfe2;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 24px 60px -18px rgba(23, 32, 51, 0.45);
+  text-align: center;
+  animation: uploadResultEnter 0.2s ease-out;
+}
+
+@keyframes uploadResultEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.uploadResultIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+}
+
+.uploadResultSuccess {
   background: #eaf8ef;
-  border: 1px solid #9fd6b3;
   color: #15803d;
 }
 
-.smallError {
+.uploadResultWarning {
+  background: #fff5df;
+  color: #996515;
+}
+
+.uploadResultError {
   background: #fdeef1;
-  border: 1px solid #efc2ca;
   color: #b4233b;
+}
+
+.uploadResultModal h2 {
+  margin: 0;
+  color: #172033;
+  font-size: 1.2rem;
+}
+
+.uploadResultModal p {
+  margin: 12px 0 24px;
+  color: #596579;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.uploadResultButton {
+  min-width: 110px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 9px;
+  background: #8b1e2d;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.uploadResultButton:hover {
+  background: #6f1724;
 }
 
 /* =========================================

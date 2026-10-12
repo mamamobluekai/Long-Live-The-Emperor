@@ -83,6 +83,55 @@
   color: #1d4ed8;
 }
 
+.reminderSettings {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding: 16px 18px;
+  border: 1px solid #e7ccd3;
+  border-radius: 14px;
+  background: linear-gradient(120deg, #fff 0%, #fdf3f5 100%);
+}
+
+.reminderSettings strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #172033;
+  font-size: 0.9rem;
+}
+
+.reminderSettings p {
+  margin: 0;
+  color: #596579;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.reminderButton {
+  flex: 0 0 auto;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid #8b1e2d;
+  border-radius: 10px;
+  background: #8b1e2d;
+  color: #fff;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.reminderButton:hover:not(:disabled) {
+  background: #741827;
+}
+
+.reminderButton:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
 
 /* =========================================================
    TODAY STATUS
@@ -1365,6 +1414,17 @@
 
   .title {
     font-size: 1.45rem;
+  }
+
+  .reminderSettings {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .reminderButton {
+    width: 100%;
   }
 
   .subtitle {

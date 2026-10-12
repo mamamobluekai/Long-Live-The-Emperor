@@ -48,8 +48,7 @@ function StudentApprovals() {
 
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadMessage, setUploadMessage] = useState('');
-  const [uploadError, setUploadError] = useState('');
+  const [uploadResult, setUploadResult] = useState(null);
 
   // Delete confirmation state
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
@@ -122,29 +121,28 @@ function StudentApprovals() {
 
   const handleUpload = async () => {
     if (!file) {
-      setUploadError('Please select an Excel file first.');
+      setUploadResult({ kind: 'error', message: 'Please select an Excel file first.' });
       return;
     }
 
     setUploading(true);
-    setUploadError('');
-    setUploadMessage('');
+    setUploadResult(null);
     setMessage('');
     setError('');
 
     try {
       const data = await uploadStudentsExcel(file);
-
       const r = data.results || {};
-      const summary = data.message || 'Upload complete.';
-      const detail = r.failed ? ` (${r.failed} failed)` : '';
 
-      setUploadMessage(`${summary}${detail}`);
+      setUploadResult({
+        kind: r.failed ? 'warning' : 'success',
+        message: data.message || 'Upload complete.',
+      });
       setFile(null);
 
       await load();
     } catch (err) {
-      setUploadError(err.message);
+      setUploadResult({ kind: 'error', message: err.message });
     } finally {
       setUploading(false);
     }
@@ -374,8 +372,7 @@ function StudentApprovals() {
                 accept=".xlsx,.xls"
                 onChange={(e) => {
                   setFile(e.target.files?.[0] || null);
-                  setUploadError('');
-                  setUploadMessage('');
+                  setUploadResult(null);
                 }}
               />
             </label>
@@ -399,36 +396,45 @@ function StudentApprovals() {
           </button>
         </div>
 
-        <div className={styles.uploadHints}>
-          <div className={styles.uploadHint}>
-            <span className={styles.hintIcon}>ⓘ</span>
-            <span>
-              <strong>Required columns</strong> (the upload is rejected if any
-              are missing): Student ID, First Name, Last Name, Email.
-            </span>
+        <div className={styles.uploadExample}>
+          <div className={styles.uploadExampleHeader}>
+            <strong>Excel format example</strong>
+            <span>* Required column</span>
           </div>
-
-          <div className={styles.uploadHint}>
-            <span className={styles.hintIcon}>ⓘ</span>
-            <span>
-              <strong>Optional columns</strong> (used when present, otherwise
-              left blank): Middle Name, Section, Strand, School, Contact Number,
-              Gender.
-            </span>
+          <div className={styles.uploadExampleTableWrap}>
+            <table className={styles.uploadExampleTable} aria-label="Example student upload spreadsheet">
+              <thead>
+                <tr>
+                  <th data-required="true">Student ID</th>
+                  <th data-required="true">First Name</th>
+                  <th>Middle Name</th>
+                  <th data-required="true">Last Name</th>
+                  <th data-required="true">Email</th>
+                  <th>Section</th>
+                  <th>Strand</th>
+                  <th>School</th>
+                  <th>Contact Number</th>
+                  <th>Gender</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2026-001</td>
+                  <td>Alex</td>
+                  <td>Jordan</td>
+                  <td>Reyes</td>
+                  <td>alex.reyes@example.com</td>
+                  <td>12-A</td>
+                  <td>STEM</td>
+                  <td>Sample High School</td>
+                  <td>09123456789</td>
+                  <td>Female</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {uploadMessage && (
-          <div className={`${styles.smallAlert} ${styles.smallSuccess}`}>
-            ✓ {uploadMessage}
-          </div>
-        )}
-
-        {uploadError && (
-          <div className={`${styles.smallAlert} ${styles.smallError}`}>
-            ! {uploadError}
-          </div>
-        )}
       </section>
 
       {/* STUDENTS */}
@@ -725,6 +731,46 @@ function StudentApprovals() {
            setDeleteConfirmId(null);
          }}
        />
+       {uploadResult && (
+         <div
+           className={styles.uploadResultOverlay}
+           onClick={() => setUploadResult(null)}
+         >
+           <div
+             className={styles.uploadResultModal}
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="student-upload-result-title"
+             onClick={(event) => event.stopPropagation()}
+           >
+             <div className={`${styles.uploadResultIcon} ${
+               uploadResult.kind === 'error'
+                 ? styles.uploadResultError
+                 : uploadResult.kind === 'warning'
+                   ? styles.uploadResultWarning
+                   : styles.uploadResultSuccess
+             }`}>
+               {uploadResult.kind === 'error' ? <X size={22} /> : <Check size={22} />}
+             </div>
+             <h2 id="student-upload-result-title">
+               {uploadResult.kind === 'error'
+                 ? 'Upload failed'
+                 : uploadResult.kind === 'warning'
+                   ? 'Upload completed with issues'
+                   : 'Upload complete'}
+             </h2>
+             <p>{uploadResult.message}</p>
+             <button
+               type="button"
+               className={styles.uploadResultButton}
+               onClick={() => setUploadResult(null)}
+               autoFocus
+             >
+               Close
+             </button>
+           </div>
+         </div>
+       )}
      </div>
    );
 }

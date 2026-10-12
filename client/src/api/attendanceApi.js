@@ -127,6 +127,28 @@ export async function getMyAttendanceRecords(token) {
   return res.data;
 }
 
+export async function getAttendancePushPublicKey(token) {
+  const res = await axios.get(`${API_BASE}/attendance/student/push/vapid-public-key`, {
+    headers: authHeaders(token),
+  });
+  return res.data;
+}
+
+export async function saveAttendancePushSubscription(subscription, token) {
+  await axios.post(
+    `${API_BASE}/attendance/student/push/subscriptions`,
+    { subscription },
+    { headers: authHeaders(token) },
+  );
+}
+
+export async function deleteAttendancePushSubscription(endpoint, token) {
+  await axios.delete(`${API_BASE}/attendance/student/push/subscriptions`, {
+    headers: authHeaders(token),
+    data: { endpoint },
+  });
+}
+
 export async function updateStudentLocation(lat, lng, accuracy, token) {
   const res = await axios.post(
     `${API_BASE}/tracking/location/update`,

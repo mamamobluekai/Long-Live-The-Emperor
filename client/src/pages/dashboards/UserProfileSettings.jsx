@@ -371,7 +371,7 @@ export default function UserProfileSettings() {
 
   const roleFields = ROLE_FIELDS[user?.role] || [];
 
-  // The two section cards, rendered either inline in the page (desktop) or inside
+  // The section cards, rendered either inline in the page (desktop) or inside
   // the phone-only modal. Defined once and mounted in a single place at a time, so
   // there is never a duplicate copy of these forms in the DOM - the shared input
   // ids and the single fileInputRef stay valid.
@@ -883,6 +883,14 @@ export default function UserProfileSettings() {
           <ShieldCheck size={16} />
           Account Security
         </button>
+        <button
+          type="button"
+          className={`${styles.switcherButton} ${activeSection === 'additional' ? styles.switcherButtonActive : ''}`}
+          onClick={() => openSectionModal('additional')}
+        >
+          <Settings size={16} />
+          Additional Settings
+        </button>
       </div>
 
       {/* CONTENT GRID */}
@@ -906,13 +914,23 @@ export default function UserProfileSettings() {
               className={styles.sectionModal}
               role="dialog"
               aria-modal="true"
-              aria-label={modalSection === 'profile' ? 'Profile Information' : 'Account Security'}
+              aria-label={
+                modalSection === 'profile'
+                  ? 'Profile Information'
+                  : modalSection === 'security'
+                    ? 'Account Security'
+                    : 'Additional Settings'
+              }
               // Clicks inside must not reach the overlay's dismiss handler.
               onClick={(event) => event.stopPropagation()}
             >
               <header className={styles.sectionModalHeader}>
                 <h2 className={styles.sectionModalTitle}>
-                  {modalSection === 'profile' ? 'Profile Information' : 'Account Security'}
+                  {modalSection === 'profile'
+                    ? 'Profile Information'
+                    : modalSection === 'security'
+                      ? 'Account Security'
+                      : 'Additional Settings'}
                 </h2>
 
                 <button

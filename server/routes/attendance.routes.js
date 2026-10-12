@@ -6,9 +6,11 @@ const attendanceSettings = require('../controllers/teacherControllers/attendance
 const attendanceManagement = require('../controllers/teacherControllers/attendanceManagement.controller');
 const attendanceController = require('../controllers/studentControllers/attendance.controller');
 const attendanceAppeal = require('../controllers/studentControllers/attendanceAppeal.controller');
+const attendancePush = require('../controllers/studentControllers/attendancePush.controller');
 const immersionSchedule = require('../controllers/teacherControllers/immersionSchedule.controller');
 const authenticate = require('../middleware/verifyToken');
 const authorize = require('../middleware/authorizeRole');
+const { writeLimiter } = require('../middleware/rateLimiters');
 
 // Batch-scoped attendance endpoints are shared by the SUPERVISOR (who owns
 // attendance scheduling), the TEACHER assigned to the batch, and the
@@ -39,6 +41,9 @@ router.get('/student/schedule', authenticate, authorize('student'), immersionSch
 router.get('/student/records', authenticate, authorize('student'), attendanceController.getMyAttendanceRecords);
 
 // ----- Student: status, check-in/out, appeals -----
+router.get('/student/push/vapid-public-key', authenticate, authorize('student'), attendancePush.getVapidPublicKey);
+router.post('/student/push/subscriptions', authenticate, authorize('student'), writeLimiter, attendancePush.saveSubscription);
+router.delete('/student/push/subscriptions', authenticate, authorize('student'), writeLimiter, attendancePush.deleteSubscription);
 router.get('/student/status', authenticate, authorize('student'), attendanceController.getStudentAttendanceAccess);
 router.post('/check-in', authenticate, authorize('student'), attendanceController.checkIn);
 router.post('/check-out', authenticate, authorize('student'), attendanceController.checkOut);

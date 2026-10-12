@@ -9,6 +9,9 @@ import {
   getMySchedule,
   getMyAttendanceRecords,
   deleteMyAppeal,
+  getAttendancePushPublicKey,
+  saveAttendancePushSubscription,
+  deleteAttendancePushSubscription,
 } from '../../../api/attendanceApi';
 import {
   getMyDailyDocs,
@@ -61,6 +64,13 @@ function fmtCountdown(sec) {
   const ss = String(sec % 60).padStart(2, '0');
 
   return `${hh}:${mm}:${ss}`;
+}
+
+function decodeVapidPublicKey(value) {
+  const padding = '='.repeat((4 - (value.length % 4)) % 4);
+  const base64 = `${value}${padding}`.replace(/-/g, '+').replace(/_/g, '/');
+  const raw = window.atob(base64);
+  return Uint8Array.from(raw, (character) => character.charCodeAt(0));
 }
 
 function formatTime12(time24) {
@@ -397,6 +407,9 @@ function Attendance() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState(null);
   const [nowSec, setNowSec] = useState(0);
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
 
   const [schedules, setSchedules] = useState([]);
   const [scheduleLoading, setScheduleLoading] =
@@ -459,6 +472,71 @@ function Attendance() {
       setLoading(false);
     }
   }, [token]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const checkPushStatus = async () => {
+      const supported = window.isSecureContext
+        && 'serviceWorker' in navigator
+        && 'PushManager' in window
+        && 'Notification' in window;
+      if (!supported) return;
+
+      try {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (!registration) return;
+        if (!cancelled) setPushSupported(true);
+        const subscription = await registration.pushManager.getSubscription();
+        if (!subscription || cancelled) return;
+        await saveAttendancePushSubscription(subscription.toJSON(), token);
+        if (!cancelled) setPushEnabled(true);
+      } catch (err) {
+        console.error('Could not sync attendance reminder subscription:', err);
+      }
+    };
+    checkPushStatus();
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+  const toggleAttendanceReminders = async () => {
+    setPushBusy(true);
+    try {
+      const registration = await navigator.serviceWorker.getRegistration();
+      if (!registration) {
+        throw new Error('Install or open the Work Immersion app from its secure website before enabling reminders.');
+      }
+      const currentSubscription = await registration.pushManager.getSubscription();
+      if (currentSubscription) {
+        await deleteAttendancePushSubscription(currentSubscription.endpoint, token);
+        await currentSubscription.unsubscribe();
+        setPushEnabled(false);
+        flash('info', 'Attendance reminders disabled on this device.');
+        return;
+      }
+
+      let permission = Notification.permission;
+      if (permission === 'default') permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        flash('error', 'Allow notifications in your browser settings to receive attendance reminders.');
+        return;
+      }
+
+      const { publicKey } = await getAttendancePushPublicKey(token);
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: decodeVapidPublicKey(publicKey),
+      });
+      await saveAttendancePushSubscription(subscription.toJSON(), token);
+      setPushEnabled(true);
+      flash('success', 'Attendance reminders are enabled on this device.');
+    } catch (err) {
+      flash('error', err.response?.data?.error || err.message || 'Could not update attendance reminders.');
+    } finally {
+      setPushBusy(false);
+    }
+  };
 
   /*
    * ============================================================
@@ -1196,6 +1274,31 @@ const openAppeal = (
       </div>
 
       <div className={styles.card}>
+
+        {pushSupported && (
+          <div className={styles.reminderSettings}>
+            <div>
+              <strong>Attendance reminders</strong>
+              <p>
+                Get a phone notification when your Time In or Time Out window opens.
+                Tap its button to open this attendance page. On iPhone, add the app
+                to your Home Screen first.
+              </p>
+            </div>
+            <button
+              type="button"
+              className={styles.reminderButton}
+              onClick={toggleAttendanceReminders}
+              disabled={pushBusy}
+            >
+              {pushBusy
+                ? 'Updating…'
+                : pushEnabled
+                  ? 'Disable reminders'
+                  : 'Enable reminders'}
+            </button>
+          </div>
+        )}
 
         {notice && (
           <div

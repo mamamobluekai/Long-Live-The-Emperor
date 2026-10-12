@@ -9,6 +9,7 @@ import styles from './DashboardTopNav.module.css';
 import LogoutConfirmDialog from './LogoutConfirmDialog';
 import NotificationBell from '../../../components/common/NotificationBell';
 import GroupChatButton from '../../../components/common/GroupChatButton';
+import AttendanceWindowReminder from '../../../components/common/AttendanceWindowReminder';
 
 function DashboardTopNav({
   user,
@@ -179,6 +180,10 @@ function DashboardTopNav({
           isOpen={logoutOpen}
           onClose={() => setLogoutOpen(false)}
         />
+      )}
+
+      {user?.role?.toLowerCase() === 'student' && (
+        <AttendanceWindowReminder />
       )}
 
     </header>
