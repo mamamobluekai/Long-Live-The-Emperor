@@ -10,6 +10,7 @@ import {
   User,
   LayoutDashboard,
   Send,
+  Info,
 } from 'lucide-react';
 
 const links = [
@@ -56,6 +57,11 @@ const links = [
     // still navigates to the route above.
     sheet: UserProfileSettings,
     sheetTitle: 'Settings',
+  },
+  {
+    to: '/dashboard/coordinator/about',
+    label: 'About',
+    icon: Info,
   },
 ];
 

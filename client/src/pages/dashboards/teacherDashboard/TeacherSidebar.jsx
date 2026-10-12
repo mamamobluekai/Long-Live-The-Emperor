@@ -12,6 +12,7 @@ import {
   Megaphone,
   User,
   FolderOpen,
+  Info,
 } from 'lucide-react';
 
 const links = [
@@ -72,6 +73,11 @@ const links = [
     // still navigates to the route above.
     sheet: UserProfileSettings,
     sheetTitle: 'Settings',
+  },
+  {
+    to: '/dashboard/teacher/about',
+    label: 'About',
+    icon: Info,
   },
 ];
 

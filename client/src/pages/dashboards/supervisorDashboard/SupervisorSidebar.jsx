@@ -11,6 +11,7 @@ import {
   User,
   Megaphone,
   FileText,
+  Info,
 } from 'lucide-react';
 
 const links = [
@@ -76,6 +77,11 @@ const links = [
     // still navigates to the route above.
     sheet: UserProfileSettings,
     sheetTitle: 'Settings',
+  },
+  {
+    to: '/dashboard/supervisor/about',
+    label: 'About',
+    icon: Info,
   },
 ];
 

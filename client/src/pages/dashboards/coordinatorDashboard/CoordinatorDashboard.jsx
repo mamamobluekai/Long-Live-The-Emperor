@@ -11,6 +11,7 @@ import DeploymentRequests from './DeploymentRequests';
 import UserProfileSettings from '../UserProfileSettings';
 import Announcements from '../Announcements/Announcements';
 import CoordinatorOverview from './CoordinatorOverview';
+import About from '../About';
 
 function CoordinatorDashboard({ user, onLogout }) {
   return (
@@ -30,6 +31,7 @@ function CoordinatorDashboard({ user, onLogout }) {
          <Route path="deployment" element={<DeploymentRequests />} />
 
          <Route path="profile" element={<UserProfileSettings />} />
+         <Route path="about" element={<About user={user} />} />
          <Route path="*" element={<Navigate to="students" replace />} />
       </Routes>
     </DashboardLayout>

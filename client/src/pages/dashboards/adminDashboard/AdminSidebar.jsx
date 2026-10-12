@@ -8,6 +8,7 @@ import {
   Search,
   Upload,
   Archive,
+  Info,
 } from 'lucide-react';
 
 const links = [
@@ -31,6 +32,11 @@ const links = [
     to: '/dashboard/admin/profile',
     label: 'Profile Settings',
     icon: User,
+  },
+  {
+    to: '/dashboard/admin/about',
+    label: 'About',
+    icon: Info,
   },
   {
     to: '/dashboard/admin/access-logs',

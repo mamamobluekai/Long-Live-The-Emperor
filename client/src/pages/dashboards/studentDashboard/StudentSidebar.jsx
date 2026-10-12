@@ -10,6 +10,7 @@ import {
   UserRound,
   NotebookPen,
   BookOpen,
+  Info,
 } from 'lucide-react';
 
 import DashboardSidebar from '../sharedSidebar/DashboardSidebar';
@@ -85,6 +86,11 @@ const links = [
     // still navigates to the route above.
     sheet: UserProfileSettings,
     sheetTitle: 'Settings',
+  },
+  {
+    to: '/dashboard/student/about',
+    label: 'About',
+    icon: Info,
   },
 ];
 

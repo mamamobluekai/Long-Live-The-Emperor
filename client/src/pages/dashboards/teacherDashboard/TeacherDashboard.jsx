@@ -15,6 +15,7 @@ import BatchChat from '../../../components/social/BatchChat';
 import Announcements from '../Announcements/Announcements';
 import UserProfileSettings from '../UserProfileSettings';
 import { TeacherBatchProvider } from '../../../context/TeacherBatchProvider';
+import About from '../About';
 
 function TeacherDashboard({ user, onLogout }) {
   return (
@@ -38,6 +39,7 @@ function TeacherDashboard({ user, onLogout }) {
 
          <Route path="group-chat" element={<BatchChat user={user} />} />
          <Route path="profile" element={<UserProfileSettings />} />
+         <Route path="about" element={<About user={user} />} />
          <Route path="documents" element={<TeacherDocuments user={user} />} />
          <Route path="*" element={<Navigate to="overview" replace />} />
        </Routes>

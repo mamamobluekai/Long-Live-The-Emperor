@@ -11,6 +11,7 @@ import Reports from './Reports';
 import AccessLogs from './AccessLogs';
 import UploadUsers from './UploadUsers';
 import ArchivedPeriods from './ArchivedPeriods';
+import About from '../About';
 
 function AdminDashboard({ user, onLogout }) {
   return (
@@ -25,6 +26,7 @@ function AdminDashboard({ user, onLogout }) {
         <Route path="coordinators" element={<Coordinators />} />
         <Route path="settings" element={<Settings />} />
         <Route path="profile" element={<AdminProfileSettings />} />
+        <Route path="about" element={<About user={user} />} />
         <Route path="reports" element={<Reports />} />
         <Route path="access-logs" element={<AccessLogs />} />
         <Route path="upload-users" element={<UploadUsers />} />

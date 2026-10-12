@@ -19,6 +19,7 @@ import UserProfileSettings from '../UserProfileSettings';
 import SupervisorCalendar from './SupervisorCalendar';
 import SupervisorStudentProgress from './SupervisorStudentProgress';
 import styles from './SupervisorDashboard.module.css';
+import About from '../About';
 
 function SupervisorDashboard({ user, onLogout }) {
   return (
@@ -79,6 +80,8 @@ function SupervisorDashboard({ user, onLogout }) {
           path="profile"
           element={<UserProfileSettings />}
         />
+
+        <Route path="about" element={<About user={user} />} />
 
         <Route
           path="*"
