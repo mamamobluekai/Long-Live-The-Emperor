@@ -1,4 +1,12 @@
-import { BookOpen, CircleHelp, Download, MapPin, Smartphone } from 'lucide-react';
+import { useState } from 'react';
+import {
+  BookOpen,
+  ChevronDown,
+  CircleHelp,
+  Download,
+  MapPin,
+  Smartphone,
+} from 'lucide-react';
 import styles from './Guide.module.css';
 import step1Image from '../../../assets/Step1_web_to_app.jpg';
 import step2Image from '../../../assets/Step2_web_to_app.jpg';
@@ -122,6 +130,18 @@ const locationSteps = [
 ];
 
 function Guide() {
+  const [expandedGuides, setExpandedGuides] = useState({
+    webApp: false,
+    location: false,
+  });
+
+  const toggleGuide = (guide) => {
+    setExpandedGuides((current) => ({
+      ...current,
+      [guide]: !current[guide],
+    }));
+  };
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -130,25 +150,46 @@ function Guide() {
         </div>
         <div>
           <p className={styles.eyebrow}>Student Guide</p>
-          <h1>Turn the website into an app</h1>
+          <h1>Student Guides</h1>
           <p className={styles.intro}>
-            Follow this step-by-step guide to add the school website to your
-            Android phone using Google Chrome.
+            Choose a guide to see step-by-step instructions for your Android
+            phone.
           </p>
         </div>
       </header>
 
-      <section className={styles.guideCard} aria-labelledby="guide-title">
-        <div className={styles.guideTitle}>
-          <div className={styles.guideTitleIcon} aria-hidden="true">
+      <section className={`${styles.guideCard} ${expandedGuides.webApp ? styles.guideCardExpanded : ''}`}>
+        <button
+          type="button"
+          className={styles.guideToggle}
+          onClick={() => toggleGuide('webApp')}
+          aria-expanded={expandedGuides.webApp}
+          aria-controls="web-app-guide-content"
+        >
+          <span className={styles.guideTitleIcon} aria-hidden="true">
             <Smartphone size={21} />
-          </div>
+          </span>
+          <span className={styles.guideToggleText}>
+            <span className={styles.guideToggleTitle}>Turn the website into an app</span>
+            <span className={styles.guideToggleSubtitle}>
+              Install or add the website to your home screen · Android / Chrome
+            </span>
+          </span>
+          <ChevronDown
+            className={`${styles.toggleChevron} ${expandedGuides.webApp ? styles.toggleChevronOpen : ''}`}
+            size={21}
+            aria-hidden="true"
+          />
+        </button>
+
+        {expandedGuides.webApp && (
+        <div id="web-app-guide-content" className={styles.guideContent}>
+        <div className={styles.guideTitle}>
           <div>
-            <h2 id="guide-title">Install or add the website to your home screen</h2>
+            <h2 id="web-app-guide-title">Install or add the website to your home screen</h2>
             <p>For students using Android phones</p>
           </div>
         </div>
-
         <ol className={styles.stepList}>
           {steps.map((step) => (
             <li
@@ -173,12 +214,12 @@ function Guide() {
           ))}
         </ol>
 
-        <aside className={styles.troubleshooting} aria-labelledby="troubleshooting-title">
+        <aside className={styles.troubleshooting} aria-labelledby="web-app-troubleshooting-title">
           <div className={styles.troubleshootingIcon} aria-hidden="true">
             <CircleHelp size={21} />
           </div>
           <div>
-            <h2 id="troubleshooting-title">Troubleshooting</h2>
+            <h2 id="web-app-troubleshooting-title">Troubleshooting</h2>
             <h3>What if “Install app” does not appear?</h3>
             <ul>
               <li>Try Add to Home screen instead.</li>
@@ -201,19 +242,42 @@ function Guide() {
             open in a more app-like window.
           </p>
         </aside>
+        </div>
+        )}
       </section>
 
-      <section className={styles.guideCard} aria-labelledby="location-guide-title">
-        <div className={styles.guideTitle}>
-          <div className={styles.guideTitleIcon} aria-hidden="true">
+      <section className={`${styles.guideCard} ${expandedGuides.location ? styles.guideCardExpanded : ''}`}>
+        <button
+          type="button"
+          className={styles.guideToggle}
+          onClick={() => toggleGuide('location')}
+          aria-expanded={expandedGuides.location}
+          aria-controls="location-guide-content"
+        >
+          <span className={styles.guideTitleIcon} aria-hidden="true">
             <MapPin size={21} />
-          </div>
+          </span>
+          <span className={styles.guideToggleText}>
+            <span className={styles.guideToggleTitle}>Enable location in Chrome</span>
+            <span className={styles.guideToggleSubtitle}>
+              Allow the website to use your location for attendance
+            </span>
+          </span>
+          <ChevronDown
+            className={`${styles.toggleChevron} ${expandedGuides.location ? styles.toggleChevronOpen : ''}`}
+            size={21}
+            aria-hidden="true"
+          />
+        </button>
+
+        {expandedGuides.location && (
+        <div id="location-guide-content" className={styles.guideContent}>
+        <div className={styles.guideTitle}>
           <div>
             <h2 id="location-guide-title">Enable location in Chrome</h2>
             <p>Allow the website to use your location for attendance</p>
           </div>
         </div>
-
         <ol className={styles.stepList}>
           {locationSteps.map((step) => (
             <li
@@ -246,6 +310,8 @@ function Guide() {
             Location under the website’s permissions or your phone’s Settings.
           </p>
         </aside>
+        </div>
+        )}
       </section>
     </main>
   );

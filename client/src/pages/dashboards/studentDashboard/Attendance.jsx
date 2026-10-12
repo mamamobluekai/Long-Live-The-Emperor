@@ -167,7 +167,8 @@ function getDayStatus(
   timedIn,
   timedOut,
   canTimeIn,
-  canTimeOut
+  canTimeOut,
+  phase
 ) {
   const rec = attendanceRecord;
 
@@ -176,6 +177,7 @@ function getDayStatus(
     if (canTimeOut) return 'can_time_out';
     if (timedIn) return 'checked_in';
     if (canTimeIn) return 'can_time_in';
+    if (phase === 'before_in') return 'awaiting_time_in';
     if (open) return 'open';
 
     // The attendance window has fully elapsed and the student never clocked
@@ -945,10 +947,10 @@ function Attendance() {
 
   const appealWindowHint = (type) => {
     if (type === 'time_in' && !appealWindows.timeInClosed) {
-      return `Available after the Time In window closes (${formatTime12(schedule?.time_in?.close)}).`;
+      return `Appeal available after the Time In window closes (${formatTime12(schedule?.time_in?.close)}).`;
     }
     if (type === 'time_out' && !appealWindows.timeOutClosed) {
-      return `Available after the Time Out window closes (${formatTime12(schedule?.time_out?.close)}).`;
+      return `Appeal available after the Time Out window closes (${formatTime12(schedule?.time_out?.close)}).`;
     }
     return null;
   };
@@ -1569,7 +1571,8 @@ const openAppeal = (
                         timedIn,
                         timedOut,
                         canTimeIn,
-                        canTimeOut
+                        canTimeOut,
+                        phase
                       );
                       const isToday = day.date === todayDate;
                       // Appealable when the day was not completed. Both Time In
@@ -1608,6 +1611,8 @@ const openAppeal = (
                             return 'Checked In';
                           case 'can_time_in':
                             return 'Can Time In';
+                          case 'awaiting_time_in':
+                            return 'Awaiting Time In';
                           case 'can_time_out':
                             return 'Can Time Out';
                           case 'open':

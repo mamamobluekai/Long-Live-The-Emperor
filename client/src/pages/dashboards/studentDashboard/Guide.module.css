@@ -70,11 +70,76 @@
 }
 
 .guideCard {
-  padding: 24px;
+  margin-bottom: 14px;
   border: 1px solid #e6dfe2;
   border-radius: 18px;
   background: linear-gradient(180deg, #fffdfd 0%, #fff 40%);
   box-shadow: 0 12px 32px -28px rgb(80 20 32 / 40%);
+}
+
+.guideCardExpanded {
+  padding: 0 24px 24px;
+}
+
+.guideToggle {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 84px;
+  padding: 18px 22px;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.guideToggle:hover {
+  background: #fff8f9;
+}
+
+.guideToggle:focus-visible {
+  outline: 3px solid rgb(139 30 45 / 35%);
+  outline-offset: -4px;
+}
+
+.guideToggleText {
+  display: grid;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+}
+
+.guideToggleTitle {
+  color: #172033;
+  font-size: 1rem;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+.guideToggleSubtitle {
+  color: #758195;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.toggleChevron {
+  flex: 0 0 auto;
+  color: #8b1e2d;
+  transition: transform 180ms ease;
+}
+
+.toggleChevronOpen {
+  transform: rotate(180deg);
+}
+
+.guideContent {
+  padding-top: 2px;
+  border-top: 1px solid #ecdfe2;
 }
 
 .guideTitle {
@@ -262,7 +327,25 @@
   }
 
   .guideCard {
-    padding: 16px;
+    padding: 0;
+  }
+
+  .guideCardExpanded {
+    padding: 0 16px 16px;
+  }
+
+  .guideToggle {
+    min-height: 76px;
+    gap: 10px;
+    padding: 15px 14px;
+  }
+
+  .guideToggleTitle {
+    font-size: 0.94rem;
+  }
+
+  .guideToggleSubtitle {
+    font-size: 0.78rem;
   }
 
   .guideTitle {
@@ -311,7 +394,29 @@
   }
 
   .guideCard {
-    padding: 12px;
+    padding: 0;
+  }
+
+  .guideCardExpanded {
+    padding: 0 12px 12px;
+  }
+
+  .guideToggle {
+    gap: 8px;
+    padding: 13px 11px;
+  }
+
+  .guideTitleIcon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .guideToggleTitle {
+    font-size: 0.88rem;
+  }
+
+  .guideToggleSubtitle {
+    font-size: 0.74rem;
   }
 
   .step {
