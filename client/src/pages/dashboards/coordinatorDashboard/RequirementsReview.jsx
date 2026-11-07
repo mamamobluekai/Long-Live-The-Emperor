@@ -17,7 +17,6 @@ import {
   CheckCircle2,
   XCircle,
   Download,
-  FileText,
   Clock3,
   Users,
   ClipboardCheck,
@@ -86,11 +85,9 @@ const fmtSize = (bytes) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-const getInitials = (firstName, lastName) => {
-  return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`
-    .toUpperCase()
-    .slice(0, 2) || 'ST';
-};
+const stripNamePrefix = (value) => String(value || '').replace(/(^|\s)RM\b\.?\s*/gi, ' ').replace(/\s+/g, ' ').trim();
+
+const displayName = (firstName, lastName) => stripNamePrefix(`${stripNamePrefix(firstName)} ${stripNamePrefix(lastName)}`);
 
 const getFileType = (mime) => {
   if (!mime) return 'FILE';
@@ -520,34 +517,28 @@ function RequirementsReview() {
       String(doc.code || doc.document_code || doc.document_type || '').toLowerCase(),
     ),
   );
+  const documentsByCode = documents.reduce((acc, doc) => {
+    const key = String(doc.code || doc.document_code || doc.document_type || '').toLowerCase();
+    if (!key) return acc;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(doc);
+    return acc;
+  }, {});
 
   const activeDocTypes = docTypes.filter((d) => d.isActive !== false);
   const checklist = activeDocTypes.map((type) => ({
     ...type,
     uploaded: uploadedCodes.has(type.code.toLowerCase()),
+    docs: documentsByCode[type.code.toLowerCase()] || [],
   }));
 
   const uploadedCount = checklist.filter((item) => item.uploaded).length;
   const missingCount = checklist.length - uploadedCount;
 
-  const grouped = documents.reduce((acc, doc) => {
-    const section = doc.section || 'other';
-    if (!acc[section]) acc[section] = [];
-    acc[section].push(doc);
-    return acc;
-  }, {});
-
-  const sectionOrder = ['guardian', 'medical', 'academic', 'other'];
-
   const pendingCount = submissions.filter((s) =>
     ['pending', 'pending review'].includes(
       String(s.status || '').toLowerCase(),
     ),
-  ).length;
-
-  const reviewCount = submissions.filter(
-    (s) =>
-      String(s.status || '').toLowerCase() === 'under review',
   ).length;
 
   const approvedCount = submissions.filter(
@@ -557,6 +548,11 @@ function RequirementsReview() {
   const revisionCount = submissions.filter(
     (s) =>
       String(s.status || '').toLowerCase() === 'needs revision',
+  ).length;
+
+  const reviewCount = submissions.filter(
+    (s) =>
+      String(s.status || '').toLowerCase() === 'under review',
   ).length;
 
   return (
@@ -799,8 +795,7 @@ function RequirementsReview() {
                         className={styles.checkbox}
                         type="button"
                         onClick={() => handleSelectOne(student.id)}
-                        aria-label={`Select ${student.first_name} ${student.last_name}`}
-                        aria-pressed={selectedIds.includes(student.id)}
+                        aria-label={`Select ${displayName(student.first_name, student.last_name)}`}
                       >
                         {selectedIds.includes(student.id) ? (
                           <CheckSquare size={16} />
@@ -812,18 +807,9 @@ function RequirementsReview() {
 
                     <td>
                       <div className={styles.studentCell}>
-
-                        <div className={styles.studentAvatar}>
-                          {getInitials(
-                            student.first_name,
-                            student.last_name
-                          )}
-                        </div>
-
                         <div>
                           <strong>
-                            {student.first_name}{' '}
-                            {student.last_name}
+                            {displayName(student.first_name, student.last_name)}
                           </strong>
 
                           <span>
@@ -1074,7 +1060,7 @@ function RequirementsReview() {
                       }`}
                     >
                       <div className={styles.configItemInfo}>
-                        <span className={styles.configItemName}>{dt.label}</span>
+                        <span className={styles.configItemName}>{String(dt.label || '').replace(/^RM\s+/i, '')}</span>
 
                         <span className={styles.configItemMeta}>
                           <span className={styles.configSectionTag}>
@@ -1085,10 +1071,6 @@ function RequirementsReview() {
                             <span className={styles.configItemDesc}>
                               &bull; {dt.description}
                             </span>
-                          )}
-
-                          {dt.code && (
-                            <span className={styles.configItemCode}>code: {dt.code}</span>
                           )}
                         </span>
                       </div>
@@ -1135,18 +1117,9 @@ function RequirementsReview() {
             <div className={styles.panelHeader}>
 
               <div className={styles.panelStudent}>
-
-                <div className={styles.largeAvatar}>
-                  {getInitials(
-                    selected.first_name,
-                    selected.last_name
-                  )}
-                </div>
-
                 <div>
                   <h2>
-                    {selected.first_name}{' '}
-                    {selected.last_name}
+                    {displayName(selected.first_name, selected.last_name)}
                   </h2>
 
                   <p>
@@ -1311,7 +1284,7 @@ function RequirementsReview() {
 
                       <p>
                         Tick marks show which required documents were
-                        submitted.
+                        submitted. Review, verify, or reject uploaded files here.
                       </p>
                     </div>
 
@@ -1327,32 +1300,79 @@ function RequirementsReview() {
                   </div>
 
                   <ul className={styles.checklist}>
-                    {checklist.map((item) => (
-                      <li
-                        key={item.code}
-                        className={`${styles.checklistItem} ${
-                          item.uploaded
-                            ? styles.checklistDone
-                            : styles.checklistMissing
-                        }`}
-                      >
-                        <span className={styles.checklistBox}>
-                          {item.uploaded ? (
-                            <CheckCircle2 size={16} />
+                    {checklist.map((item) => {
+                      const primaryDoc = item.docs[0];
+                      return (
+                        <li
+                          key={item.code}
+                          className={`${styles.checklistItem} ${
+                            item.uploaded
+                              ? styles.checklistDone
+                              : styles.checklistMissing
+                          }`}
+                        >
+                          <span className={styles.checklistBox}>
+                            {item.uploaded ? (
+                              <CheckCircle2 size={16} />
+                            ) : (
+                              <XCircle size={16} />
+                            )}
+                          </span>
+
+                          <div className={styles.checklistMain}>
+                            <span className={styles.checklistLabel}>
+                              {String(item.label || '').replace(/^RM\s+/i, '')}
+                            </span>
+                            {primaryDoc ? (
+                              <span className={styles.checklistMeta}>
+                                {primaryDoc.original_name || primaryDoc.document_name || 'Document'}
+                                {fmtSize(primaryDoc.file_size) && ` · ${fmtSize(primaryDoc.file_size)}`}
+                                {primaryDoc.mime_type && ` · ${getFileType(primaryDoc.mime_type)}`}
+                                {primaryDoc.uploaded_date && ` · ${new Date(primaryDoc.uploaded_date).toLocaleDateString()}`}
+                              </span>
+                            ) : null}
+                          </div>
+
+                          {primaryDoc ? (
+                            <div className={styles.checklistActions}>
+                              <span className={`${styles.badge} ${docBadge(primaryDoc.status)}`}>
+                                {primaryDoc.status}
+                              </span>
+                              <button
+                                type="button"
+                                className={styles.verifyButton}
+                                onClick={() => handleVerifyDoc(primaryDoc.id, 'Verified')}
+                              >
+                                <CheckCircle2 size={15} />
+                                Verify
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.rejectButton}
+                                onClick={() => handleVerifyDoc(primaryDoc.id, 'Rejected')}
+                              >
+                                <XCircle size={15} />
+                                Reject
+                              </button>
+                              {primaryDoc.cloudinary_url ? (
+                                <a
+                                  className={styles.downloadButton}
+                                  href={primaryDoc.cloudinary_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  download
+                                >
+                                  <Download size={15} />
+                                  Download
+                                </a>
+                              ) : null}
+                            </div>
                           ) : (
-                            <XCircle size={16} />
+                            <span className={styles.checklistState}>Missing</span>
                           )}
-                        </span>
-
-                        <span className={styles.checklistLabel}>
-                          {item.label}
-                        </span>
-
-                        <span className={styles.checklistState}>
-                          {item.uploaded ? 'Submitted' : 'Missing'}
-                        </span>
-                      </li>
-                    ))}
+                        </li>
+                      );
+                    })}
                   </ul>
 
                   <p
@@ -1368,223 +1388,6 @@ function RequirementsReview() {
                           missingCount !== 1 ? 's are' : ' is'
                         } still missing.`}
                   </p>
-
-                </div>
-
-                {/* DOCUMENTS */}
-                <div className={styles.documentsSection}>
-
-                  <div className={styles.sectionHeading}>
-                    <div>
-                      <h3>
-                        Student Documents
-                      </h3>
-
-                      <p>
-                        {documents.length}{' '}
-                        document
-                        {documents.length !== 1
-                          ? 's'
-                          : ''}{' '}
-                        uploaded
-                      </p>
-                    </div>
-
-                    <span className={styles.documentTotal}>
-                      {documents.length}
-                    </span>
-                  </div>
-
-                  {documents.length === 0 ? (
-
-                    <div className={styles.emptyDocuments}>
-                      <FileText size={34} />
-
-                      <span>
-                        No documents uploaded
-                      </span>
-                    </div>
-
-                  ) : (
-
-                    <div className={styles.documentGroups}>
-
-                      {sectionOrder
-                        .filter(
-                          (section) =>
-                            grouped[section]
-                        )
-                        .map((section) => (
-
-                          <div
-                            className={
-                              styles.documentGroup
-                            }
-                            key={section}
-                          >
-
-                            <div
-                              className={
-                                styles.groupTitle
-                              }
-                            >
-                              {SECTION_LABELS[
-                                section
-                              ] || 'Other'}
-
-                              <span>
-                                {
-                                  grouped[
-                                    section
-                                  ].length
-                                }
-                              </span>
-                            </div>
-
-                            <div
-                              className={
-                                styles.documentList
-                              }
-                            >
-
-                              {grouped[
-                                section
-                              ].map((doc) => (
-
-                                <div
-                                  className={
-                                    styles.documentRow
-                                  }
-                                  key={doc.id}
-                                >
-
-                                  <div
-                                    className={
-                                      styles.fileIcon
-                                    }
-                                  >
-                                    <FileText
-                                      size={20}
-                                    />
-                                  </div>
-
-                                  <div
-                                    className={
-                                      styles.documentInfo
-                                    }
-                                  >
-                                    <strong>
-                                      {doc.document_name ||
-                                        doc.original_name ||
-                                        'Document'}
-                                    </strong>
-
-                                    <span>
-                                      {doc.original_name}
-
-                                      {fmtSize(
-                                        doc.file_size
-                                      ) &&
-                                        ` · ${fmtSize(
-                                          doc.file_size
-                                        )}`}
-
-                                      {doc.mime_type &&
-                                        ` · ${getFileType(
-                                          doc.mime_type
-                                        )}`}
-
-                                      {doc.uploaded_date &&
-                                        ` · ${new Date(
-                                          doc.uploaded_date
-                                        ).toLocaleDateString()}`}
-                                    </span>
-                                  </div>
-
-                                  <span
-                                    className={`${styles.badge} ${
-                                      docBadge(
-                                        doc.status
-                                      )
-                                    }`}
-                                  >
-                                    {doc.status}
-                                  </span>
-
-                                  <div
-                                    className={
-                                      styles.documentActions
-                                    }
-                                  >
-
-                                    <button
-                                      className={
-                                        styles.verifyButton
-                                      }
-                                      onClick={() =>
-                                        handleVerifyDoc(
-                                          doc.id,
-                                          'Verified'
-                                        )
-                                      }
-                                    >
-                                      <CheckCircle2
-                                        size={15}
-                                      />
-                                      Verify
-                                    </button>
-
-                                    <button
-                                      className={
-                                        styles.rejectButton
-                                      }
-                                      onClick={() =>
-                                        handleVerifyDoc(
-                                          doc.id,
-                                          'Rejected'
-                                        )
-                                      }
-                                    >
-                                      <XCircle
-                                        size={15}
-                                      />
-                                      Reject
-                                    </button>
-
-                                    {doc.cloudinary_url && (
-                                      <a
-                                        className={
-                                          styles.downloadButton
-                                        }
-                                        href={
-                                          doc.cloudinary_url
-                                        }
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        download
-                                      >
-                                        <Download
-                                          size={15}
-                                        />
-                                        Download
-                                      </a>
-                                    )}
-
-                                  </div>
-
-                                </div>
-
-                              ))}
-
-                            </div>
-
-                          </div>
-
-                        ))}
-
-                    </div>
-
-                  )}
 
                 </div>
 

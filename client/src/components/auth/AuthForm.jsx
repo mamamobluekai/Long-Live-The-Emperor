@@ -50,7 +50,6 @@ function AuthForm({ onAuthSuccess }) {
 
   const {
     mode,
-    setMode,
     role,
     setRole,
     form,
@@ -540,28 +539,6 @@ useEffect(() => {
               ) : null}
             </form>
 
-            <p className="helper-text">
-              {mode === 'login'
-                ? "Don't have an account?"
-                : 'Already have an account?'}
-
-              {' '}
-
-              <button
-                type="button"
-                onClick={() =>
-                  setMode(
-                    mode === 'login'
-                      ? 'register'
-                      : 'login'
-                  )
-                }
-              >
-                {mode === 'login'
-                  ? 'Sign up now'
-                  : 'Sign in instead'}
-              </button>
-            </p>
           </section>
         </div>
       </div>

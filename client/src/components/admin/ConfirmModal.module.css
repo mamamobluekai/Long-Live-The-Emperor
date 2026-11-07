@@ -1,125 +1,114 @@
-/* Must stack above the dialogs that open it. Confirm modals are triggered from
-   inside page-level dialogs (the user-management role list at 10000, the
-   profile drawer at 10000), and those are all fixed-position siblings sharing
-   one stacking context. At an equal z-index the later element in the DOM paints
-   on top, which buried the confirm behind the dialog it was opened from - hence
-   this sits one full layer higher, matching the convention already used in
-   SupervisorGradeAppeals (3100 over 3000). */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.5);
+  z-index: 11000;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 11000;
   padding: 24px;
+  background: rgb(23 32 51 / 45%);
 }
 
 .modal {
-  background: #ffffff;
-  border-radius: 20px;
-  max-width: 420px;
   width: 100%;
-  padding: 28px;
-  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.25);
+  max-width: 420px;
+  padding: 30px;
+  border: 1px solid #eadde0;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 20px 40px -10px rgb(23 32 51 / 20%);
+  font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .title {
   margin: 0 0 8px;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #0f172a;
+  color: #172033;
+  font-size: 1.2rem;
+  font-weight: 760;
+  letter-spacing: -0.02em;
 }
 
 .message {
   margin: 0 0 24px;
-  color: #475569;
-  line-height: 1.5;
+  color: #596579;
+  font-size: 0.92rem;
+  line-height: 1.6;
 }
 
 .actions {
   display: flex;
-  gap: 12px;
   justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancelBtn,
+.confirmBtn,
+.destructiveBtn {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 18px;
+  border-radius: 11px;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease;
 }
 
 .cancelBtn {
-  background: #f1f5f9;
-  color: #334155;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 10px 20px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease;
+  border: 1px solid #eadde0;
+  background: #fff;
+  color: #596579;
 }
 
 .cancelBtn:hover {
-  background: #e2e8f0;
+  transform: translateY(-1px);
+  border-color: #d7b8be;
+  color: #172033;
 }
 
 .confirmBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #2a5298;
-  color: #ffffff;
-  border: none;
-  border-radius: 12px;
-  padding: 10px 20px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease;
+  border: 1px solid #8b1e2d;
+  background: #8b1e2d;
+  color: #fff;
 }
 
 .confirmBtn:hover {
-  background: #1e3a7a;
+  transform: translateY(-1px);
+  background: #741725;
+  box-shadow: 0 8px 18px rgb(139 30 45 / 18%);
 }
 
 .destructiveBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #dc2626;
-  color: #ffffff;
-  border: none;
-  border-radius: 12px;
-  padding: 10px 20px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease;
+  border: 1px solid #8b1e2d;
+  background: #8b1e2d;
+  color: #fff;
 }
 
 .destructiveBtn:hover {
-  background: #b91c1c;
+  transform: translateY(-1px);
+  background: #741725;
+  box-shadow: 0 8px 18px rgb(139 30 45 / 18%);
 }
 
-/* Held while an action is in flight. The hover tints are suppressed so a
-   running action does not look clickable. */
 .cancelBtn:disabled,
 .confirmBtn:disabled,
 .destructiveBtn:disabled {
   cursor: not-allowed;
   opacity: 0.72;
+  transform: none;
+  box-shadow: none;
 }
 
-.cancelBtn:disabled:hover {
-  background: #f1f5f9;
-}
+.cancelBtn:disabled:hover { border-color: #eadde0; color: #596579; }
+.confirmBtn:disabled:hover, .destructiveBtn:disabled:hover { background: #8b1e2d; }
 
-.confirmBtn:disabled:hover {
-  background: #2a5298;
-}
-
-.destructiveBtn:disabled:hover {
-  background: #dc2626;
-}
-
-/* Explanatory line under the message, e.g. why the dialog is still open. */
 .loadingNote {
   margin: -12px 0 20px;
-  color: #64748b;
+  color: #596579;
   font-size: 0.85rem;
   line-height: 1.45;
 }
@@ -128,59 +117,22 @@
   width: 14px;
   height: 14px;
   flex-shrink: 0;
-  border: 2px solid rgba(255, 255, 255, 0.45);
-  border-top-color: #ffffff;
+  border: 2px solid rgb(255 255 255 / 45%);
+  border-top-color: #fff;
   border-radius: 50%;
   animation: confirmSpin 0.7s linear infinite;
 }
 
-@keyframes confirmSpin {
-  to {
-    transform: rotate(360deg);
-  }
-}
+@keyframes confirmSpin { to { transform: rotate(360deg); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .spinner {
-    animation-duration: 2s;
-  }
+  .spinner { animation-duration: 2s; }
+  .cancelBtn, .confirmBtn, .destructiveBtn { transition: none; }
 }
 
-/* =========================================================
-   DARK MODE
-   ========================================================= */
-
-html[data-theme='dark'] .overlay {
-  background: var(--wim-overlay);
-}
-
-html[data-theme='dark'] .modal {
-  background: var(--wim-bg-raised);
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
-}
-
-html[data-theme='dark'] .title {
-  color: var(--wim-text-strong);
-}
-
-html[data-theme='dark'] .message {
-  color: var(--wim-text-secondary);
-}
-
-html[data-theme='dark'] .cancelBtn {
-  background: var(--wim-bg-sunken);
-  color: var(--wim-text-body);
-  border-color: var(--wim-border);
-}
-
-html[data-theme='dark'] .cancelBtn:hover {
-  background: var(--wim-bg-hover);
-}
-
-html[data-theme='dark'] .cancelBtn:disabled:hover {
-  background: var(--wim-bg-sunken);
-}
-
-html[data-theme='dark'] .loadingNote {
-  color: var(--wim-text-muted);
-}
+html[data-theme='dark'] .overlay { background: var(--wim-overlay); }
+html[data-theme='dark'] .modal { border-color: var(--wim-border); background: var(--wim-bg-raised); box-shadow: 0 20px 40px -10px rgb(0 0 0 / 60%); }
+html[data-theme='dark'] .title { color: var(--wim-text-strong); }
+html[data-theme='dark'] .message, html[data-theme='dark'] .loadingNote { color: var(--wim-text-secondary); }
+html[data-theme='dark'] .cancelBtn { border-color: var(--wim-border); background: var(--wim-bg-surface); color: var(--wim-text-body); }
+html[data-theme='dark'] .cancelBtn:hover { border-color: var(--wim-border-strong); background: var(--wim-bg-hover); color: var(--wim-text-strong); }

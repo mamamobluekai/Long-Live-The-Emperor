@@ -14,8 +14,6 @@
 
   background: #ffffff;
 
-  border-bottom: 1px solid #9a9b9e;
-
   box-sizing: border-box;
 
   position: relative;
@@ -522,7 +520,6 @@
 
 html[data-theme='dark'] .topnav {
   background: var(--wim-topbar-bg);
-  border-bottom-color: var(--wim-topbar-border);
 }
 
 html[data-theme='dark'] .notificationButton {

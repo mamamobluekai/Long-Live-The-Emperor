@@ -333,11 +333,9 @@ function TeacherBatches() {
   // whole programme without counting cards.
   const summary = useMemo(() => {
     const students = batches.reduce((sum, b) => sum + (b.students || []).length, 0);
-    const capacity = batches.reduce((sum, b) => sum + (Number(b.max_students) || 0), 0);
     return {
       batches: batches.length,
       students,
-      capacity,
       unscheduled: batches.filter((b) => !b.schedule?.has_schedule).length,
     };
   }, [batches]);
@@ -346,7 +344,6 @@ function TeacherBatches() {
     <div>
       <div className={styles.pageHeader}>
         <div className={styles.pageHeaderText}>
-          <p className={styles.pageEyebrow}>Work immersion</p>
           <h2>Deployment</h2>
           <p>
             Create batches, assign students with completed requirements, and track each
@@ -363,10 +360,6 @@ function TeacherBatches() {
           <div>
             <dt>Students</dt>
             <dd>{summary.students}</dd>
-          </div>
-          <div>
-            <dt>Capacity</dt>
-            <dd>{summary.capacity}</dd>
           </div>
         </dl>
       </div>
@@ -651,6 +644,12 @@ function TeacherBatches() {
             </div>
 
             {/* Work immersion schedule for this batch, as set by its supervisor. */}
+            {(() => {
+              const removalLocked = ['upcoming', 'ongoing', 'completed'].includes(
+                viewing.schedule?.status || 'none'
+              );
+              return (
+                <>
             <div className={styles.schedulePanel}>
               <div className={styles.schedulePanelHead}>
                 <span className={styles.schedulePanelLabel}>Work immersion schedule</span>
@@ -691,6 +690,11 @@ function TeacherBatches() {
                 <p className={styles.schedulePanelEmpty}>
                   No schedule has been set for this batch yet. The supervisor sets the work
                   immersion schedule from their Schedule page.
+                </p>
+              )}
+              {removalLocked && (
+                <p className={styles.schedulePanelEmpty} style={{ marginTop: 8 }}>
+                  Students cannot be removed while immersion is upcoming, ongoing, or completed.
                 </p>
               )}
             </div>
@@ -746,9 +750,17 @@ function TeacherBatches() {
                               type="button"
                               className={styles.studentRemove}
                               onClick={() => handleRemoveStudent(s)}
-                              disabled={removingId !== null}
-                              title={`Remove ${s.first_name} ${s.last_name} from this batch`}
-                              aria-label={`Remove ${s.first_name} ${s.last_name}`}
+                              disabled={removalLocked || removingId !== null}
+                              title={
+                                removalLocked
+                                  ? 'Cannot remove students while immersion is upcoming, ongoing, or completed'
+                                  : `Remove ${s.first_name} ${s.last_name} from this batch`
+                              }
+                              aria-label={
+                                removalLocked
+                                  ? `Cannot remove ${s.first_name} ${s.last_name}: immersion ${viewing.schedule?.status || 'scheduled'}`
+                                  : `Remove ${s.first_name} ${s.last_name}`
+                              }
                             >
                               {removingId === s.id ? (
                                 <span className={styles.spinnerDark} aria-hidden="true" />
@@ -764,6 +776,9 @@ function TeacherBatches() {
                 </div>
               )}
             </div>
+                </>
+              );
+            })()}
 
             <div className={styles.modalFooter}>
               <button className={styles.btnSecondary} type="button" onClick={closeViewStudents}>

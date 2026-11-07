@@ -16,7 +16,6 @@ import {
   Search,
   Square,
   Trash2,
-  UserCheck,
   X,
 } from 'lucide-react';
 import ConfirmModal from '../../../components/admin/ConfirmModal';
@@ -294,16 +293,12 @@ function StudentApprovals() {
       <div className={styles.pageHeader}>
         <div>
           <span className={styles.eyebrow}>Student Management</span>
-
           <h1>Student Approvals</h1>
 
           <p>
             Review pending accounts, approve student access, and manage uploaded
             student records.
           </p>
-        </div>
-        <div className={styles.headerIcon} aria-hidden="true">
-          <UserCheck size={23} strokeWidth={2.2} />
         </div>
       </div>
 

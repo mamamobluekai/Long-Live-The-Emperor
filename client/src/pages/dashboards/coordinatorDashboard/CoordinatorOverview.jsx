@@ -1,17 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { AlertCircle, ArrowRight, ChevronRight, RefreshCw } from 'lucide-react';
 import {
-  AlertCircle,
-  ArrowRight,
-  ArrowUpRight,
-  ChevronRight,
-  ClipboardCheck,
-  FileCheck2,
-  Layers3,
-  RefreshCw,
-  UserCheck,
-  Users,
-} from 'lucide-react';
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { getCoordinatorDashboard } from '../../../api/coordinatorApi';
 import { useAuth } from '../../../context/AuthContext';
 import styles from './CoordinatorOverview.module.css';
@@ -23,37 +21,11 @@ const ROUTES = {
   supervisors: '/dashboard/coordinator/supervisors',
 };
 
-const requirementSegments = [
-  { key: 'pendingReview', label: 'Pending review', color: '#b45309' },
-  { key: 'underReview', label: 'Under review', color: '#37568c' },
-  { key: 'approved', label: 'Approved', color: '#15803d' },
-  { key: 'needsRevision', label: 'Needs revision', color: '#b4233b' },
-  { key: 'rejected', label: 'Rejected', color: '#7b8794' },
-];
-
 function getGreeting() {
   const hour = new Date().getHours();
   if (hour < 12) return 'Good morning';
   if (hour < 18) return 'Good afternoon';
   return 'Good evening';
-}
-
-function formatDate(value) {
-  if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-function formatRelativeTime(value) {
-  if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
-  const minutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60000));
-  if (minutes < 1) return 'Just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  if (minutes < 1440) return `${Math.floor(minutes / 60)}h ago`;
-  return formatDate(value, { month: 'short', day: 'numeric' });
 }
 
 function getAttentionItems({ approvals, requirements, batches, deploymentRequests }) {
@@ -131,20 +103,6 @@ function ErrorState({ message, onRetry }) {
   );
 }
 
-function MetricCard({ icon: Icon, label, value, detail, to, tone = 'neutral', action = 'View' }) {
-  return (
-    <Link className={`${styles.metricCard} ${styles[`metric${tone}`]}`} to={to}>
-      <div className={styles.metricIcon}><Icon size={19} strokeWidth={1.9} /></div>
-      <div className={styles.metricCopy}>
-        <span>{label}</span>
-        <strong>{value}</strong>
-        <small>{detail}</small>
-      </div>
-      <span className={styles.metricAction}>{action}<ArrowUpRight size={14} /></span>
-    </Link>
-  );
-}
-
 function AttentionItem({ item }) {
   return (
     <div className={styles.attentionItem}>
@@ -157,25 +115,6 @@ function AttentionItem({ item }) {
         <p>{item.detail}</p>
       </div>
       <Link className={styles.actionLink} to={item.to}>{item.action}<ArrowRight size={14} /></Link>
-    </div>
-  );
-}
-
-function RequestRow({ request }) {
-  const supervisor = request.supervisor_company
-    || [request.supervisor_first_name, request.supervisor_last_name].filter(Boolean).join(' ')
-    || 'Supervisor';
-  const status = String(request.status || '').toLowerCase();
-  const tone = status === 'approved' || status === 'fulfilled' ? 'success' : status === 'rejected' ? 'urgent' : 'pending';
-  return (
-    <div className={styles.requestRow}>
-      <div className={styles.requestMark}><Users size={16} /></div>
-      <div className={styles.requestCopy}>
-        <strong>{request.batch_label}</strong>
-        <p>{supervisor} · {request.num_students} student{Number(request.num_students) === 1 ? '' : 's'}</p>
-      </div>
-      <span className={`${styles.statusPill} ${styles[tone]}`}>{request.status}</span>
-      <span className={styles.requestTime}>{formatRelativeTime(request.created_at)}</span>
     </div>
   );
 }
@@ -208,18 +147,7 @@ function CoordinatorOverview() {
   const requirements = useMemo(() => data?.requirements || {}, [data]);
   const batches = useMemo(() => data?.batches || {}, [data]);
   const deploymentRequests = useMemo(() => data?.deploymentRequests || {}, [data]);
-  const recentRequests = useMemo(() => data?.recentRequests || [], [data]);
-
-  const totalRequirements = requirementSegments.reduce(
-    (sum, segment) => sum + Number(requirements[segment.key] || 0),
-    0,
-  );
-  const approvedPercent = totalRequirements
-    ? Math.round((Number(requirements.approved || 0) / totalRequirements) * 100)
-    : 0;
-  const assignedPercent = batches.capacity
-    ? Math.round((Number(batches.assignedStudents || 0) / Number(batches.capacity)) * 100)
-    : 0;
+  const requirementsTrend = useMemo(() => data?.requirementsTrend || [], [data]);
 
   const attentionItems = useMemo(
     () => getAttentionItems({ approvals, requirements, batches, deploymentRequests }),
@@ -244,44 +172,6 @@ function CoordinatorOverview() {
 
       {!loading && !error && data && (
         <>
-          <section className={styles.metricGrid} aria-label="Coordinator metrics">
-            <MetricCard
-              icon={Users}
-              label="Pending approvals"
-              value={approvals.pending || 0}
-              detail="Student accounts"
-              to={ROUTES.students}
-              tone={Number(approvals.pending || 0) > 0 ? 'amber' : 'green'}
-              action={Number(approvals.pending || 0) > 0 ? 'Review' : 'View'}
-            />
-            <MetricCard
-              icon={ClipboardCheck}
-              label="Needs review"
-              value={requirements.pendingReview || 0}
-              detail="Requirement submissions"
-              to={ROUTES.requirements}
-              tone="maroon"
-              action="Open"
-            />
-            <MetricCard
-              icon={FileCheck2}
-              label="Ready to assign"
-              value={requirements.completed || 0}
-              detail="Completed requirements"
-              to={ROUTES.batches}
-              tone="green"
-              action="Assign"
-            />
-            <MetricCard
-              icon={UserCheck}
-              label="Open requests"
-              value={deploymentRequests.pending || 0}
-              detail="Awaiting supervisor action"
-              to={ROUTES.supervisors}
-              tone="neutral"
-              action="View"
-            />
-          </section>
 
           <div className={styles.contentGrid}>
             <div className={styles.mainColumn}>
@@ -298,68 +188,47 @@ function CoordinatorOverview() {
               )}
 
               <section className={styles.card}>
-                <div className={styles.cardHeader}>
-                  <div><p className={styles.cardEyebrow}>PIPELINE</p><h2>Requirements Status</h2></div>
-                  <span className={styles.totalBadge}>{totalRequirements} total</span>
+                <div className={`${styles.cardHeader} ${styles.chartHeader}`}>
+                  <h2>Requirements Trend</h2>
                 </div>
-                <div className={styles.chartArea}>
-                  <div
-                    className={styles.donut}
-                    style={{ '--approved': `${approvedPercent}%` }}
-                    role="img"
-                    aria-label={`${approvedPercent}% of requirement submissions approved`}
-                  >
-                    <div><strong>{requirements.approved || 0}</strong><span>approved</span></div>
-                  </div>
-                  <div className={styles.legend}>
-                    {requirementSegments.map((segment) => (
-                      <div className={styles.legendRow} key={segment.key}>
-                        <span className={styles.legendDot} style={{ backgroundColor: segment.color }} />
-                        <span>{segment.label}</span>
-                        <strong>{requirements[segment.key] || 0}</strong>
-                      </div>
-                    ))}
-                  </div>
+                <div className={styles.summaryRow} aria-label="Key coordinator metrics">
+                  <div className={styles.summaryItem}><strong>{requirements.pendingReview || 0}</strong><span>Pending review</span></div>
+                  <div className={styles.summaryItem}><strong>{requirements.approved || 0}</strong><span>Approved</span></div>
                 </div>
-                <Link className={styles.cardFooterLink} to={ROUTES.requirements}>Open requirements review<ArrowRight size={14} /></Link>
-              </section>
-
-              <section className={styles.card}>
-                <div className={styles.cardHeader}>
-                  <div><p className={styles.cardEyebrow}>FOLLOW-UP QUEUE</p><h2>Recent Deployment Requests</h2></div>
-                  <Link className={styles.cardLink} to={ROUTES.supervisors}>View all<ArrowUpRight size={14} /></Link>
+                <div className={styles.lineChartWrap}>
+                  {requirementsTrend.length ? (
+                    <ResponsiveContainer width="100%" height={240}>
+                      <LineChart data={requirementsTrend} margin={{ top: 8, right: 12, left: -20, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#eadde0" vertical={false} />
+                        <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#596579' }} tickLine={false} axisLine={{ stroke: '#eadde0' }} minTickGap={18} />
+                        <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#596579' }} tickLine={false} axisLine={false} width={28} />
+                        <Tooltip contentStyle={{ border: '1px solid #eadde0', borderRadius: 11, fontSize: 12, color: '#172033' }} />
+                        <Line type="monotone" dataKey="submitted" name="Submitted" stroke="#be8c3f" strokeWidth={2.2} dot={{ r: 2, fill: '#be8c3f' }} activeDot={{ r: 4 }} />
+                        <Line type="monotone" dataKey="approved" name="Approved" stroke="#8b1e2d" strokeWidth={2.2} dot={{ r: 2, fill: '#8b1e2d' }} activeDot={{ r: 4 }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className={styles.emptyState}><p>No requirement activity yet.</p></div>
+                  )}
                 </div>
-                {recentRequests.length > 0 ? (
-                  <div className={styles.requestList}>
-                    {recentRequests.map((request) => <RequestRow key={request.id} request={request} />)}
-                  </div>
-                ) : (
-                  <div className={styles.emptyState}><Users size={22} /><p>No deployment requests yet. Requests you send to supervisors will show here.</p></div>
-                )}
+                <Link className={styles.reviewButton} to={ROUTES.requirements}>Open requirements review<ArrowRight size={17} /></Link>
               </section>
             </div>
 
-            <aside className={styles.sideColumn}>
-              <section className={styles.card}>
-                <div className={styles.cardHeader}>
-                  <div><p className={styles.cardEyebrow}>PLACEMENT</p><h2>Batch Capacity</h2></div>
-                  <Layers3 size={19} className={styles.headingIcon} />
-                </div>
-                <div className={styles.capacityNumber}><strong>{batches.availableSlots || 0}</strong><span>open slots</span></div>
-                <div className={styles.capacityBar} aria-label={`${assignedPercent}% of batch capacity assigned`}>
-                  <span style={{ width: `${Math.min(assignedPercent, 100)}%` }} />
-                </div>
-                <div className={styles.capacityMeta}>
-                  <span>{batches.assignedStudents || 0} assigned</span>
-                  <span>{batches.capacity || 0} total capacity</span>
-                </div>
-                <div className={styles.capacityFacts}>
-                  <div><strong>{batches.total || 0}</strong><span>Teacher batches</span></div>
-                  <div><strong>{batches.withoutSupervisor || 0}</strong><span>Need supervisor</span></div>
-                </div>
-                <Link className={styles.cardFooterLink} to={ROUTES.batches}>Manage batches<ArrowRight size={14} /></Link>
-              </section>
-            </aside>
+            <section className={styles.roleSection} aria-label="Coordinator responsibilities">
+              <div className={styles.roleCard}>
+                <p className={styles.cardEyebrow}>STUDENT APPROVALS</p>
+                <p>Review and approve student accounts so learners can access the work immersion system and begin submitting requirements.</p>
+              </div>
+              <div className={styles.roleCard}>
+                <p className={styles.cardEyebrow}>REQUIREMENTS REVIEW</p>
+                <p>Check submitted documents, provide feedback, and mark requirements as approved, under review, or needing revision.</p>
+              </div>
+              <div className={styles.roleCard}>
+                <p className={styles.cardEyebrow}>PLACEMENT COORDINATION</p>
+                <p>Organize teacher batches, monitor capacity, and coordinate deployment requests to support student immersion placement.</p>
+              </div>
+            </section>
           </div>
         </>
       )}

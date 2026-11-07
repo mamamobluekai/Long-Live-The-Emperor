@@ -362,6 +362,51 @@ const assignApprovedStudentsToBatch = async (req, res) => {
       return res.status(400).json({ error: `Exceeds max capacity. Max: ${max}, Selected: ${uniqueStudentIds.length}` });
     }
 
+    // Once immersion has a schedule that is upcoming, ongoing, or completed,
+    // the roster is locked: students cannot be removed. Adding is still allowed
+    // only if the full replacement would not remove anyone (not used by UI),
+    // so enforce by rejecting any removal.
+    let scheduleRows = { rows: [] };
+    try {
+      scheduleRows = await pool.query(
+        `SELECT wis.supervisor_id, wis.duration_type, wis.duration_value,
+                to_char(wis.start_date, 'YYYY-MM-DD') AS start_date,
+                to_char(wis.end_date, 'YYYY-MM-DD') AS end_date
+           FROM work_immersion_schedules wis
+          WHERE wis.teacher_batch_id = $1`,
+        [batchId]
+      );
+    } catch (scheduleErr) {
+      if (scheduleErr.code !== '42P01') throw scheduleErr;
+      scheduleRows = { rows: [] };
+    }
+    let rosterLocked = false;
+    if ((scheduleRows.rows || []).length > 0) {
+      const rows = scheduleRows.rows || [];
+      const batchSupervisorId = batchCheck.rows[0].supervisor_id;
+      const scoped = rows.find((r) => r.supervisor_id !== null && Number(r.supervisor_id) === Number(batchSupervisorId));
+      const scheduleRow = scoped || rows.find((r) => r.supervisor_id == null) || rows[0];
+      try {
+        const { blocked } = await loadExcludedDates(batchId, scheduleRow?.supervisor_id ?? null);
+        const schedule = summarizeSchedule(scheduleRow, blocked);
+        rosterLocked = ['upcoming', 'ongoing', 'completed'].includes(schedule.status);
+      } catch (_) {
+        rosterLocked = true;
+      }
+    }
+    if (rosterLocked) {
+      const currentRows = await client.query(
+        `SELECT student_id FROM teacher_batch_students WHERE teacher_batch_id = $1`,
+        [batchId]
+      );
+      const currentIds = new Set(currentRows.rows.map((r) => Number(r.student_id)));
+      // normalizedStudentIds not computed yet; resolve against eligible map below only if needed.
+      // Do a lightweight check after normalization by deferring — but easier to compare using raw intent?
+      // We'll check after normalization.
+      batchCheck.rows[0]._rosterLocked = true;
+      batchCheck.rows[0]._currentIds = currentIds;
+    }
+
     // Accept either students.id (current UI) or users.id (older callers), then store students.id.
     const studentsCheck = await client.query(
       `SELECT s.id, s.user_id
@@ -383,6 +428,17 @@ const assignApprovedStudentsToBatch = async (req, res) => {
     const missingCount = uniqueStudentIds.length - normalizedStudentIds.length;
     if (missingCount > 0) {
       return res.status(400).json({ error: 'One or more students have not completed requirements or were not found.' });
+    }
+
+    if (batchCheck.rows[0]._rosterLocked) {
+      const nextIds = new Set(normalizedStudentIds);
+      for (const id of batchCheck.rows[0]._currentIds) {
+        if (!nextIds.has(id)) {
+          return res.status(409).json({
+            error: 'Students cannot be removed while immersion is upcoming, ongoing, or completed.',
+          });
+        }
+      }
     }
 
     // Conflict rule: a student can only ever belong to ONE teacher batch.

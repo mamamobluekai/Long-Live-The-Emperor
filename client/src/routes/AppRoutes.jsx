@@ -103,7 +103,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<MaintenanceAware><LoginAndFRegister onAuthSuccess={login} /></MaintenanceAware>} />
       <Route path="/admin/login" element={<MaintenanceAware><AdminLogin onAuthSuccess={login} /></MaintenanceAware>} />
-      <Route path="/register" element={<MaintenanceAware><LoginAndFRegister onAuthSuccess={login} /></MaintenanceAware>} />
+      <Route path="/register" element={<Navigate to="/login" replace />} />
       <Route path="/set-password" element={<MaintenanceAware><SetPassword /></MaintenanceAware>} />
       <Route path="/forgot-password" element={<MaintenanceAware><ForgotPassword /></MaintenanceAware>} />
 

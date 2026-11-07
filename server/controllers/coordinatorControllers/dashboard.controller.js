@@ -12,7 +12,7 @@ const getCoordinatorDashboard = async (req, res) => {
       return res.status(400).json({ error: 'Coordinator profile not found.' });
     }
 
-    const [approvals, requirements, batches, deploymentRequests, recentRequests] = await Promise.all([
+    const [approvals, requirements, batches, deploymentRequests, recentRequests, requirementsTrend] = await Promise.all([
       pool.query(`
         SELECT COUNT(*)::int AS count
         FROM users
@@ -65,6 +65,31 @@ const getCoordinatorDashboard = async (req, res) => {
         ORDER BY dr.created_at DESC
         LIMIT 5
       `, [req.user.id]),
+      pool.query(`
+        WITH days AS (
+          SELECT generate_series(
+            (CURRENT_DATE - INTERVAL '13 days')::date,
+            CURRENT_DATE,
+            '1 day'
+          )::date AS day
+        )
+        SELECT
+          to_char(days.day, 'YYYY-MM-DD') AS date,
+          to_char(days.day, 'Mon DD') AS label,
+          COUNT(s.id) FILTER (
+            WHERE DATE(COALESCE(s.submitted_at, s.created_at)) = days.day
+          )::int AS submitted,
+          COUNT(s.id) FILTER (
+            WHERE DATE(s.reviewed_at) = days.day
+              AND LOWER(s.status) = 'approved'
+          )::int AS approved
+        FROM days
+        LEFT JOIN student_requirement_submissions s
+          ON DATE(COALESCE(s.submitted_at, s.created_at)) = days.day
+          OR (DATE(s.reviewed_at) = days.day AND LOWER(s.status) = 'approved')
+        GROUP BY days.day
+        ORDER BY days.day
+      `),
     ]);
 
     const requirementStats = requirements.rows[0] || {};
@@ -95,6 +120,7 @@ const getCoordinatorDashboard = async (req, res) => {
         fulfilled: requestStats.fulfilled || 0,
       },
       recentRequests: recentRequests.rows,
+      requirementsTrend: requirementsTrend.rows,
     });
   } catch (err) {
     console.error('getCoordinatorDashboard error:', err);

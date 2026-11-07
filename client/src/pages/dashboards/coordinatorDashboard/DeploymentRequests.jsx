@@ -28,7 +28,7 @@ import {
   Tag,
   ShieldCheck,
 } from 'lucide-react';
-import styles from '../supervisorDashboard/Deployment.module.css';
+import styles from './DeploymentRequests.module.css';
 
 const AWAITING_LABEL = 'Awaiting coordinator';
 
