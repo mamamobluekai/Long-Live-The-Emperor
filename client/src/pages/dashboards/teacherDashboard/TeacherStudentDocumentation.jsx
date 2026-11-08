@@ -385,9 +385,10 @@ function TeacherStudentDocumentation() {
     <div className={styles.page}>
       <div className={styles.header}>
         <div>
-          <span className={styles.eyebrow}>Work Immersion Monitoring</span>
           <h2 className={styles.title}>Student Documentation</h2>
-
+          <p className={styles.pageDescription}>
+            Review and grade your students' submitted daily documentation.
+          </p>
         </div>
         <button type="button" className={styles.criteriaToggleBtn} onClick={openCriteria}>
           Grading Criteria ({criteria.length})

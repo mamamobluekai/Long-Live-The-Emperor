@@ -1,67 +1,57 @@
-/* Work Immersion calendar - student overview */
+/* Student overview — aligned to About page design system */
 
 .dashboard {
   width: 100%;
   max-width: 1440px;
   margin: 0 auto;
+  --about-maroon: #8b1e2d;
+  --about-gold: #be8c3f;
+  --about-ink: #172033;
+  --about-muted: #596579;
+  --about-border: #eadde0;
+  --about-blush: #fff7f8;
+  color: var(--about-ink);
   font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 16px;
   line-height: 1.55;
-  color: #26313f;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-wrap: anywhere;
+}
+
+.dashboard,
+.dashboard * {
+  box-sizing: border-box;
 }
 
 /* ============ GREETING ============ */
 
 .greeting {
-  margin-bottom: 18px;
-  padding: 22px 24px;
-  border: 1px solid #e8d2d8;
-  border-radius: 18px;
-  background:
-    radial-gradient(130% 160% at 0% 0%, rgba(139, 30, 45, 0.1) 0%, rgba(139, 30, 45, 0) 58%),
-    radial-gradient(120% 150% at 100% 120%, rgba(190, 140, 63, 0.16) 0%, rgba(190, 140, 63, 0) 55%),
-    linear-gradient(120deg, #ffffff 0%, #fdf3f5 58%, #f9e8ec 100%);
-  box-shadow: 0 14px 32px -28px rgba(80, 20, 32, 0.55);
-}
-
-.cardEyebrow {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin: 0 0 7px;
-  color: #8b1e2d;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.11em;
+  margin-bottom: clamp(28px, 4vw, 40px);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .greeting h1 {
   margin: 0;
-  color: #172033;
-  font-size: clamp(1.6rem, 2.4vw, 2.2rem);
-  font-weight: 750;
+  color: var(--about-ink);
+  font-size: clamp(1.55rem, 3.4vw, 2.25rem);
+  font-weight: 760;
   letter-spacing: -0.035em;
-  line-height: 1.15;
+  line-height: 1.2;
 }
 
 .greeting h1 span {
   font-size: 0.82em;
 }
 
-.greetingIcon {
-  display: inline-block;
-  flex-shrink: 0;
-  vertical-align: -4px;
-  color: #8b1e2d;
-}
-
 .greetingText {
-  max-width: 620px;
-  margin: 8px 0 0;
-  color: #596579;
-  font-size: 0.98rem;
+  max-width: 680px;
+  margin: 10px 0 0;
+  color: var(--about-muted);
+  font-size: 0.96rem;
   line-height: 1.6;
 }
 
@@ -74,22 +64,11 @@
   gap: 11px;
   min-height: 82px;
   padding: 18px 20px;
-  border: 1px solid #eadce0;
-  border-radius: 15px;
+  border: 1px solid var(--about-border);
+  border-radius: 16px;
   background: #fff;
-  box-shadow: 0 8px 24px -20px rgba(20, 25, 35, 0.4);
-  color: #596579;
+  color: var(--about-muted);
   font-size: 0.95rem;
-}
-
-.loadingPulse {
-  width: 17px;
-  height: 17px;
-  flex-shrink: 0;
-  border: 2px solid #f0dfe3;
-  border-top-color: #8b1e2d;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
 }
 
 .errorState {
@@ -101,19 +80,21 @@
 .errorState button {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 6px;
-  min-height: 38px;
   margin-left: auto;
-  padding: 8px 13px;
-  border: 1px solid #d99aa6;
-  border-radius: 9px;
-  background: #8b1e2d;
+  padding: 8px 12px;
+  border: 1px solid var(--about-maroon);
+  border-radius: 11px;
+  background: var(--about-maroon);
   color: #fff;
   cursor: pointer;
   font: inherit;
   font-size: 0.85rem;
   font-weight: 700;
+}
+
+.errorState button:hover {
+  background: #741725;
 }
 
 @keyframes spin {
@@ -140,22 +121,21 @@
 .card {
   position: relative;
   min-width: 0;
-  padding: 22px;
-  border: 1px solid #e6dfe2;
-  border-radius: 17px;
-  background: linear-gradient(180deg, #fffdfd 0%, #ffffff 40%);
-  box-shadow: 0 12px 32px -28px rgba(80, 20, 32, 0.4);
+  padding: clamp(22px, 4vw, 38px);
+  border: 1px solid var(--about-border);
+  border-radius: 16px;
+  background: #fff;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
 .card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 22px;
-  left: 22px;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: linear-gradient(90deg, rgba(139, 30, 45, 0.75), rgba(184, 57, 79, 0.35), rgba(190, 140, 63, 0.55));
+  content: none;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: #d7b8be;
+  box-shadow: 0 12px 26px rgb(23 32 51 / 7%);
 }
 
 .cardHeader {
@@ -168,10 +148,24 @@
 
 .cardHeader h2 {
   margin: 0;
-  color: #172033;
+  color: var(--about-ink);
   font-size: 1.15rem;
   font-weight: 750;
   letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.cardEyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 10px;
+  color: var(--about-maroon);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+  text-transform: uppercase;
 }
 
 .cardFooterLink {
@@ -181,17 +175,18 @@
   gap: 5px;
   min-height: 38px;
   padding: 8px 10px;
-  border: 1px solid #efdee2;
+  border: 1px solid var(--about-border);
   border-radius: 9px;
   background: #fffafb;
-  color: #8b1e2d;
+  color: var(--about-maroon);
   font-size: 0.82rem;
   font-weight: 750;
   text-decoration: none;
 }
 
 .cardFooterLink:hover {
-  border-color: #d8b8c0;
+  border-color: #d7b8be;
+  box-shadow: 0 8px 18px rgb(23 32 51 / 6%);
   text-decoration: none;
 }
 
@@ -203,9 +198,9 @@
   margin-top: 16px;
   padding: 18px;
   border: 1px dashed #ddcfd3;
-  border-radius: 13px;
-  background: linear-gradient(140deg, #fdfafb 0%, #fbf4f5 100%);
-  color: #8490a1;
+  border-radius: 14px;
+  background: var(--about-blush);
+  color: var(--about-muted);
   font-size: 0.85rem;
   text-align: center;
 }
@@ -231,10 +226,10 @@
   min-width: 36px;
   height: 36px;
   padding: 0 8px;
-  border: 1px solid #e3d7db;
+  border: 1px solid var(--about-border);
   border-radius: 9px;
   background: #fff;
-  color: #596579;
+  color: var(--about-muted);
   cursor: pointer;
   font: inherit;
   font-size: 0.8rem;
@@ -243,32 +238,34 @@
 }
 
 .calendarNav button:hover {
-  border-color: #cf9aa8;
-  background: #fff7f8;
-  color: #8b1e2d;
+  border-color: #d7b8be;
+  background: var(--about-blush);
+  color: var(--about-maroon);
 }
 
 .calendarNav .todayButton {
   min-width: 58px;
-  border-color: #8b1e2d;
-  background: #8b1e2d;
+  border-color: var(--about-maroon);
+  background: var(--about-maroon);
   color: #fff;
 }
 
 .calendarNav .todayButton:hover {
-  border-color: #7a1725;
-  background: #7a1725;
+  border-color: #741725;
+  background: #741725;
   color: #fff;
 }
+
+/* ============ PROGRESS GRAPH ============ */
 
 .progressGraph {
   display: grid;
   gap: 12px;
   margin: 4px 0 18px;
   padding: 16px 18px;
-  border: 1px solid #ecdfe2;
+  border: 1px solid var(--about-border);
   border-radius: 14px;
-  background: linear-gradient(140deg, #fffafb, #fdf3f5);
+  background: #fff;
 }
 
 .progressRow {
@@ -279,7 +276,7 @@
 }
 
 .progressLabel {
-  color: #475d6e;
+  color: var(--about-muted);
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -300,7 +297,7 @@
 }
 
 .progressValue {
-  color: #8b1e2d;
+  color: var(--about-maroon);
   font-size: 0.82rem;
   font-weight: 800;
   text-align: right;
@@ -322,7 +319,7 @@
 
 .weekdayLabel {
   padding: 6px 2px;
-  color: #8b1e2d;
+  color: var(--about-maroon);
   font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -344,18 +341,17 @@
   justify-content: center;
   gap: 5px;
   padding: 10px 6px;
-  border: 1.5px solid #ecdfe2;
+  border: 1px solid var(--about-border);
   border-radius: 14px;
-  background: #ffffff;
-  color: #172033;
+  background: #fff;
+  color: var(--about-ink);
   cursor: pointer;
   font: inherit;
-  box-shadow: 0 4px 12px -10px rgba(80, 20, 32, 0.35);
   transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
 }
 
 .dayCell:hover {
-  border-color: #cf9aa8;
+  border-color: #d7b8be;
   box-shadow: 0 8px 18px -12px rgba(80, 20, 32, 0.5);
   transform: translateY(-2px);
 }
@@ -364,7 +360,7 @@
   font-size: 1.15rem;
   font-weight: 780;
   line-height: 1.1;
-  color: #172033;
+  color: var(--about-ink);
 }
 
 .dayMarker {
@@ -438,16 +434,16 @@
 }
 
 .dayToday {
-  box-shadow: 0 0 0 2px #8b1e2d, 0 10px 20px -14px rgba(139, 30, 45, 0.7);
+  box-shadow: 0 0 0 2px var(--about-maroon), 0 10px 20px -14px rgba(139, 30, 45, 0.7);
 }
 
 .daySelected {
-  border-color: #8b1e2d;
+  border-color: var(--about-maroon);
   box-shadow: 0 0 0 2px rgba(139, 30, 45, 0.35);
 }
 
 .daySelected.dayToday {
-  box-shadow: 0 0 0 3px #8b1e2d, 0 10px 20px -14px rgba(139, 30, 45, 0.7);
+  box-shadow: 0 0 0 3px var(--about-maroon), 0 10px 20px -14px rgba(139, 30, 45, 0.7);
 }
 
 /* ============ LEGEND ============ */
@@ -465,7 +461,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #687386;
+  color: var(--about-muted);
   font-size: 0.76rem;
   font-weight: 650;
 }
@@ -486,7 +482,7 @@
 .swatchupcoming { border-color: #c9d8f0; background: #dce8f8; }
 .swatchrest { border-style: dashed; border-color: #e8ecef; background: #fbfcfd; }
 
-/* ============ DAY DETAIL ============ */
+/* ============ DAY DETAIL (popup panel) ============ */
 
 .stateBadge,
 .percentBadge {
@@ -502,7 +498,7 @@
 
 .percentBadge {
   background: #fdf0f3;
-  color: #8b1e2d;
+  color: var(--about-maroon);
   font-size: 0.82rem;
 }
 
@@ -512,11 +508,11 @@
 .badgeabsent { background: #fdeaee; color: #b4233b; }
 .badgemissed { background: #eef1f4; color: #64748b; }
 .badgeupcoming { background: #eaf1fc; color: #37568c; }
-.badgerest { background: #f4f6f8; color: #8490a1; }
+.badgerest { background: #f4f6f8; color: var(--about-muted); }
 
 .detailHint {
   margin: 0 0 14px;
-  color: #758195;
+  color: var(--about-muted);
   font-size: 0.84rem;
   line-height: 1.5;
   overflow-wrap: anywhere;
@@ -535,9 +531,9 @@
   align-items: center;
   gap: 9px;
   padding: 11px;
-  border: 1px solid #e6d9dd;
+  border: 1px solid var(--about-border);
   border-radius: 11px;
-  background: linear-gradient(150deg, #fffdfd 0%, #fdf4f6 100%);
+  background: #fff;
 }
 
 .timeIcon {
@@ -547,8 +543,8 @@
   flex-shrink: 0;
   place-items: center;
   border-radius: 9px;
-  background: #fff;
-  color: #8b1e2d;
+  background: #fdf1f3;
+  color: var(--about-maroon);
 }
 
 .timeCell div {
@@ -558,12 +554,12 @@
 }
 
 .timeCell small {
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.7rem;
 }
 
 .timeCell strong {
-  color: #26313f;
+  color: var(--about-ink);
   font-size: 0.95rem;
   line-height: 1.3;
 }
@@ -582,7 +578,7 @@
   gap: 9px;
   padding: 9px 0;
   border-top: 1px solid #eef1f4;
-  color: #8490a1;
+  color: var(--about-muted);
 }
 
 .detailRow:first-child {
@@ -590,12 +586,12 @@
 }
 
 .detailRow span {
-  color: #687386;
+  color: var(--about-muted);
   font-size: 0.82rem;
 }
 
 .detailRow strong {
-  color: #26313f;
+  color: var(--about-ink);
   font-size: 0.82rem;
   font-weight: 750;
   text-align: right;
@@ -621,7 +617,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #7f1429, #a72b43);
+  background: linear-gradient(90deg, var(--about-maroon), #b8394f);
   transition: width 500ms ease;
 }
 
@@ -653,11 +649,6 @@
     max-width: none;
   }
 
-  .greeting {
-    padding: 18px 16px;
-    border-radius: 16px;
-  }
-
   .greeting h1 {
     font-size: 1.5rem;
     line-height: 1.25;
@@ -678,11 +669,6 @@
     border-radius: 15px;
   }
 
-  .card::before {
-    right: 16px;
-    left: 16px;
-  }
-
   .cardHeader {
     gap: 10px;
     margin-bottom: 14px;
@@ -697,7 +683,6 @@
     font-size: 0.7rem;
   }
 
-  /* Keep all 7 weekday columns, just shrink the cells */
   .weekdayRow,
   .calendarGrid {
     gap: 4px;
@@ -824,11 +809,6 @@
     padding: 14px;
   }
 
-  .card::before {
-    right: 14px;
-    left: 14px;
-  }
-
   .dayCell {
     min-height: 54px;
   }
@@ -859,6 +839,10 @@
 
   .timeRow {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .calendarNav .todayButton {
+    min-width: 50px;
   }
 }
 
@@ -917,12 +901,6 @@ html[data-theme='dark'] .dashboard {
   color: var(--wim-text);
 }
 
-html[data-theme='dark'] .greeting {
-  border-color: var(--wim-border);
-  background: var(--wim-bg-surface);
-  box-shadow: 0 14px 32px -28px rgba(0, 0, 0, 0.4);
-}
-
 html[data-theme='dark'] .greeting h1 {
   color: var(--wim-text-strong);
 }
@@ -951,6 +929,17 @@ html[data-theme='dark'] .card {
 
 html[data-theme='dark'] .cardHeader h2 {
   color: var(--wim-text-strong);
+}
+
+html[data-theme='dark'] .cardFooterLink {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+  color: var(--wim-brand);
+}
+
+html[data-theme='dark'] .cardFooterLink:hover {
+  border-color: var(--wim-border-strong);
+  background: var(--wim-bg-hover);
 }
 
 html[data-theme='dark'] .dayCell {
@@ -1002,5 +991,11 @@ html[data-theme='dark'] .calendarNav button:hover {
   color: var(--wim-brand);
 }
 
+html[data-theme='dark'] .timeCell {
+  border-color: var(--wim-border);
+  background: var(--wim-bg-surface);
+}
 
-
+html[data-theme='dark'] .track {
+  background: var(--wim-bg-sunken);
+}

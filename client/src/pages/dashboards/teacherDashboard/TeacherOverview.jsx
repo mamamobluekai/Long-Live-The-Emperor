@@ -2,13 +2,8 @@ import { useCallback, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Users,
-  UserCheck,
-  UserX,
-  ClipboardCheck,
-  MapPin,
   AlertCircle,
   ArrowRight,
-  Clock,
   FolderOpen,
   Activity,
 } from 'lucide-react';
@@ -16,8 +11,6 @@ import {
 import {
   getTeacherBatchStudents,
   getBatchRecords,
-  getBatchAppeals,
-  getTeacherBatchEvaluations,
   getBatchDailyDocSummary,
 } from '../../../api/teacherApi';
 
@@ -30,8 +23,7 @@ const ROUTES = {
   attendance: '/dashboard/teacher/attendance',
   attendanceReports: '/dashboard/teacher/attendance-reports',
   evaluations: '/dashboard/teacher/evaluations',
-  liveMap: '/dashboard/teacher/live-map',
-  appeals: '/dashboard/teacher/attendance-reports',
+
   documentation: '/dashboard/teacher/student-documentation',
 };
 
@@ -53,8 +45,6 @@ function TeacherDashboard({ user }) {
 
   const [students, setStudents] = useState([]);
   const [records, setRecords] = useState([]);
-  const [appeals, setAppeals] = useState([]);
-  const [evaluations, setEvaluations] = useState([]);
   const [docSummary, setDocSummary] = useState([]);
 
   const [loading, setLoading] = useState(true);
@@ -72,7 +62,6 @@ function TeacherDashboard({ user }) {
         setNoBatch(true);
         setStudents([]);
         setRecords([]);
-        setAppeals([]);
         setDocSummary([]);
         setLoading(false);
         return;
@@ -91,14 +80,10 @@ function TeacherDashboard({ user }) {
         const [
           studentsData,
           recordsData,
-          appealsData,
-          evaluationsData,
           docSummaryData,
         ] = await Promise.all([
           getTeacherBatchStudents(selectedBatchId, token),
           getBatchRecords(selectedBatchId, today, token),
-          getBatchAppeals(selectedBatchId, 'pending', token),
-          getTeacherBatchEvaluations(),
           getBatchDailyDocSummary(selectedBatchId, token).catch(() => null),
         ]);
 
@@ -112,18 +97,6 @@ function TeacherDashboard({ user }) {
           Array.isArray(recordsData)
             ? recordsData
             : recordsData?.records || []
-        );
-
-        setAppeals(
-          Array.isArray(appealsData)
-            ? appealsData
-            : appealsData?.appeals || []
-        );
-
-        setEvaluations(
-          Array.isArray(evaluationsData)
-            ? evaluationsData
-            : evaluationsData?.evaluations || []
         );
 
         setDocSummary(
@@ -152,7 +125,6 @@ function TeacherDashboard({ user }) {
     // Clear the previous batch's numbers so a switch never flashes stale data.
     setStudents([]);
     setRecords([]);
-    setAppeals([]);
     setDocSummary([]);
   }, [selectedBatchId]);
 
@@ -190,20 +162,6 @@ function TeacherDashboard({ user }) {
   ).length;
 
   const absentCount = Math.max(studentCount - presentCount, 0);
-
-  const evaluationCount = evaluations.length;
-
-  const evaluationCompleted = evaluations.filter(
-    (evaluation) =>
-      evaluation.status === 'completed' ||
-      evaluation.completed === true ||
-      evaluation.is_completed === true
-  ).length;
-
-  const evaluationPercentage =
-    evaluationCount > 0
-      ? Math.round((evaluationCompleted / evaluationCount) * 100)
-      : 0;
 
   /* ---------------- Documentation (batch-scoped) ---------------- */
 
@@ -301,21 +259,13 @@ function TeacherDashboard({ user }) {
       {/* Header */}
       <section className={styles.pageHeader}>
         <div>
-          <div className={styles.eyebrow}>
-            <Activity size={15} />
-            Teacher Portal
-          </div>
 
           <h1>Good day, {teacherName}</h1>
 
           <p>
-            Monitor your students, attendance, evaluations, and
-            work immersion activities.
+            Track student attendance, review documentation, and evaluate
+            your students' work immersion progress.
           </p>
-        </div>
-
-        <div className={styles.headerIcon}>
-          <Activity size={22} />
         </div>
       </section>
 
@@ -326,45 +276,6 @@ function TeacherDashboard({ user }) {
         </div>
       )}
 
-      {/* Overview */}
-      <section className={styles.statsGrid}>
-        <StatCard
-          icon={<Users />}
-          label="Total Students"
-          value={studentCount}
-          description="Students assigned"
-          tone="blue"
-          to={ROUTES.students}
-        />
-
-        <StatCard
-          icon={<UserCheck />}
-          label="Present Today"
-          value={presentCount}
-          description="Attendance recorded"
-          tone="green"
-          to={ROUTES.attendance}
-        />
-
-        <StatCard
-          icon={<UserX />}
-          label="Not Recorded"
-          value={absentCount}
-          description="Needs attention"
-          tone="orange"
-          to={ROUTES.attendanceReports}
-        />
-
-        <StatCard
-          icon={<ClipboardCheck />}
-          label="Evaluations"
-          value={`${evaluationPercentage}%`}
-          description={`${evaluationCompleted}/${evaluationCount} completed`}
-          tone="red"
-          to={ROUTES.evaluations}
-        />
-      </section>
-
       {/* Main content */}
       <div className={styles.contentGrid}>
         {/* Attendance */}
@@ -373,10 +284,6 @@ function TeacherDashboard({ user }) {
             <div>
               <h2>Today's Attendance</h2>
               <p>Attendance status for your assigned students.</p>
-            </div>
-
-            <div className={styles.cardHeaderIcon}>
-              <Clock size={18} />
             </div>
           </div>
 
@@ -545,133 +452,21 @@ function TeacherDashboard({ user }) {
         </section>
       </div>
 
-      {/* Quick Actions */}
-      <section className={styles.card}>
-        <div className={styles.cardHeader}>
-          <div>
-            <h2>Quick Actions</h2>
-            <p>Common teacher functions.</p>
-          </div>
+      <section className={styles.roleSection} aria-label="Teacher responsibilities">
+        <div className={styles.roleCard}>
+          <p className={styles.eyebrow}>STUDENT ATTENDANCE</p>
+          <p>Mark daily attendance, track present and absent students, and monitor batch participation.</p>
         </div>
-
-        <div className={styles.quickActions}>
-          <QuickAction
-            icon={<UserCheck />}
-            title="Attendance"
-            description="Monitor attendance"
-            to={ROUTES.attendance}
-          />
-
-          <QuickAction
-            icon={<MapPin />}
-            title="Live Map"
-            description="Track students"
-            to={ROUTES.liveMap}
-          />
-
-          <QuickAction
-            icon={<ClipboardCheck />}
-            title="Evaluations"
-            description="Evaluate students"
-            to={ROUTES.evaluations}
-          />
-
-          <QuickAction
-            icon={<AlertCircle />}
-            title="Appeals"
-            description={`${appeals.length} pending`}
-            alert={appeals.length > 0}
-            to={ROUTES.appeals}
-          />
+        <div className={styles.roleCard}>
+          <p className={styles.eyebrow}>STUDENT DOCUMENTATION</p>
+          <p>Review submitted documentation, grade entries, and track completion across your batch.</p>
+        </div>
+        <div className={styles.roleCard}>
+          <p className={styles.eyebrow}>STUDENT EVALUATIONS</p>
+          <p>Evaluate student performance and record assessment results for work immersion.</p>
         </div>
       </section>
     </div>
-  );
-}
-
-function StatCard({
-  icon,
-  label,
-  value,
-  description,
-  tone = 'blue',
-  to,
-}) {
-  const toneClass = {
-    blue: styles.statBlue,
-    orange: styles.statOrange,
-    green: styles.statGreen,
-    red: styles.statRed,
-  }[tone];
-
-  const content = (
-    <>
-      <div className={`${styles.statIcon} ${toneClass}`}>
-        {icon}
-      </div>
-
-      <div className={styles.statCopy}>
-        <span className={styles.statLabel}>{label}</span>
-        <strong>{value}</strong>
-        <small>{description}</small>
-      </div>
-
-      {to && (
-        <span className={styles.statAction}>
-          <ArrowRight size={15} />
-        </span>
-      )}
-    </>
-  );
-
-  // Clickable cards navigate to the matching teacher page.
-  if (to) {
-    return (
-      <Link className={styles.statCard} to={to}>
-        {content}
-      </Link>
-    );
-  }
-
-  return <div className={styles.statCard}>{content}</div>;
-}
-
-function QuickAction({
-  icon,
-  title,
-  description,
-  alert = false,
-  to,
-}) {
-  const content = (
-    <>
-      <div className={styles.quickIcon}>{icon}</div>
-
-      <div>
-        <strong>{title}</strong>
-        <span>{description}</span>
-      </div>
-
-      {alert && <span className={styles.alertCount}>!</span>}
-
-      <ArrowRight size={16} className={styles.quickArrow} />
-    </>
-  );
-
-  // Quick actions navigate to the matching teacher page when a route
-  // is provided, otherwise they stay as inert buttons.
-  if (to) {
-    return (
-      <Link className={styles.quickAction} to={to}>
-        {content}
-      </Link>
-    );
-  }
-
-  return (
-    <button className={styles.quickAction} type="button">
-      {content}
-    </button>
   );
 }
 

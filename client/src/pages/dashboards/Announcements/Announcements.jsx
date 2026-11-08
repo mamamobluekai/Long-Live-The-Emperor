@@ -202,7 +202,7 @@ export default function Announcements({ user }) {
     <div className={styles.page}>
       <header className={styles.header}>
         <div>
-          <span className={styles.eyebrow}>Important updates</span>
+          <p className={styles.eyebrow}>Important updates</p>
           <h1>Announcements</h1>
           <p>
             {canManage
@@ -210,7 +210,6 @@ export default function Announcements({ user }) {
               : 'Read official updates from your teachers, supervisors, and coordinator.'}
           </p>
         </div>
-        <div className={styles.headerIcon} aria-hidden="true"><Megaphone size={23} /></div>
       </header>
 
       {canManage && (

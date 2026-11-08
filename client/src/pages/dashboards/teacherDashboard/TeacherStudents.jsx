@@ -79,15 +79,11 @@ function TeacherStudents() {
       {/* ============ PAGE HEADER ============ */}
       <div className={styles.pageHeader}>
         <div>
-          <span className={styles.eyebrow}>Batch Roster</span>
           <h1>My Students</h1>
           <p>
             Students assigned to the batch selected in the sidebar. Click any row to view the
             student's full information.
           </p>
-        </div>
-        <div className={styles.headerIcon} aria-hidden="true">
-          <Users size={24} strokeWidth={2} />
         </div>
       </div>
 

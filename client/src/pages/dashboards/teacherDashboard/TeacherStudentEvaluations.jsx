@@ -136,10 +136,9 @@ function TeacherStudentEvaluations() {
     <div className={styles.page}>
       <div className={styles.pageHeader}>
         <div>
-          <span className={styles.eyebrow}>Work Immersion Evaluation</span>
           <h2>Student Grades</h2>
-          <p>
-            Evaluation grades of your students in the batch selected in the sidebar
+          <p className={styles.pageDescription}>
+            Evaluation grades of your students in the batch selected in the sidebar.
           </p>
         </div>
         <div className={styles.headerActions}>

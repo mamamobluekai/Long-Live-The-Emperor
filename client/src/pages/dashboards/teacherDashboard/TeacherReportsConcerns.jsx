@@ -82,7 +82,7 @@ function sortByPriority(reports) {
 
 function TeacherReportsConcerns() {
   const { token } = useAuth();
-  const { batchId, batchLabel } = useTeacherBatch();
+  const { batchId } = useTeacherBatch();
   const [reports, setReports] = useState([]);
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [loading, setLoading] = useState(true);
@@ -171,9 +171,10 @@ function TeacherReportsConcerns() {
     <div className={styles.page}>
       <header className={styles.header}>
         <div>
-          <span className={styles.eyebrow}>SUPERVISOR REPORTS</span>
           <h1>Reports and Concerns</h1>
-          <p>Reports and concerns submitted by supervisors for students in your batches{batchLabel ? ` (${batchLabel})` : ''}.</p>
+          <p className={styles.pageDescription}>
+            Reports and concerns submitted by supervisors for students in your batches.
+          </p>
         </div>
       </header>
 

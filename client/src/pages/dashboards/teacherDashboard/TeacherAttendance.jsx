@@ -220,7 +220,6 @@ function TeacherAttendance() {
 
       <div className={styles.header}>
         <div>
-          <span className={styles.eyebrow}>Daily Monitoring</span>
           <h2 className={styles.title}>
             Attendance Monitor
           </h2>
@@ -228,9 +227,6 @@ function TeacherAttendance() {
           <p className={styles.pageDescription}>
             View-only. Attendance windows and immersion schedules are set by the supervisor.
           </p>
-        </div>
-        <div className={styles.headerIcon} aria-hidden="true">
-          <CalendarDays size={24} strokeWidth={2} />
         </div>
       </div>
 

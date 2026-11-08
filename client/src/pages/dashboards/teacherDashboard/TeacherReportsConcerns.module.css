@@ -5,10 +5,18 @@
 
 .page {
   width: 100%;
-  max-width: 1500px;
+  max-width: 1200px;
   margin: 0 auto;
+  --about-maroon: #8b1e2d;
+  --about-gold: #be8c3f;
+  --about-ink: #172033;
+  --about-muted: #596579;
+  --about-border: #eadde0;
+  --about-blush: #fff7f8;
+  color: var(--about-ink);
   font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #26313f;
+  font-size: 16px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -19,44 +27,42 @@
 
 .header {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 18px;
-
-  margin-bottom: 20px;
-
-  padding: 22px 24px;
-
-  border: 1px solid #e8d2d8;
-  border-radius: 18px;
-
-  background:
-    radial-gradient(130% 160% at 0% 0%, rgba(139, 30, 45, 0.1) 0%, rgba(139, 30, 45, 0) 58%),
-    radial-gradient(120% 150% at 100% 120%, rgba(190, 140, 63, 0.16) 0%, rgba(190, 140, 63, 0) 55%),
-    linear-gradient(120deg, #ffffff 0%, #fdf3f5 58%, #f9e8ec 100%);
-
-  box-shadow: 0 14px 32px -28px rgba(80, 20, 32, 0.55);
+  gap: 24px;
+  margin-bottom: clamp(28px, 4vw, 40px);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .eyebrow {
   display: block;
-  margin-bottom: 6px;
-
-  color: #8b1e2d;
-  font-size: 0.72rem;
+  margin-bottom: 10px;
+  color: var(--about-maroon);
+  font-size: 0.74rem;
   font-weight: 800;
-  letter-spacing: 0.11em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+  line-height: 1.4;
 }
 
 .header h1 {
   margin: 0;
-
-  color: #172033;
-  font-size: 1.85rem;
-  font-weight: 780;
+  color: var(--about-ink);
+  font-size: clamp(1.55rem, 3.4vw, 2.25rem);
+  font-weight: 760;
   letter-spacing: -0.035em;
-  line-height: 1.15;
+  line-height: 1.2;
+}
+
+.pageDescription {
+  max-width: 680px;
+  margin: 10px 0 0;
+  color: var(--about-muted);
+  font-size: 0.96rem;
+  line-height: 1.6;
 }
 
 .header p {
@@ -105,7 +111,7 @@
 
   min-height: 220px;
 
-  color: #8490a1;
+  color: #596579;
   font-size: 0.85rem;
 }
 
@@ -119,14 +125,14 @@
 
   padding: 30px;
 
-  color: #8490a1;
+  color: #596579;
   font-size: 0.86rem;
   text-align: center;
 
   border: 1px dashed #ddcfd3;
   border-radius: 16px;
 
-  background: linear-gradient(140deg, #fdfafb 0%, #fbf4f5 100%);
+  background: linear-gradient(140deg, #fff7f8 0%, #fbf4f5 100%);
 }
 
 /* =========================
@@ -149,7 +155,7 @@
 
   padding: 13px 16px;
 
-  border: 1px solid #ecdfe2;
+  border: 1px solid #eadde0;
   border-radius: 14px;
 
   background: #fffafb;
@@ -163,7 +169,7 @@
 .filterLabel {
   margin-right: 4px;
 
-  color: #9c8189;
+  color: #596579;
   font-size: 0.66rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -175,7 +181,7 @@
 
   padding: 0 13px;
 
-  border: 1px solid #dcc9cf;
+  border: 1px solid #d7b8be;
   border-radius: 999px;
 
   background: #fff;
@@ -196,7 +202,7 @@
 
 .filterBtn:hover {
   border-color: #b8394f;
-  color: #581725;
+  color: #8b1e2d;
 }
 
 .filterActive {
@@ -222,7 +228,7 @@
 
   background: linear-gradient(180deg, #fffdfd 0%, #ffffff 40%);
 
-  border: 1px solid #e6dfe2;
+  border: 1px solid #eadde0;
   border-radius: 18px;
 
   box-shadow: 0 12px 32px -28px rgba(80, 20, 32, 0.4);
@@ -233,7 +239,7 @@
 }
 
 .batchGroup:hover {
-  border-color: #dcc9cf;
+  border-color: #d7b8be;
   box-shadow: 0 18px 40px -30px rgba(80, 20, 32, 0.5);
 }
 
@@ -246,7 +252,7 @@
 
   padding: 17px 20px 15px;
 
-  border-bottom: 1px solid #ecdfe2;
+  border-bottom: 1px solid #eadde0;
 
   background: linear-gradient(140deg, #fffafb 0%, #fdf1f3 100%);
 
@@ -291,7 +297,7 @@
   border: 1px solid #f0d7dc;
   border-radius: 999px;
 
-  background: #fdf0f2;
+  background: #fff7f8;
 
   color: #8b1e2d;
 
@@ -331,7 +337,7 @@
 }
 
 .card:hover {
-  border-color: #dcc9cf;
+  border-color: #d7b8be;
   box-shadow: 0 12px 26px -22px rgba(80, 20, 32, 0.4);
 }
 
@@ -396,7 +402,7 @@
 }
 
 .meta {
-  color: #8490a1;
+  color: #596579;
   font-size: 0.74rem;
   font-weight: 600;
 }
@@ -543,10 +549,10 @@
 
   padding: 10px 12px;
 
-  border: 1px solid #f1e7ea;
+  border: 1px solid #eadde0;
   border-radius: 10px;
 
-  background: #fdfafb;
+  background: #fff7f8;
 
   color: #403338;
   font-size: 0.8rem;
@@ -562,7 +568,7 @@
   border: 1px solid #eadcdf;
   border-radius: 12px;
 
-  background: linear-gradient(150deg, #fdfafb 0%, #fff7f8 100%);
+  background: linear-gradient(150deg, #fff7f8 0%, #fff7f8 100%);
 }
 
 .messageBox .detailLabel {
@@ -648,7 +654,7 @@
   width: min(540px, 100%);
   height: 100%;
 
-  border-left: 1px solid #e6dfe2;
+  border-left: 1px solid #eadde0;
 
   background: #fff;
 
@@ -670,15 +676,17 @@
 
   padding: 20px 22px;
 
-  border-bottom: 1px solid #ecdfe2;
+  border-bottom: 1px solid var(--about-border);
 
-  background: linear-gradient(130deg, #ffffff 0%, #fdf3f5 60%, #fbe9ec 100%);
+  background:
+    radial-gradient(130% 160% at 0% 0%, rgba(139, 30, 45, 0.1) 0%, rgba(139, 30, 45, 0) 58%),
+    linear-gradient(120deg, #ffffff 0%, #fff7f8 100%);
 }
 
 .drawerEyebrow {
   display: block;
 
-  color: #9c8189;
+  color: var(--about-maroon);
   font-size: 0.65rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -697,7 +705,7 @@
 .drawerHeader p {
   margin: 4px 0 0;
 
-  color: #8490a1;
+  color: #596579;
   font-size: 0.78rem;
 }
 
@@ -711,7 +719,7 @@
 
   flex-shrink: 0;
 
-  border: 1px solid #dcc9cf;
+  border: 1px solid #d7b8be;
   border-radius: 9px;
 
   background: #fff;
@@ -838,3 +846,4 @@
     transition: none;
   }
 }
+
