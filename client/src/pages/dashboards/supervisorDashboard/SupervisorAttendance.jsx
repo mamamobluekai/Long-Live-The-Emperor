@@ -11,11 +11,24 @@ function formatTime(value) {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+function isPastDate(value) {
+  if (!value) return false;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  d.setHours(0, 0, 0, 0);
+  return d < today;
+}
+
 // A day with no attendance record was never taken, so it is "not started"
 // rather than "absent" — the student cannot be marked absent for a day
-// that attendance has not covered yet.
+// that attendance has not covered yet. Once that day's date has passed,
+// however, an unrecorded day counts as absent.
 function dayStatus(day) {
-  if (!day || day.recorded === false) return 'notstarted';
+  if (!day || day.recorded === false) {
+    return isPastDate(day?.date) ? 'absent' : 'notstarted';
+  }
   if (day.check_in_time && day.check_out_time) return 'complete';
   if (day.check_in_time) return 'in';
   if (day.status === 'absent' || day.status === 'excused') return 'absent';
@@ -159,8 +172,10 @@ function SupervisorAttendance() {
   return (
     <div className={styles.page}>
       <div className={styles.pageHeader}>
-        <h2>Student Attendance</h2>
-        <p>Daily attendance for the students assigned to your batches. Days are counted from each student's first attendance.</p>
+        <div>
+          <h2>Student Attendance</h2>
+          <p>Daily attendance for the students assigned to your batches. Days are counted from each student's first attendance.</p>
+        </div>
       </div>
 
       {error && <Feedback type="error" message={error} />}

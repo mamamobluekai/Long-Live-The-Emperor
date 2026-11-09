@@ -4,7 +4,6 @@ import Feedback from '../../../components/Feedback';
 import StudentDetailModal from '../../../components/shared/StudentDetailModal';
 import PersonDrawer from '../../../components/shared/PersonDrawer';
 import { getStudentName } from '../../../components/shared/studentFields';
-import { Layers, UserCog, Briefcase } from 'lucide-react';
 import styles from './SupervisorStudent.module.css';
 
 const joinName = (first, last) => `${first || ''} ${last || ''}`.trim() || 'Not provided';
@@ -145,9 +144,7 @@ function SupervisorStudents() {
     <div className={styles.page}>
       <div className={styles.pageHeader}>
         <div className={styles.headerMain}>
-          <span className={styles.headerIcon}><Layers size={22} /></span>
           <div>
-            <span className={styles.eyebrow}>Supervisor</span>
             <h2>My Batches</h2>
             <p>Teacher and coordinator information for every batch assigned to you.</p>
           </div>
@@ -206,7 +203,6 @@ function SupervisorStudents() {
                       className={styles.personCard}
                       onClick={() => openPerson('teacher', batch)}
                     >
-                      <span className={styles.personIcon}><UserCog size={16} /></span>
                       <span className={styles.personText}>
                         <span className={styles.personLabel}>Teacher</span>
                         <strong>
@@ -222,7 +218,6 @@ function SupervisorStudents() {
                       className={styles.personCard}
                       onClick={() => openPerson('coordinator', batch)}
                     >
-                      <span className={styles.personIcon}><Briefcase size={16} /></span>
                       <span className={styles.personText}>
                         <span className={styles.personLabel}>Coordinator</span>
                         <strong>

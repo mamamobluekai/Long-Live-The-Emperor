@@ -189,9 +189,8 @@ function SupervisorReportsConcerns() {
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
+      <header className={styles.pageHeader}>
         <div>
-          <span className={styles.eyebrow}>SUBMITTED BY YOU</span>
           <h1>My Reports &amp; Concerns</h1>
           <p>Concerns you reported about your assigned students, and whether the teacher has resolved them.</p>
         </div>

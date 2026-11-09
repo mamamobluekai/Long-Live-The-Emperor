@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FileText, AlertCircle, MessageSquare, ChevronDown, Scale, X } from 'lucide-react';
+import { FileText, AlertCircle, MessageSquare, ChevronDown, X } from 'lucide-react';
 import { getSupervisorAppeals, respondToAppeal } from '../../../api/appealApi';
 import styles from './SupervisorGradeAppeals.module.css';
 
@@ -139,9 +139,6 @@ function SupervisorGradeAppeals() {
     return (
       <div className={styles.page}>
         <div className={styles.pageHeader}>
-          <div className={styles.headerIcon}>
-            <Scale size={24} />
-          </div>
           <div>
             <h2>Grade Appeals</h2>
             <p>Review and respond to student grade appeals.</p>

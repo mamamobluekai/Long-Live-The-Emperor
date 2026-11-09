@@ -10,7 +10,7 @@ import {
   addSupervisorBlockedDate,
   removeSupervisorBlockedDate,
 } from '../../../api/supervisorApi';
-import { Ban, CalendarClock, Check, Info, Pencil, Save, Undo2, X } from 'lucide-react';
+import { Ban, Check, Info, Pencil, Save, Undo2, X } from 'lucide-react';
 import Feedback from '../../../components/Feedback';
 import SupervisorDatePicker from './SupervisorDatePicker';
 import styles from './SupervisorSchedule.module.css';
@@ -400,11 +400,8 @@ function SupervisorSchedule() {
   return (
     <div className={styles.page}>
       <div className={styles.pageHeader}>
-        <div className={styles.headerIcon}>
-          <CalendarClock size={24} />
-        </div>
         <div>
-          <h1>Attendance Schedule</h1>
+          <h2>Attendance Schedule</h2>
           <p>Set attendance windows and immersion duration for your batches. Teachers see these as read-only.</p>
         </div>
       </div>

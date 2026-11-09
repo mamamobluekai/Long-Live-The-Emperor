@@ -16,6 +16,7 @@ import {
   Search,
   Square,
   Trash2,
+  UserCheck,
   X,
 } from 'lucide-react';
 import ConfirmModal from '../../../components/admin/ConfirmModal';

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import {
-  Award,
   CheckCircle2,
   AlertCircle,
   Pencil,
@@ -700,9 +699,6 @@ function SupervisorCertifications() {
       `}</style>
 
       <div className={styles.pageHeader}>
-        <div className={styles.headerIcon}>
-          <Award size={24} />
-        </div>
         <div>
           <h1>Certifications</h1>
           <p>Edit your certificate design, then generate signed PDF certificates for students assigned to your batches.</p>

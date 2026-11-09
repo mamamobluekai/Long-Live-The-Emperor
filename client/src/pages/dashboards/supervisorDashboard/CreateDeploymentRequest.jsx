@@ -21,7 +21,6 @@ import {
   Search,
   X,
   Inbox,
-  GraduationCap,
   FileText,
   ChevronLeft,
 } from 'lucide-react';
@@ -192,11 +191,7 @@ function CreateDeploymentRequest() {
       {/* PAGE HEADER */}
       <div className={styles.pageHeader}>
         <div className={styles.headerLeft}>
-          <div className={styles.headerIcon}>
-            <GraduationCap size={24} />
-          </div>
           <div>
-            <div className={styles.eyebrow}>Work Immersion</div>
             <h1>Request Students</h1>
             <p>
               Ask a coordinator for students. You set the headcount — the coordinator names the

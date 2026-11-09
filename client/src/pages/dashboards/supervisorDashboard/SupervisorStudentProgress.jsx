@@ -106,7 +106,6 @@ function SupervisorStudentProgress() {
     <div className={styles.wrapper}>
       {/* SECTION HEADER */}
       <div className={styles.sectionHeader}>
-        <div className={styles.sectionIcon}><Users size={19} /></div>
         <div>
           <h2>Student Progress</h2>
           <p>Click a student to review requirements, attendance and daily documentation.</p>

@@ -13,15 +13,12 @@
 .card {
   padding: 20px 22px 22px;
 
-  border: 1px solid #e8d2d8;
-  border-radius: 18px;
+  border: 1px solid #eadde0;
+  border-radius: 16px;
 
-  background:
-    radial-gradient(130% 160% at 0% 0%, rgba(139, 30, 45, 0.08) 0%, rgba(139, 30, 45, 0) 58%),
-    radial-gradient(120% 150% at 100% 120%, rgba(190, 140, 63, 0.12) 0%, rgba(190, 140, 63, 0) 55%),
-    linear-gradient(120deg, #ffffff 0%, #fdf3f5 58%, #f9e8ec 100%);
+  background: #fff;
 
-  box-shadow: 0 14px 32px -28px rgba(80, 20, 32, 0.55);
+  box-shadow: 0 12px 26px rgb(23 32 51 / 7%);
 }
 
 .cardHeader {

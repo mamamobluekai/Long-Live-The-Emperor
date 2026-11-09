@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo } from 'react';
 import {
   AlertCircle,
   CheckCircle2,
-  ClipboardCheck,
   ListChecks,
   Plus,
   Save,
@@ -402,10 +401,7 @@ function SupervisorEvaluateStudent() {
   return (
     <div className={styles.page}>
       <div className={styles.pageHeader}>
-        <div className={styles.headerIcon}>
-          <ClipboardCheck size={24} />
-        </div>
-        <div className={styles.pageHeaderText}>
+      <div className={styles.pageHeaderText}>
           <h1>Evaluate Student</h1>
           <p>Select a student and rate their performance after their 10-day work immersion.</p>
         </div>

@@ -16,10 +16,12 @@ import BatchChat from '../../../components/social/BatchChat';
 import Announcements from '../Announcements/Announcements';
 import UserProfileSettings from '../UserProfileSettings';
 
+
 import SupervisorCalendar from './SupervisorCalendar';
 import SupervisorStudentProgress from './SupervisorStudentProgress';
-import styles from './SupervisorDashboard.module.css';
 import About from '../About';
+import aboutStyles from '../About.module.css';
+import styles from './SupervisorDashboard.module.css';
 
 function SupervisorDashboard({ user, onLogout }) {
   return (
@@ -94,7 +96,7 @@ function SupervisorDashboard({ user, onLogout }) {
 
 function SupervisorOverview({ user }) {
   return (
-    <div className={styles.dashboard}>
+    <div className={aboutStyles.page}>
 
       <div className={styles.pageHeader}>
         <div>
@@ -122,6 +124,23 @@ function SupervisorOverview({ user }) {
           <SupervisorStudentProgress />
         </div>
       </div>
+
+      <section className={styles.roleSection} aria-label="Supervisor responsibilities">
+        <article className={styles.roleCard}>
+          <p className={styles.roleEyebrow}>STUDENT DEPLOYMENT</p>
+          <p>Review deployment requests, manage assigned student batches, and coordinate student placements.</p>
+        </article>
+        <article className={styles.roleCard}>
+          <p className={styles.roleEyebrow}>STUDENT ATTENDANCE</p>
+          <p>Track daily attendance, monitor student participation, and follow up on attendance throughout immersion.</p>
+        </article>
+        <article className={styles.roleCard}>
+          <p className={styles.roleEyebrow}>STUDENT EVALUATIONS</p>
+          <p>Evaluate student performance, review submitted requirements, and record progress during work immersion.</p>
+        </article>
+      </section>
+
+      <footer className={aboutStyles.footer} aria-hidden="true" />
 
     </div>
   );
