@@ -1,118 +1,73 @@
-/* =========================================================
-   DAILY DOCUMENTATION - maroon design system
-   Matches RequirementsReview: Lexend, #8b1e2d / #b8394f, gold accents.
-   ========================================================= */
+/* Design system: Lexend + About page palette (borders, fonts, colors). */
+:root {
+  --about-maroon: #8b1e2d;
+  --about-gold: #be8c3f;
+  --about-ink: #172033;
+  --about-muted: #596579;
+  --about-border: #eadde0;
+  --about-blush: #fff7f8;
+}
 
 .container {
   width: 100%;
   max-width: 1500px;
   margin: 0 auto;
+  color: var(--about-ink);
   font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #26313f;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* =========================================================
-   PAGE HEADER
-   ========================================================= */
-
+/* ---------- Page header ---------- */
 .pageHeader {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 24px;
+  margin-bottom: 22px;
   padding: 22px 24px;
-  border: 1px solid #e8d2d8;
-  border-radius: 18px;
-  background:
-    radial-gradient(130% 160% at 0% 0%, rgba(139, 30, 45, 0.1) 0%, rgba(139, 30, 45, 0) 58%),
-    radial-gradient(120% 150% at 100% 120%, rgba(190, 140, 63, 0.16) 0%, rgba(190, 140, 63, 0) 55%),
-    linear-gradient(120deg, #ffffff 0%, #fdf3f5 58%, #f9e8ec 100%);
-  box-shadow: 0 14px 32px -28px rgba(80, 20, 32, 0.55);
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  box-shadow: none;
 }
 
-.eyebrow {
-  margin-bottom: 6px;
-  color: #8b1e2d;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-}
-
-.title {
+.pageHeader h1 {
   margin: 0;
-  color: #172033;
+  color: var(--about-ink);
   font-size: 1.85rem;
   font-weight: 780;
   letter-spacing: -0.035em;
   line-height: 1.15;
 }
 
-.subtitle {
-  margin: 8px 0 0;
-  max-width: 700px;
-  color: #596579;
-  font-size: 0.95rem;
+.pageHeader p {
+  margin: 6px 0 0;
+  max-width: 620px;
+  color: var(--about-muted);
+  font-size: 0.88rem;
   line-height: 1.6;
 }
 
-/* =========================================================
-   PROGRESS
-   ========================================================= */
-
+/* ---------- Progress overview ---------- */
 .progressOverview {
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 26px;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-  padding: 24px 26px;
   overflow: hidden;
-  background: linear-gradient(180deg, #fffdfd 0%, #ffffff 40%);
-  border: 1px solid #e6dfe2;
-  border-radius: 18px;
-  box-shadow: 0 12px 32px -28px rgba(80, 20, 32, 0.4);
+  margin-bottom: 18px;
+  background: #fff;
+  border: 1px solid var(--about-border);
+  border-radius: 16px;
+  box-shadow: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.progressOverview:hover {
+  transform: translateY(-2px);
+  border-color: #d7b8be;
+  box-shadow: 0 12px 26px rgb(23 32 51 / 7%);
 }
 
 .progressOverview::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 22px;
-  left: 22px;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: linear-gradient(90deg, rgba(139, 30, 45, 0.75), rgba(184, 57, 79, 0.35), rgba(190, 140, 63, 0.55));
-}
-
-.progressRing {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 96px;
-  height: 96px;
-  min-width: 96px;
-  border-radius: 50%;
-  box-shadow: 0 8px 20px -12px rgba(139, 30, 45, 0.6);
-}
-
-.progressRingInner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 74px;
-  height: 74px;
-  border-radius: 50%;
-  background: #fff;
-  color: #172033;
-  font-size: 1.25rem;
-  font-weight: 780;
-  letter-spacing: -0.02em;
+  content: none;
 }
 
 .progressSummary {
@@ -131,7 +86,7 @@
 
 .progressHeaderRow h2 {
   margin: 0;
-  color: #172033;
+  color: var(--about-ink);
   font-size: 1.05rem;
   font-weight: 750;
   letter-spacing: -0.015em;
@@ -155,8 +110,8 @@
 }
 
 .progressStateInProgress {
-  color: #8b1e2d;
-  background: #fff7f8;
+  color: var(--about-maroon);
+  background: var(--about-blush);
   border: 1px solid #f0d7dc;
 }
 
@@ -169,15 +124,15 @@
 .progressStat {
   padding: 12px 14px;
   background: #fff;
-  border: 1px solid #ecdfe2;
-  border-left: 4px solid #8b1e2d;
+  border: 1px solid var(--about-border);
+  border-left: 4px solid var(--about-maroon);
   border-radius: 12px;
 }
 
 .progressStatLabel {
   display: block;
   margin-bottom: 3px;
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.68rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -185,42 +140,36 @@
 }
 
 .progressStat strong {
-  color: #172033;
+  color: var(--about-ink);
   font-size: 1.3rem;
   font-weight: 780;
   letter-spacing: -0.02em;
   line-height: 1;
 }
 
-/* =========================================================
-   ALERTS / EMPTY
-   ========================================================= */
-
+/* ---------- Alerts / empty ---------- */
 .error {
   padding: 12px 15px;
   margin-bottom: 16px;
   color: #b4233b;
-  background: #fde3e8;
+  background: #fff3f5;
   border: 1px solid #f0b7c2;
-  border-radius: 12px;
-  font-size: 0.86rem;
-  font-weight: 600;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 650;
 }
 
 .empty {
   padding: 34px 20px;
   text-align: center;
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.9rem;
-  border: 1px dashed #ddcfd3;
-  border-radius: 16px;
-  background: linear-gradient(140deg, #fdfafb 0%, #fbf4f5 100%);
+  border: 1px dashed #d8dee8;
+  border-radius: 12px;
+  background: var(--about-blush);
 }
 
-/* =========================================================
-   DAY LIST
-   ========================================================= */
-
+/* ---------- Day list ---------- */
 .list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -234,27 +183,26 @@
   gap: 0;
   padding: 0;
   background: #fff;
-  border: 1px solid #ecdfe2;
-  border-radius: 14px;
+  border: 1px solid var(--about-border);
+  border-radius: 12px;
   overflow: hidden;
   transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
 .item:hover {
-  border-color: #d8b8c0;
-  box-shadow: 0 8px 20px -16px rgba(139, 30, 45, 0.5);
+  border-color: #d7b8be;
+  box-shadow: 0 12px 26px rgb(23 32 51 / 7%);
   transform: translateY(-1px);
 }
 
 .itemToday {
   background: linear-gradient(180deg, #fffafb 0%, #ffffff 60%);
-  border-color: #e2c9cf;
-  box-shadow: inset 3px 0 0 #8b1e2d;
+  box-shadow: inset 3px 0 0 var(--about-maroon);
 }
 
 .itemOpen {
-  border-color: #cf9aa8;
-  box-shadow: 0 10px 24px -16px rgba(139, 30, 45, 0.55);
+  border-color: #d7b8be;
+  box-shadow: 0 12px 26px rgb(23 32 51 / 7%);
 }
 
 /* Collapsed card is the toggle */
@@ -273,7 +221,7 @@
 }
 
 .itemToggle:hover {
-  background: #fff7f8;
+  background: var(--about-blush);
 }
 
 .itemToggleTop {
@@ -289,9 +237,9 @@
   margin-top: 4px;
   padding: 3px 10px;
   border-radius: 999px;
-  background: #fff7f8;
+  background: var(--about-blush);
   border: 1px solid #f0d7dc;
-  color: #8b1e2d;
+  color: var(--about-maroon);
   font-size: 0.7rem;
   font-weight: 750;
   letter-spacing: 0.02em;
@@ -303,7 +251,7 @@
   flex-direction: column;
   gap: 12px;
   padding: 14px 18px 16px;
-  border-top: 1px solid #ecdfe2;
+  border-top: 1px solid var(--about-border);
   background: #fffafb;
   animation: itemOpen 0.2s ease-out;
 }
@@ -313,37 +261,21 @@
     opacity: 0;
     transform: translateY(-6px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-.itemMain {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  min-width: 0;
-  flex: 1;
-}
-
-.itemHeader {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
 .dayNumber {
-  color: #172033;
+  color: var(--about-ink);
   font-size: 0.95rem;
   font-weight: 780;
   letter-spacing: -0.01em;
 }
 
 .itemDate {
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.78rem;
 }
 
@@ -366,17 +298,17 @@
 }
 
 .attPending {
-  color: #9aa4b2;
+  color: var(--about-muted);
   font-weight: 600;
 }
 
 .itemDoc {
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.78rem;
 }
 
 .itemDoc strong {
-  color: #8b1e2d;
+  color: var(--about-maroon);
   font-weight: 750;
 }
 
@@ -414,10 +346,7 @@
   text-align: right;
 }
 
-/* =========================================================
-   BUTTONS
-   ========================================================= */
-
+/* ---------- Buttons ---------- */
 .primaryBtn,
 .secondaryBtn {
   display: inline-flex;
@@ -431,32 +360,32 @@
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease, transform 0.15s ease;
+  transition: 0.18s ease;
 }
 
 .primaryBtn {
-  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
-  border: 1px solid #8b1e2d;
   color: #fff;
-  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
+  background: var(--about-maroon);
+  border: 1px solid var(--about-maroon);
+  box-shadow: 0 2px 6px rgba(139, 30, 45, 0.25);
 }
 
 .primaryBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #7a1725 0%, #932034 100%);
-  box-shadow: 0 10px 22px -10px rgba(139, 30, 45, 0.85);
-  transform: translateY(-1px);
+  background: #7a1725;
+  border-color: #7a1725;
+  box-shadow: 0 4px 10px rgba(139, 30, 45, 0.35);
 }
 
 .secondaryBtn {
-  background: #fff;
-  border: 1px solid #dcc9cf;
   color: #475d6e;
+  background: #fff;
+  border: 1px solid var(--about-border);
 }
 
 .secondaryBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
-  border-color: #8b1e2d;
-  color: #fff;
+  color: var(--about-ink);
+  background: var(--about-blush);
+  border-color: #d7b8be;
 }
 
 .primaryBtn:disabled,
@@ -466,10 +395,7 @@
   transform: none;
 }
 
-/* =========================================================
-   UPLOAD MODAL
-   ========================================================= */
-
+/* ---------- Upload modal ---------- */
 .modalBackdrop {
   position: fixed;
   inset: 0;
@@ -489,7 +415,7 @@
   max-height: 90vh;
   overflow: hidden;
   background: #fff;
-  border: 1px solid #e6dfe2;
+  border: 1px solid var(--about-border);
   border-radius: 16px;
   box-shadow: 0 24px 60px -18px rgba(80, 20, 32, 0.4);
   animation: modalIn 0.22s ease-out;
@@ -500,7 +426,6 @@
     transform: translateY(14px) scale(0.98);
     opacity: 0;
   }
-
   to {
     transform: translateY(0) scale(1);
     opacity: 1;
@@ -513,13 +438,13 @@
   justify-content: space-between;
   gap: 14px;
   padding: 20px 24px;
-  border-bottom: 1px solid #ecdfe2;
-  background: linear-gradient(120deg, #ffffff 0%, #fdf3f5 100%);
+  border-bottom: 1px solid var(--about-border);
+  background: var(--about-blush);
 }
 
 .modalHeader h2 {
   margin: 0;
-  color: #172033;
+  color: var(--about-ink);
   font-size: 1.05rem;
   font-weight: 750;
   letter-spacing: -0.015em;
@@ -527,7 +452,7 @@
 
 .modalEyebrow {
   margin-bottom: 4px;
-  color: #8b1e2d;
+  color: var(--about-maroon);
   font-size: 0.66rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -544,7 +469,7 @@
   border: 1px solid #dcc9cf;
   border-radius: 9px;
   background: #fff;
-  color: #596579;
+  color: var(--about-muted);
   font-family: inherit;
   font-size: 1.2rem;
   line-height: 1;
@@ -553,9 +478,9 @@
 }
 
 .modalClose:hover:not(:disabled) {
-  color: #172033;
+  color: var(--about-ink);
   border-color: #b8394f;
-  background: #fff7f8;
+  background: var(--about-blush);
 }
 
 .modalBody {
@@ -571,9 +496,9 @@
   margin-bottom: 16px;
   padding: 7px 13px;
   border-radius: 999px;
-  background: #fff7f8;
+  background: var(--about-blush);
   border: 1px solid #f0d7dc;
-  color: #8b1e2d;
+  color: var(--about-maroon);
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -596,7 +521,7 @@
   border: 1px solid #dcc9cf;
   border-radius: 9px;
   background: #fff;
-  color: #172033;
+  color: var(--about-ink);
   font-family: inherit;
   font-size: 0.85rem;
   outline: none;
@@ -615,7 +540,7 @@
 
 .label textarea:focus,
 .label input[type='file']:focus {
-  border-color: #b8394f;
+  border-color: var(--about-maroon);
   box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.1);
 }
 
@@ -625,7 +550,7 @@
   border: 1px solid #dcc9cf;
   border-radius: 8px;
   background: #fff;
-  color: #8b1e2d;
+  color: var(--about-maroon);
   font-family: inherit;
   font-size: 0.78rem;
   font-weight: 700;
@@ -634,15 +559,15 @@
 }
 
 .label input[type='file']::file-selector-button:hover {
-  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
-  border-color: #8b1e2d;
+  background: linear-gradient(135deg, var(--about-maroon) 0%, #a82739 100%);
+  border-color: var(--about-maroon);
   color: #fff;
 }
 
 .labelHint {
   display: block;
   margin-top: 7px;
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.74rem;
   font-weight: 500;
   line-height: 1.5;
@@ -654,13 +579,10 @@
   justify-content: flex-end;
   margin-top: 20px;
   padding-top: 18px;
-  border-top: 1px solid #ecdfe2;
+  border-top: 1px solid var(--about-border);
 }
 
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
-
+/* ---------- Responsive ---------- */
 @media (max-width: 900px) {
   .list {
     grid-template-columns: minmax(0, 1fr);
@@ -693,29 +615,17 @@
     border-radius: 16px;
   }
 
-  .title {
+  .pageHeader h1 {
     font-size: 1.5rem;
   }
 
-  .subtitle {
+  .pageHeader p {
     font-size: 0.9rem;
   }
 
   .progressOverview {
     padding: 20px 16px;
     gap: 18px;
-  }
-
-  .progressRing {
-    width: 84px;
-    height: 84px;
-    min-width: 84px;
-  }
-
-  .progressRingInner {
-    width: 64px;
-    height: 64px;
-    font-size: 1.05rem;
   }
 
   .progressStats {
@@ -762,10 +672,7 @@
   }
 }
 
-/* =========================================================
-   EXTRA PHONE / NARROW-SCREEN GUARDS
-   ========================================================= */
-
+/* ---------- Extra phone / narrow-screen guards ---------- */
 @media (max-width: 1024px) {
   .progressStats {
     gap: 10px;
@@ -800,11 +707,6 @@
     grid-template-columns: 1fr;
   }
 
-  .itemHeader {
-    gap: 6px;
-  }
-
-  /* Long batch names and emails must wrap, not force a sideways scroll */
   .itemMeta,
   .itemDoc,
   .itemDate {
@@ -825,19 +727,13 @@
   }
 }
 
-/* Keep long unbroken values (file names, batch labels) inside the viewport */
 .container {
   overflow-wrap: break-word;
 }
 
-/* =========================================================
-   PHONE: compact card
-   Collapsed cards show only "Day N" and the status word, so the
-   status (Submitted / Not Submitted) is readable at a glance.
-   ========================================================= */
-
+/* ---------- Phone: compact card ---------- */
 .itemDocLabel {
-  color: #8490a1;
+  color: var(--about-muted);
   font-weight: 600;
 }
 
@@ -878,19 +774,14 @@
   }
 }
 
-/* =========================================================
-   STATUS COLOURS
-   Not submitted stays maroon; submitted/reviewed/graded turns green.
-   ========================================================= */
-
-/* Specificity must beat `.itemDoc strong`, which sets the maroon default. */
+/* ---------- Status colours ---------- */
 .itemDoc strong.docDone {
   color: #15803d;
   font-weight: 750;
 }
 
 .itemDoc strong.docPending {
-  color: #8b1e2d;
+  color: var(--about-maroon);
   font-weight: 750;
 }
 
@@ -910,10 +801,7 @@
   color: #37568c;
 }
 
-/* =========================================================
-   PHONE: progress block
-   ========================================================= */
-
+/* ---------- Phone: progress block ---------- */
 @media (max-width: 640px) {
   .progressOverview {
     flex-direction: column;
@@ -955,5 +843,15 @@
 
   .progressStat strong {
     font-size: 1.15rem;
+  }
+}
+
+/* ---------- Accessibility ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
   }
 }

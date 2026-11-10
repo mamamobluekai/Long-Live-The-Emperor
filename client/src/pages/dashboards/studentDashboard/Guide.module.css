@@ -1,10 +1,22 @@
+/* Design system: Lexend + About page palette (borders, fonts, colors). */
+:root {
+  --about-maroon: #8b1e2d;
+  --about-gold: #be8c3f;
+  --about-ink: #172033;
+  --about-muted: #596579;
+  --about-border: #eadde0;
+  --about-blush: #fff7f8;
+}
+
 .page {
   width: 100%;
-  max-width: 1100px;
+  max-width: 1500px;
   min-width: 0;
   margin: 0 auto;
-  color: #26313f;
+  color: var(--about-ink);
   font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .page,
@@ -12,82 +24,65 @@
   box-sizing: border-box;
 }
 
+/* ---------- Page header ---------- */
 .header {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  gap: 16px;
+  gap: 0;
   margin-bottom: 22px;
-  padding: 24px;
-  border: 1px solid #e8d2d8;
-  border-radius: 18px;
-  background:
-    radial-gradient(130% 160% at 0% 0%, rgb(139 30 45 / 10%) 0%, transparent 58%),
-    radial-gradient(120% 150% at 100% 120%, rgb(190 140 63 / 16%) 0%, transparent 55%),
-    linear-gradient(120deg, #fff 0%, #fdf3f5 58%, #f9e8ec 100%);
-  box-shadow: 0 14px 32px -28px rgb(80 20 32 / 55%);
-}
-
-.headerIcon,
-.guideTitleIcon,
-.troubleshootingIcon {
-  display: grid;
-  flex: 0 0 auto;
-  place-items: center;
-}
-
-.headerIcon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: linear-gradient(140deg, #8b1e2d, #b8394f);
-  color: #fff;
-}
-
-.eyebrow {
-  margin: 0 0 6px;
-  color: #8b1e2d;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
+  padding: 22px 24px;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  box-shadow: none;
 }
 
 .header h1 {
   margin: 0;
-  color: #172033;
-  font-size: clamp(1.45rem, 3vw, 1.9rem);
+  color: var(--about-ink);
+  font-size: 1.85rem;
   font-weight: 780;
   letter-spacing: -0.035em;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .intro {
-  max-width: 680px;
-  margin: 9px 0 0;
+  margin: 8px 0 0;
+  max-width: 700px;
   color: #596579;
   font-size: 0.95rem;
   line-height: 1.6;
 }
 
+/* ---------- Guide cards ---------- */
 .guideCard {
-  margin-bottom: 14px;
-  border: 1px solid #e6dfe2;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #fffdfd 0%, #fff 40%);
-  box-shadow: 0 12px 32px -28px rgb(80 20 32 / 40%);
+  margin-bottom: 18px;
+  border: 1px solid var(--about-border);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.guideCard:hover {
+  transform: translateY(-2px);
+  border-color: #d7b8be;
+  box-shadow: 0 12px 26px rgb(23 32 51 / 7%);
 }
 
 .guideCardExpanded {
   padding: 0 24px 24px;
 }
 
+/* ---------- Guide toggle ---------- */
 .guideToggle {
   display: flex;
   align-items: center;
   gap: 14px;
   width: 100%;
-  min-height: 84px;
-  padding: 18px 22px;
+  min-height: 44px;
+  padding: 14px 16px;
   border: 0;
   border-radius: inherit;
   background: transparent;
@@ -99,7 +94,7 @@
 }
 
 .guideToggle:hover {
-  background: #fff8f9;
+  background: var(--about-blush);
 }
 
 .guideToggle:focus-visible {
@@ -115,21 +110,21 @@
 }
 
 .guideToggleTitle {
-  color: #172033;
+  color: var(--about-ink);
   font-size: 1rem;
   font-weight: 750;
   line-height: 1.4;
 }
 
 .guideToggleSubtitle {
-  color: #758195;
+  color: var(--about-muted);
   font-size: 0.84rem;
   line-height: 1.45;
 }
 
 .toggleChevron {
   flex: 0 0 auto;
-  color: #8b1e2d;
+  color: var(--about-maroon);
   transition: transform 180ms ease;
 }
 
@@ -137,9 +132,10 @@
   transform: rotate(180deg);
 }
 
+/* ---------- Guide content ---------- */
 .guideContent {
   padding-top: 2px;
-  border-top: 1px solid #ecdfe2;
+  border-top: 1px solid var(--about-border);
 }
 
 .guideTitle {
@@ -147,32 +143,35 @@
   align-items: center;
   gap: 12px;
   padding-bottom: 20px;
-  border-bottom: 1px solid #ecdfe2;
+  border-bottom: 1px solid var(--about-border);
 }
 
 .guideTitleIcon,
 .troubleshootingIcon {
   width: 42px;
   height: 42px;
+  flex-shrink: 0;
+  place-items: center;
   border-radius: 12px;
-  background: #f8e9ec;
-  color: #8b1e2d;
+  background: var(--about-blush);
+  color: var(--about-maroon);
 }
 
 .guideTitle h2,
 .troubleshooting h2 {
   margin: 0;
-  color: #172033;
+  color: var(--about-ink);
   font-size: 1.05rem;
   line-height: 1.4;
 }
 
 .guideTitle p {
   margin: 3px 0 0;
-  color: #758195;
+  color: var(--about-muted);
   font-size: 0.84rem;
 }
 
+/* ---------- Steps ---------- */
 .stepList {
   display: grid;
   gap: 14px;
@@ -187,7 +186,7 @@
   align-items: center;
   gap: 24px;
   padding: 20px;
-  border: 1px solid #eee5e7;
+  border: 1px solid var(--about-border);
   border-radius: 14px;
   background: #fff;
 }
@@ -201,8 +200,8 @@
   margin-bottom: 8px;
   padding: 5px 10px;
   border-radius: 999px;
-  background: #f8e9ec;
-  color: #8b1e2d;
+  background: var(--about-blush);
+  color: var(--about-maroon);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -211,7 +210,7 @@
 
 .step h3 {
   margin: 0 0 10px;
-  color: #172033;
+  color: var(--about-ink);
   font-size: 1rem;
   line-height: 1.45;
 }
@@ -221,7 +220,7 @@
   gap: 7px;
   margin: 0;
   padding-left: 22px;
-  color: #475569;
+  color: var(--about-muted);
   font-size: 0.9rem;
   line-height: 1.55;
 }
@@ -231,16 +230,16 @@
 }
 
 .instructions li::marker {
-  color: #8b1e2d;
+  color: var(--about-maroon);
   font-weight: 700;
 }
 
 .stepFigure {
   overflow: hidden;
   margin: 0;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--about-border);
   border-radius: 12px;
-  background: #f8fafc;
+  background: var(--about-blush);
 }
 
 .stepFigure img {
@@ -250,25 +249,26 @@
   object-fit: contain;
 }
 
+/* ---------- Troubleshooting ---------- */
 .troubleshooting {
   display: flex;
   align-items: flex-start;
   gap: 13px;
   margin-top: 22px;
   padding: 19px;
-  border: 1px solid #ead8b8;
+  border: 1px solid var(--about-border);
   border-radius: 14px;
-  background: #fffaf0;
+  background: var(--about-blush);
 }
 
 .troubleshootingIcon {
-  background: #f8edcf;
-  color: #8a5a12;
+  background: var(--about-blush);
+  color: var(--about-maroon);
 }
 
 .troubleshooting h3 {
   margin: 8px 0;
-  color: #26313f;
+  color: var(--about-ink);
   font-size: 0.92rem;
 }
 
@@ -277,21 +277,22 @@
   gap: 6px;
   margin: 0;
   padding-left: 20px;
-  color: #596579;
+  color: var(--about-muted);
   font-size: 0.88rem;
   line-height: 1.5;
 }
 
+/* ---------- Note ---------- */
 .note {
   display: flex;
   align-items: flex-start;
   gap: 11px;
   margin-top: 14px;
   padding: 15px 17px;
-  border: 1px solid #dbeafe;
+  border: 1px solid var(--about-border);
   border-radius: 12px;
-  background: #f4f8ff;
-  color: #334155;
+  background: var(--about-blush);
+  color: var(--about-muted);
 }
 
 .note > svg {
@@ -306,20 +307,15 @@
   line-height: 1.55;
 }
 
+/* ---------- Responsive ---------- */
 @media (max-width: 640px) {
   .header {
-    gap: 12px;
+    gap: 0;
     padding: 19px 17px;
   }
 
-  .header > div:last-child,
-  .guideTitle > div:last-child {
-    min-width: 0;
-  }
-
-  .headerIcon {
-    width: 42px;
-    height: 42px;
+  .header h1 {
+    font-size: 1.5rem;
   }
 
   .intro {
@@ -383,12 +379,6 @@
     padding: 16px 13px;
   }
 
-  .headerIcon {
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
-  }
-
   .header h1 {
     font-size: 1.35rem;
   }
@@ -406,11 +396,6 @@
     padding: 13px 11px;
   }
 
-  .guideTitleIcon {
-    width: 36px;
-    height: 36px;
-  }
-
   .guideToggleTitle {
     font-size: 0.88rem;
   }
@@ -421,5 +406,20 @@
 
   .step {
     padding: 13px;
+  }
+
+  .guideTitleIcon {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* ---------- Accessibility ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
   }
 }

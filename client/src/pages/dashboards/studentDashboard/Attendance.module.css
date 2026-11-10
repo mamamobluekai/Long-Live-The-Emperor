@@ -1,1618 +1,59 @@
-/* =========================================================
-   ATTENDANCE PAGE
-   Modern Maroon Student Dashboard
-========================================================= */
+/* Design system: Lexend + About page palette (borders, fonts, colors). */
+:root {
+  --about-maroon: #8b1e2d;
+  --about-gold: #be8c3f;
+  --about-ink: #172033;
+  --about-muted: #596579;
+  --about-border: #eadde0;
+  --about-blush: #fff7f8;
+}
 
 .page {
   width: 100%;
-  min-height: 100%;
-  padding: 32px;
-  box-sizing: border-box;
-  background: #f4f5f7;
-}
-
-
-/* =========================================================
-   MAIN CONTAINER
-========================================================= */
-
-.card {
-  width: 100%;
-  max-width: 1250px;
-  margin: 0 auto;
-  background: transparent;
-  color: #172033;
-}
-
-
-/* =========================================================
-   HEADER
-========================================================= */
-
-.title {
-  margin: 0;
-  font-size: 1.8rem;
-  line-height: 1.2;
-  font-weight: 750;
-  letter-spacing: -0.035em;
-  color: #111827;
-}
-
-.subtitle {
-  margin: 8px 0 28px;
-  color: #303844;
-  font-size: 0.94rem;
-}
-
-
-/* =========================================================
-   NOTIFICATIONS
-========================================================= */
-
-.notice {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  padding: 14px 17px;
-  margin-bottom: 20px;
-
-  border-radius: 12px;
-
-  font-size: 0.88rem;
-  font-weight: 600;
-
-  animation: slideDown 0.25s ease;
-}
-
-.noticeSuccess {
-  background: #ecfdf3;
-  border: 1px solid #9ee6b4;
-  color: #166534;
-}
-
-.noticeError {
-  background: #fff1f2;
-  border: 1px solid #e7a6b0;
-  color: #be123c;
-}
-
-.noticeInfo {
-  background: #eff6ff;
-  border: 1px solid #a9c7f5;
-  color: #1d4ed8;
-}
-
-.reminderSettings {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 18px;
-  padding: 16px 18px;
-  border: 1px solid #e7ccd3;
-  border-radius: 14px;
-  background: linear-gradient(120deg, #fff 0%, #fdf3f5 100%);
-}
-
-.reminderSettings strong {
-  display: block;
-  margin-bottom: 4px;
-  color: #172033;
-  font-size: 0.9rem;
-}
-
-.reminderSettings p {
-  margin: 0;
-  color: #596579;
-  font-size: 0.78rem;
-  line-height: 1.5;
-}
-
-.reminderButton {
-  flex: 0 0 auto;
-  min-height: 42px;
-  padding: 0 16px;
-  border: 1px solid #8b1e2d;
-  border-radius: 10px;
-  background: #8b1e2d;
-  color: #fff;
-  font: inherit;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.reminderButton:hover:not(:disabled) {
-  background: #741827;
-}
-
-.reminderButton:disabled {
-  opacity: 0.65;
-  cursor: wait;
-}
-
-
-/* =========================================================
-   TODAY STATUS
-========================================================= */
-
-.statusRow {
-  position: relative;
-
-  display: flex;
-  align-items: center;
-  gap: 13px;
-
-  padding: 16px 19px;
-  margin-bottom: 18px;
-
-  background: #ffffff;
-
-  border: 1px solid #aeb5bf;
-  border-radius: 14px;
-
-  box-shadow:
-    0 5px 18px rgba(15, 23, 42, 0.06);
-
-  overflow: hidden;
-}
-
-/* Maroon accent */
-
-.statusRow::before {
-  content: "";
-
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-
-  width: 4px;
-
-  background: #8b1631;
-}
-
-.phasePill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  min-width: 76px;
-
-  padding: 6px 12px;
-
-  border-radius: 999px;
-
-  font-size: 0.72rem;
-  font-weight: 800;
-
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.phaseOpen {
-  background: #dcfce7;
-  color: #15803d;
-}
-
-.phaseClosed {
-  background: #eceff3;
-  color: #6b7280;
-}
-
-.phaseText {
-  color: #303844;
-  font-size: 0.88rem;
-  font-weight: 600;
-}
-
-
-/* =========================================================
-   COUNTDOWN
-========================================================= */
-
-.countdown {
-  position: relative;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 27px 29px;
-  margin-bottom: 30px;
-
-  overflow: hidden;
-
-  border: 1px solid #641020;
-  border-radius: 18px;
-
-  background:
-    radial-gradient(
-      circle at 90% 20%,
-      rgba(255, 255, 255, 0.12),
-      transparent 35%
-    ),
-    linear-gradient(
-      135deg,
-      #780d23 0%,
-      #92152e 55%,
-      #651020 100%
-    );
-
-  color: white;
-
-  box-shadow:
-    0 15px 35px rgba(120, 13, 35, 0.24);
-}
-
-.countdown::before {
-  content: "";
-
-  position: absolute;
-
-  width: 240px;
-  height: 240px;
-
-  right: -110px;
-  bottom: -170px;
-
-  border: 1px solid rgba(255, 255, 255, 0.08);
-
-  border-radius: 50%;
-}
-
-.countdown::after {
-  content: "";
-
-  position: absolute;
-
-  width: 180px;
-  height: 180px;
-
-  right: -70px;
-  top: -100px;
-
-  border-radius: 50%;
-
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.countdownLabel {
-  position: relative;
-  z-index: 1;
-
-  font-size: 0.9rem;
-  font-weight: 600;
-
-  color: rgba(255, 255, 255, 0.82);
-}
-
-.countdownValue {
-  position: relative;
-  z-index: 1;
-
-  font-size: clamp(1.8rem, 4vw, 2.6rem);
-
-  font-weight: 800;
-
-  font-variant-numeric: tabular-nums;
-
-  letter-spacing: -0.04em;
-}
-
-
-/* =========================================================
-   SECTIONS
-========================================================= */
-
-.section {
-  margin-bottom: 30px;
-}
-
-.sectionTitle {
-  margin: 0 0 15px;
-
-  font-size: 1.05rem;
-  font-weight: 750;
-
-  letter-spacing: -0.015em;
-
-  color: #172033;
-}
-
-
-/* =========================================================
-   SCHEDULE LIST
-========================================================= */
-
-.dayList {
-  display: flex;
-  flex-direction: column;
-  gap: 11px;
-}
-
-
-/* =========================================================
-   DAY CARD
-========================================================= */
-
-.dayCard {
-  position: relative;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 22px;
-
-  padding: 18px 20px;
-
-  background: #ffffff;
-
-  border: 1px solid #aeb5bf;
-
-  border-radius: 15px;
-
-  transition:
-    transform 0.18s ease,
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
-
-  box-shadow:
-    0 3px 14px rgba(15, 23, 42, 0.045);
-}
-
-.dayCard:hover {
-  transform: translateY(-2px);
-
-  border-color: #7f8996;
-
-  box-shadow:
-    0 9px 25px rgba(15, 23, 42, 0.10);
-}
-
-
-/* =========================================================
-   TODAY'S CARD
-========================================================= */
-
-.dayToday {
-  border: 1.5px solid #8b1631;
-
-  background:
-    linear-gradient(
-      90deg,
-      rgba(139, 22, 49, 0.07),
-      #ffffff 38%
-    );
-
-  box-shadow:
-    0 7px 24px rgba(120, 13, 35, 0.10);
-}
-
-.dayToday::before {
-  content: "";
-
-  position: absolute;
-
-  left: 0;
-  top: 12px;
-  bottom: 12px;
-
-  width: 4px;
-
-  border-radius: 0 5px 5px 0;
-
-  background: #8b1631;
-}
-
-
-/* =========================================================
-   DAY INFORMATION
-========================================================= */
-
-.dayMain {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-
-  min-width: 0;
-}
-
-.dayNumber {
-  font-size: 0.93rem;
-  font-weight: 750;
-
-  color: #172033;
-}
-
-.dayDate {
-  font-size: 0.82rem;
-
-  color: #303844;
-
-  font-weight: 600;
-}
-
-.dayMeta {
-  margin-top: 3px;
-
-  font-size: 0.78rem;
-
-  color: #46505d;
-}
-
-.dayTime {
-  font-size: 0.76rem;
-
-  color: #3f4753;
-}
-
-.dayTimeActual {
-  font-size: 0.76rem;
-
-  font-weight: 700;
-
-  color: #7b1029;
-}
-
-
-/* =========================================================
-   DAY ACTIONS
-========================================================= */
-
-.dayActions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-
-  gap: 10px;
-
-  flex-shrink: 0;
-}
-
-.dayStatus {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 6px 11px;
-
-  border-radius: 999px;
-
-  background: #e2e6eb;
-
-  color: #303844;
-
-  font-size: 0.72rem;
-  font-weight: 750;
-}
-
-/* Status colors are declared next to the later .dayStatus definition
-   (see "STATUS COLORS" below), which is the one that applies. */
-
-
-/* =========================================================
-   BUTTONS
-========================================================= */
-
-.primaryBtn,
-.secondaryBtn,
-.smallPrimaryBtn,
-.smallSecondaryBtn,
-.cancelBtn {
-  border: none;
-
-  cursor: pointer;
-
-  font-family: inherit;
-
-  font-weight: 700;
-
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    opacity 0.15s ease;
-}
-
-.primaryBtn {
-  min-height: 46px;
-
-  padding: 0 22px;
-
-  border-radius: 11px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #8b1631,
-      #6d1027
-    );
-
-  color: #ffffff;
-
-  box-shadow:
-    0 7px 18px rgba(109, 16, 39, 0.22);
-}
-
-.primaryBtn:hover:not(:disabled) {
-  transform: translateY(-1px);
-
-  box-shadow:
-    0 10px 24px rgba(109, 16, 39, 0.28);
-}
-
-.secondaryBtn {
-  min-height: 46px;
-
-  padding: 0 22px;
-
-  border-radius: 11px;
-
-  background: #172033;
-
-  color: white;
-
-  box-shadow:
-    0 7px 18px rgba(23, 32, 51, 0.16);
-}
-
-.secondaryBtn:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-.smallPrimaryBtn,
-.smallSecondaryBtn {
-  padding: 8px 13px;
-
-  border-radius: 9px;
-
-  font-size: 0.75rem;
-}
-
-.smallPrimaryBtn {
-  background: #831631;
-  color: white;
-}
-
-.smallSecondaryBtn {
-  background: #172033;
-  color: white;
-}
-
-.primaryBtn:disabled,
-.secondaryBtn:disabled,
-.smallPrimaryBtn:disabled,
-.smallSecondaryBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-
-/* =========================================================
-   TIME IN / TIME OUT
-========================================================= */
-
-.legacyActionSection {
-  display: none;
-}
-
-.doneRow {
-  display: flex;
-  align-items: center;
-
-  gap: 11px;
-
-  padding: 14px 16px;
-
-  border-radius: 12px;
-
-  background: #ecfdf3;
-
-  border: 1px solid #9ee6b4;
-
-  color: #166534;
-
-  font-size: 0.86rem;
-
-  font-weight: 650;
-}
-
-.check {
-  display: grid;
-  place-items: center;
-
-  width: 25px;
-  height: 25px;
-
-  border-radius: 50%;
-
-  background: #22c55e;
-
-  color: white;
-
-  font-size: 0.75rem;
-
-  font-weight: 800;
-}
-
-.lockedRow {
-  padding: 16px;
-
-  background: #f7f8fa;
-
-  border: 1px solid #aeb5bf;
-
-  border-radius: 13px;
-}
-
-.info {
-  margin: 0;
-
-  color: #303844;
-
-  font-size: 0.86rem;
-}
-
-
-/* =========================================================
-   APPEAL
-========================================================= */
-
-.appealLink {
-  border: none;
-
-  background: transparent;
-
-  color: #7b1029;
-
-  font-size: 0.78rem;
-
-  font-weight: 750;
-
-  cursor: pointer;
-
-  text-decoration: none;
-}
-
-.appealLink:hover {
-  text-decoration: underline;
-}
-
-.appealSection {
-  margin-top: 22px;
-
-  padding: 22px;
-
-  background: #ffffff;
-
-  border: 1px solid #aeb5bf;
-
-  border-radius: 16px;
-
-  box-shadow:
-    0 6px 20px rgba(15, 23, 42, 0.06);
-}
-
-.appealForm {
-  display: flex;
-  flex-direction: column;
-
-  gap: 15px;
-}
-
-.appealDate {
-  padding: 11px 13px;
-
-  border-radius: 10px;
-
-  background: #faf1f4;
-
-  color: #7b1029;
-
-  font-size: 0.82rem;
-
-  font-weight: 700;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-
-  gap: 7px;
-
-  color: #303844;
-
-  font-size: 0.8rem;
-
-  font-weight: 650;
-}
-
-.field input,
-.field select,
-.field textarea {
-  width: 100%;
-
-  box-sizing: border-box;
-
-  border: 1px solid #9fa7b2;
-
-  border-radius: 10px;
-
-  background: #fafbfc;
-
-  padding: 11px 12px;
-
-  font-family: inherit;
-
-  font-size: 0.86rem;
-
-  color: #172033;
-
-  outline: none;
-
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    background 0.15s ease;
-}
-
-.field input::placeholder,
-.field textarea::placeholder {
-  color: #697380;
-}
-
-.field input:focus,
-.field select:focus,
-.field textarea:focus {
-  background: white;
-
-  border-color: #8b1631;
-
-  box-shadow:
-    0 0 0 3px rgba(139, 22, 49, 0.1);
-}
-
-.field textarea {
-  resize: vertical;
-
-  min-height: 100px;
-}
-
-.appealActions {
-  display: flex;
-  align-items: center;
-
-  gap: 10px;
-}
-
-.cancelBtn {
-  min-height: 46px;
-
-  padding: 0 18px;
-
-  border-radius: 11px;
-
-  background: #e2e6eb;
-
-  color: #303844;
-
-  border: 1px solid #aeb5bf;
-}
-
-.cancelBtn:hover {
-  background: #d5dae0;
-}
-
-
-/* =========================================================
-   APPEAL LIST
-========================================================= */
-
-.appealList {
-  display: flex;
-  flex-direction: column;
-
-  gap: 10px;
-
-  list-style: none;
-
-  padding: 0;
-  margin: 0;
-}
-
-.appealItem {
-  padding: 16px;
-
-  background: #fafbfc;
-
-  border: 1px solid #aeb5bf;
-
-  border-radius: 13px;
-}
-
-.appealTop {
-  display: flex;
-
-  align-items: center;
-
-  justify-content: space-between;
-
-  margin-bottom: 7px;
-}
-
-.appealTop strong {
-  font-size: 0.86rem;
-
-  color: #172033;
-}
-
-.appealExcuse {
-  margin: 5px 0;
-
-  font-size: 0.8rem;
-
-  line-height: 1.5;
-
-  color: #303844;
-}
-
-.badge {
-  display: inline-flex;
-
-  padding: 5px 9px;
-
-  border-radius: 999px;
-
-  font-size: 0.68rem;
-
-  font-weight: 750;
-
-  text-transform: capitalize;
-}
-
-.badge_pending {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.badge_approved {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.badge_rejected {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
-.fileLink {
-  display: inline-block;
-
-  margin-top: 6px;
-
-  color: #7b1029;
-
-  font-size: 0.78rem;
-
-  font-weight: 700;
-
-  text-decoration: none;
-}
-
-.fileLink:hover {
-  text-decoration: underline;
-}
-
-.comment {
-  margin: 10px 0 0;
-
-  padding-top: 10px;
-
-  border-top: 1px solid #aeb5bf;
-
-  color: #3f4753;
-
-  font-size: 0.78rem;
-}
-
-
-/* =========================================================
-   SCHEDULE SUMMARY
-========================================================= */
-
-.scheduleCard {
-  margin-top: 18px;
-
-  padding: 18px;
-
-  background: #ffffff;
-
-  border: 1px solid #aeb5bf;
-
-  border-radius: 15px;
-
-  box-shadow:
-    0 4px 16px rgba(15, 23, 42, 0.05);
-}
-
-.scheduleHeader {
-  display: grid;
-
-  grid-template-columns: repeat(3, 1fr);
-
-  gap: 12px;
-
-  color: #303844;
-
-  font-size: 0.78rem;
-}
-
-.scheduleHeader strong {
-  color: #202733;
-}
-
-.dateChips {
-  display: flex;
-
-  flex-wrap: wrap;
-
-  gap: 7px;
-
-  margin-top: 14px;
-
-  padding-top: 13px;
-
-  border-top: 1px solid #aeb5bf;
-}
-
-.dateChip {
-  padding: 5px 9px;
-
-  border-radius: 7px;
-
-  background: #e5e8ec;
-
-  color: #3f4753;
-
-  font-size: 0.7rem;
-
-  font-weight: 650;
-}
-
-
-/* =========================================================
-   DOCUMENTATION BUTTONS
-========================================================= */
-
-.dayDocStatus {
-  font-size: 0.72rem;
-
-  font-weight: 700;
-
-  padding: 3px 8px;
-
-  border-radius: 6px;
-}
-
-.docPending {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.docSubmitted {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.docReviewed {
-  background: #e9d5ff;
-  color: #7e22ce;
-}
-
-.docGraded {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.docBtn {
-  padding: 7px 14px;
-
-  border: 1px solid #8b1631;
-
-  border-radius: 8px;
-
-  background: #ffffff;
-
-  color: #8b1631;
-
-  font-size: 0.7rem;
-
-  font-weight: 700;
-
-  cursor: pointer;
-
-  transition: all 0.2s ease;
-}
-
-.docBtn:hover {
-  background: #fdf2f4;
-
-  border-color: #6d1027;
-}
-
-
-/* =========================================================
-   DOCUMENTATION MODAL
-========================================================= */
-
-.docModal {
-  position: fixed;
-
-  inset: 0;
-
-  z-index: 1000;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  padding: 24px;
-
-  background: rgba(37, 15, 22, 0.68);
-
-  backdrop-filter: blur(5px);
-
-  animation: fadeIn 0.2s ease;
-}
-
-.docModalContent {
-  width: min(600px, 100%);
-
-  max-height: 90vh;
-
-  overflow: hidden;
-
-  border: 1px solid #9f7984;
-
-  border-radius: 18px;
-
-  background: #ffffff;
-
-  box-shadow:
-    0 25px 70px rgba(44, 13, 23, 0.32);
-
-  animation: modalIn 0.22s ease;
-}
-
-.docModalHeader {
-  display: flex;
-
-  align-items: center;
-
-  justify-content: space-between;
-
-  gap: 15px;
-
-  padding: 18px 20px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #581725 0%,
-      #6d1e30 55%,
-      #822d3e 100%
-    );
-
-  color: #ffffff;
-}
-
-.docModalHeader h3 {
-  margin: 0;
-
-  font-size: 1rem;
-
-  font-weight: 750;
-
-  white-space: nowrap;
-
-  overflow: hidden;
-
-  text-overflow: ellipsis;
-}
-
-.closeBtn {
-  display: grid;
-
-  place-items: center;
-
-  width: 32px;
-  height: 32px;
-
-  border: none;
-
-  border-radius: 8px;
-
-  background: rgba(255, 255, 255, 0.15);
-
-  color: #ffffff;
-
-  font-size: 1.1rem;
-
-  font-weight: 700;
-
-  cursor: pointer;
-
-  transition: background 0.15s ease;
-}
-
-.closeBtn:hover {
-  background: rgba(255, 255, 255, 0.28);
-}
-
-.docModalBody {
-  max-height: calc(90vh - 70px);
-
-  overflow-y: auto;
-
-  padding: 22px;
-
-  color: #303844;
-}
-
-.existingDoc {
-  padding: 13px;
-
-  margin-bottom: 17px;
-
-  background: #faf1f4;
-
-  border: 1px solid #cdb4bb;
-
-  border-radius: 10px;
-
-  font-size: 0.82rem;
-}
-
-.existingDoc p {
-  margin: 6px 0 0;
-
-  color: #4f4549;
-}
-
-.docUploadForm {
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 15px;
-}
-
-.docUploadForm h4 {
-  margin: 0;
-
-  font-size: 1rem;
-
-  font-weight: 750;
-
-  color: #581725;
-}
-
-.uploadedFileInfo {
-  font-size: 0.82rem;
-
-  color: #166534;
-
-  font-weight: 600;
-}
-
-.fileMeta {
-  font-size: 0.78rem;
-
-  color: #46505d;
-
-  margin-top: 4px;
-}
-
-.docActions {
-  display: flex;
-
-  align-items: center;
-
-  gap: 10px;
-}
-
-
-/* =========================================================
-   LOADING
-========================================================= */
-
-.loading {
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  min-height: 180px;
-
-  color: #303844;
-}
-
-
-/* =========================================================
-   APPEAL MODAL
-========================================================= */
-
-.modalBackdrop {
-  position: fixed;
-
-  inset: 0;
-
-  background: rgba(15, 23, 42, 0.58);
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  padding: 20px;
-
-  z-index: 1000;
-}
-
-.modalContent {
-  background: #fff;
-
-  border-radius: 18px;
-
-  width: 100%;
-
-  max-width: 520px;
-
-  max-height: 90vh;
-
-  overflow-y: auto;
-
-  /* DARKER BORDER */
-  border: 1px solid #9fa7b2;
-
-  box-shadow:
-    0 24px 48px -12px rgba(15, 23, 42, 0.36);
-}
-
-.modalHeader {
-  display: flex;
-
-  align-items: center;
-
-  justify-content: space-between;
-
-  padding: 19px 22px;
-
-  border-bottom: 1px solid #aeb5bf;
-}
-
-.modalHeader h3 {
-  margin: 0;
-
-  font-size: 1.0625rem;
-
-  font-weight: 700;
-
-  color: #0f172a;
-}
-
-.modalClose {
-  background: transparent;
-
-  border: none;
-
-  font-size: 1.5rem;
-
-  line-height: 1;
-
-  color: #46505d;
-
-  cursor: pointer;
-
-  padding: 4px 8px;
-
-  border-radius: 8px;
-}
-
-.modalClose:hover:not(:disabled) {
-  background: #e2e6eb;
-
-  color: #0f172a;
-}
-
-.modalBody {
-  padding: 21px 22px;
-
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 14px;
-}
-
-
-/* =========================================================
-   ANIMATIONS
-========================================================= */
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes modalIn {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.98);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-
-/* =========================================================
-   TABLET
-========================================================= */
-
-@media (max-width: 900px) {
-
-  .page {
-    padding: 22px;
-  }
-
-  .scheduleHeader {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .dayCard {
-    align-items: flex-start;
-  }
-
-}
-
-
-/* =========================================================
-   MOBILE
-========================================================= */
-
-@media (max-width: 650px) {
-
-  .page {
-    padding: 16px;
-  }
-
-  .title {
-    font-size: 1.45rem;
-  }
-
-  .reminderSettings {
-    align-items: stretch;
-    flex-direction: column;
-    gap: 12px;
-    padding: 14px;
-  }
-
-  .reminderButton {
-    width: 100%;
-  }
-
-  .subtitle {
-    font-size: 0.82rem;
-
-    margin-bottom: 20px;
-  }
-
-  .statusRow {
-    align-items: flex-start;
-
-    flex-direction: column;
-
-    gap: 8px;
-
-    padding-left: 17px;
-  }
-
-  .countdown {
-    align-items: flex-start;
-
-    flex-direction: column;
-
-    gap: 8px;
-
-    padding: 21px;
-  }
-
-  .countdownValue {
-    font-size: 2rem;
-  }
-
-  .dayCard {
-    flex-direction: column;
-
-    align-items: stretch;
-
-    gap: 13px;
-
-    padding: 16px;
-  }
-
-  .dayActions {
-    justify-content: space-between;
-
-    padding-top: 11px;
-
-    border-top: 1px solid #aeb5bf;
-  }
-
-  .dayStatus {
-    margin-right: auto;
-  }
-
-  .scheduleHeader {
-    grid-template-columns: 1fr;
-  }
-
-  .appealSection {
-    padding: 17px;
-  }
-
-  .appealActions {
-    flex-direction: column;
-
-    align-items: stretch;
-  }
-
-  .primaryBtn,
-  .secondaryBtn,
-  .cancelBtn {
-    width: 100%;
-  }
-
-}
-
-
-/* =========================================================
-   SMALL PHONES
-========================================================= */
-
-@media (max-width: 420px) {
-
-  .page {
-    padding: 12px;
-  }
-
-  .title {
-    font-size: 1.3rem;
-  }
-
-  .countdown {
-    border-radius: 15px;
-  }
-
-  .dayCard {
-    padding: 14px;
-  }
-
-  .dayActions {
-    flex-wrap: wrap;
-  }
-
-  .smallPrimaryBtn,
-  .smallSecondaryBtn {
-    flex: 1;
-  }
-
-}
-
-
-/* =========================================================
-   MAROON DESIGN SYSTEM
-   Lexend type scale, #8b1e2d / #b8394f / gold accents.
-   Matches RequirementsReview; overrides the legacy tokens above.
-   ========================================================= */
-
-.page {
   max-width: 1500px;
   margin: 0 auto;
+  color: var(--about-ink);
   font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #26313f;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-.card {
+/* ---------- Page header ---------- */
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 22px;
+  padding: 22px 24px;
+  border: 0;
+  border-radius: 16px;
   background: transparent;
-  border: none;
   box-shadow: none;
-  padding: 0;
 }
 
-/* ---------- PAGE HEADER ---------- */
+.headerMain {
+  min-width: 0;
+}
 
-.title {
-  margin: 0 0 6px;
-  color: #172033;
+.pageHeader h2 {
+  margin: 0;
+  color: var(--about-ink);
   font-size: 1.85rem;
   font-weight: 780;
   letter-spacing: -0.035em;
   line-height: 1.15;
 }
 
-.pageHeader {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-areas:
-    'main status'
-    'countdown countdown';
-  align-items: start;
-  gap: 12px 20px;
-  margin-bottom: 24px;
-  padding: 22px 24px;
-  border: 1px solid #e8d2d8;
-  border-radius: 18px;
-  background:
-    radial-gradient(130% 160% at 0% 0%, rgba(139, 30, 45, 0.1) 0%, rgba(139, 30, 45, 0) 58%),
-    radial-gradient(120% 150% at 100% 120%, rgba(190, 140, 63, 0.16) 0%, rgba(190, 140, 63, 0) 55%),
-    linear-gradient(120deg, #ffffff 0%, #fdf3f5 58%, #f9e8ec 100%);
-  box-shadow: 0 14px 32px -28px rgba(80, 20, 32, 0.55);
-}
-
-.eyebrow {
-  margin-bottom: 6px;
-  color: #8b1e2d;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-}
-
-.subtitle {
-  margin: 8px 0 0;
-  max-width: 650px;
-  color: #596579;
-  font-size: 0.95rem;
+.pageHeader p {
+  margin: 6px 0 0;
+  max-width: 620px;
+  color: var(--about-muted);
+  font-size: 0.88rem;
   line-height: 1.6;
 }
 
 /* Live status, shown on the right of the page header */
-.headerMain {
-  grid-area: main;
-  min-width: 0;
-}
-
 .headerStatus {
-  grid-area: status;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -1623,14 +64,13 @@
 
 .headerStatusText {
   max-width: 260px;
-  color: #596579;
+  color: var(--about-muted);
   font-size: 0.78rem;
   line-height: 1.4;
 }
 
 /* Countdown banner spanning the full width of the header card */
 .headerCountdown {
-  grid-area: countdown;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1640,8 +80,7 @@
   border-radius: 14px;
   background:
     radial-gradient(120% 160% at 100% 0%, rgba(190, 140, 63, 0.22) 0%, rgba(190, 140, 63, 0) 60%),
-    linear-gradient(135deg, #7a1725 0%, #8b1e2d 55%, #a82739 100%);
-  box-shadow: 0 10px 24px -14px rgba(80, 20, 32, 0.9);
+    linear-gradient(135deg, #7a1725 0%, var(--about-maroon) 55%, #a82739 100%);
 }
 
 .headerCountdownLabel {
@@ -1659,7 +98,48 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------- SCHEDULE GRID ---------- */
+/* ---------- Cards / sections ---------- */
+.section {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 18px;
+  background: #fff;
+  border: 1px solid var(--about-border);
+  border-radius: 16px;
+  box-shadow: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.section::before {
+  content: none;
+}
+
+.section:hover {
+  transform: translateY(-2px);
+  border-color: #d7b8be;
+  box-shadow: 0 12px 26px rgb(23 32 51 / 7%);
+}
+
+.card {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.card:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: transparent;
+}
+
+.sectionTitle {
+  margin: 0 0 15px;
+  color: var(--about-ink);
+  font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+}
 
 .sectionHeaderRow {
   display: flex;
@@ -1668,7 +148,7 @@
   gap: 14px;
   flex-wrap: wrap;
   padding: 21px 22px 16px;
-  border-bottom: 1px solid #ecdfe2;
+  border-bottom: 1px solid var(--about-border);
 }
 
 .sectionSubtitle {
@@ -1677,49 +157,104 @@
   font-size: 0.8rem;
 }
 
-.historyBtn {
-  display: inline-flex;
+/* ---------- Alerts / notices ---------- */
+.notice {
+  display: flex;
   align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  min-height: 38px;
-  padding: 0 16px;
-  border: 1px solid #8b1e2d;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
-  color: #fff;
-  font-family: inherit;
+  gap: 10px;
+  padding: 14px 17px;
+  margin-bottom: 20px;
+  border-radius: 10px;
   font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.noticeSuccess {
+  background: #eaf8ef;
+  border: 1px solid #bfe6cc;
+  color: #15803d;
+}
+
+.noticeError {
+  background: #fff3f5;
+  border: 1px solid #f0b7c2;
+  color: #b4233b;
+}
+
+.noticeInfo {
+  background: #e6eefb;
+  border: 1px solid #c7d7f0;
+  color: #37568c;
+}
+
+.info {
+  margin: 0;
+  color: var(--about-muted);
+  font-size: 0.88rem;
+}
+
+/* ---------- Reminder settings ---------- */
+.reminderSettings {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--about-border);
+  border-radius: 14px;
+  background: var(--about-blush);
+}
+
+.reminderSettings strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--about-ink);
+  font-size: 0.9rem;
+}
+
+.reminderSettings p {
+  margin: 0;
+  color: var(--about-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.reminderButton {
+  flex: 0 0 auto;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid var(--about-maroon);
+  border-radius: 10px;
+  background: var(--about-maroon);
+  color: #fff;
+  font: inherit;
+  font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
-  transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.15s ease;
 }
 
-.historyBtn:hover {
-  background: linear-gradient(135deg, #7a1725 0%, #932034 100%);
-  box-shadow: 0 10px 22px -10px rgba(139, 30, 45, 0.85);
-  transform: translateY(-1px);
+.reminderButton:hover:not(:disabled) {
+  background: #7a1725;
 }
 
-.historyCount {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  font-size: 0.68rem;
-  font-weight: 800;
+.reminderButton:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* ---------- Schedule list ---------- */
+.dayList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .dayListHeader {
   display: none;
 }
 
+/* ---------- Day cards ---------- */
 .dayCard {
   display: block;
   margin: 0;
@@ -1760,13 +295,13 @@
 }
 
 .dayToggle:hover {
-  background: #fff7f8;
+  background: var(--about-blush);
 }
 
 .dayChevron {
   flex-shrink: 0;
   width: 20px;
-  color: #8b1e2d;
+  color: var(--about-maroon);
   font-size: 0.9rem;
   line-height: 1;
   transition: transform 0.18s ease;
@@ -1820,7 +355,7 @@
 }
 
 .dayDetailLabel {
-  color: #8b1e2d;
+  color: var(--about-maroon);
   font-size: 0.66rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -1836,7 +371,7 @@
 }
 
 .dayNumber {
-  color: #172033;
+  color: var(--about-ink);
   font-size: 0.9rem;
   font-weight: 780;
   letter-spacing: -0.01em;
@@ -1864,7 +399,7 @@
 }
 
 .dayTimeActual {
-  color: #8b1e2d;
+  color: var(--about-maroon);
   font-weight: 700;
 }
 
@@ -1877,58 +412,7 @@
   letter-spacing: 0.03em;
 }
 
-/* ---------- "Already appeal time in/out" badge ----------
-   A filed appeal sits in the same action row as the live Time In / Time Out /
-   Appeal buttons. Rendering it as a bordered chip (instead of bare text) makes
-   it read as a settled state — a status — rather than another tappable action,
-   so the student can tell at a glance which appeals are already submitted and
-   which are still available. */
-.appealFiledBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 11px;
-  border: 1px solid #b9d8c2;
-  border-radius: 8px;
-  background: #f2fbf5;
-  color: #1c6b34;
-  font-size: 0.78rem;
-  font-weight: 700;
-  line-height: 1.3;
-  white-space: nowrap;
-}
-
-/* Shown in place of an appeal button that exists but is not yet available,
-   e.g. "Appeal Time Out" before the Time Out window has closed. */
-.appealLockedHint {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 11px;
-  border: 1px dashed #d8dee8;
-  border-radius: 8px;
-  background: #f7f8fa;
-  color: #7c8798;
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1.3;
-}
-
-/* A small check dot so the badge is distinguishable without relying on colour
-   alone (colour-blind and greyscale-print friendly). */
-.appealFiledBadge::before {
-  content: '';
-  flex: 0 0 auto;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #2e9d55;
-}
-
-.dayToday {
-  background: linear-gradient(180deg, #fffafb 0%, #ffffff 60%);
-  box-shadow: inset 3px 0 0 #8b1e2d;
-}
-
+/* ---------- Status pills ---------- */
 .dayStatus {
   display: inline-flex;
   align-items: center;
@@ -1938,14 +422,11 @@
   border-radius: 999px;
   border: 1px solid #e6dfe2;
   background: #f7f8fa;
-  color: #596579;
+  color: var(--about-muted);
   font-size: 0.72rem;
   font-weight: 750;
   white-space: nowrap;
 }
-
-/* ---------- STATUS COLORS ----------
-   Declared after .dayStatus so the variant wins over the base badge color. */
 
 .dayPresent {
   background: #dcfce7;
@@ -1965,10 +446,642 @@
   color: #6b7280;
 }
 
-/* ---------- DELETE CONFIRMATION ---------- */
+.dayToday {
+  background: linear-gradient(180deg, #fffafb 0%, #ffffff 60%);
+  box-shadow: inset 3px 0 0 var(--about-maroon);
+}
 
-/* Must sit above the history drawer (z-index 1000), since the confirm is
-   triggered from inside it and both share the same backdrop base. */
+/* ---------- Already appeal badge / locked hint ---------- */
+.appealFiledBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border: 1px solid #b9d8c2;
+  border-radius: 8px;
+  background: #f2fbf5;
+  color: #1c6b34;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.appealFiledBadge::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2e9d55;
+}
+
+.appealLockedHint {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 11px;
+  border: 1px dashed #d8dee8;
+  border-radius: 8px;
+  background: #f7f8fa;
+  color: #7c8798;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* ---------- Time In / Time Out rows ---------- */
+.legacyActionSection {
+  display: none;
+}
+
+.doneRow {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #eaf8ef;
+  border: 1px solid #bfe6cc;
+  color: #15803d;
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.check {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #22c55e;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.lockedRow {
+  padding: 16px;
+  background: var(--about-blush);
+  border: 1px solid var(--about-border);
+  border-radius: 13px;
+}
+
+/* ---------- Buttons ---------- */
+.primaryBtn,
+.secondaryBtn,
+.smallPrimaryBtn,
+.smallSecondaryBtn,
+.cancelBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 700;
+  transition: 0.18s ease;
+}
+
+.primaryBtn {
+  min-height: 46px;
+  padding: 0 22px;
+  border-radius: 11px;
+  background: var(--about-maroon);
+  color: #fff;
+  border: 1px solid var(--about-maroon);
+  box-shadow: 0 2px 6px rgba(139, 30, 45, 0.25);
+}
+
+.primaryBtn:hover:not(:disabled) {
+  background: #7a1725;
+  border-color: #7a1725;
+  box-shadow: 0 4px 10px rgba(139, 30, 45, 0.35);
+}
+
+.primaryBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.secondaryBtn {
+  min-height: 46px;
+  padding: 0 22px;
+  border-radius: 11px;
+  color: #475d6e;
+  background: #fff;
+  border: 1px solid var(--about-border);
+}
+
+.secondaryBtn:hover:not(:disabled) {
+  color: var(--about-ink);
+  background: var(--about-blush);
+  border-color: #d7b8be;
+}
+
+.secondaryBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.smallPrimaryBtn,
+.smallSecondaryBtn {
+  padding: 8px 13px;
+  border-radius: 9px;
+  font-size: 0.75rem;
+}
+
+.smallPrimaryBtn {
+  color: #fff;
+  background: var(--about-maroon);
+  border: 1px solid var(--about-maroon);
+}
+
+.smallPrimaryBtn:hover:not(:disabled) {
+  background: #7a1725;
+  border-color: #7a1725;
+}
+
+.smallSecondaryBtn {
+  color: #475d6e;
+  background: #fff;
+  border: 1px solid var(--about-border);
+}
+
+.smallSecondaryBtn:hover:not(:disabled) {
+  color: var(--about-ink);
+  background: var(--about-blush);
+  border-color: #d7b8be;
+}
+
+.cancelBtn {
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 11px;
+  background: #fff;
+  border: 1px solid var(--about-border);
+  color: #475d6e;
+}
+
+.cancelBtn:hover:not(:disabled) {
+  background: var(--about-blush);
+  border-color: #d7b8be;
+}
+
+.cancelBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ---------- Appeal link ---------- */
+.appealLink {
+  border: none;
+  background: transparent;
+  color: var(--about-maroon);
+  font-size: 0.78rem;
+  font-weight: 750;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 0;
+}
+
+.appealLink:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Appeal section / form ---------- */
+.appealSection {
+  margin-top: 22px;
+  padding: 22px;
+  background: #fff;
+  border: 1px solid var(--about-border);
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+.appealForm {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.appealDate {
+  display: inline-block;
+  margin-bottom: 16px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  color: var(--about-maroon);
+  background: var(--about-blush);
+  border: 1px solid #f0d7dc;
+  font-size: 0.74rem;
+  font-weight: 750;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #475d6e;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #dcc9cf;
+  border-radius: 9px;
+  background: #fafbfc;
+  padding: 11px 12px;
+  font-family: inherit;
+  font-size: 0.86rem;
+  color: var(--about-ink);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: #a9b0bd;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  background: #fff;
+  border-color: var(--about-maroon);
+  box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.1);
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.appealActions {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #ecdfe2;
+}
+
+/* ---------- Appeal list ---------- */
+.appealList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.appealItem {
+  padding: 15px 17px;
+  background: #fff;
+  border: 1px solid #ecdfe2;
+  border-radius: 12px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.appealItem:hover {
+  border-color: #d7b8be;
+  box-shadow: 0 12px 26px rgb(23 32 51 / 7%);
+}
+
+.appealTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-bottom: 9px;
+  border-bottom: 1px solid #f2e9ec;
+  margin-bottom: 7px;
+}
+
+.appealTop strong {
+  color: var(--about-ink);
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.appealTopRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.appealExcuse {
+  margin: 5px 0;
+  color: var(--about-muted);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.comment {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fdf7f8;
+  border: 1px solid #efdee2;
+  color: #475d6e;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.fileLink {
+  display: inline-block;
+  margin-top: 6px;
+  color: var(--about-maroon);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom: 1px solid #f0d7dc;
+}
+
+.fileLink:hover {
+  color: #7a1725;
+  border-bottom-color: var(--about-maroon);
+}
+
+/* ---------- Badges ---------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  min-height: 25px;
+  padding: 3px 10px;
+}
+
+.badge_pending {
+  color: #9a5b10;
+  background: #fff4df;
+  border: 1px solid #f2dfb6;
+}
+
+.badge_approved {
+  color: #15803d;
+  background: #eaf8ef;
+  border: 1px solid #bfe6cc;
+}
+
+.badge_rejected {
+  color: #b4233b;
+  background: #fde3e8;
+  border: 1px solid #f0b7c2;
+}
+
+/* ---------- Schedule summary ---------- */
+.scheduleCard {
+  margin-top: 18px;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid var(--about-border);
+  border-radius: 15px;
+  box-shadow: none;
+}
+
+.scheduleHeader {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  color: var(--about-muted);
+  font-size: 0.78rem;
+}
+
+.scheduleHeader strong {
+  color: var(--about-ink);
+}
+
+.dateChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px solid var(--about-border);
+}
+
+.dateChip {
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: #e5e8ec;
+  color: #3f4753;
+  font-size: 0.7rem;
+  font-weight: 650;
+}
+
+/* ---------- Schedule footer (history button) ---------- */
+.scheduleFooter {
+  display: flex;
+  justify-content: center;
+  padding: 16px 22px 20px;
+  border-top: 1px solid #ecdfe2;
+  background: #fffafb;
+  border-radius: 0 0 18px 18px;
+}
+
+.historyBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-height: 38px;
+  padding: 0 16px;
+  border: 1px solid var(--about-maroon);
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--about-maroon) 0%, #a82739 100%);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
+  transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.15s ease;
+}
+
+.historyBtn:hover {
+  background: linear-gradient(135deg, #7a1725 0%, #932034 100%);
+  box-shadow: 0 10px 22px -10px rgba(139, 30, 45, 0.85);
+  transform: translateY(-1px);
+}
+
+.historyCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+/* ---------- Documentation button chips ---------- */
+.dayDocStatus {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.docPending {
+  background: #fff4df;
+  color: #9a5b10;
+}
+
+.docSubmitted {
+  background: #e6eefb;
+  color: #1e40af;
+}
+
+.docReviewed {
+  background: #f3e8ff;
+  color: #7e22ce;
+}
+
+.docGraded {
+  background: #eaf8ef;
+  color: #15803d;
+}
+
+.docBtn {
+  padding: 7px 14px;
+  border: 1px solid var(--about-maroon);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--about-maroon);
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.docBtn:hover {
+  background: var(--about-blush);
+  border-color: #7a1725;
+}
+
+/* ---------- Modals ---------- */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(23, 32, 51, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid var(--about-border);
+  box-shadow: 0 24px 60px -18px rgba(80, 20, 32, 0.4);
+  font-family: inherit;
+  overflow: hidden;
+}
+
+.modalDrawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: auto;
+  width: min(480px, 100vw);
+  max-height: none;
+  max-width: none;
+  margin: 0;
+  border-radius: 0;
+  border-right: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: drawerIn 0.24s ease-out;
+}
+
+@keyframes drawerIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.modalDrawer .modalBody {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 20px 24px;
+  border-bottom: 1px solid #ecdfe2;
+  background: var(--about-blush);
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 750;
+  color: var(--about-ink);
+  letter-spacing: -0.015em;
+}
+
+.modalHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.modalClose {
+  background: #fff;
+  border: 1px solid #dcc9cf;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--about-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 9px;
+}
+
+.modalClose:hover:not(:disabled) {
+  color: var(--about-ink);
+  border-color: #b8394f;
+  background: var(--about-blush);
+}
+
+.modalBody {
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ---------- Delete confirmation ---------- */
 .confirmBackdrop {
   z-index: 1100;
 }
@@ -2010,7 +1123,7 @@
 
 .confirmTitle {
   margin: 0 0 8px;
-  color: #172033;
+  color: var(--about-ink);
   font-size: 1.1rem;
   font-weight: 750;
   letter-spacing: -0.015em;
@@ -2018,7 +1131,7 @@
 
 .confirmText {
   margin: 0;
-  color: #596579;
+  color: var(--about-muted);
   font-size: 0.88rem;
   line-height: 1.5;
 }
@@ -2060,66 +1173,25 @@
 
 .confirmCancel:hover:not(:disabled) {
   border-color: #b8394f;
-  background: #fffafb;
-  color: #8b1e2d;
+  background: var(--about-blush);
+  color: var(--about-maroon);
 }
 
 .confirmDelete {
-  background: linear-gradient(135deg, #b4233b 0%, #d1495f 100%);
-  border: 1px solid #b4233b;
+  background: linear-gradient(135deg, var(--about-maroon) 0%, #a82739 100%);
+  border: 1px solid var(--about-maroon);
   color: #fff;
-  box-shadow: 0 8px 16px -10px rgba(180, 35, 59, 0.75);
+  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
 }
 
 .confirmDelete:hover:not(:disabled) {
-  background: linear-gradient(135deg, #991d31 0%, #b93c53 100%);
+  background: linear-gradient(135deg, #7a1725 0%, #932034 100%);
 }
 
 .confirmCancel:disabled,
 .confirmDelete:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-/* ---------- SIDE DRAWER (modal slides in from the right) ---------- */
-
-.modalDrawer {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: auto;
-  width: min(480px, 100vw);
-  max-height: none;
-  max-width: none;
-  margin: 0;
-  border-radius: 0;
-  border-right: none;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  animation: drawerIn 0.24s ease-out;
-}
-
-@keyframes drawerIn {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-  .modalDrawer .modalBody {
-    flex: 1;
-    overflow-y: auto;
-  }
-
-.modalHeaderActions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
 }
 
 .clearAllBtn {
@@ -2149,13 +1221,6 @@
 .clearAllBtn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-.appealTopRight {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
 }
 
 .appealDeleteBtn {
@@ -2188,371 +1253,31 @@
   cursor: not-allowed;
 }
 
-.appealDelete {
-  align-self: flex-start;
-  margin-top: 10px;
-  color: #b4233b;
-  background: #fff;
-  border-color: #f0b7c2;
-}
-
-.appealDelete:hover:not(:disabled) {
-  background: linear-gradient(135deg, #b4233b 0%, #d1495f 100%);
-  border-color: #b4233b;
-  color: #fff;
-}
-
-/* ---------- SECTIONS ---------- */
-
-.section {
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(180deg, #fffdfd 0%, #ffffff 40%);
-  border: 1px solid #e6dfe2;
-  border-radius: 18px;
-  box-shadow: 0 12px 32px -28px rgba(80, 20, 32, 0.4);
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
-}
-
-.section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 22px;
-  left: 22px;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: linear-gradient(90deg, rgba(139, 30, 45, 0.75), rgba(184, 57, 79, 0.35), rgba(190, 140, 63, 0.55));
-}
-
-.section:hover {
-  border-color: #dcc9cf;
-  box-shadow: 0 18px 40px -30px rgba(80, 20, 32, 0.5);
-}
-
-.sectionTitle {
-  color: #172033;
-  font-weight: 750;
-  letter-spacing: -0.015em;
-}
-
-.appealSection::before {
-  right: 22px;
-  left: 22px;
-}
-
-/* ---------- DAY CARDS ---------- */
-
-.dayCard {
-  background: #fff;
-  border: 1px solid #ecdfe2;
-  border-radius: 12px;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
-}
-
-.dayCard:hover {
-  border-color: #d8b8c0;
-  box-shadow: 0 8px 18px -14px rgba(139, 30, 45, 0.4);
-}
-
-.dayToday {
-  border-color: #e2c9cf;
-  background: linear-gradient(180deg, #fffafb 0%, #ffffff 60%);
-}
-
-/* ---------- ALERTS ---------- */
-
-.noticeSuccess {
-  color: #15803d;
-  background: #eaf8ef;
-  border-color: #bfe6cc;
-}
-
-.noticeError {
-  color: #b4233b;
-  background: #fde3e8;
-  border-color: #f0b7c2;
-}
-
-.noticeInfo {
-  color: #37568c;
-  background: #e6eefb;
-  border-color: #c7d7f0;
-}
-
-.info {
-  color: #8490a1;
-}
-
-/* ---------- BUTTONS: maroon fill on hover ---------- */
-
-.primaryBtn,
-.smallPrimaryBtn {
-  border: 1px solid #8b1e2d;
-  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
-  color: #fff;
-  font-weight: 700;
-  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
-}
-
-.primaryBtn:hover:not(:disabled),
-.smallPrimaryBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #7a1725 0%, #932034 100%);
-  border-color: #7a1725;
-  box-shadow: 0 10px 22px -10px rgba(139, 30, 45, 0.85);
-}
-
-.secondaryBtn,
-.smallSecondaryBtn,
-.cancelBtn {
-  background: #fff;
-  border: 1px solid #dcc9cf;
-  color: #475d6e;
-  font-weight: 700;
-}
-
-.secondaryBtn:hover:not(:disabled),
-.smallSecondaryBtn:hover:not(:disabled),
-.cancelBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
-  border-color: #8b1e2d;
-  color: #fff;
-  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
-}
-
-.appealLink {
-  color: #8b1e2d;
-  font-weight: 700;
-  border: 1px solid #efdee2;
-  background: #fffafb;
-  border-radius: 8px;
-  padding: 6px 11px;
-}
-
-.appealLink:hover:not(:disabled) {
-  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
-  border-color: #8b1e2d;
-  color: #fff;
-}
-
-/* ---------- MODAL ---------- */
-
-.modalBackdrop {
-  background: rgba(23, 32, 51, 0.45);
-  backdrop-filter: blur(3px);
-}
-
-.modalContent {
-  background: #fff;
-  border-radius: 16px;
-  border: 1px solid #e6dfe2;
-  box-shadow: 0 24px 60px -18px rgba(80, 20, 32, 0.4);
-  font-family: inherit;
-  overflow: hidden;
-}
-
-.modalHeader {
-  padding: 20px 24px;
-  border-bottom: 1px solid #ecdfe2;
-  background: linear-gradient(120deg, #ffffff 0%, #fdf3f5 100%);
-}
-
-.modalHeader h3 {
-  color: #172033;
-  font-weight: 750;
-  letter-spacing: -0.015em;
-}
-
-.modalClose {
-  color: #596579;
-  background: #fff;
-  border: 1px solid #dcc9cf;
-  border-radius: 9px;
-}
-
-.modalClose:hover:not(:disabled) {
-  color: #172033;
-  border-color: #b8394f;
-  background: #fff7f8;
-}
-
-.modalBody {
-  padding: 22px 24px;
-}
-
-.appealDate {
-  display: inline-block;
-  margin-bottom: 16px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  color: #8b1e2d;
-  background: #fff7f8;
-  border: 1px solid #f0d7dc;
-  font-size: 0.74rem;
-  font-weight: 750;
-}
-
-.field {
-  display: block;
-  margin-bottom: 14px;
-  color: #475d6e;
-  font-size: 0.74rem;
-  font-weight: 700;
-}
-
-.field input,
-.field select,
-.field textarea {
-  border: 1px solid #dcc9cf;
-  border-radius: 9px;
-  color: #172033;
-  font-family: inherit;
-}
-
-.field input:focus,
-.field select:focus,
-.field textarea:focus {
-  border-color: #b8394f;
-  box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.1);
-}
-
-.field input::placeholder,
-.field textarea::placeholder {
-  color: #a9b0bd;
-}
-
-.appealActions {
-  display: flex;
-  gap: 9px;
-  flex-wrap: wrap;
-  margin-top: 18px;
-  padding-top: 16px;
-  border-top: 1px solid #ecdfe2;
-}
-
-/* ---------- APPEAL HISTORY ---------- */
-
-.appealList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.appealItem {
-  padding: 15px 17px;
-  background: #fff;
-  border: 1px solid #ecdfe2;
-  border-left: 4px solid #cbd5e1;
-  border-radius: 12px;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
-}
-
-.appealItem:hover {
-  border-color: #d8b8c0;
-  box-shadow: 0 8px 18px -14px rgba(139, 30, 45, 0.4);
-}
-
-.appealTop {
+/* ---------- Loading ---------- */
+.loading {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-  padding-bottom: 9px;
-  border-bottom: 1px solid #f2e9ec;
+  justify-content: center;
+  min-height: 180px;
+  color: var(--about-muted);
 }
 
-.appealTop strong {
-  color: #172033;
-  font-size: 0.9rem;
-  font-weight: 750;
-}
-
-.appealExcuse {
-  color: #596579;
-  font-size: 0.8rem;
-  line-height: 1.55;
-}
-
-.comment {
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: #fdf7f8;
-  border: 1px solid #efdee2;
-  color: #475d6e;
-  font-size: 0.8rem;
-  line-height: 1.5;
-}
-
-.fileLink {
-  color: #8b1e2d;
-  font-weight: 700;
-  text-decoration: none;
-  border-bottom: 1px solid #f0d7dc;
-}
-
-.fileLink:hover {
-  color: #7a1725;
-  border-bottom-color: #8b1e2d;
-}
-
-/* Status pills */
-.badge {
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 750;
-  letter-spacing: 0.02em;
-  min-height: 25px;
-  padding: 3px 10px;
-}
-
-.badge_pending {
-  color: #9a5b10;
-  background: #fff4df;
-  border: 1px solid #f2dfb6;
-}
-
-.badge_approved {
-  color: #15803d;
-  background: #eaf8ef;
-  border: 1px solid #bfe6cc;
-}
-
-.badge_rejected {
-  color: #b4233b;
-  background: #fde3e8;
-  border: 1px solid #f0b7c2;
-}
-
-/* ---------- RESPONSIVE ---------- */
-
+/* ---------- Responsive ---------- */
 @media (max-width: 640px) {
   .pageHeader {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      'main'
-      'status'
-      'countdown';
-    align-items: stretch;
+    flex-direction: column;
     gap: 12px;
     padding: 18px 16px;
     margin-bottom: 18px;
     border-radius: 16px;
   }
 
-  .title {
+  .pageHeader h2 {
     font-size: 1.5rem;
   }
 
-  .subtitle {
+  .pageHeader p {
     font-size: 0.9rem;
-  }
-
-  .section {
-    border-radius: 16px;
   }
 
   .headerStatus {
@@ -2572,8 +1297,11 @@
     font-size: 1.5rem;
   }
 
+  .section {
+    border-radius: 16px;
+  }
+
   .modalDrawer {
-    /* On phones the drawer becomes a centered sheet */
     top: auto;
     left: 0;
     right: 0;
@@ -2594,7 +1322,6 @@
     }
   }
 
-  /* Schedule rows are collapsible; just tighten the padding on phones */
   .dayToggle {
     padding: 14px 16px;
     gap: 10px;
@@ -2620,10 +1347,6 @@
     min-height: 44px;
   }
 
-  /* On phones the action row stacks, so the filed-appeal badge should stretch
-     to the full width too — otherwise a right-aligned chip beside full-width
-     buttons looks misaligned. Full-width also gives the longer label
-     ("Already appeal time out") room to sit on one line. */
   .appealFiledBadge {
     display: flex;
     width: 100%;
@@ -2638,15 +1361,6 @@
     align-items: stretch;
     padding: 18px 16px 14px;
   }
-
-.scheduleFooter {
-  display: flex;
-  justify-content: center;
-  padding: 16px 22px 20px;
-  border-top: 1px solid #ecdfe2;
-  background: #fffafb;
-  border-radius: 0 0 18px 18px;
-}
 
   .scheduleFooter {
     padding: 14px 16px 16px;
@@ -2672,17 +1386,13 @@
     min-height: 44px;
   }
 }
-/* =========================================================
-   ACCESSIBILITY
-========================================================= */
 
+/* ---------- Accessibility ---------- */
 @media (prefers-reduced-motion: reduce) {
-
   *,
   *::before,
   *::after {
     animation: none !important;
     transition: none !important;
   }
-
 }

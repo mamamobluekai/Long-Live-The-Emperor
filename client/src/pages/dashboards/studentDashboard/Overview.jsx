@@ -379,7 +379,7 @@ export default function Overview({ user }) {
       <section className={styles.greeting}>
         <div>
           <h1>
-            {getGreeting()}, {firstName}!
+            {getGreeting()}, <span className={styles.greetingName}>{firstName}!</span>
           </h1>
           <p className={styles.greetingText}>
             Track every immersion day of your work immersion. Tap any date to see

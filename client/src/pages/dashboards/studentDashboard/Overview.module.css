@@ -44,7 +44,8 @@
 }
 
 .greeting h1 span {
-  font-size: 0.82em;
+  font-size: inherit;
+  color: var(--about-maroon);
 }
 
 .greetingText {

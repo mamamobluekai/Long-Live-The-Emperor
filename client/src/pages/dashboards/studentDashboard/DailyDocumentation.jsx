@@ -135,7 +135,6 @@ function DailyDocumentation() {
     const doc = docMap[normalizeDateKey(day.date)];
     return doc && ['reviewed', 'graded'].includes(doc.status);
   }).length;
-  const progressPercent = scheduledCount > 0 ? Math.round((gradedCount / scheduledCount) * 100) : 0;
   const progressLabel = scheduledCount > 0 && gradedCount >= scheduledCount ? 'Completed' : 'In Progress';
 
   function openModal(day) {
@@ -222,7 +221,7 @@ function DailyDocumentation() {
           @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap');
         `}</style>
         <div className={styles.pageHeader}>
-          <div className={styles.eyebrow}>Student Portal</div>
+
           <h1 className={styles.title}>Daily Documentation</h1>
           <p className={styles.subtitle}>Loading your daily documentation…</p>
         </div>
@@ -237,7 +236,7 @@ function DailyDocumentation() {
           @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap');
         `}</style>
         <div className={styles.pageHeader}>
-          <div className={styles.eyebrow}>Student Portal</div>
+
           <h1 className={styles.title}>Daily Documentation</h1>
         </div>
         <p className={styles.error}>{error}</p>
@@ -253,7 +252,7 @@ function DailyDocumentation() {
 
       <div className={styles.pageHeader}>
         <div>
-          <div className={styles.eyebrow}>Student Portal</div>
+
           <h1 className={styles.title}>Daily Documentation</h1>
           <p className={styles.subtitle}>
             Upload your daily work immersion documentation. You must be present (Time In or Time Out) for the day to upload.
@@ -262,15 +261,6 @@ function DailyDocumentation() {
       </div>
 
       <div className={styles.progressOverview}>
-        <div
-          className={styles.progressRing}
-          style={{
-            background: `conic-gradient(#8b1e2d ${progressPercent * 3.6}deg, #f4e7ea 0deg)`,
-          }}
-        >
-          <div className={styles.progressRingInner}>{progressPercent}%</div>
-        </div>
-
         <div className={styles.progressSummary}>
           <div className={styles.progressHeaderRow}>
             <h2>Documentation Progress</h2>

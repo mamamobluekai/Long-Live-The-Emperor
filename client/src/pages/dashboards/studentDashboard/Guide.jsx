@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  BookOpen,
   ChevronDown,
   CircleHelp,
   Download,
@@ -145,11 +144,7 @@ function Guide() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <div className={styles.headerIcon} aria-hidden="true">
-          <BookOpen size={24} />
-        </div>
         <div>
-          <p className={styles.eyebrow}>Student Guide</p>
           <h1>Student Guides</h1>
           <p className={styles.intro}>
             Choose a guide to see step-by-step instructions for your Android

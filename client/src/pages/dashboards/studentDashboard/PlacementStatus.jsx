@@ -2,13 +2,6 @@ import { useEffect, useState } from 'react';
 import { getMySubmissionStatus, getMyPlacementInfo } from '../../../api/studentApi';
 import styles from './PlacementStatus.module.css';
 
-function getGreeting() {
-  const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 18) return 'Good afternoon';
-  return 'Good evening';
-}
-
 function fullName(person) {
   if (!person) return '';
   return [person.first_name, person.last_name].filter(Boolean).join(' ').trim();
@@ -58,7 +51,7 @@ function PersonCard({ roleLabel, person, fallback, accent, onClick }) {
   );
 }
 
-function PlacementStatus({ user }) {
+function PlacementStatus() {
   const [submission, setSubmission] = useState(null);
   const [placement, setPlacement] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -90,8 +83,6 @@ function PlacementStatus({ user }) {
     return () => { cancelled = true; };
   }, []);
 
-  const firstName = user?.first_name || user?.email?.split('@')[0] || 'Student';
-
   const statusMap = {
     Pending: { label: 'Pending', cls: styles.badgePending },
     'Pending Review': { label: 'Pending Review', cls: styles.badgeReview },
@@ -115,8 +106,7 @@ function PlacementStatus({ user }) {
 
       <div className={styles.greeting}>
         <div>
-          <div className={styles.eyebrow}>Student Portal</div>
-          <h2>{getGreeting()}, {firstName}! 👋</h2>
+          <h2>Deployment Status</h2>
           <p>
             {placement
               ? `You are assigned to ${placement.batch_label || 'your immersion batch'}. Here is your deployment team.`

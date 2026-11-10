@@ -746,9 +746,10 @@ function Requirements() {
 
       <div className={styles.pageHeader}>
         <div className={styles.headerMain}>
-          <div className={styles.eyebrow}>Student Portal</div>
-          <h2>Requirements</h2>
-          <p>Fill in your information and upload the required documents.</p>
+          <div>
+            <h2>Requirements</h2>
+            <p>Fill in your information and upload the required documents.</p>
+          </div>
         </div>
       </div>
 

@@ -1,7 +1,171 @@
-/* =========================================
-   RESPONSIVE LAYOUT
-   (layout lives here; colours stay inline)
-   ========================================= */
+/* Design system: Lexend + About page palette (borders, fonts, colors). */
+:root {
+  --about-maroon: #8b1e2d;
+  --about-gold: #be8c3f;
+  --about-ink: #172033;
+  --about-muted: #596579;
+  --about-border: #eadde0;
+  --about-blush: #fff7f8;
+}
+
+.page {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  color: var(--about-ink);
+  font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- Page header ---------- */
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 22px;
+  padding: 22px 24px;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.headerIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  color: #fff;
+  background: linear-gradient(140deg, var(--about-maroon), #b8394f);
+  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
+}
+
+.pageHeader h1 {
+  margin: 0;
+  color: var(--about-ink);
+  font-size: 1.85rem;
+  font-weight: 780;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--about-maroon);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.pageHeader p {
+  margin: 6px 0 0;
+  max-width: 620px;
+  color: var(--about-muted);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+/* ---------- Cards ---------- */
+.card {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 18px;
+  background: #fff;
+  border: 1px solid var(--about-border);
+  border-radius: 16px;
+  box-shadow: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.card::before {
+  content: none;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: #d7b8be;
+  box-shadow: 0 12px 26px rgb(23 32 51 / 7%);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 21px 22px 18px;
+  border-bottom: 1px solid var(--about-border);
+}
+
+.cardHeader h2 {
+  margin: 0;
+  color: var(--about-ink);
+  font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+}
+
+.cardBody {
+  padding: 22px 24px 24px;
+}
+
+/* ---------- Overall progress ---------- */
+.overallBody {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.overallText {
+  flex: 1;
+  min-width: 220px;
+}
+
+.overallText .eyebrow {
+  margin-bottom: 8px;
+  color: var(--about-maroon);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.overallText h3 {
+  margin: 0 0 5px 0;
+  color: var(--about-ink);
+  font-size: 1.25rem;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+}
+
+.overallText p {
+  margin: 0 0 0 0;
+  font-size: 0.9rem;
+  color: var(--about-muted);
+  line-height: 1.55;
+}
+
+.barTrack {
+  width: 100%;
+  height: 10px;
+  margin-top: 16px;
+  background: #f1e3e6;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--about-maroon) 0%, #b8394f 100%);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
 
 .ring {
   position: relative;
@@ -25,84 +189,13 @@
   justify-content: center;
   font-weight: 780;
   font-size: 18px;
-  color: #172033;
+  color: var(--about-ink);
   letter-spacing: -0.02em;
 }
 
-.overallBody {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-
-.overallText {
-  flex: 1;
-  min-width: 220px;
-}
-
-.barTrack {
-  width: 100%;
-  height: 10px;
-  margin-top: 16px;
-  background: #f4e7ea;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.barFill {
-  height: 100%;
-  background: linear-gradient(90deg, #8b1e2d 0%, #b8394f 100%);
-  border-radius: 999px;
-  transition: width 0.4s ease;
-}
-
-/* Certificate CTA — layout only, the navy + gold colours stay inline */
-.certWrap {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.certRibbon {
-  flex-shrink: 0;
-}
-
-.certBody {
-  flex: 1;
-}
-
-.certBtn {
-  flex-shrink: 0;
-}
-
-@media (max-width: 640px) {
-  .certWrap {
-    flex-direction: column;
-    align-items: stretch;
-    text-align: center;
-    gap: 14px;
-    padding: 24px 18px;
-  }
-
-  .certRibbon {
-    align-self: center;
-  }
-
-  .certBody {
-    width: 100%;
-  }
-
-  .certBody p {
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .certBtn {
-    width: 100%;
-    padding: 12px 18px;
-  }
+/* ---------- Milestones ---------- */
+.milestonesCard {
+  margin-top: 0;
 }
 
 .stepList {
@@ -122,17 +215,109 @@
   gap: 10px;
 }
 
-.milestonesCard {
+/* ---------- Certificate CTA ---------- */
+.certWrap {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
   margin-top: 18px;
 }
 
+.certRibbon {
+  flex-shrink: 0;
+}
+
+.certBody {
+  flex: 1;
+}
+
+.certBtn {
+  flex-shrink: 0;
+}
+
+.countBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  color: var(--about-maroon);
+  background: #fff7f8;
+  border: 1px solid #f0d7dc;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 750;
+}
+
+.loading {
+  color: var(--about-muted);
+  font-size: 0.95rem;
+  padding: 50px 0;
+  text-align: center;
+}
+
+/* ---------- Buttons ---------- */
+.btn,
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 15px;
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.btn {
+  color: #fff;
+  background: var(--about-maroon);
+  border: 1px solid var(--about-maroon);
+  box-shadow: 0 2px 6px rgba(139, 30, 45, 0.25);
+}
+
+.btn:hover:not(:disabled) {
+  background: #7a1725;
+  border-color: #7a1725;
+  box-shadow: 0 4px 10px rgba(139, 30, 45, 0.35);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  color: #475d6e;
+  background: #fff;
+  border: 1px solid var(--about-border);
+}
+
+.btnSecondary:hover:not(:disabled) {
+  color: var(--about-ink);
+  background: var(--about-blush);
+  border-color: #d7b8be;
+}
+
+.btnSecondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ---------- Responsive ---------- */
 @media (max-width: 640px) {
   .pageHeaderWrap {
     padding: 18px 16px;
     margin-bottom: 20px;
   }
 
-  .pageHeaderWrap h2 {
+  .pageHeaderWrap h1 {
     font-size: 1.5rem;
   }
 
@@ -143,7 +328,6 @@
   .headerIcon {
     width: 40px;
     height: 40px;
-    font-size: 1.05rem;
     border-radius: 12px;
   }
 
@@ -174,10 +358,6 @@
     gap: 4px;
   }
 
-  .milestonesCard {
-    padding: 18px 16px 4px;
-  }
-
   .stepRow {
     gap: 12px;
   }
@@ -187,776 +367,29 @@
     gap: 6px;
   }
 
-  .stepLabel {
-    font-size: 14px;
-  }
-}
-
-@media (max-width: 420px) {
-  .barTrack {
-    height: 8px;
-  }
-}
-
-/* =========================================
-   PAGE HEADER
-   ========================================= */
-
-.pageHeader {
-  margin-bottom: 30px;
-}
-
-.pageHeader h2 {
-  margin: 0 0 7px;
-  font-size: 1.8rem;
-  line-height: 1.2;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  color: #172033;
-}
-
-.pageHeader p {
-  margin: 0;
-  color: #64748b;
-  font-size: 0.98rem;
-  line-height: 1.6;
-}
-
-
-/* =========================================
-   LOADING
-========================================= */
-
-.loading {
-  color: #94a3b8;
-  font-size: 0.95rem;
-  padding: 50px 0;
-  text-align: center;
-}
-
-
-/* =========================================
-   OVERALL PROGRESS CARD
-========================================= */
-
-.overall {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: 32px;
-
-  width: 100%;
-  min-height: 165px;
-
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 18px;
-
-  padding: 30px 34px;
-  margin-bottom: 24px;
-
-  box-shadow:
-    0 2px 6px rgba(15, 23, 42, 0.03),
-    0 10px 30px rgba(15, 23, 42, 0.05);
-
-  box-sizing: border-box;
-}
-
-
-/* =========================================
-   OVERALL PROGRESS CIRCLE
-========================================= */
-
-.progressCircle {
-  width: 110px;
-  height: 110px;
-
-  min-width: 110px;
-
-  border-radius: 50%;
-
-  display: grid;
-  place-items: center;
-
-  position: relative;
-}
-
-
-/* Inner circle */
-
-.progressCircle::after {
-  content: '';
-
-  position: absolute;
-
-  width: 82px;
-  height: 82px;
-
-  background: #ffffff;
-
-  border-radius: 50%;
-}
-
-
-/* Percentage text */
-
-.progressCircle span {
-  position: relative;
-  z-index: 1;
-
-  font-size: 1.25rem;
-  font-weight: 700;
-
-  color: #172033;
-}
-
-
-/* =========================================
-   OVERALL META
-========================================= */
-
-.overallMeta {
-  min-width: 0;
-  width: 100%;
-}
-
-.overallMeta h3 {
-  margin: 0 0 6px;
-
-  font-size: 1.25rem;
-  line-height: 1.3;
-
-  font-weight: 700;
-
-  color: #7f172b;
-}
-
-.overallMeta p {
-  margin: 0;
-
-  color: #64748b;
-
-  font-size: 0.95rem;
-  line-height: 1.5;
-}
-
-
-/* =========================================
-   PROGRESS BAR
-========================================= */
-
-.bar {
-  width: 100%;
-  height: 10px;
-
-  margin-top: 18px;
-
-  background: #e9edf2;
-
-  border-radius: 999px;
-
-  overflow: hidden;
-}
-
-.barFill {
-  height: 100%;
-
-  background: linear-gradient(
-    90deg,
-    #7f172b 0%,
-    #a9233d 100%
-  );
-
-  border-radius: 999px;
-
-  transition: width 0.4s ease;
-}
-
-
-/* =========================================
-   MILESTONE GRID
-========================================= */
-
-.steps {
-  display: grid;
-
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-
-  gap: 20px;
-
-  margin-bottom: 24px;
-}
-
-
-/* =========================================
-   MILESTONE CARD
-========================================= */
-
-.step {
-  position: relative;
-
-  display: flex;
-  flex-direction: column;
-
-  min-width: 0;
-  min-height: 200px;
-
-  padding: 26px;
-
-  background: #ffffff;
-
-  border: 1px solid #e2e8f0;
-
-  border-radius: 16px;
-
-  box-shadow:
-    0 2px 6px rgba(15, 23, 42, 0.03);
-
-  transition:
-    transform 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.step:hover {
-  transform: translateY(-3px);
-
-  border-color: #cbd5e1;
-
-  box-shadow:
-    0 10px 24px rgba(15, 23, 42, 0.08);
-}
-
-
-/* =========================================
-   COMPLETED CARD
-========================================= */
-
-.stepDone {
-  background: #ffffff;
-
-  border-color: #e8c6cc;
-}
-
-.stepDone:hover {
-  border-color: #8b1e2d;
-}
-
-
-/* =========================================
-   STEP ICON
-========================================= */
-
-.stepIcon {
-  width: 50px;
-  height: 50px;
-
-  flex-shrink: 0;
-
-  display: grid;
-  place-items: center;
-
-  border-radius: 14px;
-
-  background: #f1f5f9;
-
-  color: #64748b;
-
-  font-size: 1rem;
-  font-weight: 700;
-
-  margin-bottom: 20px;
-}
-
-
-/* Completed icon */
-
-.stepDone .stepIcon {
-  background: #8b1e2d;
-
-  color: #ffffff;
-
-  box-shadow:
-    0 5px 14px rgba(139, 30, 45, 0.22);
-}
-
-
-/* =========================================
-   STEP BODY
-========================================= */
-
-.stepBody {
-  flex: 1;
-
-  min-width: 0;
-}
-
-.stepLabel {
-  display: block;
-
-  margin-bottom: 7px;
-
-  color: #172033;
-
-  font-size: 1.08rem;
-
-  font-weight: 700;
-
-  line-height: 1.3;
-}
-
-.stepDetail {
-  margin-top: 0;
-
-  color: #64748b;
-
-  font-size: 0.88rem;
-
-  line-height: 1.55;
-}
-
-
-/* =========================================
-   STEP BADGE
-========================================= */
-
-.stepBadge {
-  align-self: flex-start;
-
-  margin-top: 18px;
-
-  padding: 6px 12px;
-
-  border-radius: 999px;
-
-  font-size: 0.75rem;
-
-  font-weight: 700;
-
-  line-height: 1.2;
-}
-
-
-/* Completed */
-
-.badgeDone {
-  background: #fce7eb;
-
-  color: #8b1e2d;
-}
-
-
-/* Pending */
-
-.badgePending {
-  background: #fff7ed;
-
-  color: #9a3412;
-}
-
-
-/* =========================================
-   CERTIFICATE SECTION
-========================================= */
-
-.certSection {
-  position: relative;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: space-between;
-
-  gap: 28px;
-
-  min-height: 150px;
-
-  padding: 30px 34px;
-
-  margin-bottom: 20px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #7f172b 0%,
-      #641322 100%
-    );
-
-  border-radius: 18px;
-
-  color: #ffffff;
-
-  box-shadow:
-    0 10px 30px rgba(127, 23, 43, 0.18);
-
-  overflow: hidden;
-
-  box-sizing: border-box;
-}
-
-
-/* Decorative background */
-
-.certSection::before {
-  content: '';
-
-  position: absolute;
-
-  width: 220px;
-  height: 220px;
-
-  right: -90px;
-  top: -100px;
-
-  border-radius: 50%;
-
-  border: 35px solid rgba(255, 255, 255, 0.05);
-}
-
-.certSection::after {
-  content: '';
-
-  position: absolute;
-
-  width: 130px;
-  height: 130px;
-
-  right: 100px;
-  bottom: -90px;
-
-  border-radius: 50%;
-
-  background: rgba(255, 255, 255, 0.035);
-}
-
-
-/* =========================================
-   CERTIFICATE INFO
-========================================= */
-
-.certInfo {
-  position: relative;
-
-  z-index: 1;
-
-  min-width: 0;
-}
-
-.certInfo h3 {
-  margin: 0 0 7px;
-
-  color: #ffffff;
-
-  font-size: 1.2rem;
-
-  font-weight: 700;
-
-  line-height: 1.3;
-}
-
-.certInfo p {
-  margin: 0;
-
-  max-width: 600px;
-
-  color: rgba(255, 255, 255, 0.75);
-
-  font-size: 0.9rem;
-
-  line-height: 1.55;
-}
-
-
-/* =========================================
-   DOWNLOAD BUTTON
-========================================= */
-
-.downloadBtn {
-  position: relative;
-
-  z-index: 2;
-
-  flex-shrink: 0;
-
-  padding: 13px 22px;
-
-  min-height: 44px;
-
-  border: 1px solid rgba(255, 255, 255, 0.3);
-
-  border-radius: 9px;
-
-  background: #ffffff;
-
-  color: #7f172b;
-
-  font-size: 0.88rem;
-
-  font-weight: 700;
-
-  cursor: pointer;
-
-  transition:
-    transform 0.2s ease,
-    background 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.downloadBtn:hover:not(:disabled) {
-  transform: translateY(-2px);
-
-  background: #f8fafc;
-
-  box-shadow:
-    0 8px 18px rgba(0, 0, 0, 0.15);
-}
-
-.downloadBtn:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.downloadBtn:disabled {
-  opacity: 0.45;
-
-  cursor: not-allowed;
-
-  box-shadow: none;
-}
-
-
-/* =========================================
-   LARGE TABLET
-========================================= */
-
-@media (max-width: 1100px) {
-
-  .overall {
-    padding: 28px;
-    gap: 26px;
-  }
-
-  .steps {
-    gap: 16px;
-  }
-
-  .step {
-    padding: 22px;
-  }
-
-  .certSection {
-    padding: 26px 28px;
-  }
-}
-
-
-/* =========================================
-   TABLET
-========================================= */
-
-@media (max-width: 850px) {
-
-  .pageHeader {
-    margin-bottom: 24px;
-  }
-
-  .pageHeader h2 {
-    font-size: 1.55rem;
-  }
-
-  /* Overall becomes vertical */
-
-  .overall {
-    grid-template-columns: 1fr;
-
-    text-align: center;
-
-    justify-items: center;
-
-    gap: 18px;
-
-    padding: 28px;
-  }
-
-  .overallMeta {
-    width: 100%;
-  }
-
-  .bar {
-    margin-top: 16px;
-  }
-
-  /* Two columns */
-
-  .steps {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .step {
-    min-height: 190px;
-  }
-
-  /* Certificate */
-
-  .certSection {
-    align-items: flex-start;
-
+  .certWrap {
     flex-direction: column;
-
-    padding: 26px;
-  }
-
-  .downloadBtn {
-    width: auto;
-  }
-}
-
-
-/* =========================================
-   MOBILE
-========================================= */
-
-@media (max-width: 600px) {
-
-  .pageHeader {
-    margin-bottom: 20px;
-  }
-
-  .pageHeader h2 {
-    font-size: 1.35rem;
-  }
-
-  .pageHeader p {
-    font-size: 0.88rem;
-  }
-
-
-  /* Overall */
-
-  .overall {
-    min-height: auto;
-
-    padding: 24px 20px;
-
-    border-radius: 14px;
-
-    margin-bottom: 18px;
-  }
-
-
-  /* Circle */
-
-  .progressCircle {
-    width: 95px;
-    height: 95px;
-
-    min-width: 95px;
-  }
-
-  .progressCircle::after {
-    width: 71px;
-    height: 71px;
-  }
-
-  .progressCircle span {
-    font-size: 1.05rem;
-  }
-
-
-  .overallMeta h3 {
-    font-size: 1.1rem;
-  }
-
-  .overallMeta p {
-    font-size: 0.84rem;
-  }
-
-  .bar {
-    height: 8px;
-  }
-
-
-  /* One column */
-
-  .steps {
-    grid-template-columns: 1fr;
-
+    align-items: stretch;
+    text-align: center;
     gap: 14px;
-
-    margin-bottom: 18px;
+    padding: 24px 18px;
   }
 
-  .step {
-    min-height: auto;
-
-    padding: 20px;
-
-    border-radius: 14px;
+  .certRibbon {
+    align-self: center;
   }
 
-  .stepIcon {
-    width: 44px;
-    height: 44px;
-
-    margin-bottom: 16px;
-  }
-
-  .stepLabel {
-    font-size: 1rem;
-  }
-
-  .stepDetail {
-    font-size: 0.84rem;
-  }
-
-
-  /* Certificate */
-
-  .certSection {
-    min-height: auto;
-
-    padding: 22px 20px;
-
-    gap: 20px;
-
-    border-radius: 14px;
-  }
-
-  .certInfo h3 {
-    font-size: 1.05rem;
-  }
-
-  .certInfo p {
-    font-size: 0.84rem;
-  }
-
-  .downloadBtn {
+  .certBody {
     width: 100%;
+  }
 
+  .certBody p {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .certBtn {
+    width: 100%;
     padding: 12px 18px;
-  }
-}
-
-
-/* =========================================
-   SMALL MOBILE
-========================================= */
-
-@media (max-width: 380px) {
-
-  .pageHeader h2 {
-    font-size: 1.25rem;
-  }
-
-  .overall {
-    padding: 20px 16px;
-  }
-
-  .step {
-    padding: 18px;
-  }
-
-  .certSection {
-    padding: 20px 16px;
   }
 }

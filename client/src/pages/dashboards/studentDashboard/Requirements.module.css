@@ -1,54 +1,43 @@
-/* =========================================================
-   REQUIREMENTS — maroon design system (matches RequirementsReview)
-   Lexend type scale · #8b1e2d / #b8394f / gold accents
-   ========================================================= */
+/* Design system: Lexend + About page palette (borders, fonts, colors). */
+:root {
+  --about-maroon: #8b1e2d;
+  --about-gold: #be8c3f;
+  --about-ink: #172033;
+  --about-muted: #596579;
+  --about-border: #eadde0;
+  --about-blush: #fff7f8;
+}
 
 .page {
   width: 100%;
   max-width: 1500px;
   margin: 0 auto;
+  color: var(--about-ink);
   font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #26313f;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* =========================================================
-   PAGE HEADER
-   ========================================================= */
-
+/* ---------- Page header ---------- */
 .pageHeader {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 26px;
+  gap: 24px;
+  margin-bottom: 22px;
   padding: 22px 24px;
-  border: 1px solid #e8d2d8;
-  border-radius: 18px;
-  background:
-    radial-gradient(130% 160% at 0% 0%, rgba(139, 30, 45, 0.1) 0%, rgba(139, 30, 45, 0) 58%),
-    radial-gradient(120% 150% at 100% 120%, rgba(190, 140, 63, 0.16) 0%, rgba(190, 140, 63, 0) 55%),
-    linear-gradient(120deg, #ffffff 0%, #fdf3f5 58%, #f9e8ec 100%);
-  box-shadow: 0 14px 32px -28px rgba(80, 20, 32, 0.55);
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  box-shadow: none;
 }
 
 .headerMain {
   min-width: 0;
 }
 
-.eyebrow {
-  margin-bottom: 6px;
-  color: #8b1e2d;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-}
-
 .pageHeader h2 {
   margin: 0;
-  color: #172033;
+  color: var(--about-ink);
   font-size: 1.85rem;
   font-weight: 780;
   letter-spacing: -0.035em;
@@ -56,104 +45,74 @@
 }
 
 .pageHeader p {
-  margin: 8px 0 0;
-  max-width: 650px;
-  color: #596579;
-  font-size: 0.95rem;
+  margin: 6px 0 0;
+  max-width: 620px;
+  color: var(--about-muted);
+  font-size: 0.88rem;
   line-height: 1.6;
 }
 
-.headerIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  flex-shrink: 0;
-  border-radius: 14px;
-  background: linear-gradient(140deg, #8b1e2d, #b8394f);
-  color: #fff;
-  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
-}
-
-/* =========================================================
-   ALERTS
-   ========================================================= */
-
+/* ---------- Alerts ---------- */
 .message,
 .error {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 15px;
-  margin-bottom: 18px;
-  border-radius: 12px;
-  font-size: 0.86rem;
-  font-weight: 600;
-  border: 1px solid;
+  padding: 11px 14px;
+  margin-bottom: 14px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 650;
 }
 
 .message {
-  color: #15803d;
   background: #eaf8ef;
-  border-color: #bfe6cc;
+  border: 1px solid #bfe6cc;
+  color: #15803d;
 }
 
 .error {
+  background: #fff3f5;
+  border: 1px solid #f0b7c2;
   color: #b4233b;
-  background: #fde3e8;
-  border-color: #f0b7c2;
 }
 
-/* =========================================================
-   CARDS
-   ========================================================= */
-
+/* ---------- Cards / sections ---------- */
 .section {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(180deg, #fffdfd 0%, #ffffff 40%);
-  border: 1px solid #e6dfe2;
-  border-radius: 18px;
-  padding: 22px 24px;
-  margin-bottom: 20px;
-  box-shadow: 0 12px 32px -28px rgba(80, 20, 32, 0.4);
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  margin-bottom: 18px;
+  background: #fff;
+  border: 1px solid var(--about-border);
+  border-radius: 16px;
+  box-shadow: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
 .section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 22px;
-  left: 22px;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: linear-gradient(90deg, rgba(139, 30, 45, 0.75), rgba(184, 57, 79, 0.35), rgba(190, 140, 63, 0.55));
+  content: none;
 }
 
 .section:hover {
-  border-color: #dcc9cf;
-  box-shadow: 0 18px 40px -30px rgba(80, 20, 32, 0.5);
+  transform: translateY(-2px);
+  border-color: #d7b8be;
+  box-shadow: 0 12px 26px rgb(23 32 51 / 7%);
 }
 
-/* =========================================================
-   PROGRESS
-   ========================================================= */
-
+/* ---------- Progress ---------- */
 .progressLabel {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
   margin-bottom: 12px;
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.82rem;
   font-weight: 600;
 }
 
 .progressLabel strong {
-  color: #8b1e2d;
+  color: var(--about-maroon);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -163,7 +122,7 @@
 .progressBar {
   width: 100%;
   height: 10px;
-  background: #f4e7ea;
+  background: #f1e3e6;
   border-radius: 999px;
   overflow: hidden;
 }
@@ -182,34 +141,31 @@
   gap: 10px;
   margin-top: 18px;
   padding-top: 16px;
-  border-top: 1px solid #ecdfe2;
+  border-top: 1px solid var(--about-border);
 }
 
 .muted {
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.8rem;
 }
 
-/* =========================================================
-   BADGES
-   ========================================================= */
-
+/* ---------- Badges ---------- */
 .badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 25px;
-  padding: 3px 10px;
+  min-height: 24px;
+  padding: 2px 9px;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 750;
   white-space: nowrap;
 }
 
 .badgeReview {
-  color: #8b1e2d;
-  background: #fff7f8;
-  border: 1px solid #f0d7dc;
+  color: var(--about-maroon);
+  background: var(--about-blush);
+  border: 1px solid var(--about-border);
 }
 
 .badgeVerified {
@@ -218,21 +174,16 @@
   border: 1px solid #bfe6cc;
 }
 
-/* =========================================================
-   TABS
-   ========================================================= */
-
-/* Pill tabs, matching the municipality buttons on the teacher live map:
-   white pill with a soft border, filling maroon on hover and when active. */
+/* ---------- Tabs ---------- */
 .tabs {
   display: flex;
-  gap: 7px;
+  gap: 8px;
   flex-wrap: wrap;
-  padding: 0;
-  margin-bottom: 24px;
-  background: transparent;
-  border: none;
-  border-radius: 0;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid var(--about-border);
+  border-radius: 16px;
+  margin-bottom: 22px;
 }
 
 .tab {
@@ -243,32 +194,29 @@
   gap: 6px;
   flex: 1;
   min-width: max-content;
-  border: 1px solid #dcc9cf;
-  background: #ffffff;
-  color: #334155;
-  padding: 9px 16px;
-  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--about-muted);
+  padding: 0 14px;
+  border-radius: 10px;
   font-family: inherit;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(80, 20, 32, 0.06);
-  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
 }
 
 .tab:hover {
-  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
-  border-color: #8b1e2d;
-  color: #ffffff;
-  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
+  color: var(--about-maroon);
+  background: #fff7f8;
 }
 
 .tab.active {
-  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
-  border-color: #8b1e2d;
-  color: #ffffff;
-  box-shadow: 0 8px 18px -10px rgba(139, 30, 45, 0.85);
+  color: #fff;
+  background: var(--about-maroon);
+  border-color: var(--about-maroon);
+  box-shadow: 0 6px 14px -8px rgba(139, 30, 45, 0.75);
 }
 
 .tab.active .tabFlag {
@@ -307,10 +255,7 @@
   border: 1px solid #f0b7c2;
 }
 
-/* =========================================================
-   FORM GRID
-   ========================================================= */
-
+/* ---------- Form grid ---------- */
 .grid2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -323,45 +268,45 @@
 
 .field label {
   display: block;
-  margin-bottom: 7px;
-  color: #475d6e;
-  font-size: 0.74rem;
+  margin-bottom: 5px;
+  color: var(--about-muted);
+  font-size: 0.72rem;
   font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .requiredDiamond {
-  color: #8b1e2d;
+  color: var(--about-maroon);
   font-size: 0.8rem;
 }
 
-/* =========================================================
-   INPUTS
-   ========================================================= */
-
+/* ---------- Inputs ---------- */
 .input,
 .select,
 .textarea {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #dcc9cf;
-  border-radius: 9px;
+  padding: 0 11px;
+  color: var(--about-ink);
   background: #fff;
-  color: #172033;
-  font-family: inherit;
-  font-size: 0.85rem;
+  border: 1px solid var(--about-border);
+  border-radius: 9px;
   outline: none;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .input,
 .select {
-  height: 42px;
-  padding: 0 12px;
+  height: 38px;
 }
 
 .textarea {
-  min-height: 100px;
-  padding: 11px 12px;
+  min-height: 96px;
+  padding: 9px 11px;
   resize: vertical;
   line-height: 1.5;
 }
@@ -374,21 +319,21 @@
 .input:hover,
 .select:hover,
 .textarea:hover {
-  border-color: #cf9aa8;
+  border-color: #d7b8be;
 }
 
 .input:focus,
 .select:focus,
 .textarea:focus {
-  border-color: #b8394f;
-  box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.1);
+  border-color: var(--about-maroon);
+  box-shadow: 0 0 0 3px rgba(109, 30, 48, 0.1);
 }
 
 .input:read-only,
 .select:read-only,
 .textarea:read-only {
-  background: #fdf7f8;
-  color: #596579;
+  background: var(--about-blush);
+  color: var(--about-muted);
   cursor: default;
 }
 
@@ -418,18 +363,15 @@
   line-height: 1.4;
 }
 
-/* =========================================================
-   DOCUMENT LIST
-   ========================================================= */
-
+/* ---------- Document list ---------- */
 .docItem {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  padding: 14px 16px;
+  padding: 12px 15px;
   margin-bottom: 12px;
-  border: 1px solid #ecdfe2;
+  border: 1px solid var(--about-border);
   border-radius: 12px;
   background: #fff;
   transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
@@ -440,7 +382,7 @@
 }
 
 .docItem:hover {
-  border-color: #d8b8c0;
+  border-color: #d7b8be;
   box-shadow: 0 8px 18px -14px rgba(139, 30, 45, 0.4);
   transform: translateY(-1px);
 }
@@ -451,14 +393,14 @@
 }
 
 .docName {
-  color: #172033;
+  color: var(--about-ink);
   font-size: 0.85rem;
   font-weight: 700;
   margin-bottom: 4px;
 }
 
 .docMeta {
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.75rem;
   line-height: 1.5;
   overflow-wrap: anywhere;
@@ -472,10 +414,7 @@
   flex-wrap: wrap;
 }
 
-/* =========================================================
-   FILE INPUT
-   ========================================================= */
-
+/* ---------- File input ---------- */
 .fileName {
   display: inline-flex;
   align-items: center;
@@ -485,7 +424,7 @@
 .fileName input[type="file"] {
   width: 210px;
   max-width: 100%;
-  color: #8490a1;
+  color: var(--about-muted);
   font-family: inherit;
   font-size: 0.75rem;
 }
@@ -493,10 +432,10 @@
 .fileName input[type="file"]::file-selector-button {
   margin-right: 8px;
   padding: 8px 14px;
-  border: 1px solid #dcc9cf;
+  border: 1px solid var(--about-border);
   border-radius: 8px;
   background: #fff;
-  color: #8b1e2d;
+  color: var(--about-maroon);
   font-family: inherit;
   font-size: 0.78rem;
   font-weight: 700;
@@ -505,15 +444,11 @@
 }
 
 .fileName input[type="file"]::file-selector-button:hover {
-  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
-  border-color: #8b1e2d;
-  color: #fff;
+  background: #fdf3f5;
+  border-color: #d7b8be;
 }
 
-/* =========================================================
-   BUTTONS
-   ========================================================= */
-
+/* ---------- Buttons ---------- */
 .btn,
 .btnGhost,
 .btnSuccess,
@@ -522,22 +457,23 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 38px;
-  padding: 0 15px;
-  border-radius: 9px;
+  gap: 7px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
   font-family: inherit;
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 0.8rem;
+  font-weight: 750;
   cursor: pointer;
   text-decoration: none;
-  transition: transform 0.15s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+  transition: background 180ms ease, border-color 180ms ease, color 180ms ease, transform 150ms ease;
 }
 
-.btn:hover,
-.btnGhost:hover,
-.btnSuccess:hover,
-.btnDanger:hover,
-.submitBtn:hover {
+.btn:hover:not(:disabled),
+.btnGhost:hover:not(:disabled),
+.btnSuccess:hover:not(:disabled),
+.btnDanger:hover:not(:disabled),
+.submitBtn:hover:not(:disabled) {
   transform: translateY(-1px);
 }
 
@@ -546,87 +482,69 @@
 .btnSuccess:disabled,
 .btnDanger:disabled,
 .submitBtn:disabled {
-  opacity: 0.55;
+  opacity: 0.6;
   cursor: not-allowed;
   transform: none;
 }
 
 .btn,
 .btnGhost {
+  border: 1px solid #e2c9cf;
   background: #fff;
-  border: 1px solid #dcc9cf;
-  color: #475d6e;
+  color: #596579;
 }
 
-/* Hover fills the button with maroon for a clear press target */
-.btn:hover:not(:disabled),
-.btnGhost:hover:not(:disabled) {
-  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
-  border-color: #8b1e2d;
+.btnSuccess {
+  border: 1px solid var(--about-maroon);
+  background: linear-gradient(140deg, #8b1e2d, #b8394f);
   color: #fff;
   box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
 }
 
-.btnSuccess {
-  border: 1px solid #15803d;
-  background: linear-gradient(140deg, #15803d, #27a35a);
-  color: #fff;
-  box-shadow: 0 8px 16px -10px rgba(21, 128, 61, 0.7);
-}
-
 .btnSuccess:hover:not(:disabled) {
-  background: linear-gradient(140deg, #126e34, #1f8f4d);
-  border-color: #126e34;
-  box-shadow: 0 10px 20px -10px rgba(21, 128, 61, 0.8);
+  background: linear-gradient(140deg, #8b1e2d, #8b1e2d);
 }
 
 .btnDanger {
-  border: 1px solid #f0b7c2;
+  border-color: #e2c9cf;
   background: #fff;
   color: #b4233b;
 }
 
 .btnDanger:hover:not(:disabled) {
-  background: linear-gradient(135deg, #b4233b 0%, #d1495f 100%);
-  border-color: #b4233b;
-  color: #fff;
-  box-shadow: 0 8px 16px -10px rgba(180, 35, 59, 0.7);
+  background: #fde3e8;
+  border-color: #f0b7c2;
+  color: #b4233b;
+  transform: translateY(-1px);
 }
 
 .submitBtn {
-  border: 1px solid #8b1e2d;
-  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
+  border: 1px solid var(--about-maroon);
+  background: linear-gradient(140deg, #8b1e2d, #b8394f);
   color: #fff;
   padding: 0 20px;
   box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
 }
 
 .submitBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #7a1725 0%, #932034 100%);
-  border-color: #7a1725;
-  box-shadow: 0 10px 22px -10px rgba(139, 30, 45, 0.85);
+  background: linear-gradient(140deg, #8b1e2d, #8b1e2d);
 }
 
-/* =========================================================
-   SAVE BAR
-   ========================================================= */
-
+/* ---------- Save bar ---------- */
 .saveBar {
-  margin-top: 24px;
+  margin-top: 22px;
   padding-top: 20px;
-  border-top: 1px solid #ecdfe2;
+  border-top: 1px solid var(--about-border);
 }
 
-/* The two actions sit in their own grouped row with a visible divider, so
-   Submit and Save never read as one control. */
 .saveBarActions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   flex-wrap: wrap;
   padding: 12px;
   background: #fffafb;
-  border: 1px solid #ecdfe2;
+  border: 1px solid var(--about-border);
   border-radius: 12px;
 }
 
@@ -635,40 +553,47 @@
   line-height: 1.5;
 }
 
-/* =========================================================
-   EMPTY / LOADING
-   ========================================================= */
-
+/* ---------- Empty / loading ---------- */
 .empty {
-  padding: 34px 20px;
-  text-align: center;
-  color: #8490a1;
-  font-size: 0.85rem;
-  border: 1px dashed #ddcfd3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 90px;
+  margin: 0;
+  padding: 22px;
+  border: 1px dashed var(--about-border);
   border-radius: 14px;
   background: linear-gradient(140deg, #fdfafb 0%, #fbf4f5 100%);
+  color: var(--about-muted);
+  font-size: 0.83rem;
+  text-align: center;
 }
 
 .loading {
   padding: 40px;
   text-align: center;
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.88rem;
 }
 
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
-
-@media (max-width: 1024px) {
-  .grid2 {
-    gap: 16px;
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  .pageHeader {
+    padding: 21px 18px;
   }
-}
 
-@media (max-width: 900px) {
+  .pageHeader h2 {
+    font-size: 1.32rem;
+  }
+
+  .pageHeader p {
+    font-size: 0.8rem;
+  }
+
   .section {
-    padding: 20px;
+    padding: 18px 15px;
+    border-radius: 16px;
+    margin-bottom: 16px;
   }
 
   .docItem {
@@ -686,61 +611,8 @@
   .fileName input[type="file"] {
     width: 100%;
   }
-}
 
-@media (max-width: 720px) {
-  .grid2 {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 640px) {
-  .pageHeader {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 18px 16px;
-    margin-bottom: 18px;
-    border-radius: 16px;
-  }
-
-  .pageHeader h2 {
-    font-size: 1.5rem;
-  }
-
-  .pageHeader p {
-    font-size: 0.9rem;
-  }
-
-  .headerIcon {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-  }
-
-  .section {
-    padding: 18px 15px;
-    border-radius: 16px;
-    margin-bottom: 16px;
-  }
-
-  .section::before {
-    right: 15px;
-    left: 15px;
-  }
-
-  .progressLabel {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .statusRow {
-    margin-top: 15px;
-    padding-top: 14px;
-  }
-
-  /* Tabs wrap into a 2×2 grid so all four are visible without side-scrolling */
+  /* Tabs wrap into a 2x2 grid so all four are visible without side-scrolling */
   .tabs {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -774,19 +646,6 @@
     padding: 1px 7px;
   }
 
-  .docItem {
-    padding: 14px;
-  }
-
-  .docActions {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .docActions > * {
-    width: 100%;
-  }
-
   .btn,
   .btnGhost,
   .btnSuccess,
@@ -811,16 +670,5 @@
 
   .loading {
     padding: 30px 18px;
-  }
-}
-
-@media (max-width: 420px) {
-  .progressBar {
-    height: 8px;
-  }
-
-  .input,
-  .select {
-    height: 44px;
   }
 }

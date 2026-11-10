@@ -1252,7 +1252,6 @@ const openAppeal = (
 
       <div className={styles.pageHeader}>
         <div className={styles.headerMain}>
-          <div className={styles.eyebrow}>Student Portal</div>
           <h2 className={styles.title}>Daily Attendance</h2>
           <p className={styles.subtitle}>
             Time in and out for your scheduled immersion days.
