@@ -417,10 +417,6 @@ export default function AccessLogs() {
             recorded for it and remove entries you no longer need.
           </p>
         </div>
-
-        <div className={styles.headerIcon}>
-          <ScrollText size={24} />
-        </div>
       </div>
 
       <div className={styles.card}>

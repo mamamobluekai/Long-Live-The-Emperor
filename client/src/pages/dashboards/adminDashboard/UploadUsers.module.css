@@ -1,44 +1,44 @@
-/* =========================================================
-   ADMIN UPLOAD USERS
-   Modern e-MMERSION Design (Lexend + maroon system)
-   Matches RequirementsReview
-   ========================================================= */
+/* Design system: Lexend + About page palette (borders, fonts, colors). */
+:root {
+  --about-maroon: #8b1e2d;
+  --about-gold: #be8c3f;
+  --about-ink: #172033;
+  --about-muted: #596579;
+  --about-border: #eadde0;
+  --about-blush: #fff7f8;
+}
 
 .page {
   width: 100%;
   max-width: 1500px;
   margin: 0 auto;
   padding-bottom: 40px;
+  color: var(--about-ink);
   font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #26313f;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 /* =========================
    PAGE HEADER
-   ========================= */
+========================= */
 
 .pageHeader {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 18px;
+  gap: 8px;
   margin-bottom: 22px;
   padding: 22px 24px;
-  border: 1px solid #e8d2d8;
-  border-radius: 18px;
-  background:
-    radial-gradient(130% 160% at 0% 0%, rgba(139, 30, 45, 0.1) 0%, rgba(139, 30, 45, 0) 58%),
-    radial-gradient(120% 150% at 100% 120%, rgba(190, 140, 63, 0.16) 0%, rgba(190, 140, 63, 0) 55%),
-    linear-gradient(120deg, #ffffff 0%, #fdf3f5 58%, #f9e8ec 100%);
-  box-shadow: 0 14px 32px -28px rgba(80, 20, 32, 0.55);
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  box-shadow: none;
 }
 
 .eyebrow {
-  display: block;
-  margin-bottom: 6px;
-  color: #8b1e2d;
+  margin: 0 0 6px;
+  color: var(--about-maroon);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.11em;
@@ -47,7 +47,7 @@
 
 .pageHeader h1 {
   margin: 0;
-  color: #172033;
+  color: var(--about-ink);
   font-size: 1.85rem;
   font-weight: 780;
   letter-spacing: -0.035em;
@@ -56,28 +56,15 @@
 
 .pageHeader p {
   margin: 8px 0 0;
-  max-width: 680px;
+  max-width: 700px;
   color: #596579;
   font-size: 0.95rem;
   line-height: 1.6;
 }
 
-.headerIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  flex-shrink: 0;
-  border-radius: 14px;
-  background: linear-gradient(140deg, #8b1e2d, #b8394f);
-  color: #fff;
-  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
-}
-
 /* =========================
    GUIDE CARD
-   ========================= */
+========================= */
 
 .guideCard {
   display: flex;
@@ -85,26 +72,34 @@
   gap: 14px;
   margin-bottom: 20px;
   padding: 18px 20px;
-  border: 1px solid #e8d2d8;
+  border: 1px solid var(--about-border);
   border-radius: 16px;
-  background: linear-gradient(140deg, #fffafb 0%, #fdf3f5 100%);
+  background: #fff;
+  box-shadow: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.guideCard:hover {
+  transform: translateY(-2px);
+  border-color: #d7b8be;
+  box-shadow: 0 12px 26px rgb(23 32 51 / 7%);
 }
 
 .guideIcon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
   border-radius: 12px;
-  background: #fdf0f2;
-  color: #8b1e2d;
+  background: #fbebee;
+  color: var(--about-maroon);
 }
 
 .guideCard h3 {
   margin: 0 0 8px;
-  color: #172033;
+  color: var(--about-ink);
   font-size: 0.95rem;
   font-weight: 750;
 }
@@ -112,14 +107,14 @@
 .guideCard ul {
   margin: 0;
   padding-left: 18px;
-  color: #475d6e;
+  color: var(--about-muted);
   font-size: 0.82rem;
   line-height: 1.7;
 }
 
 /* =========================
    CARD LIST
-   ========================= */
+========================= */
 
 .cardList {
   display: flex;
@@ -130,27 +125,17 @@
 .card {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(180deg, #fffdfd 0%, #ffffff 40%);
-  border: 1px solid #e6dfe2;
-  border-radius: 18px;
-  box-shadow: 0 12px 32px -28px rgba(80, 20, 32, 0.4);
-  transition: box-shadow 180ms ease, border-color 180ms ease;
-}
-
-.card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 22px;
-  left: 22px;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: linear-gradient(90deg, rgba(139, 30, 45, 0.75), rgba(184, 57, 79, 0.35), rgba(190, 140, 63, 0.55));
+  background: #fff;
+  border: 1px solid var(--about-border);
+  border-radius: 16px;
+  box-shadow: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
 .card:hover {
-  border-color: #dcc9cf;
-  box-shadow: 0 18px 40px -30px rgba(80, 20, 32, 0.5);
+  transform: translateY(-2px);
+  border-color: #d7b8be;
+  box-shadow: 0 12px 26px rgb(23 32 51 / 7%);
 }
 
 .cardHeader {
@@ -158,20 +143,19 @@
   align-items: center;
   gap: 14px;
   padding: 20px 22px 18px;
-  border-bottom: 1px solid #ecdfe2;
+  border-bottom: 1px solid var(--about-border);
 }
 
 .cardIcon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
   border-radius: 12px;
-  background: linear-gradient(140deg, #8b1e2d, #b8394f);
-  color: #fff;
-  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.7);
+  background: #fbebee;
+  color: var(--about-maroon);
 }
 
 .cardHeading {
@@ -181,14 +165,14 @@
 
 .cardHeading h3 {
   margin: 0 0 4px;
-  color: #172033;
+  color: var(--about-ink);
   font-size: 1.02rem;
   font-weight: 750;
 }
 
 .cardHeading p {
   margin: 0;
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.8rem;
   line-height: 1.5;
 }
@@ -200,10 +184,10 @@
   height: 38px;
   padding: 0 14px;
   flex-shrink: 0;
-  border: 1px solid #dcc9cf;
+  border: 1px solid var(--about-border);
   border-radius: 10px;
   background: #fff;
-  color: #8b1e2d;
+  color: var(--about-maroon);
   font-family: inherit;
   font-size: 0.78rem;
   font-weight: 750;
@@ -212,8 +196,8 @@
 }
 
 .templateBtn:hover {
-  background: #fdf1f3;
-  border-color: #d8b8c0;
+  background: var(--about-blush);
+  border-color: #d7b8be;
   transform: translateY(-1px);
 }
 
@@ -223,7 +207,7 @@
 
 /* =========================
    COLUMNS
-   ========================= */
+========================= */
 
 .columnsBlock {
   margin-bottom: 18px;
@@ -234,7 +218,7 @@
   align-items: center;
   gap: 7px;
   margin-bottom: 10px;
-  color: #252b35;
+  color: var(--about-ink);
   font-size: 0.72rem;
   font-weight: 750;
   letter-spacing: 0.05em;
@@ -242,7 +226,7 @@
 }
 
 .columnsLabel svg {
-  color: #8b1e2d;
+  color: var(--about-maroon);
 }
 
 .chips {
@@ -265,20 +249,20 @@
 }
 
 .chipRequired {
-  color: #8b1e2d;
-  background: #fdf1f3;
-  border: 1px solid #f0d7dd;
+  color: var(--about-maroon);
+  background: var(--about-blush);
+  border: 1px solid var(--about-border);
 }
 
 .chipOptional {
-  color: #596579;
+  color: var(--about-muted);
   background: #f8fafc;
   border: 1px dashed #cbd5e1;
 }
 
 /* =========================
    FILE PICKER
-   ========================= */
+========================= */
 
 .dropzone {
   display: flex;
@@ -289,10 +273,10 @@
   width: 100%;
   min-height: 118px;
   padding: 20px;
-  border: 1.5px dashed #ddbfc6;
+  border: 1.5px dashed var(--about-border);
   border-radius: 14px;
-  background: #fffafb;
-  color: #8b1e2d;
+  background: var(--about-blush);
+  color: var(--about-maroon);
   font-family: inherit;
   cursor: pointer;
   transition: 0.18s ease;
@@ -300,17 +284,17 @@
 
 .dropzone:hover {
   border-color: #b8394f;
-  background: #fdf3f5;
+  background: #fff3f5;
 }
 
 .dropzone strong {
-  color: #172033;
+  color: var(--about-ink);
   font-size: 0.88rem;
   font-weight: 750;
 }
 
 .dropzone span {
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.74rem;
   font-weight: 600;
 }
@@ -322,9 +306,9 @@
   gap: 14px;
   min-height: 74px;
   padding: 14px 16px;
-  border: 1px solid #e8d2d8;
+  border: 1px solid var(--about-border);
   border-radius: 14px;
-  background: linear-gradient(140deg, #fffafb 0%, #fdf3f5 100%);
+  background: var(--about-blush);
 }
 
 .fileInfo {
@@ -332,20 +316,20 @@
   align-items: center;
   gap: 12px;
   min-width: 0;
-  color: #8b1e2d;
+  color: var(--about-maroon);
 }
 
 .fileInfo strong {
   display: block;
   margin-bottom: 3px;
-  color: #172033;
+  color: var(--about-ink);
   font-size: 0.85rem;
   font-weight: 700;
   overflow-wrap: anywhere;
 }
 
 .fileInfo span {
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.72rem;
   font-weight: 600;
 }
@@ -381,7 +365,7 @@
 
 /* =========================
    FOOTER
-   ========================= */
+========================= */
 
 .cardFooter {
   display: flex;
@@ -390,7 +374,7 @@
   flex-wrap: wrap;
   margin-top: 18px;
   padding-top: 18px;
-  border-top: 1px solid #ecdfe2;
+  border-top: 1px solid var(--about-border);
 }
 
 .primaryBtn {
@@ -403,7 +387,7 @@
   padding: 0 18px;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
+  background: linear-gradient(135deg, var(--about-maroon) 0%, #a82739 100%);
   color: #fff;
   font-family: inherit;
   font-size: 0.82rem;
@@ -436,7 +420,7 @@
 
 .resultHint,
 .resultSummary {
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.78rem;
   font-weight: 600;
 }
@@ -448,7 +432,7 @@
 
 /* =========================
    RESULT LISTS
-   ========================= */
+========================= */
 
 .errorList {
   margin-top: 18px;
@@ -509,10 +493,10 @@
   height: 40px;
   margin-top: 20px;
   padding: 0 16px;
-  border: 1px solid #dcc9cf;
+  border: 1px solid var(--about-border);
   border-radius: 10px;
   background: #fff;
-  color: #596579;
+  color: var(--about-muted);
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: 700;
@@ -521,14 +505,14 @@
 }
 
 .clearResultsBtn:hover {
-  color: #8b1e2d;
-  border-color: #d8b8c0;
-  background: #fff7f8;
+  color: var(--about-maroon);
+  border-color: #d7b8be;
+  background: var(--about-blush);
 }
 
 /* =========================
    RESPONSIVE
-   ========================= */
+========================= */
 
 @media (max-width: 900px) {
   .page {
@@ -536,8 +520,6 @@
   }
 
   .pageHeader {
-    flex-direction: column-reverse;
-    align-items: flex-start;
     padding: 18px;
   }
 

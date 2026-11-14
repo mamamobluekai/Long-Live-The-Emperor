@@ -382,10 +382,6 @@ export default function ArchivedPeriods() {
             was archived.
           </p>
         </div>
-
-        <div className={styles.headerIcon}>
-          <Archive size={24} />
-        </div>
       </div>
 
       <div className={styles.card}>

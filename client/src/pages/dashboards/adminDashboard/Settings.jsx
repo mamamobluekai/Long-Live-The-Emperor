@@ -261,9 +261,6 @@ export default function SettingsPage() {
     <div className={styles.page}>
       <div className={styles.pageHeader}>
         <div className={styles.headerIdentity}>
-          <span className={styles.headerIcon} aria-hidden="true">
-            <SettingsIcon size={24} strokeWidth={1.9} />
-          </span>
           <div>
             <p className={styles.eyebrow}>CONFIGURATION</p>
             <h1 className={styles.title}>System Settings</h1>

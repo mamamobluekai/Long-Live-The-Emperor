@@ -323,10 +323,6 @@ export default function UploadUsers() {
             columns, a sample row, and a read-me sheet.
           </p>
         </div>
-
-        <div className={styles.headerIcon}>
-          <FileSpreadsheet size={24} />
-        </div>
       </div>
 
       <div className={styles.guideCard}>

@@ -102,12 +102,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  background: linear-gradient(140deg, var(--about-maroon), #b8394f);
-  color: #fff;
-  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #fbebee;
+  color: var(--about-maroon);
 }
 
 .statCopy {
@@ -144,8 +143,8 @@
   background: var(--about-maroon);
 }
 .tonemaroon .statIcon {
-  background: linear-gradient(140deg, var(--about-maroon), #b8394f);
-  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
+  background: #fbebee;
+  color: var(--about-maroon);
 }
 
 .tonegreen::before {
@@ -158,8 +157,8 @@
   background: #15803d;
 }
 .tonegreen .statIcon {
-  background: linear-gradient(140deg, #15803d, #27a35a);
-  box-shadow: 0 8px 16px -10px rgba(21, 128, 61, 0.7);
+  background: #fbebee;
+  color: var(--about-maroon);
 }
 
 .toneamber::before {
@@ -172,8 +171,8 @@
   background: #b45309;
 }
 .toneamber .statIcon {
-  background: linear-gradient(140deg, #b45309, #d98324);
-  box-shadow: 0 8px 16px -10px rgba(180, 83, 9, 0.65);
+  background: #fbebee;
+  color: var(--about-maroon);
 }
 
 .toneblue::before {
@@ -186,8 +185,8 @@
   background: #37568c;
 }
 .toneblue .statIcon {
-  background: linear-gradient(140deg, #37568c, #4f7bc0);
-  box-shadow: 0 8px 16px -10px rgba(55, 86, 140, 0.6);
+  background: #fbebee;
+  color: var(--about-maroon);
 }
 
 /* =========================
@@ -425,13 +424,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
-  border-radius: 11px;
-  background: var(--role-accent, var(--about-maroon));
-  color: #fff;
-  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
+  border-radius: 12px;
+  background: #fbebee;
+  color: var(--about-maroon);
 }
 
 .roleButtonCopy {
@@ -488,13 +486,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
-  border-radius: 11px;
-  background: var(--role-accent, var(--about-maroon));
-  color: #fff;
-  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
+  border-radius: 12px;
+  background: #fbebee;
+  color: var(--about-maroon);
 }
 
 .modalHeaderRight {

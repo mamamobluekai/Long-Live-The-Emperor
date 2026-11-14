@@ -1,30 +1,38 @@
-/* SYSTEM SETTINGS — ADMIN DASHBOARD
-   Lexend + maroon design system (matches RequirementsReview) */
+/* Design system: Lexend + About page palette (borders, fonts, colors). */
+:root {
+  --about-maroon: #8b1e2d;
+  --about-gold: #be8c3f;
+  --about-ink: #172033;
+  --about-muted: #596579;
+  --about-border: #eadde0;
+  --about-blush: #fff7f8;
+}
 
 .page {
   width: 100%;
   max-width: 1500px;
   margin: 0 auto;
+  color: var(--about-ink);
   font-family: 'Lexend', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #26313f;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* =========================
+   PAGE HEADER
+========================= */
+
 .pageHeader {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
+  gap: 8px;
   margin-bottom: 22px;
   padding: 22px 24px;
-  border: 1px solid #e8d2d8;
-  border-radius: 18px;
-  background:
-    radial-gradient(130% 160% at 0% 0%, rgba(139, 30, 45, 0.1) 0%, rgba(139, 30, 45, 0) 58%),
-    radial-gradient(120% 150% at 100% 120%, rgba(190, 140, 63, 0.16) 0%, rgba(190, 140, 63, 0) 55%),
-    linear-gradient(120deg, #ffffff 0%, #fdf3f5 58%, #f9e8ec 100%);
-  box-shadow: 0 14px 32px -28px rgba(80, 20, 32, 0.55);
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  box-shadow: none;
 }
 
 .headerIdentity {
@@ -34,22 +42,9 @@
   min-width: 0;
 }
 
-.headerIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  flex-shrink: 0;
-  border-radius: 14px;
-  background: linear-gradient(140deg, #8b1e2d, #b8394f);
-  color: #fff;
-  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
-}
-
 .eyebrow {
   margin: 0 0 7px;
-  color: #8b1e2d;
+  color: var(--about-maroon);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.11em;
@@ -58,7 +53,7 @@
 
 .title {
   margin: 0;
-  color: #172033;
+  color: var(--about-ink);
   font-size: 1.85rem;
   font-weight: 780;
   letter-spacing: -0.035em;
@@ -76,7 +71,7 @@
 
 /* =========================
    LAYOUT
-   ========================= */
+========================= */
 
 .section {
   display: flex;
@@ -94,7 +89,7 @@
 
 .sectionTitle {
   margin: 0;
-  color: #172033;
+  color: var(--about-ink);
   font-size: 1.05rem;
   font-weight: 750;
   letter-spacing: -0.015em;
@@ -102,13 +97,13 @@
 
 .sectionSubtitle {
   margin: 4px 0 0;
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.8rem;
 }
 
 /* =========================
    STATUS BADGES
-   ========================= */
+========================= */
 
 .periodStatusBadge {
   display: inline-flex;
@@ -145,12 +140,12 @@
 .periodStatusBadge.inactive {
   background: #f7f8fa;
   border-color: #dcc9cf;
-  color: #596579;
+  color: var(--about-muted);
 }
 
 /* =========================
    FORM FIELDS
-   ========================= */
+========================= */
 
 .grid {
   display: grid;
@@ -172,7 +167,7 @@
 
 .field label,
 .fieldFull label {
-  color: #64748b;
+  color: var(--about-muted);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -188,10 +183,10 @@
   width: 100%;
   box-sizing: border-box;
   padding: 9px 11px;
-  border: 1px solid #dcc9cf;
+  border: 1px solid var(--about-border);
   border-radius: 9px;
   background: #fff;
-  color: #172033;
+  color: var(--about-ink);
   font-family: inherit;
   font-size: 0.85rem;
   outline: none;
@@ -204,7 +199,7 @@
 .fieldFull input:focus,
 .fieldFull select:focus,
 .fieldFull textarea:focus {
-  border-color: #b8394f;
+  border-color: var(--about-maroon);
   box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.1);
 }
 
@@ -223,14 +218,14 @@
 
 /* =========================
    TOGGLES
-   ========================= */
+========================= */
 
 .toggleItem {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 12px 14px;
-  border: 1px solid #e6dfe2;
+  border: 1px solid var(--about-border);
   border-radius: 12px;
   background: #fff;
   cursor: pointer;
@@ -238,65 +233,57 @@
 }
 
 .toggleItem:hover {
-  border-color: #dcc9cf;
-  background: #fffafb;
+  border-color: #d7b8be;
+  background: var(--about-blush);
 }
 
 .toggleItem input[type='checkbox'] {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  accent-color: #8b1e2d;
+  accent-color: var(--about-maroon);
   cursor: pointer;
 }
 
 .toggleLabel {
-  color: #26313f;
+  color: var(--about-ink);
   font-size: 0.85rem;
   font-weight: 600;
 }
 
 /* =========================
    MAINTENANCE MODE
-   ========================= */
+========================= */
 
-/* Its own card so the toggle reads as a separate control rather than
-   blending into the immersion periods list below it. */
 .maintCard {
   position: relative;
   overflow: hidden;
   padding: 21px 22px;
-  border: 1px solid #e2c9cf;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #fffdfd 0%, #ffffff 40%);
-  box-shadow: 0 12px 32px -28px rgba(80, 20, 32, 0.4);
-  transition: border-color 180ms ease, box-shadow 180ms ease;
-}
-
-.maintCard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 22px;
-  left: 22px;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: linear-gradient(90deg, rgba(139, 30, 45, 0.75), rgba(184, 57, 79, 0.35), rgba(190, 140, 63, 0.55));
+  border: 1px solid var(--about-border);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
 .maintCard:hover {
-  border-color: #dcc9cf;
-  box-shadow: 0 18px 40px -30px rgba(80, 20, 32, 0.5);
+  transform: translateY(-2px);
+  border-color: #d7b8be;
+  box-shadow: 0 12px 26px rgb(23 32 51 / 7%);
 }
 
-/* While maintenance is live the card gets an amber edge so the state is
-   obvious even before the text is read. */
 .maintCardOn {
   border-color: #f2dfb6;
 }
 
 .maintCardOn::before {
-  background: linear-gradient(90deg, #b45309, #d98324);
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: #b45309;
 }
 
 .maintHeader {
@@ -307,7 +294,7 @@
   flex-wrap: wrap;
   margin-bottom: 16px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #f0e3e6;
+  border-bottom: 1px solid var(--about-border);
 }
 
 .maintIdentity {
@@ -321,18 +308,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
   border-radius: 12px;
-  background: linear-gradient(140deg, #8b1e2d, #b8394f);
-  color: #fff;
-  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
+  background: #fbebee;
+  color: var(--about-maroon);
 }
 
 .maintTitle {
   margin: 0;
-  color: #172033;
+  color: var(--about-ink);
   font-size: 1.05rem;
   font-weight: 750;
   letter-spacing: -0.015em;
@@ -341,7 +327,7 @@
 .maintSubtitle {
   margin: 6px 0 0;
   max-width: 62ch;
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.8rem;
   line-height: 1.6;
   text-wrap: pretty;
@@ -349,7 +335,7 @@
 
 .maintIdle {
   margin: 0 0 16px;
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.8rem;
 }
 
@@ -429,13 +415,13 @@
 }
 
 .maintStartBtn {
-  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
-  box-shadow: 0 2px 6px rgba(139, 30, 45, 0.25);
+  background: linear-gradient(135deg, var(--about-maroon) 0%, #a82739 100%);
+  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
   color: #fff;
 }
 
 .maintStartBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #7a1725 0%, #8b1e2d 100%);
+  background: linear-gradient(135deg, #7a1725 0%, var(--about-maroon) 100%);
   transform: translateY(-1px);
 }
 
@@ -457,7 +443,7 @@
 
 /* =========================
    BUTTONS
-   ========================= */
+========================= */
 
 .saveBtn,
 .addBtn,
@@ -480,27 +466,27 @@
 
 .saveBtn,
 .addBtn {
-  background: linear-gradient(135deg, #8b1e2d 0%, #a82739 100%);
-  box-shadow: 0 2px 6px rgba(139, 30, 45, 0.25);
+  background: linear-gradient(135deg, var(--about-maroon) 0%, #a82739 100%);
+  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
   color: #fff;
 }
 
 .saveBtn:hover:not(:disabled),
 .addBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #7a1725 0%, #8b1e2d 100%);
+  background: linear-gradient(135deg, #7a1725 0%, var(--about-maroon) 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(139, 30, 45, 0.35);
+  box-shadow: 0 10px 20px -8px rgba(139, 30, 45, 0.4);
 }
 
 .cancelBtn {
-  border-color: #dcc9cf;
+  border-color: var(--about-border);
   background: #fff;
-  color: #475d6e;
+  color: var(--about-muted);
 }
 
 .cancelBtn:hover:not(:disabled) {
   border-color: #b8394f;
-  background: #fffafb;
+  background: var(--about-blush);
 }
 
 .archiveConfirmBtn {
@@ -522,14 +508,21 @@
 
 /* =========================
    PERIODS TABLE
-   ========================= */
+========================= */
 
 .periodsTable {
   overflow: hidden;
-  border: 1px solid #e6dfe2;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #fffdfd 0%, #ffffff 40%);
-  box-shadow: 0 12px 32px -28px rgba(80, 20, 32, 0.4);
+  border: 1px solid var(--about-border);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.periodsTable:hover {
+  transform: translateY(-2px);
+  border-color: #d7b8be;
+  box-shadow: 0 12px 26px rgb(23 32 51 / 7%);
 }
 
 .periodsHeader,
@@ -542,9 +535,9 @@
 
 .periodsHeader {
   padding: 14px 22px;
-  border-bottom: 1px solid #ecdfe2;
-  background: #fff7f8;
-  color: #8b1e2d;
+  border-bottom: 1px solid var(--about-border);
+  background: var(--about-blush);
+  color: var(--about-maroon);
   font-size: 0.68rem;
   font-weight: 750;
   letter-spacing: 0.06em;
@@ -553,14 +546,14 @@
 
 .periodRow {
   padding: 13px 22px;
-  border-bottom: 1px solid #f2e9ec;
+  border-bottom: 1px solid var(--about-border);
   color: #475d6e;
   font-size: 0.82rem;
   transition: background 0.15s ease;
 }
 
 .periodRow:hover {
-  background: #fffafb;
+  background: var(--about-blush);
 }
 
 .periodRow:last-child {
@@ -574,14 +567,14 @@
 }
 
 .periodName strong {
-  color: #172033;
+  color: var(--about-ink);
   font-size: 0.85rem;
   font-weight: 700;
   overflow-wrap: anywhere;
 }
 
 .periodMeta {
-  color: #94a0af;
+  color: var(--about-muted);
   font-size: 0.72rem;
 }
 
@@ -609,7 +602,7 @@
 }
 
 .periodEditBtn {
-  border-color: #dcc9cf;
+  border-color: var(--about-border);
   background: #f7f8fa;
   color: #475d6e;
 }
@@ -617,7 +610,7 @@
 .periodEditBtn:hover {
   background: #eef1f4;
   border-color: #b8394f;
-  color: #8b1e2d;
+  color: var(--about-maroon);
 }
 
 .periodArchiveBtn {
@@ -647,7 +640,7 @@
   gap: 16px;
   min-height: 240px;
   padding: 40px 20px;
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.82rem;
   text-align: center;
 }
@@ -658,7 +651,7 @@
 
 /* =========================
    MODALS
-   ========================= */
+========================= */
 
 .modalOverlay {
   position: fixed;
@@ -668,8 +661,7 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(80, 20, 32, 0.42);
-  backdrop-filter: blur(2px);
+  background: rgba(23, 32, 51, 0.35);
 }
 
 .modal {
@@ -679,10 +671,10 @@
   max-width: 620px;
   max-height: min(88vh, 780px);
   overflow: hidden;
-  border: 1px solid #e8d2d8;
-  border-radius: 20px;
-  background: linear-gradient(180deg, #fffdfd 0%, #ffffff 45%);
-  box-shadow: 0 24px 60px -18px rgba(80, 20, 32, 0.45);
+  border: 1px solid var(--about-border);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: none;
   animation: modalIn 0.18s ease-out;
 }
 
@@ -692,13 +684,13 @@
   justify-content: space-between;
   gap: 14px;
   padding: 20px 24px;
-  border-bottom: 1px solid #ecdfe2;
-  background: linear-gradient(120deg, #ffffff 0%, #fdf3f5 100%);
+  border-bottom: 1px solid var(--about-border);
+  background: #fff;
 }
 
 .modalHeader h3 {
   margin: 0;
-  color: #172033;
+  color: var(--about-ink);
   font-size: 1.2rem;
   font-weight: 780;
   letter-spacing: -0.025em;
@@ -712,17 +704,17 @@
   height: 30px;
   flex-shrink: 0;
   padding: 0;
-  border: 1px solid #efdee2;
+  border: 1px solid var(--about-border);
   border-radius: 8px;
-  background: #fffafb;
-  color: #8b1e2d;
+  background: #fff;
+  color: var(--about-muted);
   cursor: pointer;
   transition: background 0.18s ease, border-color 0.18s ease;
 }
 
 .modalClose:hover:not(:disabled) {
-  border-color: #d8b8c0;
-  background: #fde3e8;
+  border-color: #d7b8be;
+  background: var(--about-blush);
 }
 
 .modalClose:disabled {
@@ -748,13 +740,12 @@
 .modalForm::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
   border-radius: 999px;
-  background: #e2cdd3;
+  background: #d7b8be;
   background-clip: content-box;
 }
 
 .modalForm::-webkit-scrollbar-thumb:hover {
-  background: #c9a9b2;
-  background-clip: content-box;
+  background: #b8394f;
 }
 
 .modalActions {
@@ -763,12 +754,12 @@
   gap: 12px;
   margin-top: 4px;
   padding-top: 16px;
-  border-top: 1px solid #ecdfe2;
+  border-top: 1px solid var(--about-border);
 }
 
 /* =========================
    ARCHIVE MODAL
-   ========================= */
+========================= */
 
 .archiveIntro {
   margin: 0;
@@ -782,7 +773,7 @@
 }
 
 .archiveIntro strong {
-  color: #8b1e2d;
+  color: var(--about-maroon);
   font-weight: 750;
 }
 
@@ -797,13 +788,13 @@
   flex-direction: column;
   gap: 2px;
   padding: 11px 14px;
-  border: 1px solid #e6dfe2;
+  border: 1px solid var(--about-border);
   border-radius: 12px;
-  background: #fdfafb;
+  background: var(--about-blush);
 }
 
 .archiveStat span {
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.68rem;
   font-weight: 750;
   letter-spacing: 0.06em;
@@ -811,7 +802,7 @@
 }
 
 .archiveStat strong {
-  color: #172033;
+  color: var(--about-ink);
   font-size: 1.2rem;
   font-weight: 780;
   letter-spacing: -0.02em;
@@ -830,7 +821,7 @@
 }
 
 .muted {
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.83rem;
 }
 
@@ -847,7 +838,7 @@
 
 /* =========================
    LOADING
-   ========================= */
+========================= */
 
 .loading {
   display: flex;
@@ -856,15 +847,15 @@
   justify-content: center;
   gap: 12px;
   min-height: 320px;
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.82rem;
 }
 
 .spinner {
   width: 18px;
   height: 18px;
-  border: 2px solid #f0dfe3;
-  border-top-color: #8b1e2d;
+  border: 2px solid var(--about-border);
+  border-top-color: var(--about-maroon);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -880,7 +871,7 @@
 
 /* =========================
    RESPONSIVE
-   ========================= */
+========================= */
 
 @media (max-width: 1100px) {
   .grid {
@@ -895,15 +886,6 @@
 
   .title {
     font-size: 1.5rem;
-  }
-
-  .tabs {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-  }
-
-  .toggleGrid {
-    grid-template-columns: 1fr;
   }
 
   .periodsHeader {
@@ -934,41 +916,26 @@
   .card {
     padding-inline: 16px;
   }
-
-  .headerIcon {
-    width: 42px;
-    height: 42px;
-  }
 }
 
 /* =========================================================
    ADDITIONAL SETTINGS
-   ========================================================= */
+========================================================= */
 
 .additionalCard {
   margin-top: 22px;
   padding: 21px 22px;
-  border: 1px solid #e2c9cf;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #fffdfd 0%, #ffffff 40%);
-  box-shadow: 0 12px 32px -28px rgba(80, 20, 32, 0.4);
-  transition: border-color 180ms ease, box-shadow 180ms ease;
-}
-
-.additionalCard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 22px;
-  left: 22px;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: linear-gradient(90deg, rgba(139, 30, 45, 0.75), rgba(184, 57, 79, 0.35), rgba(190, 140, 63, 0.55));
+  border: 1px solid var(--about-border);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
 .additionalCard:hover {
-  border-color: #dcc9cf;
-  box-shadow: 0 18px 40px -30px rgba(80, 20, 32, 0.5);
+  transform: translateY(-2px);
+  border-color: #d7b8be;
+  box-shadow: 0 12px 26px rgb(23 32 51 / 7%);
 }
 
 .additionalHeader {
@@ -977,25 +944,24 @@
   gap: 13px;
   margin-bottom: 18px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #f0e3e6;
+  border-bottom: 1px solid var(--about-border);
 }
 
 .additionalIcon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
   border-radius: 12px;
-  background: linear-gradient(140deg, #8b1e2d, #b8394f);
-  color: #fff;
-  box-shadow: 0 8px 16px -10px rgba(139, 30, 45, 0.75);
+  background: #fbebee;
+  color: var(--about-maroon);
 }
 
 .additionalTitle {
   margin: 0;
-  color: #172033;
+  color: var(--about-ink);
   font-size: 1.05rem;
   font-weight: 750;
   letter-spacing: -0.015em;
@@ -1004,7 +970,7 @@
 .additionalSubtitle {
   margin: 6px 0 0;
   max-width: 62ch;
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.8rem;
   line-height: 1.6;
   text-wrap: pretty;
@@ -1021,7 +987,7 @@
 }
 
 .themeLabel {
-  color: #64748b;
+  color: var(--about-muted);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -1039,8 +1005,8 @@
 
 .themeButton:hover:not(.themeButtonActive) {
   border-color: #b8394f !important;
-  background: #fffafb !important;
-  color: #8b1e2d !important;
+  background: var(--about-blush) !important;
+  color: var(--about-maroon) !important;
   transform: translateY(-1px);
 }
 
@@ -1055,7 +1021,7 @@
 
 .themeHint {
   margin: 0;
-  color: #8490a1;
+  color: var(--about-muted);
   font-size: 0.72rem;
   font-weight: 600;
   line-height: 1.5;
