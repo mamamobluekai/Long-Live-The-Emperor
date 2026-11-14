@@ -344,17 +344,12 @@ export default function UserManagement() {
     <div className={styles.page}>
       <section className={styles.pageHeader}>
         <div className={styles.headerCopy}>
-          <p className={styles.eyebrow}>ACCOUNTS</p>
           <h1>User Management</h1>
           <p className={styles.headerText}>
             Browse every account registered in the Work Immersion System by role.
             Activate or deactivate accounts at any time.
           </p>
         </div>
-
-        <span className={styles.headerIcon} aria-hidden="true">
-          <Users size={22} strokeWidth={1.9} />
-        </span>
       </section>
 
       <section className={styles.statsGrid} aria-label="Account summary">

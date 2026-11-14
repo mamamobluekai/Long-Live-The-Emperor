@@ -158,10 +158,6 @@ export default function AdminDashboardPage() {
             graphed for every work immersion period and academic year.
           </p>
         </div>
-
-        <span className={styles.headerIcon} aria-hidden="true">
-          <GraduationCap size={22} strokeWidth={1.9} />
-        </span>
       </section>
 
       <section className={styles.statsGrid} aria-label="Users by role">
