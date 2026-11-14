@@ -285,6 +285,102 @@ const createAdmin = async (req, res) => {
   }
 };
 
+// Manually create a teacher, supervisor, or coordinator account (pending by default).
+const createUser = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const {
+      firstName,
+      lastName,
+      email,
+      password,
+      role,
+      employeeId,
+      companyName,
+      department,
+      position,
+      phone,
+    } = req.body;
+
+    if (!firstName || !lastName || !email || !password || !role) {
+      return res.status(400).json({ error: 'First name, last name, email, password, and role are required.' });
+    }
+
+    if (!['teacher', 'supervisor', 'coordinator'].includes(role)) {
+      return res.status(400).json({ error: 'Role must be teacher, supervisor, or coordinator.' });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+    }
+
+    const trimmedEmail = String(email).trim();
+    const existingUser = await client.query('SELECT id FROM users WHERE email = $1', [trimmedEmail]);
+    if (existingUser.rows.length > 0) {
+      return res.status(409).json({ error: 'Email already registered.' });
+    }
+
+    const roleTables = {
+      teacher: 'teachers',
+      supervisor: 'supervisors',
+      coordinator: 'coordinators',
+    };
+    const roleTable = roleTables[role];
+
+    const uniqueIdColumn = role === 'supervisor' ? 'employee_id' : role === 'coordinator' ? 'coordinator_id' : 'employee_id';
+
+    if (role === 'supervisor' && !companyName) {
+      return res.status(400).json({ error: 'Company name is required for supervisors.' });
+    }
+
+    await client.query('BEGIN');
+
+    const userResult = await client.query(
+      `INSERT INTO users (email, password, role, phone, status)
+       VALUES ($1, $2, $3, $4, 'pending')
+       RETURNING id, email, role, status, phone, created_at`,
+      [trimmedEmail, await hashPassword(password), role, phone ? String(phone).trim() : null]
+    );
+
+    const user = userResult.rows[0];
+
+    const roleFields = {
+      teacher: `INSERT INTO teachers (user_id, first_name, last_name, employee_id, department, position)
+                VALUES ($1, $2, $3, $4, $5, $6)`,
+      supervisor: `INSERT INTO supervisors (user_id, first_name, last_name, company_name, position, department, phone)
+                   VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      coordinator: `INSERT INTO coordinators (user_id, first_name, last_name, coordinator_id, department, position, phone)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    }[role];
+
+    const roleParams = role === 'teacher'
+      ? [user.id, String(firstName).trim(), String(lastName).trim(), employeeId ? String(employeeId).trim() : null, department ? String(department).trim() : null, position ? String(position).trim() : null]
+      : role === 'supervisor'
+      ? [user.id, String(firstName).trim(), String(lastName).trim(), String(companyName).trim(), position ? String(position).trim() : null, department ? String(department).trim() : null, phone ? String(phone).trim() : null]
+      : [user.id, String(firstName).trim(), String(lastName).trim(), employeeId ? String(employeeId).trim() : null, department ? String(department).trim() : null, position ? String(position).trim() : null, phone ? String(phone).trim() : null];
+
+    await client.query(roleFields, roleParams);
+
+    await client.query('COMMIT');
+
+    res.status(201).json({
+      message: `${role.charAt(0).toUpperCase() + role.slice(1)} account created. It stays pending until approved.`,
+      user: {
+        ...user,
+        first_name: String(firstName).trim(),
+        last_name: String(lastName).trim(),
+        role,
+      },
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Create user error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  } finally {
+    client.release();
+  }
+};
+
 // The profile name for an account, read from whichever role table holds it.
 // Used for the greeting line in the approval email.
 async function loadRoleNames(userId, role, client = pool) {
@@ -627,6 +723,134 @@ const rejectCoordinator = async (req, res) => {
     res.json({ message: 'Coordinator rejected.', user: result.user, profile: result.profile });
   } catch (err) {
     console.error('Reject coordinator error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+// Coordinator Management: list all approved coordinators with their current
+// student count vs. configured student limit.
+const getCoordinatorManagement = async (req, res) => {
+  try {
+    const coordinators = await pool.query(
+      `SELECT c.id, c.first_name, c.last_name, c.employee_id, c.department,
+              c.designation, c.school, c.student_limit, c.strand, c.created_at,
+              COALESCE(s.student_count, 0) AS student_count,
+              u.email, u.status, u.phone
+       FROM coordinators c
+       JOIN users u ON u.id = c.user_id
+       LEFT JOIN (
+         SELECT tb.coordinator_id, COUNT(tbs.student_id) AS student_count
+         FROM teacher_batches tb
+         JOIN teacher_batch_students tbs ON tbs.teacher_batch_id = tb.id
+         GROUP BY tb.coordinator_id
+       ) s ON s.coordinator_id = c.id
+       ORDER BY c.created_at DESC`
+    );
+    res.json({ coordinators: coordinators.rows });
+  } catch (err) {
+    console.error('Coordinator management error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+// Update a coordinator's student limit (how many students they can manage).
+const updateCoordinatorStudentLimit = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { student_limit } = req.body;
+
+    if (student_limit === undefined || student_limit === null) {
+      return res.status(400).json({ error: 'student_limit is required.' });
+    }
+
+    const limit = Number(student_limit);
+    if (!Number.isInteger(limit) || limit < 0) {
+      return res.status(400).json({ error: 'student_limit must be a non-negative integer.' });
+    }
+
+    // Check current student count for this coordinator.
+    const currentCount = await pool.query(
+      `SELECT COUNT(tbs.student_id) AS student_count
+       FROM teacher_batches tb
+       JOIN teacher_batch_students tbs ON tbs.teacher_batch_id = tb.id
+       WHERE tb.coordinator_id = $1`,
+      [Number(id)]
+    );
+    const currentStudents = Number(currentCount.rows[0]?.student_count || 0);
+
+    if (limit < currentStudents) {
+      return res.status(400).json({
+        error: `Cannot set student limit to ${limit}. This coordinator already has ${currentStudents} student(s) assigned.`,
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE coordinators SET student_limit = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2
+       RETURNING id, first_name, last_name, employee_id, student_limit`,
+      [limit, Number(id)]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Coordinator not found.' });
+    }
+
+    await writeAuditLog(req, 'coordinator_student_limit_update', `Updated student limit to ${limit} for coordinator ${result.rows[0].first_name} ${result.rows[0].last_name}`);
+    res.json({ message: 'Student limit updated.', coordinator: result.rows[0] });
+  } catch (err) {
+    console.error('Update coordinator student limit error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+// Update a coordinator's strand restriction (which strand they can manage).
+// NULL / empty means the coordinator can manage all strands.
+const updateCoordinatorStrand = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { strand } = req.body;
+
+    const normalizedStrand = strand && String(strand).trim() !== ''
+      ? String(strand).trim()
+      : null;
+
+    // If setting a specific strand, make sure no student already assigned to
+    // this coordinator's batches belongs to a different strand. Otherwise the
+    // coordinator would be locked to a strand they already have students
+    // outside of, which creates an inconsistent state.
+    if (normalizedStrand) {
+      const mismatched = await pool.query(
+        `SELECT DISTINCT s.track_strand
+         FROM teacher_batches tb
+         JOIN teacher_batch_students tbs ON tbs.teacher_batch_id = tb.id
+         JOIN students s ON s.id = tbs.student_id
+         WHERE tb.coordinator_id = $1 AND s.track_strand IS NOT NULL
+           AND s.track_strand <> $2
+         LIMIT 1`,
+        [Number(id), normalizedStrand]
+      );
+      if (mismatched.rows.length > 0) {
+        return res.status(400).json({
+          error: `Cannot set strand to "${normalizedStrand}". This coordinator already has students from a different strand ("${mismatched.rows[0].track_strand}") assigned to their batches. Reassign those students first or keep "All Strands".`,
+        });
+      }
+    }
+
+    const result = await pool.query(
+      `UPDATE coordinators SET strand = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2
+       RETURNING id, first_name, last_name, employee_id, strand`,
+      [normalizedStrand, Number(id)]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Coordinator not found.' });
+    }
+
+    await writeAuditLog(req, 'coordinator_strand_update', `Updated strand to ${normalizedStrand || 'all strands'} for coordinator ${result.rows[0].first_name} ${result.rows[0].last_name}`);
+    res.json({ message: 'Strand updated.', coordinator: result.rows[0] });
+  } catch (err) {
+    console.error('Update coordinator strand error:', err);
     res.status(500).json({ error: 'Server error.' });
   }
 };
@@ -1052,6 +1276,7 @@ module.exports = {
   getCoordinators,
   getUsersByStatus,
   createAdmin,
+  createUser,
   approveStaff,
   disapproveStaff,
   deleteUser,
@@ -1065,6 +1290,9 @@ module.exports = {
   listPendingCoordinators,
   approveCoordinator,
   rejectCoordinator,
+  getCoordinatorManagement,
+  updateCoordinatorStudentLimit,
+  updateCoordinatorStrand,
   getSettings,
   updateSettings,
   setMaintenanceMode,

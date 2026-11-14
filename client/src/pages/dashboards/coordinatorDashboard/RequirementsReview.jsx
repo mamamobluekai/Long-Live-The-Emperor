@@ -10,6 +10,8 @@ import {
   createDocumentType,
   updateDocumentType,
   deleteDocumentType,
+  restoreDocumentType,
+  permanentDeleteDocumentType,
 } from '../../../api/coordinatorApi';
 import {
   Search,
@@ -32,6 +34,8 @@ import {
   Square,
   ThumbsUp,
   ThumbsDown,
+  Archive,
+  UserCheck,
 } from 'lucide-react';
 import styles from './RequirementsReview.module.css';
 
@@ -228,6 +232,7 @@ function RequirementsReview() {
   const [typeSaving, setTypeSaving] = useState(false);
   const [typeDeleting, setTypeDeleting] = useState(null);
   const [showReqModal, setShowReqModal] = useState(false);
+  const [removedModalOpen, setRemovedModalOpen] = useState(false);
 
   const loadSubmissions = async () => {
     try {
@@ -526,6 +531,7 @@ function RequirementsReview() {
   }, {});
 
   const activeDocTypes = docTypes.filter((d) => d.isActive !== false);
+  const removedDocTypes = docTypes.filter((d) => d.isActive === false);
   const checklist = activeDocTypes.map((type) => ({
     ...type,
     uploaded: uploadedCodes.has(type.code.toLowerCase()),
@@ -1052,7 +1058,9 @@ function RequirementsReview() {
                 )}
 
                 <div className={styles.configList}>
-                  {docTypes.map((dt) => (
+                  {docTypes
+                    .filter((dt) => dt.isActive !== false)
+                    .map((dt) => (
                     <div
                       key={dt.id || dt.code}
                       className={`${styles.configItem} ${
@@ -1086,16 +1094,18 @@ function RequirementsReview() {
                           <Pencil size={15} />
                         </button>
 
-                        <button
-                          type="button"
-                          className={styles.iconBtnDelete}
-                          title="Delete requirement"
-                          aria-label={`Delete ${dt.label}`}
-                          disabled={typeDeleting === dt.id}
-                          onClick={() => handleDeleteDocType(dt)}
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                        {!editingDocType && (
+                          <button
+                            type="button"
+                            className={styles.iconBtnDelete}
+                            title="Remove requirement"
+                            aria-label={`Remove ${dt.label}`}
+                            disabled={typeDeleting === dt.id}
+                            onClick={() => handleDeleteDocType(dt)}
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -1408,8 +1418,8 @@ function RequirementsReview() {
             <div className={styles.confirmIcon}>
               <AlertCircle size={40} />
             </div>
-            <h3>Delete Requirement</h3>
-            <p>Are you sure you want to delete <strong>"{deleteConfirm.label}"</strong>?</p>
+            <h3>Remove Requirement</h3>
+            <p>Are you sure you want to remove <strong>"{deleteConfirm.label}"</strong>?</p>
             <p className={styles.confirmNote}>
               This will deactivate the requirement for all students and recalculate progress.
             </p>
@@ -1425,7 +1435,7 @@ function RequirementsReview() {
                 onClick={confirmDeleteDocType}
                 disabled={typeDeleting === deleteConfirm.id}
               >
-                {typeDeleting === deleteConfirm.id ? 'Deleting...' : 'Delete'}
+                {typeDeleting === deleteConfirm.id ? 'Removing...' : 'Remove'}
               </button>
             </div>
           </div>
@@ -1445,6 +1455,147 @@ function RequirementsReview() {
             </button>
           </div>
         ))}
+      </div>
+
+      {/* REMOVED REQUIREMENTS ARCHIVE ICON (bottom) */}
+      <button
+        type="button"
+        className={styles.archiveToggleBtn}
+        onClick={() => setRemovedModalOpen(true)}
+        title="View removed requirements"
+        aria-label="View removed requirements"
+      >
+        <Archive size={18} />
+      </button>
+
+      {/* REMOVED REQUIREMENTS MODAL */}
+      <div
+        className={`${styles.modalOverlay} ${removedModalOpen ? styles.modalOpen : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="removed-requirements-title"
+        onClick={() => setRemovedModalOpen(false)}
+      >
+        <div className={styles.removedModal} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modalHeader}>
+            <h2 id="removed-requirements-title">Removed Requirements</h2>
+            <button
+              type="button"
+              className={styles.modalCloseBtn}
+              onClick={() => setRemovedModalOpen(false)}
+              aria-label="Close removed requirements"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className={styles.modalBody}>
+            {removedDocTypes.length === 0 ? (
+              <div className={styles.empty}>
+                <div className={styles.emptyIcon}>✓</div>
+                <h4>No removed requirements</h4>
+                <p>Removed requirements will appear here.</p>
+              </div>
+            ) : (
+              <>
+                {removedDocTypes.length > 0 && (
+                  <div className={styles.bulkBar}>
+                    <div className={styles.bulkActions}>
+                      <button
+                        className={styles.bulkApproveBtn}
+                        onClick={() => {
+                          removedDocTypes.forEach((dt) => restoreDocumentType(dt.id));
+                          setRemovedModalOpen(false);
+                          refreshDocTypes();
+                        }}
+                        disabled={typeSaving}
+                      >
+                        <UserCheck size={14} />
+                        Restore All
+                      </button>
+
+                      <button
+                        className={styles.bulkDeleteBtn}
+                        onClick={() => {
+                          removedDocTypes.forEach((dt) => permanentDeleteDocumentType(dt.id));
+                          setRemovedModalOpen(false);
+                          refreshDocTypes();
+                        }}
+                        disabled={typeSaving}
+                      >
+                        <Trash2 size={14} />
+                        Permanently Delete All
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className={styles.tableContainer}>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>REQUIREMENT</th>
+                        <th>SECTION</th>
+                        <th className={styles.actionHeader}>ACTIONS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {removedDocTypes.map((dt) => (
+                        <tr key={dt.id || dt.code}>
+                          <td>
+                            <div className={styles.studentCell}>
+                              <div>
+                                <strong>{String(dt.label || '').replace(/^RM\s+/i, '')}</strong>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span className={styles.trackStrand}>
+                              {SECTION_LABELS[dt.section] || dt.section || 'Academic'}
+                            </span>
+                          </td>
+                          <td>
+                            <div className={styles.actions}>
+                              <button
+                                className={styles.approveBtn}
+                                onClick={() => {
+                                  restoreDocumentType(dt.id).then(() => {
+                                    setRemovedModalOpen(false);
+                                    refreshDocTypes();
+                                  });
+                                }}
+                                disabled={typeSaving}
+                                title="Restore requirement"
+                                aria-label={`Restore ${dt.label}`}
+                              >
+                                <UserCheck size={15} />
+                              </button>
+
+                              <button
+                                className={styles.deleteBtn}
+                                onClick={() => {
+                                  permanentDeleteDocumentType(dt.id).then(() => {
+                                    setRemovedModalOpen(false);
+                                    refreshDocTypes();
+                                  });
+                                }}
+                                disabled={typeSaving}
+                                title="Permanently delete"
+                                aria-label={`Permanently delete ${dt.label}`}
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
     </div>

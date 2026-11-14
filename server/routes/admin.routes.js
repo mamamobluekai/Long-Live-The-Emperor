@@ -12,6 +12,7 @@ const {
   getCoordinators,
   getUsersByStatus,
   createAdmin,
+  createUser,
   approveStaff,
   disapproveStaff,
   deleteUser,
@@ -25,6 +26,9 @@ const {
   listPendingCoordinators,
   approveCoordinator,
   rejectCoordinator,
+  getCoordinatorManagement,
+  updateCoordinatorStudentLimit,
+  updateCoordinatorStrand,
   getSettings,
   updateSettings,
   setMaintenanceMode,
@@ -79,6 +83,7 @@ router.get('/dashboard', dashboard);
 router.get('/dashboard/period-analytics', periodAnalytics);
 
 router.get('/users', getAllUsers);
+router.post('/users', createUser);
 router.get('/users/status/:status', getUsersByStatus);
 router.get('/users/:id', getUserById);
 router.put('/users/:id', updateUser);
@@ -89,8 +94,11 @@ router.patch('/users/:id/reset-password', resetUserPassword);
 
 router.get('/coordinators', getCoordinators);
 router.get('/coordinators/pending', listPendingCoordinators);
+router.get('/coordinators/management', getCoordinatorManagement);
 router.patch('/coordinators/:id/approve', approveCoordinator);
 router.patch('/coordinators/:id/reject', rejectCoordinator);
+router.post('/coordinators/:id/student-limit', updateCoordinatorStudentLimit);
+router.post('/coordinators/:id/strand', updateCoordinatorStrand);
 
 router.put('/staff/:id/approve', approveStaff);
 router.put('/staff/:id/disapprove', disapproveStaff);

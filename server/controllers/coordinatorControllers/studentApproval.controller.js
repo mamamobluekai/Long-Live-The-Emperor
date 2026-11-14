@@ -69,6 +69,62 @@ const getStudentStrands = async (req, res) => {
 const approveStudent = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Resolve the coordinator making the approval so we can enforce their
+    // strand restriction and student limit.
+    const coordinatorRow = await pool.query(
+      `SELECT c.id, c.student_limit, c.strand
+       FROM coordinators c
+       WHERE c.user_id = $1`,
+      [req.user.id]
+    );
+    if (coordinatorRow.rows.length === 0) {
+      return res.status(403).json({ error: 'Coordinator profile not found.' });
+    }
+    const coordinator = coordinatorRow.rows[0];
+
+    // Fetch the student being approved (with strand and current status).
+    const studentResult = await pool.query(
+      `SELECT u.id, u.email, u.role, u.status, s.track_strand, s.first_name, s.last_name
+       FROM users u
+       JOIN students s ON u.id = s.user_id
+       WHERE u.id = $1 AND u.role = 'student'`,
+      [id]
+    );
+    if (studentResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Student not found.' });
+    }
+    const student = studentResult.rows[0];
+    if (student.status !== 'pending') {
+      return res.status(400).json({ error: 'Student is not pending approval.' });
+    }
+
+    // Strand check: a coordinator restricted to a strand can only approve
+    // students from that same strand.
+    if (coordinator.strand && student.track_strand && student.track_strand !== coordinator.strand) {
+      return res.status(400).json({
+        error: `Cannot approve student. This coordinator is registered to the "${coordinator.strand}" strand only, but the student belongs to "${student.track_strand}".`,
+      });
+    }
+
+    // Student limit check: count approved students assigned to this coordinator's batches.
+    const currentCount = await pool.query(
+      `SELECT COUNT(tbs.student_id) AS student_count
+       FROM teacher_batches tb
+       JOIN teacher_batch_students tbs ON tbs.teacher_batch_id = tb.id
+       JOIN students s ON s.id = tbs.student_id
+       JOIN users u ON u.id = s.user_id
+       WHERE tb.coordinator_id = $1 AND u.status = 'approved'`,
+      [coordinator.id]
+    );
+    const currentStudents = Number(currentCount.rows[0]?.student_count || 0);
+    const limit = Number(coordinator.student_limit);
+    if (Number.isInteger(limit) && currentStudents >= limit) {
+      return res.status(400).json({
+        error: `Cannot approve student. This coordinator has reached their student limit of ${limit}.`,
+      });
+    }
+
     const result = await pool.query(
       `UPDATE users SET status = 'approved', updated_at = CURRENT_TIMESTAMP
        WHERE id = $1 AND status = 'pending' AND role = 'student'
@@ -79,16 +135,9 @@ const approveStudent = async (req, res) => {
       return res.status(404).json({ error: 'Student not found, already processed, or not a student.' });
     }
 
-    const studentResult = await pool.query(
-      `SELECT first_name, last_name FROM students WHERE user_id = $1`,
-      [id]
-    );
-
     const user = result.rows[0];
-    if (studentResult.rows.length > 0) {
-      user.first_name = studentResult.rows[0].first_name;
-      user.last_name = studentResult.rows[0].last_name;
-    }
+    user.first_name = student.first_name;
+    user.last_name = student.last_name;
 
     const { emailSent, emailError, linkSent } = await approvalLink.issueAndEmailApprovalLink(user);
 
@@ -171,57 +220,152 @@ const disapproveStudent = async (req, res) => {
   }
 };
 
-const deleteStudent = async (req, res) => {
+const archiveStudent = async (req, res) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;
-    
+
     await client.query('BEGIN');
-    
-    // Check if student exists
+
     const userResult = await client.query(
       `SELECT id, email, role FROM users WHERE id = $1 AND role = 'student'`,
       [id]
     );
-    
+
     if (userResult.rows.length === 0) {
       await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Student not found.' });
     }
-    
+
     const studentId = userResult.rows[0].id;
-    
-    // Delete related records first (cascade order matters)
-    // 1. Delete student documents
-    await client.query(`DELETE FROM student_documents WHERE student_id = (SELECT id FROM students WHERE user_id = $1)`, [studentId]);
-    
-    // 2. Delete student daily documentation
-    await client.query(`DELETE FROM student_daily_documentation WHERE student_id = (SELECT id FROM students WHERE user_id = $1)`, [studentId]);
-    
-    // 3. Delete student attendance
-    await client.query(`DELETE FROM student_attendance WHERE student_id = (SELECT id FROM students WHERE user_id = $1)`, [studentId]);
-    
-    // 4. Delete student requirement submissions
-    await client.query(`DELETE FROM student_requirement_submissions WHERE student_id = (SELECT id FROM students WHERE user_id = $1)`, [studentId]);
-    
-    // 5. Delete from teacher_batch_students
-    await client.query(`DELETE FROM teacher_batch_students WHERE student_id = (SELECT id FROM students WHERE user_id = $1)`, [studentId]);
-    
-    // 6. Delete from students table
-    await client.query(`DELETE FROM students WHERE user_id = $1`, [studentId]);
-    
-    // 7. Finally delete the user
-    await client.query(`DELETE FROM users WHERE id = $1 AND role = 'student'`, [id]);
-    
+
+    // Soft-delete: mark as archived instead of hard-removing so the student
+    // can be restored later or permanently deleted from the archived section.
+    await client.query(
+      `UPDATE students SET archived_at = CURRENT_TIMESTAMP WHERE user_id = $1`,
+      [studentId]
+    );
+    await client.query(
+      `UPDATE users SET status = 'archived', updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND role = 'student'`,
+      [id]
+    );
+
     await client.query('COMMIT');
-    
-    res.json({ message: 'Student deleted successfully.' });
+
+    res.json({ message: 'Student removed to archive.' });
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error('Delete student error:', err);
+    console.error('Archive student error:', err);
     res.status(500).json({ error: 'Server error.' });
   } finally {
     client.release();
+  }
+};
+
+// Restore an archived student back to pending.
+const restoreStudent = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+
+    await client.query('BEGIN');
+
+    const userResult = await client.query(
+      `SELECT id, email, role FROM users WHERE id = $1 AND role = 'student'`,
+      [id]
+    );
+
+    if (userResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Student not found.' });
+    }
+
+    const studentId = userResult.rows[0].id;
+
+    await client.query(
+      `UPDATE students SET archived_at = NULL WHERE user_id = $1`,
+      [studentId]
+    );
+    await client.query(
+      `UPDATE users SET status = 'pending', updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND role = 'student'`,
+      [id]
+    );
+
+    await client.query('COMMIT');
+
+    res.json({ message: 'Student restored from archive.' });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Restore student error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  } finally {
+    client.release();
+  }
+};
+
+// Permanently delete a student (hard remove from the archived section).
+const permanentDeleteStudent = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+
+    await client.query('BEGIN');
+
+    const userResult = await client.query(
+      `SELECT id, email, role FROM users WHERE id = $1 AND role = 'student'`,
+      [id]
+    );
+
+    if (userResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Student not found.' });
+    }
+
+    const studentId = userResult.rows[0].id;
+
+    // 1. Delete student documents
+    await client.query(`DELETE FROM student_documents WHERE student_id = (SELECT id FROM students WHERE user_id = $1)`, [studentId]);
+    // 2. Delete student daily documentation
+    await client.query(`DELETE FROM student_daily_documentation WHERE student_id = (SELECT id FROM students WHERE user_id = $1)`, [studentId]);
+    // 3. Delete student attendance
+    await client.query(`DELETE FROM student_attendance WHERE student_id = (SELECT id FROM students WHERE user_id = $1)`, [studentId]);
+    // 4. Delete student requirement submissions
+    await client.query(`DELETE FROM student_requirement_submissions WHERE student_id = (SELECT id FROM students WHERE user_id = $1)`, [studentId]);
+    // 5. Delete from teacher_batch_students
+    await client.query(`DELETE FROM teacher_batch_students WHERE student_id = (SELECT id FROM students WHERE user_id = $1)`, [studentId]);
+    // 6. Delete from students table
+    await client.query(`DELETE FROM students WHERE user_id = $1`, [studentId]);
+    // 7. Finally delete the user
+    await client.query(`DELETE FROM users WHERE id = $1 AND role = 'student'`, [id]);
+
+    await client.query('COMMIT');
+
+    res.json({ message: 'Student permanently deleted.' });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Permanent delete student error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  } finally {
+    client.release();
+  }
+};
+
+// List archived students (removed by coordinators).
+const getArchivedStudents = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT u.id, u.email, u.role, u.status, u.created_at, u.updated_at,
+              s.first_name, s.last_name, s.student_number, s.grade_level, s.section,
+              s.track_strand, s.school, s.preferred_company, s.archived_at
+       FROM users u
+       JOIN students s ON u.id = s.user_id
+       WHERE u.role = 'student' AND s.archived_at IS NOT NULL
+       ORDER BY s.archived_at DESC`,
+    );
+    res.json({ students: result.rows });
+  } catch (err) {
+    console.error('Get archived students error:', err);
+    res.status(500).json({ error: 'Server error.' });
   }
 };
 
@@ -352,7 +496,78 @@ const bulkDisapproveStudents = async (req, res) => {
   }
 };
 
-const bulkDeleteStudents = async (req, res) => {
+const bulkArchiveStudents = async (req, res) => {
+  const { student_ids } = req.body;
+  if (!Array.isArray(student_ids) || student_ids.length === 0) {
+    return res.status(400).json({ error: 'No student IDs provided.' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    await client.query(
+      `UPDATE students SET archived_at = CURRENT_TIMESTAMP
+       WHERE user_id = ANY($1) AND archived_at IS NULL`,
+      [student_ids]
+    );
+    await client.query(
+      `UPDATE users SET status = 'archived', updated_at = CURRENT_TIMESTAMP
+       WHERE id = ANY($1) AND role = 'student'`,
+      [student_ids]
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      message: `${student_ids.length} student(s) removed to archive.`,
+      count: student_ids.length,
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Bulk archive students error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  } finally {
+    client.release();
+  }
+};
+
+const bulkRestoreStudents = async (req, res) => {
+  const { student_ids } = req.body;
+  if (!Array.isArray(student_ids) || student_ids.length === 0) {
+    return res.status(400).json({ error: 'No student IDs provided.' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    await client.query(
+      `UPDATE students SET archived_at = NULL WHERE user_id = ANY($1)`,
+      [student_ids]
+    );
+    await client.query(
+      `UPDATE users SET status = 'pending', updated_at = CURRENT_TIMESTAMP
+       WHERE id = ANY($1) AND role = 'student'`,
+      [student_ids]
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      message: `${student_ids.length} student(s) restored from archive.`,
+      count: student_ids.length,
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Bulk restore students error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  } finally {
+    client.release();
+  }
+};
+
+const bulkPermanentDeleteStudents = async (req, res) => {
   const { student_ids } = req.body;
   if (!Array.isArray(student_ids) || student_ids.length === 0) {
     return res.status(400).json({ error: 'No student IDs provided.' });
@@ -364,49 +579,44 @@ const bulkDeleteStudents = async (req, res) => {
 
     await client.query(
       `DELETE FROM student_documents WHERE student_id IN (SELECT id FROM students WHERE user_id = ANY($1))`,
-      [student_ids],
+      [student_ids]
     );
-
     await client.query(
       `DELETE FROM student_daily_documentation WHERE student_id IN (SELECT id FROM students WHERE user_id = ANY($1))`,
-      [student_ids],
+      [student_ids]
     );
-
     await client.query(
       `DELETE FROM student_attendance WHERE student_id IN (SELECT id FROM students WHERE user_id = ANY($1))`,
-      [student_ids],
+      [student_ids]
     );
-
     await client.query(
       `DELETE FROM student_requirement_submissions WHERE student_id IN (SELECT id FROM students WHERE user_id = ANY($1))`,
-      [student_ids],
+      [student_ids]
     );
-
     await client.query(
       `DELETE FROM teacher_batch_students WHERE student_id IN (SELECT id FROM students WHERE user_id = ANY($1))`,
-      [student_ids],
+      [student_ids]
     );
-
     await client.query(
       `DELETE FROM students WHERE user_id = ANY($1)`,
-      [student_ids],
+      [student_ids]
     );
 
     const result = await client.query(
       `DELETE FROM users WHERE id = ANY($1) AND role = 'student'
        RETURNING id`,
-      [student_ids],
+      [student_ids]
     );
 
     await client.query('COMMIT');
 
     res.json({
-      message: `${result.rows.length} student(s) deleted.`,
+      message: `${result.rows.length} student(s) permanently deleted.`,
       count: result.rows.length,
     });
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error('Bulk delete students error:', err);
+    console.error('Bulk permanent delete students error:', err);
     res.status(500).json({ error: 'Server error.' });
   } finally {
     client.release();
@@ -419,8 +629,30 @@ module.exports = {
   approveStudent,
   disapproveStudent,
   resendStudentApprovalLink,
-  deleteStudent,
+  archiveStudent,
+  restoreStudent,
+  permanentDeleteStudent,
+  getArchivedStudents,
   bulkApproveStudents,
   bulkDisapproveStudents,
-  bulkDeleteStudents,
+  bulkArchiveStudents,
+  bulkRestoreStudents,
+  bulkPermanentDeleteStudents,
+};
+
+module.exports = {
+  getPendingStudents,
+  getStudentStrands,
+  approveStudent,
+  disapproveStudent,
+  resendStudentApprovalLink,
+  archiveStudent,
+  restoreStudent,
+  permanentDeleteStudent,
+  getArchivedStudents,
+  bulkApproveStudents,
+  bulkDisapproveStudents,
+  bulkArchiveStudents,
+  bulkRestoreStudents,
+  bulkPermanentDeleteStudents,
 };

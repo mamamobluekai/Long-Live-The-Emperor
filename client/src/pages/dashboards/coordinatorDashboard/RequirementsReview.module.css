@@ -502,3 +502,100 @@
   .confirmActions { flex-direction: column-reverse; }
   .confirmCancel, .confirmDelete { width: 100%; }
 }
+
+.archiveToggleBtn {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 1200;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--about-border);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--about-maroon);
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  box-shadow: 0 8px 16px rgb(23 32 51 / 8%);
+}
+
+.archiveToggleBtn:hover {
+  transform: translateY(-2px);
+  border-color: #d7b8be;
+  box-shadow: 0 12px 24px rgb(23 32 51 / 12%);
+}
+
+.archiveToggleBtn:active { transform: scale(0.96); }
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgb(23 32 51 / 35%);
+  backdrop-filter: blur(4px);
+  padding: 24px;
+}
+
+.modalOpen { display: flex; }
+
+.removedModal {
+  width: 100%;
+  max-width: 700px;
+  max-height: 85vh;
+  border: 1px solid var(--about-border);
+  border-radius: 18px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgb(23 32 51 / 12%);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: clamp(18px, 3vw, 24px);
+  border-bottom: 1px solid var(--about-border);
+}
+
+.modalHeader h2 {
+  margin: 0;
+  color: var(--about-ink);
+  font-size: 1.05rem;
+  font-weight: 760;
+  letter-spacing: -0.02em;
+}
+
+.modalCloseBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--about-border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--about-muted);
+  cursor: pointer;
+}
+
+.modalCloseBtn:hover { background: var(--about-blush); color: var(--about-maroon); }
+
+.modalBody {
+  padding: clamp(18px, 3vw, 24px);
+  overflow-y: auto;
+}
+
+@media (max-width: 640px) {
+  .archiveToggleBtn { bottom: 18px; right: 18px; width: 40px; height: 40px; }
+  .modalOverlay { padding: 12px; }
+  .removedModal { max-height: 90vh; }
+}

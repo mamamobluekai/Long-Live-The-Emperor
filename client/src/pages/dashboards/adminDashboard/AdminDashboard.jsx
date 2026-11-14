@@ -10,6 +10,9 @@ import AdminProfileSettings from './AdminProfileSettings';
 import Reports from './Reports';
 import AccessLogs from './AccessLogs';
 import UploadUsers from './UploadUsers';
+import UploadBulk from './UploadBulk';
+import ManualUser from './ManualUser';
+import CoordinatorManagement from './CoordinatorManagement';
 import ArchivedPeriods from './ArchivedPeriods';
 import About from '../About';
 
@@ -30,6 +33,9 @@ function AdminDashboard({ user, onLogout }) {
         <Route path="reports" element={<Reports />} />
         <Route path="access-logs" element={<AccessLogs />} />
         <Route path="upload-users" element={<UploadUsers />} />
+        <Route path="manual-users" element={<ManualUser />} />
+        <Route path="upload-bulk" element={<UploadBulk />} />
+        <Route path="coordinator-management" element={<CoordinatorManagement />} />
         <Route path="archives" element={<ArchivedPeriods />} />
         <Route path="*" element={<Navigate to="/dashboard/admin/dashboard" replace />} />
       </Routes>

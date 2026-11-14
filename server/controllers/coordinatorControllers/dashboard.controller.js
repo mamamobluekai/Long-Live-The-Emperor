@@ -1,5 +1,48 @@
 const pool = require('../../db/');
 
+const getCoordinatorProfile = async (req, res) => {
+  try {
+    const coordinatorRow = await pool.query(
+      `SELECT c.id, c.student_limit, c.strand, c.first_name, c.last_name, c.employee_id, c.department, c.designation
+       FROM coordinators c
+       WHERE c.user_id = $1`,
+      [req.user.id]
+    );
+    if (coordinatorRow.rows.length === 0) {
+      return res.status(404).json({ error: 'Coordinator profile not found.' });
+    }
+    const coordinator = coordinatorRow.rows[0];
+
+    const currentCount = await pool.query(
+      `SELECT COUNT(tbs.student_id) AS student_count
+       FROM teacher_batches tb
+       JOIN teacher_batch_students tbs ON tbs.teacher_batch_id = tb.id
+       JOIN students s ON s.id = tbs.student_id
+       JOIN users u ON u.id = s.user_id
+       WHERE tb.coordinator_id = $1 AND u.status = 'approved'`,
+      [coordinator.id]
+    );
+    const currentStudents = Number(currentCount.rows[0]?.student_count || 0);
+
+    res.json({
+      coordinator: {
+        id: coordinator.id,
+        first_name: coordinator.first_name,
+        last_name: coordinator.last_name,
+        employee_id: coordinator.employee_id,
+        department: coordinator.department,
+        designation: coordinator.designation,
+        student_limit: coordinator.student_limit,
+        strand: coordinator.strand || null,
+        student_count: currentStudents,
+      },
+    });
+  } catch (err) {
+    console.error('getCoordinatorProfile error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+};
+
 const getCoordinatorDashboard = async (req, res) => {
   try {
     const coordinatorRow = await pool.query(
@@ -128,4 +171,4 @@ const getCoordinatorDashboard = async (req, res) => {
   }
 };
 
-module.exports = { getCoordinatorDashboard };
+module.exports = { getCoordinatorDashboard, getCoordinatorProfile };

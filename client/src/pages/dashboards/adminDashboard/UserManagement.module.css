@@ -24,8 +24,8 @@
 
 .pageHeader {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
   margin-bottom: 22px;
   padding: 22px 24px;
@@ -33,10 +33,54 @@
   border-radius: 16px;
   background: transparent;
   box-shadow: none;
+  flex-wrap: wrap;
 }
 
 .headerCopy {
   min-width: 0;
+  flex: 1;
+}
+
+.uploadUsersBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 18px;
+  border: 1px solid var(--about-border);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--about-muted);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  flex-shrink: 0;
+}
+
+.uploadUsersBtn:hover:not(:disabled) {
+  border-color: var(--about-maroon);
+  background: var(--about-blush);
+  color: var(--about-maroon);
+}
+
+.uploadUsersBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .pageHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .uploadUsersBtn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 .eyebrow {

@@ -36,6 +36,10 @@ export async function getCoordinatorDashboard() {
   return apiFetch('/dashboard');
 }
 
+export async function getCoordinatorProfile() {
+  return apiFetch('/profile');
+}
+
 /* ---------------- Student approvals ---------------- */
 export async function getPendingStudents(status = 'pending', strand = 'all') {
   const params = new URLSearchParams();
@@ -67,6 +71,18 @@ export async function deleteStudent(id) {
   return apiFetch(`/students/${id}`, { method: 'DELETE' });
 }
 
+export async function restoreStudent(id) {
+  return apiFetch(`/students/${id}/restore`, { method: 'POST' });
+}
+
+export async function permanentDeleteStudent(id) {
+  return apiFetch(`/students/${id}/permanent`, { method: 'DELETE' });
+}
+
+export async function getArchivedStudents() {
+  return apiFetch('/students/archived');
+}
+
 export async function bulkApproveStudents(studentIds) {
   return apiFetch('/students/bulk/approve', jsonBody({ student_ids: studentIds }, 'PUT'));
 }
@@ -75,8 +91,16 @@ export async function bulkDisapproveStudents(studentIds) {
   return apiFetch('/students/bulk/disapprove', jsonBody({ student_ids: studentIds }, 'PUT'));
 }
 
-export async function bulkDeleteStudents(studentIds) {
+export async function bulkArchiveStudents(studentIds) {
   return apiFetch('/students/bulk', jsonBody({ student_ids: studentIds }, 'DELETE'));
+}
+
+export async function bulkRestoreStudents(studentIds) {
+  return apiFetch('/students/bulk/restore', jsonBody({ student_ids: studentIds }, 'POST'));
+}
+
+export async function bulkPermanentDeleteStudents(studentIds) {
+  return apiFetch('/students/bulk/permanent', jsonBody({ student_ids: studentIds }, 'DELETE'));
 }
 
 export async function uploadStudentsExcel(file) {
@@ -142,6 +166,14 @@ export async function updateDocumentType(id, { name, section, description, sort_
 
 export async function deleteDocumentType(id) {
   return apiFetch(`/document-types/${id}`, { method: 'DELETE' });
+}
+
+export async function restoreDocumentType(id) {
+  return apiFetch(`/document-types/${id}/restore`, { method: 'PUT' });
+}
+
+export async function permanentDeleteDocumentType(id) {
+  return apiFetch(`/document-types/${id}/permanent`, { method: 'DELETE' });
 }
 
 /* ---------------- Teachers / Supervisors ---------------- */

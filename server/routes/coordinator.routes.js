@@ -9,10 +9,8 @@ const {
   approveStudent,
   disapproveStudent,
   resendStudentApprovalLink,
-  deleteStudent,
   bulkApproveStudents,
   bulkDisapproveStudents,
-  bulkDeleteStudents,
   upsertRequirements,
   submitRequirements,
   getRequirements,
@@ -26,6 +24,8 @@ const {
   createDocumentType,
   updateDocumentType,
   deleteDocumentType,
+  restoreDocumentType,
+  permanentDeleteDocumentType,
   createTeacherBatch,
   updateTeacherBatch,
   deleteTeacherBatch,
@@ -48,6 +48,14 @@ const {
   deleteDeploymentRequest,
   fulfillSupervisorRequest,
   getCoordinatorDashboard,
+  getCoordinatorProfile,
+  archiveStudent,
+  restoreStudent,
+  permanentDeleteStudent,
+  getArchivedStudents,
+  bulkArchiveStudents,
+  bulkRestoreStudents,
+  bulkPermanentDeleteStudents,
 } = require('../controllers/coordinatorControllers');
 const { getTeacherReportsConcerns, confirmReportConcern } = require('../controllers/supervisorControllers/supervisor.controller');
 const { uploadStudentsExcel } = require('../controllers/coordinatorControllers/uploadStudents.controller');
@@ -64,6 +72,7 @@ const uploadDoc = multer({ storage: multer.memoryStorage(), limits: { fileSize: 
 router.use(authenticate);
 
 router.get('/dashboard', authorize('coordinator', 'admin'), getCoordinatorDashboard);
+router.get('/profile', authorize('coordinator', 'admin'), getCoordinatorProfile);
 
 router.get('/students/pending', authorize('coordinator', 'admin'), getPendingStudents);
 router.get('/students/strands', authorize('coordinator', 'admin'), getStudentStrands);
@@ -71,11 +80,16 @@ router.post('/students/upload', authorize('coordinator', 'admin'), uploadExcel.s
 // Register literal bulk paths before the matching parameterized :id paths.
 router.put('/students/bulk/approve', authorize('coordinator', 'admin'), bulkApproveStudents);
 router.put('/students/bulk/disapprove', authorize('coordinator', 'admin'), bulkDisapproveStudents);
-router.delete('/students/bulk', authorize('coordinator', 'admin'), bulkDeleteStudents);
+router.delete('/students/bulk', authorize('coordinator', 'admin'), bulkArchiveStudents);
+router.post('/students/bulk/restore', authorize('coordinator', 'admin'), bulkRestoreStudents);
+router.delete('/students/bulk/permanent', authorize('coordinator', 'admin'), bulkPermanentDeleteStudents);
 router.put('/students/:id/approve', authorize('coordinator', 'admin'), approveStudent);
 router.put('/students/:id/disapprove', authorize('coordinator', 'admin'), disapproveStudent);
 router.post('/students/:id/resend-approval', authorize('coordinator', 'admin'), resendStudentApprovalLink);
-router.delete('/students/:id', authorize('coordinator', 'admin'), deleteStudent);
+router.post('/students/:id/restore', authorize('coordinator', 'admin'), restoreStudent);
+router.delete('/students/:id/permanent', authorize('coordinator', 'admin'), permanentDeleteStudent);
+router.delete('/students/:id', authorize('coordinator', 'admin'), archiveStudent);
+router.get('/students/archived', authorize('coordinator', 'admin'), getArchivedStudents);
 
 router.put('/requirements', authorize('student', 'coordinator', 'admin'), upsertRequirements);
 router.post('/requirements/submit', authorize('student', 'coordinator', 'admin'), submitRequirements);
@@ -94,6 +108,9 @@ router.get('/document-types', authorize('student', 'coordinator', 'admin', 'teac
 router.post('/document-types', authorize('coordinator', 'admin'), createDocumentType);
 router.put('/document-types/:id', authorize('coordinator', 'admin'), updateDocumentType);
 router.delete('/document-types/:id', authorize('coordinator', 'admin'), deleteDocumentType);
+
+router.put('/document-types/:id/restore', authorize('coordinator', 'admin'), restoreDocumentType);
+router.delete('/document-types/:id/permanent', authorize('coordinator', 'admin'), permanentDeleteDocumentType);
 
 router.post('/teacher-batches', authorize('coordinator', 'admin'), createTeacherBatch);
 router.put('/teacher-batches/:batchId', authorize('coordinator', 'admin'), updateTeacherBatch);

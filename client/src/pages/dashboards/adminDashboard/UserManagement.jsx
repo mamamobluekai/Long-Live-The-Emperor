@@ -1,6 +1,7 @@
 // User management.
 // Design system: Lexend + the RequirementsReview maroon palette.
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
   Ban,
@@ -16,6 +17,7 @@ import {
   Trash2,
   UserCog,
   Users,
+  Upload,
   X,
 } from 'lucide-react';
 import {
@@ -51,6 +53,7 @@ const ROLE_SHORTCUTS = [
 
 export default function UserManagement() {
   const { showToast } = useToast();
+  const navigate = useNavigate();
   // The directory table was removed; this fetch now only feeds the summary cards
   // at the top of the page.
   const [users, setUsers] = useState([]);
@@ -350,6 +353,15 @@ export default function UserManagement() {
             Activate or deactivate accounts at any time.
           </p>
         </div>
+        <button
+          type="button"
+          className={styles.uploadUsersBtn}
+          onClick={() => navigate('/dashboard/admin/upload-users')}
+          aria-label="Upload users in bulk"
+        >
+          <Upload size={17} strokeWidth={1.9} aria-hidden="true" />
+          Upload Users
+        </button>
       </section>
 
       <section className={styles.statsGrid} aria-label="Account summary">

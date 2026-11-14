@@ -86,6 +86,14 @@ export async function createAdmin(admin) {
   });
 }
 
+export async function createUser(user) {
+  return fetchJsonOrThrow(`${API_BASE}/admin/users`, {
+    method: 'POST',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(user),
+  });
+}
+
 export async function getAdminDashboard() {
   return fetchJsonOrThrow(`${API_BASE}/admin/dashboard`, { headers: authHeaders() });
 }
@@ -185,6 +193,30 @@ export async function rejectCoordinator(id) {
     method: 'PATCH',
     headers: authHeaders(),
   });
+}
+
+export async function getCoordinatorManagement() {
+  return fetchJsonOrThrow(`${API_BASE}/admin/coordinators/management`, { headers: authHeaders() });
+}
+
+export async function updateCoordinatorStudentLimit(id, studentLimit) {
+  return fetchJsonOrThrow(`${API_BASE}/admin/coordinators/${id}/student-limit`, {
+    method: 'POST',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ student_limit: studentLimit }),
+  });
+}
+
+export async function updateCoordinatorStrand(id, strand) {
+  return fetchJsonOrThrow(`${API_BASE}/admin/coordinators/${id}/strand`, {
+    method: 'POST',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ strand: strand || null }),
+  });
+}
+
+export async function getStudentStrands() {
+  return fetchJsonOrThrow(`${API_BASE}/coordinator/students/strands`, { headers: authHeaders() });
 }
 
 export async function getAdminSettings() {

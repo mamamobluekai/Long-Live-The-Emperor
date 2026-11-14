@@ -372,7 +372,6 @@ export default function ArchivedPeriods() {
     <div className={styles.page}>
       <div className={styles.pageHeader}>
         <div>
-          <span className={styles.eyebrow}>Historical Records</span>
 
           <h1>Archived Periods</h1>
 

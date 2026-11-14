@@ -10,6 +10,7 @@ import {
   Upload,
   Archive,
   Info,
+  ShieldCheck,
 } from 'lucide-react';
 
 const links = [
@@ -28,6 +29,11 @@ const links = [
     to: '/dashboard/admin/upload-users',
     label: 'Upload Users',
     icon: Upload,
+  },
+  {
+    to: '/dashboard/admin/coordinator-management',
+    label: 'Coordinator Management',
+    icon: ShieldCheck,
   },
   {
     to: '/dashboard/admin/archives',

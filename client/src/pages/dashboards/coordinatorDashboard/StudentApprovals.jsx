@@ -1,12 +1,18 @@
 import { useEffect, useState } from 'react';
 import {
+  getCoordinatorProfile,
   getPendingStudents,
   getStudentStrands,
+  getArchivedStudents,
   approveStudent,
   resendStudentApprovalEmail,
   deleteStudent,
+  restoreStudent,
+  permanentDeleteStudent,
   bulkApproveStudents,
-  bulkDeleteStudents,
+  bulkArchiveStudents,
+  bulkRestoreStudents,
+  bulkPermanentDeleteStudents,
   uploadStudentsExcel,
 } from '../../../api/coordinatorApi';
 import {
@@ -18,6 +24,7 @@ import {
   Trash2,
   UserCheck,
   X,
+  Archive,
 } from 'lucide-react';
 import ConfirmModal from '../../../components/admin/ConfirmModal';
 import styles from './StudentApprovals.module.css';
@@ -35,10 +42,12 @@ const statusBadge = (status) => {
 };
 
 function StudentApprovals() {
-  const [students, setStudents] = useState([]);
-  const [strands, setStrands] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingStrands, setLoadingStrands] = useState(true);
+const [students, setStudents] = useState([]);
+const [archivedStudents, setArchivedStudents] = useState([]);
+const [coordinator, setCoordinator] = useState(null);
+const [strands, setStrands] = useState([]);
+const [loading, setLoading] = useState(true);
+const [loadingStrands, setLoadingStrands] = useState(true);
   const [statusFilter, setStatusFilter] = useState('pending');
   const [strandFilter, setStrandFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -51,11 +60,13 @@ function StudentApprovals() {
   const [uploadResult, setUploadResult] = useState(null);
 
   // Delete confirmation state
-  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
-  const [deleting, setDeleting] = useState(false);
+const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+const [deleting, setDeleting] = useState(false);
+const [archivedModalOpen, setArchivedModalOpen] = useState(false);
 
   // Bulk selection & actions
   const [selectedIds, setSelectedIds] = useState([]);
+  const [archivedSelectedIds, setArchivedSelectedIds] = useState([]);
   const [bulkLoading, setBulkLoading] = useState(false);
 
   // Tracks which student's Resend button is in flight, so only that row spins.
@@ -66,8 +77,14 @@ function StudentApprovals() {
     setError('');
 
     try {
-      const data = await getPendingStudents(statusFilter, strandFilter);
-      setStudents(data.students || []);
+      const [studentsData, profileData, archivedData] = await Promise.all([
+        getPendingStudents(statusFilter, strandFilter),
+        getCoordinatorProfile(),
+        getArchivedStudents(),
+      ]);
+      setStudents(studentsData.students || []);
+      setCoordinator(profileData.coordinator || null);
+      setArchivedStudents(archivedData.students || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -194,15 +211,15 @@ function StudentApprovals() {
     }
   };
 
-  const handleDeleteConfirm = (id) => {
+  const handleArchiveConfirm = (id) => {
     setDeleteConfirmId(id);
   };
 
-  const handleDelete = async (id) => {
+  const handleArchive = async (id) => {
     setDeleting(true);
     try {
       await deleteStudent(id);
-      setMessage('Student deleted successfully.');
+      setMessage('Student removed to archive.');
       setDeleteConfirmId(null);
       await load();
     } catch (err) {
@@ -213,7 +230,37 @@ function StudentApprovals() {
     }
   };
 
-  const handleCancelDelete = () => {
+  const handleRestore = async (id) => {
+    setDeleting(true);
+    setError('');
+    setMessage('');
+    try {
+      await restoreStudent(id);
+      setMessage('Student restored from archive.');
+      await load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handlePermanentDelete = async (id) => {
+    setDeleting(true);
+    setError('');
+    setMessage('');
+    try {
+      await permanentDeleteStudent(id);
+      setMessage('Student permanently deleted.');
+      await load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleCancelArchive = () => {
     setDeleteConfirmId(null);
   };
 
@@ -233,6 +280,22 @@ function StudentApprovals() {
     );
   };
 
+  const handleSelectAllArchived = () => {
+    if (archivedSelectedIds.length === archivedStudents.length) {
+      setArchivedSelectedIds([]);
+    } else {
+      setArchivedSelectedIds(archivedStudents.map((s) => s.id));
+    }
+  };
+
+  const handleSelectOneArchived = (id) => {
+    setArchivedSelectedIds((prev) =>
+      prev.includes(id)
+        ? prev.filter((s) => s !== id)
+        : [...prev, id],
+    );
+  };
+
   const handleBulkApprove = async () => {
     if (selectedIds.length === 0) return;
     setBulkLoading(true);
@@ -240,8 +303,6 @@ function StudentApprovals() {
     setMessage('');
     try {
       const data = await bulkApproveStudents(selectedIds);
-      // The server reports how many of the set-password emails failed so a
-      // partial delivery failure is visible instead of reading as a clean run.
       setMessage(data.message || `${selectedIds.length} student(s) approved.`);
       if (data.emailFailures > 0) {
         setError(`${data.emailFailures} approval email(s) failed to send. Use Resend email on those rows.`);
@@ -255,18 +316,18 @@ function StudentApprovals() {
     }
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkArchive = async () => {
     if (selectedIds.length === 0) return;
     setDeleteConfirmId('bulk');
   };
 
-  const handleBulkDeleteConfirm = async () => {
+  const handleBulkArchiveConfirm = async () => {
     setDeleting(true);
     setError('');
     setMessage('');
     try {
-      const data = await bulkDeleteStudents(selectedIds);
-      setMessage(data.message || `${selectedIds.length} student(s) deleted.`);
+      const data = await bulkArchiveStudents(selectedIds);
+      setMessage(data.message || `${selectedIds.length} student(s) removed to archive.`);
       setSelectedIds([]);
       setDeleteConfirmId(null);
       await load();
@@ -275,6 +336,38 @@ function StudentApprovals() {
     } finally {
       setDeleting(false);
       setDeleteConfirmId(null);
+    }
+  };
+
+  const handleBulkRestore = async () => {
+    setBulkLoading(true);
+    setError('');
+    setMessage('');
+    try {
+      const data = await bulkRestoreStudents(selectedIds);
+      setMessage(data.message || `${selectedIds.length} student(s) restored from archive.`);
+      setSelectedIds([]);
+      await load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleBulkPermanentDelete = async () => {
+    setBulkLoading(true);
+    setError('');
+    setMessage('');
+    try {
+      const data = await bulkPermanentDeleteStudents(selectedIds);
+      setMessage(data.message || `${selectedIds.length} student(s) permanently deleted.`);
+      setSelectedIds([]);
+      await load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBulkLoading(false);
     }
   };
 
@@ -293,7 +386,6 @@ function StudentApprovals() {
       {/* HEADER */}
       <div className={styles.pageHeader}>
         <div>
-          <span className={styles.eyebrow}>Student Management</span>
           <h1>Student Approvals</h1>
 
           <p>
@@ -302,6 +394,32 @@ function StudentApprovals() {
           </p>
         </div>
       </div>
+
+      {/* COORDINATOR LIMIT BANNER */}
+      {coordinator && (
+        <div className={styles.limitBanner}>
+          <div className={styles.limitBannerContent}>
+            <span className={styles.limitBannerLabel}>Your assigned limits</span>
+            <span className={styles.limitBannerStrand}>
+              <strong>Strand:</strong> {coordinator.strand ? coordinator.strand : 'All Strands'}
+            </span>
+            <span className={styles.limitBannerCount}>
+              <strong>Students:</strong> {coordinator.student_count} / {coordinator.student_limit}
+            </span>
+            {coordinator.strand && (
+              <span className={styles.limitBannerNote}>
+                You can only approve students from the {coordinator.strand} strand.
+              </span>
+            )}
+            {coordinator.student_count >= coordinator.student_limit && (
+              <span className={styles.limitBannerLimit}>
+                ⚠ Student limit reached — you cannot approve more students until
+                an admin raises your limit.
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* TOASTS (floating – does not shift the layout) */}
       <div className={styles.toastStack} aria-live="polite">
@@ -510,11 +628,11 @@ function StudentApprovals() {
 
               <button
                 className={styles.bulkDeleteBtn}
-                onClick={handleBulkDelete}
+                onClick={handleBulkArchive}
                 disabled={bulkLoading}
               >
                 <Trash2 size={14} />
-                Delete Selected
+                Remove Selected
               </button>
             </div>
           </div>
@@ -642,14 +760,14 @@ function StudentApprovals() {
                         <div className={styles.actions}>
                           {deleteConfirmId === student.id ? (
                             <div className={styles.deleteConfirm}>
-                              <span>Delete this student?</span>
+                              <span>Remove this student?</span>
                               <div className={styles.deleteConfirmActions}>
                                 <button
                                   className={styles.confirmDeleteBtn}
-                                  onClick={() => handleDelete(student.id)}
+                                  onClick={() => handleArchive(student.id)}
                                   disabled={deleting}
-                                  title="Confirm delete"
-                                  aria-label="Confirm delete"
+                                  title="Confirm remove"
+                                  aria-label="Confirm remove"
                                 >
                                   {deleting ? (
                                     <span className={styles.spinnerDark}></span>
@@ -659,10 +777,10 @@ function StudentApprovals() {
                                 </button>
                                 <button
                                   className={styles.cancelDeleteBtn}
-                                  onClick={handleCancelDelete}
+                                  onClick={handleCancelArchive}
                                   disabled={deleting}
-                                  title="Cancel"
-                                  aria-label="Cancel delete"
+                                  title="Cancel remove"
+                                  aria-label="Cancel remove"
                                 >
                                   <X size={15} />
                                 </button>
@@ -697,9 +815,9 @@ function StudentApprovals() {
 
                               <button
                                 className={styles.deleteBtn}
-                                onClick={() => handleDeleteConfirm(student.id)}
-                                title="Delete"
-                                aria-label="Delete student"
+                                onClick={() => handleArchiveConfirm(student.id)}
+                                title="Remove"
+                                aria-label="Remove student"
                               >
                                 <Trash2 size={15} />
                               </button>
@@ -716,59 +834,292 @@ function StudentApprovals() {
         )}
        </section>
 
-       <ConfirmModal
-         isOpen={deleteConfirmId === 'bulk'}
-         title="Delete Selected Students"
-         message={`This will permanently delete ${selectedIds.length} student account(s) and all related records. This action cannot be undone.`}
-         confirmLabel={deleting ? 'Deleting...' : 'Delete All'}
-         isDestructive
-         onConfirm={handleBulkDeleteConfirm}
-         onClose={() => {
-           setDeleteConfirmId(null);
-         }}
-       />
-       {uploadResult && (
-         <div
-           className={styles.uploadResultOverlay}
-           onClick={() => setUploadResult(null)}
-         >
-           <div
-             className={styles.uploadResultModal}
-             role="dialog"
-             aria-modal="true"
-             aria-labelledby="student-upload-result-title"
-             onClick={(event) => event.stopPropagation()}
-           >
-             <div className={`${styles.uploadResultIcon} ${
-               uploadResult.kind === 'error'
-                 ? styles.uploadResultError
-                 : uploadResult.kind === 'warning'
-                   ? styles.uploadResultWarning
-                   : styles.uploadResultSuccess
-             }`}>
-               {uploadResult.kind === 'error' ? <X size={22} /> : <Check size={22} />}
-             </div>
-             <h2 id="student-upload-result-title">
-               {uploadResult.kind === 'error'
-                 ? 'Upload failed'
-                 : uploadResult.kind === 'warning'
-                   ? 'Upload completed with issues'
-                   : 'Upload complete'}
-             </h2>
-             <p>{uploadResult.message}</p>
-             <button
-               type="button"
-               className={styles.uploadResultButton}
-               onClick={() => setUploadResult(null)}
-               autoFocus
-             >
-               Close
-             </button>
-           </div>
-         </div>
-       )}
-     </div>
-   );
-}
+        <ConfirmModal
+          isOpen={deleteConfirmId === 'bulk'}
+          title="Remove Selected Students"
+          message={`This will permanently remove ${selectedIds.length} student account(s) to the archive. This action cannot be undone from this page. Restore them from the Archived section below.`}
+          confirmLabel={deleting ? 'Removing...' : 'Remove All'}
+          isDestructive
+          onConfirm={handleBulkArchiveConfirm}
+          onClose={() => {
+            setDeleteConfirmId(null);
+          }}
+        />
+        {uploadResult && (
+          <div
+            className={styles.uploadResultOverlay}
+            onClick={() => setUploadResult(null)}
+          >
+            <div
+              className={styles.uploadResultModal}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="student-upload-result-title"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className={`${styles.uploadResultIcon} ${
+                uploadResult.kind === 'error'
+                  ? styles.uploadResultError
+                  : uploadResult.kind === 'warning'
+                    ? styles.uploadResultWarning
+                    : styles.uploadResultSuccess
+              }`}>
+                {uploadResult.kind === 'error' ? <X size={22} /> : <Check size={22} />}
+              </div>
+              <h2 id="student-upload-result-title">
+                {uploadResult.kind === 'error'
+                  ? 'Upload failed'
+                  : uploadResult.kind === 'warning'
+                    ? 'Upload completed with issues'
+                    : 'Upload complete'}
+              </h2>
+              <p>{uploadResult.message}</p>
+              <button
+                type="button"
+                className={styles.uploadResultButton}
+                onClick={() => setUploadResult(null)}
+                autoFocus
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ARCHIVED ICON BUTTON (bottom) */}
+        <button
+          type="button"
+          className={styles.archiveToggleBtn}
+          onClick={() => setArchivedModalOpen(true)}
+          title="View archived students"
+          aria-label="View archived students"
+        >
+          <Archive size={18} />
+        </button>
+
+        {/* ARCHIVED STUDENTS MODAL */}
+        <div
+          className={`${styles.modalOverlay} ${archivedModalOpen ? styles.modalOpen : ''}`}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="archived-title"
+          onClick={() => setArchivedModalOpen(false)}
+        >
+          <div
+            className={styles.archivedModal}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.modalHeader}>
+              <h2 id="archived-title">Archived Students</h2>
+              <button
+                type="button"
+                className={styles.modalCloseBtn}
+                onClick={() => setArchivedModalOpen(false)}
+                aria-label="Close archived students"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {archivedStudents.length === 0 ? (
+              <div className={styles.empty}>
+                <div className={styles.emptyIcon}>✓</div>
+                <h4>No archived students</h4>
+                <p>Removed students will appear here.</p>
+              </div>
+            ) : (
+              <>
+                {/* ARCHIVED BULK ACTIONS */}
+                {archivedSelectedIds.length > 0 && (
+                  <div className={styles.bulkBar}>
+                    <div className={styles.bulkActions}>
+                      <button
+                        className={styles.bulkApproveBtn}
+                        onClick={handleBulkRestore}
+                        disabled={bulkLoading}
+                      >
+                        <UserCheck size={14} />
+                        Restore Selected
+                      </button>
+
+                      <button
+                        className={styles.bulkDeleteBtn}
+                        onClick={handleBulkPermanentDelete}
+                        disabled={bulkLoading}
+                      >
+                        <Trash2 size={14} />
+                        Permanently Delete Selected
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className={styles.tableContainer}>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th className={styles.checkboxHeader}>
+                          <button
+                            className={styles.checkbox}
+                            type="button"
+                            onClick={handleSelectAllArchived}
+                            aria-label="Select all archived"
+                          >
+                            {archivedSelectedIds.length === archivedStudents.length &&
+                            archivedStudents.length > 0 ? (
+                              <CheckSquare size={16} />
+                            ) : (
+                              <Square size={16} />
+                            )}
+                          </button>
+                        </th>
+                        <th>STUDENT</th>
+                        <th>EMAIL</th>
+                        <th>STRAND</th>
+                        <th>ARCHIVED</th>
+                        <th className={styles.actionHeader}>ACTIONS</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {archivedStudents.map((student) => {
+                        const fullName =
+                          `${student.first_name || ''} ${student.last_name || ''}`.trim();
+                        const isSelected = archivedSelectedIds.includes(student.id);
+                        return (
+                          <tr key={student.id}>
+                            <td className={styles.checkboxCell}>
+                              <button
+                                className={styles.checkbox}
+                                type="button"
+                                onClick={() => handleSelectOneArchived(student.id)}
+                                aria-label={`Select ${student.first_name}`}
+                              >
+                                {isSelected ? (
+                                  <CheckSquare size={16} />
+                                ) : (
+                                  <Square size={16} />
+                                )}
+                              </button>
+                            </td>
+
+                            <td>
+                              <div className={styles.studentCell}>
+                                <div>
+                                  <strong>{fullName || 'Unnamed Student'}</strong>
+                                </div>
+                              </div>
+                            </td>
+
+                            <td>
+                              <span className={styles.email}>{student.email || '-'}</span>
+                            </td>
+
+                            <td>
+                              <span className={styles.trackStrand}>
+                                {student.track_strand || '-'}
+                              </span>
+                            </td>
+
+                            <td>
+                              <span className={styles.registeredDate}>
+                                {student.archived_at
+                                  ? new Date(student.archived_at).toLocaleDateString('en-US', {
+                                      year: 'numeric',
+                                      month: 'short',
+                                      day: 'numeric',
+                                    })
+                                  : '—'}
+                              </span>
+                            </td>
+
+                            <td>
+                              <div className={styles.actions}>
+                                <button
+                                  className={styles.approveBtn}
+                                  onClick={() => handleRestore(student.id)}
+                                  disabled={deleting}
+                                  title="Restore from archive"
+                                  aria-label="Restore student from archive"
+                                >
+                                  <UserCheck size={15} />
+                                </button>
+
+                                <button
+                                  className={styles.deleteBtn}
+                                  onClick={() => handlePermanentDelete(student.id)}
+                                  disabled={deleting}
+                                  title="Permanently delete"
+                                  aria-label="Permanently delete student"
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        <ConfirmModal
+          isOpen={deleteConfirmId === 'bulk'}
+          title="Remove Selected Students"
+          message={`This will permanently remove ${selectedIds.length} student account(s) to the archive. This action cannot be undone from this page. Restore them from the Archived section below.`}
+          confirmLabel={deleting ? 'Removing...' : 'Remove All'}
+          isDestructive
+          onConfirm={handleBulkArchiveConfirm}
+          onClose={() => {
+            setDeleteConfirmId(null);
+          }}
+        />
+        {uploadResult && (
+          <div
+            className={styles.uploadResultOverlay}
+            onClick={() => setUploadResult(null)}
+          >
+            <div
+              className={styles.uploadResultModal}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="student-upload-result-title"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className={`${styles.uploadResultIcon} ${
+                uploadResult.kind === 'error'
+                  ? styles.uploadResultError
+                  : uploadResult.kind === 'warning'
+                    ? styles.uploadResultWarning
+                    : styles.uploadResultSuccess
+              }`}>
+                {uploadResult.kind === 'error' ? <X size={22} /> : <Check size={22} />}
+              </div>
+              <h2 id="student-upload-result-title">
+                {uploadResult.kind === 'error'
+                  ? 'Upload failed'
+                  : uploadResult.kind === 'warning'
+                    ? 'Upload completed with issues'
+                    : 'Upload complete'}
+              </h2>
+              <p>{uploadResult.message}</p>
+              <button
+                type="button"
+                className={styles.uploadResultButton}
+                onClick={() => setUploadResult(null)}
+                autoFocus
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
 export default StudentApprovals;

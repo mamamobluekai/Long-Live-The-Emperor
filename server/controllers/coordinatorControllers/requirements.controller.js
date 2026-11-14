@@ -479,6 +479,70 @@ const deleteDocumentType = async (req, res) => {
   }
 };
 
+// Restore a removed requirement (set is_active back to TRUE).
+const restoreDocumentType = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    await ensureDocumentTypesSchema();
+    const { id } = req.params;
+
+    await client.query('BEGIN');
+    const result = await client.query(
+      `UPDATE document_types
+       SET is_active = TRUE
+       WHERE id = $1
+       RETURNING id, code, name, section, is_active, sort_order`,
+      [id]
+    );
+    if (!result.rows.length) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Requirement not found.' });
+    }
+
+    await recalculateAllProgress(client);
+    await client.query('COMMIT');
+
+    res.json({ message: 'Requirement restored.', documentType: result.rows[0] });
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch (_) {}
+    console.error('restoreDocumentType error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  } finally {
+    client.release();
+  }
+};
+
+// Permanently delete a removed requirement from the database.
+const permanentDeleteDocumentType = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    await ensureDocumentTypesSchema();
+    const { id } = req.params;
+
+    await client.query('BEGIN');
+    const result = await client.query(
+      `DELETE FROM document_types WHERE id = $1
+       RETURNING id, code, name, section`,
+      [id]
+    );
+    if (!result.rows.length) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Requirement not found.' });
+    }
+
+    await recalculateAllProgress(client);
+    await client.query('COMMIT');
+
+    res.json({ message: 'Requirement permanently deleted.', documentType: result.rows[0] });
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch (_) {}
+    console.error('permanentDeleteDocumentType error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   upsertRequirements,
   submitRequirements,
@@ -493,4 +557,6 @@ module.exports = {
   createDocumentType,
   updateDocumentType,
   deleteDocumentType,
+  restoreDocumentType,
+  permanentDeleteDocumentType,
 };

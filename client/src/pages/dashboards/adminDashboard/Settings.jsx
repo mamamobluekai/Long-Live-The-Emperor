@@ -262,7 +262,6 @@ export default function SettingsPage() {
       <div className={styles.pageHeader}>
         <div className={styles.headerIdentity}>
           <div>
-            <p className={styles.eyebrow}>CONFIGURATION</p>
             <h1 className={styles.title}>System Settings</h1>
             <p className={styles.subtitle}>
               Manage the work immersion periods that drive each batch schedule. Changes here apply

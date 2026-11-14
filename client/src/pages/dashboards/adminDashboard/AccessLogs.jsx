@@ -408,7 +408,6 @@ export default function AccessLogs() {
     <div className={styles.page}>
       <div className={styles.pageHeader}>
         <div>
-          <span className={styles.eyebrow}>Security &amp; Audit</span>
 
           <h1>Access Logs</h1>
 
